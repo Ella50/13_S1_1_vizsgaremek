@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eMenza - Backend és Adatbázis Tervezés</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+        }
+        
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background-color: #e0e6ed;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            margin: 0 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .content {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #3498db;
+            margin: 25px 0 15px 0;
+        }
+        
+        .architecture {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .arch-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .arch-card h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .code-block {
+            background-color: #2c3e50;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        
+        .endpoint {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+        }
+        
+        .endpoint-method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .get { background-color: #61affe; color: white; }
+        .post { background-color: #49cc90; color: white; }
+        .put { background-color: #fca130; color: white; }
+        .delete { background-color: #f93e3e; color: white; }
+        
+        .db-schema {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .db-schema th, .db-schema td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .db-schema th {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .db-schema tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .simulator {
+            background-color: #e8f4fc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .simulator-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .simulator-result {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 100px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            color: #7f8c8d;
+            border-top: 1px solid #eee;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <h1>eMenza - Backend és Adatbázis Tervezés</h1>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('arch')">Architektúra</button>
+            <button class="tab" onclick="showTab('api')">API Végpontok</button>
+            <button class="tab" onclick="showTab('db')">Adatbázis Tervezés</button>
+            <button class="tab" onclick="showTab('code')">Kódpéldák</button>
+            <button class="tab" onclick="showTab('sim')">Szimulátor</button>
+        </div>
+
+        <div id="arch" class="tab-content content">
+            <h2>Rendszerarchitektúra</h2>
+            <p>Az eMenza rendszer háromrétegű architektúrát követ, amely a következő komponensekből áll:</p>
+            
+            <div class="architecture">
+                <div class="arch-card">
+                    <h4><i class="fas fa-desktop"></i> Frontend (Vue.js)</h4>
+                    <p>Reszponzív felhasználói felület, amely kommunikál a backend API-val RESTful webszolgáltatásokon keresztül.</p>
+                    <ul>
+                        <li>Felhasználói hitelesítés és autorizáció</li>
+                        <li>Menü megjelenítése és rendelések kezelése</li>
+                        <li>Adminisztrációs felület</li>
+                    </ul>
+                </div>
+                
+                <div class="arch-card">
+                    <h4><i class="fas fa-server"></i> Backend (Node.js + Express)</h4>
+                    <p>A szerveroldali logika kezeli az üzleti szabályokat, hitelesítést és adatbázis-műveleteket.</p>
+                    <ul>
+                        <li>RESTful API végpontok</li>
+                        <li>JWT token alapú hitelesítés</li>
+                        <li>Adatvalidáció és biztonság</li>
+                        <li>Üzleti logika implementációja</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="architecture">
+                <div class="arch-card">
+                    <h4><i class="fas fa-database"></i> Adatbázis (MySQL)</h4>
+                    <p>Relációs adatbázis, amely tárolja a felhasználói adatokat, ételeket, rendeléseket és egyéb információkat.</p>
+                    <ul>
+                        <li>Felhasználók és jogosultságok kezelése</li>
+                        <li>Menük és ételek tárolása</li>
+                        <li>Rendelések és tranzakciók nyomon követése</li>
+                        <li>Értékelések és statisztikák</li>
+                    </ul>
+                </div>
+                
+                <div class="arch-card">
+                    <h4><i class="fas fa-plug"></i> Külső Integrációk</h4>
+                    <p>Harmadik féltől származó szolgáltatások integrációja a rendszerrel.</p>
+                    <ul>
+                        <li>RFID olvasó API integráció</li>
+                        <li>Fizetési rendszer (bankkártya, online fizetés)</li>
+                        <li>Email értesítések (SendGrid, Mailgun)</li>
+                        <li>Mobil alkalmazás REST API</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="api" class="tab-content content" style="display: none;">
+            <h2>API Végpontok Tervezete</h2>
+            <p>Az alábbiakban az eMenza rendszer főbb REST API végpontjai láthatók:</p>
+            
+            <h3>Hitelesítés</h3>
+            <div class="endpoint">
+                <span class="endpoint-method post">POST</span>
+                <span>/api/auth/register</span> - Felhasználó regisztráció
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method post">POST</span>
+                <span>/api/auth/login</span> - Bejelentkezés és JWT token kiadása
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method get">GET</span>
+                <span>/api/auth/profile</span> - Felhasználói profil lekérése
+            </div>
+            
+            <h3>Menü kezelés</h3>
+            <div class="endpoint">
+                <span class="endpoint-method get">GET</span>
+                <span>/api/menu</span> - Heti menü lekérése
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method get">GET</span>
+                <span>/api/menu/:date</span> - Adott napi menü lekérése
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method post">POST</span>
+                <span>/api/menu</span> - Új menü hozzáadása (admin)
+            </div>
+            
+            <h3>Rendelések</h3>
+            <div class="endpoint">
+                <span class="endpoint-method get">GET</span>
+                <span>/api/orders</span> - Felhasználó rendeléseinek lekérése
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method post">POST</span>
+                <span>/api/orders</span> - Új rendelés leadása
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method put">PUT</span>
+                <span>/api/orders/:id</span> - Rendelés módosítása
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method delete">DELETE</span>
+                <span>/api/orders/:id</span> - Rendelés törlése (lemondás)
+            </div>
+            
+            <h3>Admin felület</h3>
+            <div class="endpoint">
+                <span class="endpoint-method get">GET</span>
+                <span>/api/admin/users</span> - Összes felhasználó lekérése
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method get">GET</span>
+                <span>/api/admin/statistics</span> - Rendszerstatisztikák
+            </div>
+            <div class="endpoint">
+                <span class="endpoint-method post">POST</span>
+                <span>/api/admin/meals</span> - Új étel hozzáadása
+            </div>
+        </div>
+
+        <div id="db" class="tab-content content" style="display: none;">
+            <h2>Adatbázis Tervezés</h2>
+            <p>Az eMenza rendszer az alábbi MySQL táblákat fogja használni:</p>
+            
+            <h3>Felhasználók tábla (users)</h3>
+            <table class="db-schema">
+                <tr>
+                    <th>Mező</th>
+                    <th>Típus</th>
+                    <th>Leírás</th>
+                </tr>
+                <tr>
+                    <td>id</td>
+                    <td>INT (PK, Auto Increment)</td>
+                    <td>Felhasználó egyedi azonosítója</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>VARCHAR(255)</td>
+                    <td>Felhasználó email címe</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>VARCHAR(255)</td>
+                    <td> Titkosított jelszó</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR(100)</td>
+                    <td>Felhasználó teljes neve</td>
+                </tr>
+                <tr>
+                    <td>role</td>
+                    <td>ENUM('user', 'admin')</td>
+                    <td>Felhasználó szerepköre</td>
+                </tr>
+                <tr>
+                    <td>balance</td>
+                    <td>DECIMAL(10,2)</td>
+                    <td>Felhasználó egyenlege</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>Felhasználó létrehozásának ideje</td>
+                </tr>
+            </table>
+            
+            <h3>Ételek tábla (meals)</h3>
+            <table class="db-schema">
+                <tr>
+                    <th>Mező</th>
+                    <th>Típus</th>
+                    <th>Leírás</th>
+                </tr>
+                <tr>
+                    <td>id</td>
+                    <td>INT (PK, Auto Increment)</td>
+                    <td>Étel egyedi azonosítója</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR(255)</td>
+                    <td>Étel neve</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>TEXT</td>
+                    <td>Étel leírása</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL(10,2)</td>
+                    <td>Étel ára</td>
+                </tr>
+                <tr>
+                    <td>allergens</td>
+                    <td>JSON</td>
+                    <td>Allergének listája</td>
+                </tr>
+                <tr>
+                    <td>diet_info</td>
+                    <td>JSON</td>
+                    <td>Diétás információk</td>
+                </tr>
+            </table>
+            
+            <h3>Rendelések tábla (orders)</h3>
+            <table class="db-schema">
+                <tr>
+                    <th>Mező</th>
+                    <th>Típus</th>
+                    <th>Leírás</th>
+                </tr>
+                <tr>
+                    <td>id</td>
+                    <td>INT (PK, Auto Increment)</td>
+                    <td>Rendelés egyedi azonosítója</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT (FK)</td>
+                    <td>Felhasználó azonosítója</td>
+                </tr>
+                <tr>
+                    <td>meal_id</td>
+                    <td>INT (FK)</td>
+                    <td>Étel azonosítója</td>
+                </tr>
+                <tr>
+                    <td>order_date</td>
+                    <td>DATE</td>
+                    <td>Rendelés dátuma</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>ENUM('active', 'cancelled', 'completed')</td>
+                    <td>Rendelés állapota</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>Rendelés létrehozásának ideje</td>
+                </tr>
+            </table>
+            
+            <h3>Értékelések tábla (ratings)</h3>
+            <table class="db-schema">
+                <tr>
+                    <th>Mező</th>
+                    <th>Típus</th>
+                    <th>Leírás</th>
+                </tr>
+                <tr>
+                    <td>id</td>
+                    <td>INT (PK, Auto Increment)</td>
+                    <td>Értékelés egyedi azonosítója</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT (FK)</td>
+                    <td>Felhasználó azonosítója</td>
+                </tr>
+                <tr>
+                    <td>meal_id</td>
+                    <td>INT (FK)</td>
+                    <td>Étel azonosítója</td>
+                </tr>
+                <tr>
+                    <td>rating</td>
+                    <td>INT(1)</td>
+                    <td>Értékelés (1-5)</td>
+                </tr>
+                <tr>
+                    <td>comment</td>
+                    <td>TEXT</td>
+                    <td>Szöveges értékelés</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>Értékelés létrehozásának ideje</td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="code" class="tab-content content" style="display: none;">
+            <h2>Kódpéldák</h2>
+            <p>Az alábbiakban néhány fontos kódrészlet látható a backend implementációból:</p>
+            
+            <h3>Express.js Szerver Alapkonfiguráció</h3>
+            <div class="code-block">
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Adatbázis kapcsolat
+const db = mysql.createConnection({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'emenza'
+});
+
+// Kapcsolat ellenőrzése
+db.connect((err) => {
+    if (err) {
+        console.error('Database connection failed: ' + err.stack);
+        return;
+    }
+    console.log('Connected to database as id ' + db.threadId);
+});
+
+// Alap útvonal
+app.get('/', (req, res) => {
+    res.json({ message: 'eMenza API Running' });
+});
+
+// Szerver indítása
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+            </div>
+            
+            <h3>Hitelesítési Részleg</h3>
+            <div class="code-block">
+// Regisztráció
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { email, password, name } = req.body;
+        
+        // Ellenőrzés, hogy létezik-e már a felhasználó
+        const userExists = await db.execute(
+            'SELECT id FROM users WHERE email = ?', 
+            [email]
+        );
+        
+        if (userExists[0].length > 0) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+        
+        // Jelszó hash-elés
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        
+        // Felhasználó létrehozása
+        const result = await db.execute(
+            'INSERT INTO users (email, password, name, role, balance) VALUES (?, ?, ?, "user", 0)',
+            [email, hashedPassword, name]
+        );
+        
+        res.status(201).json({ message: 'User created successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Bejelentkezés
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        // Felhasználó keresése
+        const [users] = await db.execute(
+            'SELECT * FROM users WHERE email = ?', 
+            [email]
+        );
+        
+        if (users.length === 0) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+        
+        const user = users[0];
+        
+        // Jelszó ellenőrzése
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+        
+        // JWT token generálása
+        const token = jwt.sign(
+            { userId: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET || 'your_secret_key',
+            { expiresIn: '24h' }
+        );
+        
+        res.json({ 
+            token, 
+            user: { 
+                id: user.id, 
+                email: user.email, 
+                name: user.name, 
+                role: user.role 
+            } 
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+            </div>
+            
+            <h3>Middleware JWT Ellenőrzéshez</h3>
+            <div class="code-block">
+// Middleware a token ellenőrzéséhez
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    
+    jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key', (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Invalid or expired token' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
+// Példa védett útvonal
+app.get('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        const [users] = await db.execute(
+            'SELECT id, email, name, role, balance FROM users WHERE id = ?',
+            [req.user.userId]
+        );
+        
+        if (users.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json(users[0]);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+            </div>
+        </div>
+
+        <div id="sim" class="tab-content content" style="display: none;">
+            <h2>API Szimulátor</h2>
+            <p>Az alábbi szimulátor segítségével tesztelheted a backend API működését:</p>
+            
+            <div class="simulator">
+                <div class="simulator-controls">
+                    <select id="apiEndpoint" class="btn">
+                        <option value="/api/menu">GET /api/menu - Menü lekérése</option>
+                        <option value="/api/orders">GET /api/orders - Rendelések lekérése</option>
+                        <option value="/api/auth/login">POST /api/auth/login - Bejelentkezés</option>
+                        <option value="/api/orders">POST /api/orders - Rendelés leadása</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="simulateRequest()">Kérés indítása</button>
+                </div>
+                
+                <h4>Kérés részletei:</h4>
+                <div class="code-block" id="requestDetails">
+// Válassz egy API végpontot és indítsd a kérelmet
+                </div>
+                
+                <h4>Válasz:</h4>
+                <div class="simulator-result" id="simulatorResult">
+// Az API válasza ide jelenik meg
+                </div>
+            </div>
+            
+            <h3>API Válasz Példák</h3>
+            <p>Valósághű API válaszok, amelyeket a backend küldene:</p>
+            
+            <h4>GET /api/menu válasza:</h4>
+            <div class="code-block">
+{
+  "status": "success",
+  "data": [
+    {
+      "date": "2023-10-23",
+      "meals": [
+        {
+          "id": 1,
+          "name": "Csirkepaprikás",
+          "description": "Tészta és tejföllel",
+          "price": 4.5,
+          "allergens": ["tej", "glutén"],
+          "diet_info": []
+        },
+        {
+          "id": 2,
+          "name": "Zöldséges quiche",
+          "description": "Lilahagymával és fetasajttal",
+          "price": 4.0,
+          "allergens": ["tej", "tojás", "glutén"],
+          "diet_info": ["vegetáriánus"]
+        }
+      ]
+    }
+  ]
+}
+            </div>
+            
+            <h4>POST /api/auth/login válasza:</h4>
+            <div class="code-block">
+{
+  "status": "success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": 1,
+      "email": "kovacs.janos@iskola.hu",
+      "name": "Kovács János",
+      "role": "user",
+      "balance": 12.5
+    }
+  }
+}
+            </div>
+        </div>
+
+        <footer>
+            <p>eMenza - Iskolai Étkezéskezelő Rendszer &copy; 2023</p>
+            <p>Készítők: Atkári Ariella, Farkas Dominik</p>
+        </footer>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Elrejtjük az összes tab tartalmát
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Megjelenítjük a kiválasztott tab tartalmát
+            document.getElementById(tabName).style.display = 'block';
+            
+            // Frissítjük az aktív tab-ot
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Az aktuális tab-ot aktívvá tesszük
+            event.currentTarget.classList.add('active');
+        }
+        
+        function simulateRequest() {
+            const endpoint = document.getElementById('apiEndpoint').value;
+            const resultDiv = document.getElementById('simulatorResult');
+            const requestDetails = document.getElementById('requestDetails');
+            
+            // Szimuláljuk a kérést
+            resultDiv.innerHTML = 'Szimuláljuk a kérést...';
+            
+            // Kérés részleteinek megjelenítése
+            requestDetails.innerHTML = `// API hívás: ${endpoint}\n// Metódus: ${endpoint.startsWith('POST') ? 'POST' : 'GET'}\n// Header: Content-Type: application/json`;
+            
+            // Szimulált válasz a kiválasztott endpoint alapján
+            setTimeout(() => {
+                if (endpoint === '/api/menu') {
+                    resultDiv.innerHTML = JSON.stringify({
+                        status: "success",
+                        data: [
+                            {
+                                date: "2023-10-23",
+                                meals: [
+                                    {
+                                        id: 1,
+                                        name: "Csirkepaprikás",
+                                        description: "Tészta és tejföllel",
+                                        price: 4.5,
+                                        allergens: ["tej", "glutén"],
+                                        diet_info: []
+                                    },
+                                    {
+                                        id: 2,
+                                        name: "Zöldséges quiche",
+                                        description: "Lilahagymával és fetasajttal",
+                                        price: 4.0,
+                                        allergens: ["tej", "tojás", "glutén"],
+                                        diet_info: ["vegetáriánus"]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, null, 2);
+                } else if (endpoint === '/api/orders') {
+                    resultDiv.innerHTML = JSON.stringify({
+                        status: "success",
+                        data: [
+                            {
+                                id: 101,
+                                meal_id: 1,
+                                meal_name: "Csirkepaprikás",
+                                order_date: "2023-10-23",
+                                status: "active"
+                            }
+                        ]
+                    }, null, 2);
+                } else if (endpoint === '/api/auth/login') {
+                    resultDiv.innerHTML = JSON.stringify({
+                        status: "success",
+                        data: {
+                            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoia292YWNzLmphbm9zQGlza29sYS5odSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNjk4MDQ0MDQwLCJleHAiOjE2OTgxMzA0NDB9.ABC123def456ghi789jkl012mno345pqr678stu901vwx234yza567bcd890efg",
+                            user: {
+                                id: 1,
+                                email: "kovacs.janos@iskola.hu",
+                                name: "Kovács János",
+                                role: "user",
+                                balance: 12.5
+                            }
+                        }
+                    }, null, 2);
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
