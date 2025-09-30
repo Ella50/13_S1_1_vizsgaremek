@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menza - Bejelentkezés</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .logo-icon {
+            background-color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+        
+        .logo-text h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+        
+        .login-header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .login-form {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: #3498db;
+        }
+        
+        .checkbox-group label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 0;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .forgot-password {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .forgot-password a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        
+        .forgot-password a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        
+        .register-link {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e0e6ed;
+        }
+        
+        .register-link p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .register-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        .register-link a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        
+        /* Animációk */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-container {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        /* Reszponzív design */
+        @media (max-width: 480px) {
+            .login-container {
+                border-radius: 15px;
+            }
+            
+            .login-header {
+                padding: 25px 15px;
+            }
+            
+            .login-form {
+                padding: 25px 20px;
+            }
+            
+            .logo-text h1 {
+                font-size: 1.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Menza</h1>
+                </div>
+            </div>
+            <p>Iskolai Étkezéskezelő Rendszer</p>
+        </div>
+        
+        <div class="login-form">
+            <div class="form-group">
+                <label for="email">E-mail cím</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" class="form-control" placeholder="email@pelda.hu">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Jelszó</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••">
+                </div>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="remember">
+                <label for="remember">Emlékezz rám</label>
+            </div>
+            
+            <button class="btn-login">Bejelentkezés</button>
+            
+            <div class="forgot-password">
+                <a href="#">Elfelejtette a jelszavát?</a>
+            </div>
+            
+            <div class="register-link">
+                <p>Még nincs fiókja? <a href="#">Regisztráljon most!</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Form validation
+            const loginForm = document.querySelector('.login-form');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const loginButton = document.querySelector('.btn-login');
+            
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Egyszerű validáció
+                if (!emailInput.value || !passwordInput.value) {
+                    alert('Kérjük, töltse ki mindkét mezőt!');
+                    return;
+                }
+                
+                // Szimulált bejelentkezés
+                loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Bejelentkezés...';
+                loginButton.disabled = true;
+                
+                setTimeout(() => {
+                    alert('Sikeres bejelentkezés!');
+                    loginButton.innerHTML = 'Bejelentkezés';
+                    loginButton.disabled = false;
+                }, 1500);
+            });
+            
+            // Input focus effects
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.querySelector('i').style.color = '#3498db';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.querySelector('i').style.color = '#7f8c8d';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
