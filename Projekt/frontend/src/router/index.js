@@ -1,20 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Home from '@/views/Home.vue'
+import Contact from '@/views/Contact.vue'
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: Contact
+  }
+]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView
-    },
-    {
-      path: '/registrationForm',
-      name: 'registrationForm',
-      component: () => import('../views/RegistrationForm.vue')
-    }
-  ]
+  history: createWebHistory(),
+  routes
 })
 
 export default router
