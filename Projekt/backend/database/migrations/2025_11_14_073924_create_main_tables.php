@@ -66,7 +66,7 @@ return new class extends Migration
         $table->string('email')->unique();
         $table->string('password');
         $table->enum('userType', array_column(UserType::cases(), 'value'))->default('Tanuló');
-        $table->foreignId('rfidCard_id')->constrained('rfidCard'); 
+        $table->foreignId('rfidCard_id')->nullable()->constrained('rfidCard'); 
         $table->foreignId('class_id')->nullable()->constrained('class');
         $table->foreignId('group_id')->nullable()->constrained('group'); 
         $table->enum('status', array_column(UserStatus::cases(), 'value'))->default('inactive');

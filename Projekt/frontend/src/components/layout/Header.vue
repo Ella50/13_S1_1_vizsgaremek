@@ -9,6 +9,7 @@
         <button class="mobile-menu-btn" @click="toggleMobileMenu">☰</button>
         <ul :class="['nav-list', { 'nav-list--open': mobileMenuOpen }]">
           <li><router-link to="/" class="nav-link">Főoldal</router-link></li>
+              <li><router-link to="/users" class="nav-link">Felhasználók</router-link></li>
           <li><router-link to="/contact" class="nav-link">Kapcsolat</router-link></li>
         </ul>
       </nav>
