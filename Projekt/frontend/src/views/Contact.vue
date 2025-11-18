@@ -2,7 +2,7 @@
   <div class="contact">
     <div class="container">
       <h1>Kapcsolat</h1>
-      <p>Ez a Kapcsolat oldal. Itt találhatók elérhetőségek és kapcsolati űrlap.</p>
+      <p>elérhetőségek és kapcsolati űrlap</p>
     </div>
   </div>
 </template>
