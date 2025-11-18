@@ -12,17 +12,15 @@ return new class extends Migration
 
         Schema::create('county', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->timestamps();
+            $table->string('countyName');
         });
 
 
         Schema::create('city', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('cityName');
             $table->integer('zipCode');
             $table->foreignId('county_id')->constrained('county');
-            $table->timestamps();
         });
 
 

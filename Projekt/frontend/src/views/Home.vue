@@ -27,14 +27,14 @@
     </section>
     
     <section class="data-section">
-      <h2>Adatok az adatbázisból</h2>
+      <h2>Adatok</h2>
       <DataDisplay />
     </section>
   </div>
 </template>
 
 <script>
-import DataDisplay from '@/components/DataDisplay.vue'
+import DataDisplay from '@/components/UserDisplay.vue'
 
 export default {
   name: 'Home',
