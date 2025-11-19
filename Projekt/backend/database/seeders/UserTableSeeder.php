@@ -7,6 +7,10 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
+use App\Enums\UserType;
+use App\Enums\UserStatus;
+
+
 class UserTableSeeder extends Seeder
 {
     public function run()
@@ -20,11 +24,11 @@ class UserTableSeeder extends Seeder
                 'address' => 'Admin utca 1.',
                 'email' => 'admin@iskola.hu',
                 'password' => Hash::make('admin123'),
-                'userType' => 'Admin',
+                'userType' => UserType::Admin->value,
                 'rfidCard_id' => null,
                 'class_id' => null,
                 'group_id' => null,
-                'status' => 'active',
+                'status' => UserStatus::ACTIVE->value,
                 'hasDiscount' => false,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -49,11 +53,11 @@ class UserTableSeeder extends Seeder
                 'address' => $this->generateRandomAddress(),
                 'email' => strtolower($diak[1] . '.' . $diak[0] . '@iskola.hu'),
                 'password' => Hash::make('diak123'),
-                'userType' => 'Tanuló',
+                'userType' => UserType::TANULO->value,
                 'rfidCard_id' => $index + 1, 
                 'class_id' => rand(1, 2), 
                 'group_id' => rand(1, 2), 
-                'status' => 'active',
+                'status' => UserStatus::ACTIVE->value,
                 'hasDiscount' => (bool)rand(0, 1),
                 'created_at' => now(),
                 'updated_at' => now()
@@ -75,11 +79,11 @@ class UserTableSeeder extends Seeder
                 'address' => $this->generateRandomAddress(),
                 'email' => strtolower($tanar[1] . '.' . $tanar[0] . '@iskola.hu'),
                 'password' => Hash::make('tanar123'),
-                'userType' => 'Tanár',
+                'userType' => UserType::TANAR->value,
                 'rfidCard_id' => null,
                 'class_id' => null,
                 'group_id' => rand(1, 2),
-                'status' => 'active',
+                'status' => UserStatus::ACTIVE->value,
                 'hasDiscount' => false,
                 'created_at' => now(),
                 'updated_at' => now()
