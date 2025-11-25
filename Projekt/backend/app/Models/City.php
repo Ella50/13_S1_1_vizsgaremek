@@ -23,7 +23,7 @@ class City extends Model
     }
 
     // Kapcsolat User modellel
-    public function users()
+    public function user()
     {
         return $this->hasMany(User::class, 'city_id');
     }
