@@ -14,11 +14,21 @@
         <div class="login-box">
           <h1>Bejelentkezés</h1>
 
-          <div class="avatar"></div>
+          <form @submit.prevent="login">
+            <div>
+              <label>Email:</label>
+              <input type="email" v-model="email" required />
+            </div>
 
-          <input type="text" placeholder="Email" class="input" />
-          <input type="password" placeholder="Jelszó" class="input" />
+            <div>
+              <label>Jelszó:</label>
+              <input type="password" v-model="password" required />
+            </div>
 
+            <button type="submit">Belépés</button>
+
+            <p v-if="error" style="color:red">{{ error }}</p>
+          </form>
           <a class="forgot">Elfelejtett jelszó</a>
 
          <button class="login-btn" @click="login">Login</button>
@@ -34,14 +44,67 @@
   </div>
 </template>
 
-<script setup>
-import { useRouter } from 'vue-router'
-const router = useRouter()
+<script >
+  /*import { useRouter } from 'vue-router'
+  import axios from 'axios'
+  const router = useRouter()
 
-function login() {
-  // itt később majd bekötöd a backend validációt
-  router.push('/app')
-}
+  axios.post("http://localhost:8000/api/login", {
+    email: this.email,
+    password: this.password
+  })
+  .then(res => {
+    localStorage.setItem("token", res.data.token);
+  })
+  .catch(err => {
+    console.error(err);
+  });
+
+  axios.post("http://localhost:8000/api/login", {
+    email: this.email,
+    password: this.password
+  })
+  .then(res => {
+    localStorage.setItem("token", res.data.token)   // <-- ITT TÁROLÓD
+  })
+
+
+
+  function login() {
+    // itt később majd bekötöd a backend validációt
+    router.push('/app')
+  }*/
+import axios from "axios";
+
+export default {
+  data() {
+    return {
+      email: "",
+      password: "",
+      error: ""
+    };
+  },
+
+  methods: {
+    async login() {
+      try {
+        const res = await axios.post("http://localhost:8000/api/login", {
+          email: this.email,
+          password: this.password
+        });
+
+        // Token tárolása
+        localStorage.setItem("token", res.data.token);
+
+        // Sikeres bejelentkezés után pl. átirányítás
+        this.$router.push("/app");
+
+      } catch (err) {
+        this.error = "Hibás email vagy jelszó!";
+      }
+    }
+  }
+};
 </script>
 
 <style scoped>

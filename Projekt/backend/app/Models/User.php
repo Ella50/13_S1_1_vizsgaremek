@@ -7,9 +7,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\RFIDCard;
 use App\Models\City;
 use App\Models\Class;
+use Illuminate\Support\Facades\Hash;
 
 use Illuminate\Notifications\Notifiable;
-
+User::create([
+    'name' => 'Teszt User',
+    'email' => 'teszt@example.com',
+    'password' => Hash::make('1234')
+]);
 class User extends Model
 {
     use HasFactory;

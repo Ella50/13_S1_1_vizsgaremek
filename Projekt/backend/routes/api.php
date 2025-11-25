@@ -51,3 +51,6 @@ Route::get('/rfidcards', function () {
         'data' => \App\Models\RfidCard::all()
     ]);
 });
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
