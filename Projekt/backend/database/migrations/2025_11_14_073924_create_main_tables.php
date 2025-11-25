@@ -42,9 +42,8 @@ return new class extends Migration
     Schema::create('ingredient', function (Blueprint $table) {
         $table->id();
         $table->string('name')->unique();
-        $table->enum('status', array_column(IngredientType::cases(), 'value'))->default('Egyéb');
-        $table->integer('energyKcal')->nullable();
-        $table->integer('energyKj')->nullable();
+        $table->enum('type', array_column(IngredientType::cases(), 'value'))->default('Egyéb');
+        $table->integer('energy')->nullable();
         $table->integer('protein')->nullable();
         $table->integer('carbohydrate')->nullable();
         $table->integer('fat')->nullable();
@@ -52,7 +51,6 @@ return new class extends Migration
         $table->integer('sugar')->nullable();
         $table->integer('fiber')->nullable();
         $table->boolean('isAvailable')->default(true);
-        $table->timestamps();
     });
 
 
