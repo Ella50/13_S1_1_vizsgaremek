@@ -24,7 +24,7 @@ class UserTableSeeder extends Seeder
                 'address' => 'Admin utca 1.',
                 'email' => 'admin@iskola.hu',
                 'password' => Hash::make('admin123'),
-                'userType' => UserType::Admin->value,
+                'userType' => UserType::ADMIN->value,
                 'rfidCard_id' => null,
                 'class_id' => null,
                 'group_id' => null,
