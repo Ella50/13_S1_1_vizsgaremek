@@ -17,7 +17,7 @@ class RfidCard extends Model
         'isActive'
     ];
 
-    // Kapcsolat User modellel
+
     public function user()
     {
         return $this->hasOne(User::class, 'rfidCard_id');

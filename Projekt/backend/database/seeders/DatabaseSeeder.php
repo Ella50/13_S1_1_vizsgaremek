@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             UserHealthRestrictionTableSeeder::class,
             IngredientTableSeeder::class,
             IngredientAllergenTableSeeder::class,
+            InvoiceTableSeeder::class,
+            MealIngredientTableSeeder::class,
             
         ]);
     }

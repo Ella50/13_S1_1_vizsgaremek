@@ -5,9 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+
+/*
+User::create([
+    'name' => 'Teszt User',
+    'email' => 'teszt@example.com',
+    'password' => Hash::make('1234')
+]);*/
+class User extends Model
+
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
+
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -36,7 +46,7 @@ class User extends Authenticatable
         'updated_at'
     ];
 
-    // ENUM értékek definiálása
+    /* ENUM értékek definiálása
     const USER_TYPE_STUDENT = 'student';
     const USER_TYPE_TEACHER = 'teacher';
     const USER_TYPE_ADMIN = 'admin';
@@ -46,7 +56,7 @@ class User extends Authenticatable
     const STATUS_INACTIVE = 'inactive';
     const STATUS_SUSPENDED = 'suspended';
 
-    // ENUM opciók
+    ENUM opciók
     public static function getUserTypeOptions()
     {
         return [
@@ -64,7 +74,7 @@ class User extends Authenticatable
             self::STATUS_INACTIVE => 'Inaktív',
             self::STATUS_SUSPENDED => 'Felfüggesztett'
         ];
-    }
+    }*/
 
     // Jelszó titkosítás
     public function setPasswordAttribute($value)
