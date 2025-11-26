@@ -5,30 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
-/*
-User::create([
-    'name' => 'Teszt User',
-    'email' => 'teszt@example.com',
-    'password' => Hash::make('1234')
-]);*/
-class User extends Model
-
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
-
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    // Fontos: a tábla neve 'user'
     protected $table = 'user';
+
+    // Primary key
+    protected $primaryKey = 'id';
+
+    // Timestamps
+    public $timestamps = true;
 
     protected $hidden = [
         'password',
         'remember_token'
     ];
 
-     protected $fillable = [
+    protected $fillable = [
         'firstName',
         'lastName', 
         'thirdName',
@@ -46,43 +43,7 @@ class User extends Authenticatable
         'updated_at'
     ];
 
-    /* ENUM értékek definiálása
-    const USER_TYPE_STUDENT = 'student';
-    const USER_TYPE_TEACHER = 'teacher';
-    const USER_TYPE_ADMIN = 'admin';
-    const USER_TYPE_PARENT = 'parent';
-
-    const STATUS_ACTIVE = 'active';
-    const STATUS_INACTIVE = 'inactive';
-    const STATUS_SUSPENDED = 'suspended';
-
-    ENUM opciók
-    public static function getUserTypeOptions()
-    {
-        return [
-            self::USER_TYPE_STUDENT => 'Diák',
-            self::USER_TYPE_TEACHER => 'Tanár',
-            self::USER_TYPE_ADMIN => 'Adminisztrátor',
-            self::USER_TYPE_PARENT => 'Szülő'
-        ];
-    }
-
-    public static function getStatusOptions()
-    {
-        return [
-            self::STATUS_ACTIVE => 'Aktív',
-            self::STATUS_INACTIVE => 'Inaktív',
-            self::STATUS_SUSPENDED => 'Felfüggesztett'
-        ];
-    }*/
-
-    // Jelszó titkosítás
-    public function setPasswordAttribute($value)
-    {
-        $this->attributes['password'] = bcrypt($value);
-    }
-
-    // Kapcsolatok más modellekkel
+    // Kapcsolatok
     public function city()
     {
         return $this->belongsTo(City::class, 'city_id');
@@ -102,5 +63,4 @@ class User extends Authenticatable
     {
         return $this->belongsTo(RfidCard::class, 'rfidCard_id');
     }
-
 }

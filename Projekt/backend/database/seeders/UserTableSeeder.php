@@ -10,11 +10,22 @@ use Illuminate\Support\Facades\DB;
 use App\Enums\UserType;
 use App\Enums\UserStatus;
 
-
 class UserTableSeeder extends Seeder
 {
     public function run()
     {
+        // Foreign key ellenőrzések kikapcsolása
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        // User tábla ürítése (truncate helyett delete)
+        User::query()->delete();
+        
+        // Reset auto increment
+        DB::statement('ALTER TABLE user AUTO_INCREMENT = 1;');
+        
+        // Foreign key ellenőrzések visszakapcsolása
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $users = [
             [
                 'firstName' => 'Admin',
@@ -101,6 +112,6 @@ class UserTableSeeder extends Seeder
     private function generateRandomAddress()
     {
         $utcak = ['Kossuth', 'Petőfi', 'Rákóczi', 'Ady Endre', 'Béke', 'Szabadság'];
-        return $utcak[array_rand($utcak)] . ' ' . rand(1, 5) . '. utca';
+        return $utcak[array_rand($utcak)] . ' ' . rand(1, 50) . '.';
     }
 }

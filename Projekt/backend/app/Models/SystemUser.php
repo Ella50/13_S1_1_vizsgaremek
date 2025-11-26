@@ -1,5 +1,5 @@
 <?php
-namespace App\Models;
+/*namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -111,6 +111,4 @@ class User extends Model
 
     public function rfidCard()
     {
-        return $this->belongsTo(RfidCard::class, 'rfidCard_id');
-    }
-}
+      */

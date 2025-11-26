@@ -6,11 +6,15 @@ use App\Models\Meal;
 use Illuminate\Database\Seeder;
 use Illuminate\Validation\Rules\In;
 use PHPUnit\Framework\Constraint\Count;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         $this->call([
             CountyTableSeeder::class,
             CityTableSeeder::class,
@@ -28,5 +32,7 @@ class DatabaseSeeder extends Seeder
             MealIngredientTableSeeder::class,
             
         ]);
+
+         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }
