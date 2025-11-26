@@ -31,8 +31,6 @@
           </form>
           <a class="forgot">Elfelejtett jelszó</a>
 
-         <button class="login-btn" @click="login">Login</button>
-
 
           <p class="register">
             Még nincs fiókja?
@@ -91,6 +89,11 @@ export default {
         const res = await axios.post("http://localhost:8000/api/login", {
           email: this.email,
           password: this.password
+        },{
+          headers: {
+            'Content-Type': 'application/json',
+            //'Accept': 'application/json'
+          }
         });
 
         // Token tárolása

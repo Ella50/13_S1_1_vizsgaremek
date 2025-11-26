@@ -16,29 +16,33 @@ class AuthController extends Controller
         return response()->json(User::all());
     }
 
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
+            "name" => $request->name,
+            "email" => $request->email,
+            "password" => Hash::make($request->password)
         ]);
 
-        return response()->json(['user' => $user], 201);
+        return response()->json([
+            "message" => "Sikeres regisztráció",
+            "user" => $user
+        ]);
     }
 
-    public function login(Request $request) {
-        $user = User::where('email', $request->email)->first();
+    public function login(Request $request)
+    {
+        $user = User::where("email", $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Hibás adatok'], 401);
+            return response()->json(["message" => "Hibás email vagy jelszó"], 401);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-        
+        $token = $user->createToken("auth_token")->plainTextToken;
+
         return response()->json([
-            'message' => 'Sikeres bejelentkezés',
-            'token' => $token
+            "message" => "Sikeres bejelentkezés",
+            "token" => $token
         ]);
     }
-
 }
