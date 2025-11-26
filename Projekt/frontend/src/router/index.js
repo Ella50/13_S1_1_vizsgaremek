@@ -1,46 +1,29 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import StarterPage from '@/views/StarterPage.vue'
-import Home from '@/views/Home.vue'
-import Contact from '@/views/Contact.vue'
-import Users from '@/views/Users.vue'
-import App from '@/App.vue'
-
+import AuthService from '@/services/AuthService'
 
 const routes = [
-  /*{
+  {
     path: '/',
+    redirect: '/dashboard'
+  },
+  {
+    path: '/login',
     name: 'Login',
-    component: Login
-  },*/
+    component: () => import('@/views/Login.vue'),
+    meta: { requiresGuest: true }
+  },
   {
-    path: '/app',
-    name: 'App',
-    component: App,
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/views/Dashboard.vue'),
     meta: { requiresAuth: true }
-  },
-  {
-    path: '/',
-    name: 'StarterPage',
-    component: StarterPage
-  },
-  {
-    path: '/home',
-    name: 'Home',
-    component: Home,
-     meta: { requiresAuth: true }
-  },
-  {
-    path: '/contact',
-    name: 'Contact',
-    component: Contact
-  },
-    {
-    path: '/users',
-    name: 'Users',
-    component: Users,
-    meta: { requiresAuth: true }
-  },
- 
+  }
 ]
 
 const router = createRouter({
@@ -48,14 +31,17 @@ const router = createRouter({
   routes
 })
 
-// Route guard - csak bejelentkezett felhasználók
+// Route guard
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem('authToken')
-  
+  const isAuthenticated = AuthService.isAuthenticated()
+
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/')
+    next('/login')
+  } else if (to.meta.requiresGuest && isAuthenticated) {
+    next('/dashboard')
   } else {
     next()
   }
 })
+
 export default router
