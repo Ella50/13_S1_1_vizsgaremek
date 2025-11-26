@@ -16,7 +16,7 @@ class StudentClass extends Model
         
     ];
 
-    // Kapcsolat User modellel
+
     public function students()
     {
         return $this->hasMany(User::class, 'class_id')->where('userType', 'Tanuló');

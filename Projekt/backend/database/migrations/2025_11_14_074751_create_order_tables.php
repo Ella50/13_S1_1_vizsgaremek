@@ -2,7 +2,7 @@
 
 use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\UserType;
 use App\Enums\SelectedOption;
 
@@ -37,8 +37,8 @@ return new class extends Migration
         $table->date('issueDate');
         $table->date('dueDate');
         $table->decimal('totalAmount', 10, 2);
-        $table->string('paymentMethod')->nullable();
-        $table->enum('status', array_column(InvoiceStatus::cases(), 'value'))->default('Hiányzik');
+        $table->enum('paymentMethod', array_column(PaymentMethod::cases(), 'value'))->default('Banki utalás');;
+        $table->enum('status', array_column(InvoiceStatus::cases(), 'value'))->default('Generálva');
         $table->string('transactionId')->nullable();
         $table->timestamp('paidAt')->nullable();
         $table->timestamps();

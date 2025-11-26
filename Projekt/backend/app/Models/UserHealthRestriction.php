@@ -17,7 +17,7 @@ class UserHealthRestriction extends Model
 
     ];
 
-    // Kapcsolat User modellel
+
     public function allergen()
     {
         return $this->belongsTo(Allergen::class, 'allergen_id');

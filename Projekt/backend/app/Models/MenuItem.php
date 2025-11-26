@@ -17,9 +17,19 @@ class MenuItem extends Model
         'optionB',
         'day'
     ];
-    /*
-    public function meal()
+    
+    public function soup()
     {
-        return $this->hasOne(Meal::class, 'rfidCard_id');
-    }*/
+        return $this->belongsTo(Meal::class, 'soup');
+    }
+
+    public function optionA()
+    {
+        return $this->belongsTo(Meal::class, 'optionA');
+    }
+
+    public function optionB()
+    {
+        return $this->belongsTo(Meal::class, 'optionB');
+    }
 }

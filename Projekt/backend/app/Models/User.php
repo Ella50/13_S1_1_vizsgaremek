@@ -10,11 +10,12 @@ use App\Models\Class;
 use Illuminate\Support\Facades\Hash;
 
 use Illuminate\Notifications\Notifiable;
+/*
 User::create([
     'name' => 'Teszt User',
     'email' => 'teszt@example.com',
     'password' => Hash::make('1234')
-]);
+]);*/
 class User extends Model
 {
     use HasFactory;
@@ -38,7 +39,7 @@ class User extends Model
         'updated_at'
     ];
 
-    // ENUM értékek definiálása
+    /* ENUM értékek definiálása
     const USER_TYPE_STUDENT = 'student';
     const USER_TYPE_TEACHER = 'teacher';
     const USER_TYPE_ADMIN = 'admin';
@@ -48,7 +49,7 @@ class User extends Model
     const STATUS_INACTIVE = 'inactive';
     const STATUS_SUSPENDED = 'suspended';
 
-    // ENUM opciók
+    ENUM opciók
     public static function getUserTypeOptions()
     {
         return [
@@ -66,7 +67,7 @@ class User extends Model
             self::STATUS_INACTIVE => 'Inaktív',
             self::STATUS_SUSPENDED => 'Felfüggesztett'
         ];
-    }
+    }*/
 
     // Jelszó titkosítás
     public function setPasswordAttribute($value)
