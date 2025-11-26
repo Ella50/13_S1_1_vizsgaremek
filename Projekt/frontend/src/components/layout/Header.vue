@@ -11,6 +11,7 @@
           <li><router-link to="/" class="nav-link">Főoldal</router-link></li>
           <li><router-link to="/users" class="nav-link">Felhasználók</router-link></li>
           <li><router-link to="/contact" class="nav-link">Kapcsolat</router-link></li>
+          <li><button @click="logout" class="nav-link logout-btn">Kijelentkezés</button></li>
         </ul>
       </nav>
     </div>
@@ -28,12 +29,23 @@ export default {
   methods: {
     toggleMobileMenu() {
       this.mobileMenuOpen = !this.mobileMenuOpen
+    },
+    logout() {
+      this.$emit('logout')
     }
   }
 }
 </script>
 
 <style scoped>
+
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
 .header {
   background-color: #ffd18f;
   color: #8f2127;

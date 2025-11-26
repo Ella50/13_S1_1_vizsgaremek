@@ -1,7 +1,38 @@
 <template>
-  <div id="login">
+
+  <div class="starter-page">
+    <div class="login-container">
+      <h1>Bejelentkezés</h1>
+      <form @submit.prevent="handleLogin">
+        <div class="form-group">
+          <label>Email:</label>
+          <input v-model="loginForm.email" type="email" placeholder="pelda@iskola.hu" required>
+        </div>
+        <div class="form-group">
+          <label>Jelszó:</label>
+          <input v-model="loginForm.password" type="password" placeholder="diak123" required>
+        </div>
+        <button type="submit" class="login-btn">Bejelentkezés</button>
+      </form>
+      
+      <div v-if="error" class="error">
+        {{ error }}
+      </div>
+      
+      <div class="demo-info">
+        <p><strong>Demo bejelentkezés:</strong></p>
+        <p>Email: bence.kovacs@iskola.hu</p>
+        <p>Jelszó: diak123</p>
+      </div>
+    </div>
+  </div>
+
+
+
+
+ <!--<div id="login">
     <div class="login-wrapped">
-      <!-- Bal oldal -->
+
       <div class="left-side">
         <img src="/public/eMenza.png" alt="eMenza Logo" class="logo" />
         <img src="/public/falevel.png" class="leaf leaf-top-left" />
@@ -9,7 +40,7 @@
         <img src="/public/abrosz.png" class="picnic" />
       </div>
 
-      <!-- Jobb oldal -->
+
       <div class="right-side">
         <div class="login-box">
           <h1>Bejelentkezés</h1>
@@ -40,9 +71,55 @@
       </div>
     </div>
   </div>
+  -->
 </template>
 
 <script >
+
+import { userService } from '@/services/userService.js'
+
+export default {
+  name: 'StarterPage',
+  inject: ['emitter'], // ✅ INJECT használata
+  data() {
+    return {
+      loginForm: {
+        email: '',
+        password: ''
+      },
+      error: ''
+    }
+  },
+  methods: {
+    async handleLogin() {
+      try {
+        // Mock bejelentkezés
+        const users = await userService.getAll()
+        const user = users.data.find(u => 
+          u.email === this.loginForm.email && 
+          this.loginForm.password === 'diak123'
+        )
+        
+        if (user) {
+          // Token mentése
+          localStorage.setItem('authToken', 'mock-token')
+          localStorage.setItem('userData', JSON.stringify(user))
+          
+          // Bejelentkezési esemény
+          this.emitter.emit('login') // ✅ INJECT-elt emitter
+          
+          // Átirányítás
+          this.$router.push('/home')
+        } else {
+          this.error = 'Hibás email vagy jelszó! Használd a demo adatokat.'
+        }
+      } catch (err) {
+        this.error = 'Hiba történt a bejelentkezés során'
+      }
+    }
+  }
+}
+
   /*import { useRouter } from 'vue-router'
   import axios from 'axios'
   const router = useRouter()
@@ -72,6 +149,8 @@
     // itt később majd bekötöd a backend validációt
     router.push('/app')
   }*/
+
+  /*
 import axios from "axios";
 
 export default {
@@ -107,11 +186,86 @@ export default {
       }
     }
   }
-};
+};*/
 </script>
 
 <style scoped>
-/* --- LAYOUT --- */
+
+.starter-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 400px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.login-btn {
+  width: 100%;
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.login-btn:hover {
+  background: #5a6fd8;
+}
+
+.error {
+  background: #fee;
+  color: #c33;
+  padding: 0.75rem;
+  border-radius: 5px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.demo-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f0f8ff;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+/* 
 .login-wrapped{
   display: flex;
   height: 100vh;
@@ -141,7 +295,7 @@ export default {
   width: 320px;
 }
 
-/* --- LOGO & DEKOR --- */
+
 .logo {
   width: 300px;
 }
@@ -170,7 +324,7 @@ export default {
   transform: rotate(-10deg);
 }
 
-/* --- KÖZPONTI DOBOZ --- */
+
 h1 {
   color: #9b1c1c;
   margin-bottom: 20px;
@@ -206,7 +360,6 @@ h1 {
   font-size: 13px;
 }
 
-/* --- LOGIN GOMB --- */
 .login-btn {
   width: 100%;
   padding: 12px;
@@ -235,7 +388,7 @@ h1 {
   cursor: pointer;
 }
 
-/* --- RESPONSIVE --- */
+
 @media (max-width: 900px) {
   .login-wrapper {
     flex-direction: column;
@@ -267,5 +420,5 @@ h1 {
     width: 70px;
     height: 70px;
   }
-}
+}*/
 </style>
