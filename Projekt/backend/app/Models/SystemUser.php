@@ -1,24 +1,45 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\RFIDCard;
+use App\Models\City;
+use App\Models\Class;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+
+User::create([
+    'name' => 'Teszt User',
+    'email' => 'teszt@example.com',
+    'password' => Hash::make('1234')
+]);
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'user';
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
 
     protected $hidden = [
         'password',
-        'remember_token'
+        'remember_token',
     ];
+}
 
-     protected $fillable = [
+class User extends Model
+{
+    use HasFactory;
+
+    protected $table = 'user'; 
+    protected $fillable = [
         'firstName',
         'lastName', 
         'thirdName',
@@ -92,5 +113,4 @@ class User extends Authenticatable
     {
         return $this->belongsTo(RfidCard::class, 'rfidCard_id');
     }
-
 }
