@@ -1,47 +1,49 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import AuthService from '@/services/AuthService'
+import Login from '../components/auth/Login.vue'
+import Register from '../components/auth/Register.vue'
+import Dashboard from '../components/Dashboard.vue'
 
 const routes = [
-  {
-    path: '/',
-    redirect: '/dashboard'
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/views/Login.vue'),
-    meta: { requiresGuest: true }
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: () => import('@/views/Register.vue'),
-    meta: { requiresGuest: true }
-  },
-  {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/views/Dashboard.vue'),
-    meta: { requiresAuth: true }
-  }
+    {
+        path: '/login',
+        name: 'login',
+        component: Login,
+        meta: { guest: true }
+    },
+    {
+        path: '/register',
+        name: 'register',
+        component: Register,
+        meta: { guest: true }
+    },
+    {
+        path: '/dashboard',
+        name: 'dashboard',
+        component: Dashboard,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/',
+        redirect: '/login'
+    }
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes
+    history: createWebHistory(),
+    routes
 })
 
-// Route guard
+// Auth middleware
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = AuthService.isAuthenticated()
-
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-  } else if (to.meta.requiresGuest && isAuthenticated) {
-    next('/dashboard')
-  } else {
-    next()
-  }
+    const token = localStorage.getItem('auth_token')
+    
+    if (to.meta.requiresAuth && !token) {
+        next('/login')
+    } else if (to.meta.guest && token) {
+        next('/dashboard')
+    } else {
+        next()
+    }
 })
 
 export default router
