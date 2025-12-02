@@ -10,35 +10,35 @@ return new class extends Migration
     public function up(): void
     {
 
-        Schema::create('county', function (Blueprint $table) {
+        Schema::create('counties', function (Blueprint $table) {
             $table->id();
             $table->string('countyName');
         });
 
 
-        Schema::create('city', function (Blueprint $table) {
+        Schema::create('cities', function (Blueprint $table) {
             $table->id();
             $table->string('cityName');
             $table->integer('zipCode');
-            $table->foreignId('county_id')->constrained('county');
+            $table->foreignId('county_id')->constrained('counties');
         });
 
 
-        Schema::create('class', function (Blueprint $table) {
+        Schema::create('classes', function (Blueprint $table) {
             $table->id();
             $table->string('className')->unique();
             $table->timestamps();
         });
 
  
-        Schema::create('group', function (Blueprint $table) {
+        Schema::create('groups', function (Blueprint $table) {
             $table->id();
             $table->string('groupName')->unique();
             $table->timestamps();
         });
 
 
-        Schema::create('rfidCard', function (Blueprint $table) {
+        Schema::create('rfidCards', function (Blueprint $table) {
             $table->id();
             $table->integer('cardNumber')->unique();
             $table->timestamp('lastUsedAt')->nullable();
@@ -47,7 +47,7 @@ return new class extends Migration
         });
 
 
-        Schema::create('allergen', function (Blueprint $table) {
+        Schema::create('allergens', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->string('icon')->nullable();

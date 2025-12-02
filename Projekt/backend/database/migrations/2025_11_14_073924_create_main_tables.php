@@ -20,7 +20,7 @@ return new class extends Migration
     public function up(): void
     {
 
-    Schema::create('meal', function (Blueprint $table) {
+    Schema::create('meals', function (Blueprint $table) {
         $table->id();
         $table->string('mealName');
         $table->enum('mealType', ['Leves', 'Főétel', 'Bónusz']);
@@ -29,20 +29,21 @@ return new class extends Migration
         $table->timestamps();
     });
 
-    Schema::create('menuItem', function (Blueprint $table) {
+    Schema::create('menuItems', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('soup')->constrained('meal');
-        $table->foreignId('optionA')->constrained('meal');
-        $table->foreignId('optionB')->constrained('meal');
+        $table->foreignId('soup')->constrained('meals');
+        $table->foreignId('optionA')->constrained('meals');
+        $table->foreignId('optionB')->constrained('meals');
         $table->date('day');
         $table->timestamps();
     });
 
 
-    Schema::create('ingredient', function (Blueprint $table) {
+    Schema::create('ingredients', function (Blueprint $table) {
         $table->id();
         $table->string('name')->unique();
-        $table->enum('type', array_column(IngredientType::cases(), 'value'))->default('Egyéb');
+        //$table->enum('type', array_column(IngredientType::cases(), 'value'))->default('Egyéb');
+        $table->enum('type', ['Egyéb', 'Hús', 'Tejtermék', 'Zöldség'])->default('Egyéb');
         $table->integer('energy')->nullable();
         $table->integer('protein')->nullable();
         $table->integer('carbohydrate')->nullable();
@@ -54,29 +55,31 @@ return new class extends Migration
     });
 
 
-    Schema::create('user', function (Blueprint $table) {
+    Schema::create('users', function (Blueprint $table) {
         $table->id();
         $table->string('firstName');
         $table->string('lastName');
         $table->string('thirdName')->nullable();
-        $table->foreignId('city_id')->constrained('city');
+        $table->foreignId('city_id')->constrained('cities');
         $table->string('address');
         $table->string('email')->unique();
-        $table->string('password');
-        $table->enum('userType', array_column(UserType::cases(), 'value'))->default('Tanuló');
-        $table->foreignId('rfidCard_id')->nullable()->constrained('rfidCard'); 
-        $table->foreignId('class_id')->nullable()->constrained('class');
-        $table->foreignId('group_id')->nullable()->constrained('group'); 
-        $table->enum('status', array_column(UserStatus::cases(), 'value'))->default('inactive');
+        $table->string('password_hash');
+        //$table->enum('userType', array_column(UserType::cases(), 'value'))->default('Tanuló');
+        $table->enum('userType', ['Tanuló', 'Külsős', 'Tanár', 'Dolgozó', 'Admin', 'Konyha'])->default('Tanuló');
+        $table->foreignId('rfidCard_id')->nullable()->constrained('rfidCards'); 
+        $table->foreignId('class_id')->nullable()->constrained('classes');
+        $table->foreignId('group_id')->nullable()->constrained('groups'); 
+        //$table->enum('status', array_column(UserStatus::cases(), 'value'))->default('inactive');
+        $table->enum('userStatus', ['inactive', 'active', 'suspended'])->default('inactive');
         $table->boolean('hasDiscount')->default(false);
         $table->timestamps();
 
     });
 
-    Schema::create('schedule', function (Blueprint $table) {
+    Schema::create('schedules', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('class_id')->constrained('class');
-        $table->foreignId('group_id')->nullable()->constrained('group');
+        $table->foreignId('class_id')->constrained('classes');
+        $table->foreignId('group_id')->nullable()->constrained('groups');
         $table->date('from');
         $table->date('to');
         $table->timestamps();

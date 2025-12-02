@@ -1,109 +1,76 @@
-<?php 
+<?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use App\Enums\UserType;
-use App\Enums\UserStatus;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'firstName' => 'required|string|max:255',
+            'firsName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
-            'email' => 'required|email|unique:user,email',
-            'password' => 'required|string|min:8|confirmed',
-            'city_id' => 'required|integer|exists:city,id',
-            'address' => 'required|string|max:255',
-            'userType' => 'required|in:Tanuló,Tanár,Admin,Külsős,Dolgozó,Konyha',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'userType' => 'required|in:Tanuló,Külsős,Tanár,Dolgozó',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validációs hiba',
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json($validator->errors(), 422);
         }
 
-        try {
-            $user = User::create([
-                "firstName" => $request->firstName,
-                "lastName" => $request->lastName,
-                "email" => $request->email,
-                "password" => Hash::make($request->password), // Csak itt hash-eljük
-                "city_id" => $request->city_id,
-                "address" => $request->address,
-                "userType" => $request->userType,
-                "status" => UserStatus::ACTIVE->value,
-                "hasDiscount" => false
-            ]);
+        $user = User::create([
+            'firstName' => $request->first_name,
+            'lastName' => $request->last_name,
+            'email' => $request->email,
+            'password_hash' => Hash::make($request->password),
+            'userType' => $request->user_type,
+            'userStatus' => 'inactive', // Adminnak kell jóváhagynia
+        ]);
 
-            $token = $user->createToken("auth_token")->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json([
-                "message" => "Sikeres regisztráció",
-                "user" => $user,
-                "token" => $token
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                "message" => "Hiba történt a regisztráció során",
-                "error" => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'user' => $user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'message' => 'Regisztráció sikeres. Várja az admin jóváhagyását.'
+        ]);
     }
 
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => 'required',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                "message" => "Validációs hiba",
-                "errors" => $validator->errors()
-            ], 422);
-        }
+        $user = User::where('email', $request->email)->first();
 
-        $user = User::where("email", $request->email)->first();
-
-        if (!$user) {
+        if (!$user || !Hash::check($request->password, $user->password_hash)) {
             return response()->json([
-                "message" => "Hibás email vagy jelszó"
+                'message' => 'Hibás bejelentkezési adatok'
             ], 401);
         }
 
-        // Hash ellenőrzés - most már helyesen működik
-        if (!Hash::check($request->password, $user->password)) {
+        // Ellenőrizzük, hogy aktív-e
+        if ($user->status !== 'active') {
             return response()->json([
-                "message" => "Hibás email vagy jelszó"
-            ], 401);
-        }
-
-        // Ellenőrizzük, hogy aktív-e a felhasználó
-        if ($user->status !== UserStatus::ACTIVE->value) {
-            return response()->json([
-                "message" => "A fiók nem aktív. Kérjük, lépj kapcsolatba az adminisztrátorral."
+                'message' => 'Felhasználó nincs aktiválva. Várja az admin jóváhagyását.'
             ], 403);
         }
 
-        $token = $user->createToken("auth_token")->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            "message" => "Sikeres bejelentkezés",
-            "user" => $user,
-            "token" => $token,
-            "token_type" => "Bearer"
+            'user' => $user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
         ]);
     }
 
@@ -112,18 +79,12 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            "message" => "Sikeres kijelentkezés"
+            'message' => 'Sikeres kijelentkezés'
         ]);
     }
 
-    public function user(Request $request)
+    public function me(Request $request)
     {
-        return response()->json([
-            "user" => $request->user()->load(['city', 'studentClass', 'group', 'rfidCard'])
-        ]);
-    }
-
-    public function users(){
-        return response()->json(User::all());
+        return response()->json($request->user());
     }
 }

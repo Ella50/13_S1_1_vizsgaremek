@@ -11,14 +11,10 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    // Fontos: a tábla neve 'user'
-    protected $table = 'user';
 
-    // Primary key
-    protected $primaryKey = 'id';
-
-    // Timestamps
-    public $timestamps = true;
+    
+   /* protected $primaryKey = 'id';
+    public $timestamps = true;*/
 
     protected $hidden = [
         'password',
@@ -37,13 +33,25 @@ class User extends Authenticatable
         'rfidCard_id', 
         'class_id',
         'group_id',
-        'status',
-        'hasDiscount',
-        'created_at',
-        'updated_at'
+        'userStatus',
     ];
 
+        protected $casts = [
+        'has_discount' => 'boolean',
+    ];
+
+
+    // Jelszó getter átállítása
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
+
+
+
+
     // Kapcsolatok
+    /*
     public function city()
     {
         return $this->belongsTo(City::class, 'city_id');
@@ -63,4 +71,5 @@ class User extends Authenticatable
     {
         return $this->belongsTo(RfidCard::class, 'rfidCard_id');
     }
+    */
 }
