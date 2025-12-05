@@ -2,24 +2,37 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Meal;
 use Illuminate\Database\Seeder;
+use Illuminate\Validation\Rules\In;
+use PHPUnit\Framework\Constraint\Count;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
+    public function run()
     {
-        // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        $this->call([
+            CountyTableSeeder::class,
+            CityTableSeeder::class,
+            ClassTableSeeder::class,
+            GroupTableSeeder::class,
+            RfidCardTableSeeder::class,
+            UserTableSeeder::class,
+            MealTableSeeder::class,
+            MenuItemTableSeeder::class,
+            AllergenTableSeeder::class,
+            UserHealthRestrictionTableSeeder::class,
+            IngredientTableSeeder::class,
+            IngredientAllergenTableSeeder::class,
+            InvoiceTableSeeder::class,
+            MealIngredientTableSeeder::class,
+            
         ]);
+
+         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

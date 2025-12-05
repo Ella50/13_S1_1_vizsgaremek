@@ -1,47 +1,76 @@
 <template>
-<div class="starter-page">
-    <div class="login-container">
-      <h1>Bejelentkezés</h1>
-      <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label>Email:</label>
-          <input v-model="loginForm.email" type="email" placeholder="pelda@iskola.hu" required>
-        </div>
-        <div class="form-group">
-          <label>Jelszó:</label>
-          <input v-model="loginForm.password" type="password" placeholder="diak123" required>
-        </div>
-        <button type="submit" class="login-btn">Bejelentkezés</button>
-      </form>
-      
-      <div v-if="error" class="error">
-        {{ error }}
+  <div class="login-container">
+    <h1>Bejelentkezés</h1>
+    
+    <!-- A form submit eseménye a "login" metódust hívja meg -->
+    <form @submit.prevent="login"> 
+      <div class="input-group">
+        <label for="email">Email</label>
+        <!-- Visszakötve a "email" ref változóra -->
+        <input
+          id="email"
+          type="email"
+          v-model="email"
+          placeholder="Add meg az email címed"
+          required
+        />
       </div>
+
+      <div class="input-group">
+        <label for="password">Jelszó</label>
+        <!-- Visszakötve a "password" ref változóra -->
+        <input
+          id="password"
+          type="password"
+          v-model="password"
+          placeholder="Add meg a jelszót"
+          required
+        />
+      </div>
+
+      <button type="submit">Bejelentkezés</button>
+    </form>
+
+    <!-- Hibaüzenet megjelenítése, ha van -->
+    <div v-if="errorMessage" class="error">
+      {{ errorMessage }}
     </div>
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
 
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "http://localhost:8000";
+// A router példányosítása a setup scope-on belül
+const router = useRouter()
 
-export async function login(email, password) {
-  await axios.get('/sanctum/csrf-cookie');
+// Reakítv állapotok definiálása
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('') // Hozzáadva a hibaüzenet kezeléséhez
 
-  const response = await axios.post('/api/login', {
-    email,
-    password
-  });
+// A bejelentkezési logika egy függvényben
+const login = async () => {
+  try {
+    // Használhatod a lokális hostot, ha szükséges, vagy relatív utat
+    const response = await axios.post("http://localhost:8000/api/login", {
+      email: email.value,
+      password: password.value
+    })
 
-  localStorage.setItem('token', response.data.token);
+    // Token mentése és átirányítás
+    localStorage.setItem("token", response.data.token)
+    console.log("Login successful:", response.data)
+    router.push('/dashboard') // Átirányítás a dashboard-ra
 
-  axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-
-  return response.data.user;
+  } catch (error) {
+    // Hiba esetén beállítjuk a hibaüzenetet
+    console.error("Login failed:", error.response?.data ?? error)
+    errorMessage.value = "Hibás email vagy jelszó! Kérlek ellenőrizd a bejelentkezési adatokat."
+  }
 }
-
 </script>
 
 <style scoped>

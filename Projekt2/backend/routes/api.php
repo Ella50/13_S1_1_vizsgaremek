@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 
 // PUBLIC ROUTES
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']); 
 
 // PROTECTED ROUTES (Token szükséges)
 Route::middleware('auth:sanctum')->group(function () {
