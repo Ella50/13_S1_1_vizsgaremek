@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 
+
+
 Route::prefix('v1')->group(function () {
     // Nyilvános végpontok
     Route::post('/register', [AuthController::class, 'register']);
