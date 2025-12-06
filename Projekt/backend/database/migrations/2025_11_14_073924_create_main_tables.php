@@ -60,10 +60,10 @@ return new class extends Migration
         $table->string('firstName');
         $table->string('lastName');
         $table->string('thirdName')->nullable();
-        $table->foreignId('city_id')->constrained('cities');
-        $table->string('address');
+        $table->foreignId('city_id')->nullable()->constrained('cities');
+        $table->string('address')->nullable();
         $table->string('email')->unique();
-        $table->string('password_hash');
+        $table->string('password');
         //$table->enum('userType', array_column(UserType::cases(), 'value'))->default('Tanuló');
         $table->enum('userType', ['Tanuló', 'Külsős', 'Tanár', 'Dolgozó', 'Admin', 'Konyha'])->default('Tanuló');
         $table->foreignId('rfidCard_id')->nullable()->constrained('rfidCards'); 

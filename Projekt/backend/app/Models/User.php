@@ -11,34 +11,34 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory;
 
     protected $fillable = [
-        'first_name',
-        'last_name',
-        'third_name',
+        'firstName',
+        'lastName',
+        'thirdName',
         'city_id',
         'address',
         'email',
-        'password_hash',
-        'user_type',
-        'rfid_card_id',
+        'password',
+        'userType',
+        'rfidCard_id',
         'class_id',
         'group_id',
-        'status',
-        'has_discount',
+        'userStatus',
+        'hasDiscount',
     ];
 
     protected $hidden = [
-        'password_hash',
+        'password',
         'remember_token',
     ];
 
     protected $casts = [
-        'has_discount' => 'boolean',
+        'hasDiscount' => 'boolean',
     ];
 
     // Jelszó mező átnevezése
     public function getAuthPassword()
     {
-        return $this->password_hash;
+        return $this->password;
     }
 
     // Kapcsolatok

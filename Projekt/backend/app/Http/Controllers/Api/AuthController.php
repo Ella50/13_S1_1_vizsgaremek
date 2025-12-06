@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log; // Naplózáshoz
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -17,11 +17,11 @@ class AuthController extends Controller
         
         try {
             $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
+                'firstName' => 'required|string|max:255',
+                'lastName' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
-                'user_type' => 'required|in:Tanuló,Külsős,Tanár,Dolgozó',
+                'userType' => 'required|in:Tanuló,Külsős,Tanár,Dolgozó',
             ]);
 
             if ($validator->fails()) {
@@ -33,12 +33,20 @@ class AuthController extends Controller
             }
 
             $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
+                'firstName' => $request->firstName,      
+                'lastName' => $request->lastName,  
                 'email' => $request->email,
-                'password_hash' => Hash::make($request->password),
-                'user_type' => $request->user_type,
-                'status' => 'inactive',
+                'password' => Hash::make($request->password),
+                'userType' => $request->userType,      
+                'userStatus' => 'inactive',
+                // A többi mező nullable, így automatikusan null lesz
+                'city_id' => null,
+                'address' => null,
+                'thirdName' => null,
+                'rfidCard_id' => null,
+                'class_id' => null,
+                'group_id' => null,
+                'hasDiscount' => false,
             ]);
 
             Log::info('Felhasználó létrehozva', ['user_id' => $user->id]);
@@ -47,9 +55,16 @@ class AuthController extends Controller
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
-                'user' => $user,
-                'access_token' => $token,
-                'token_type' => 'Bearer',
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'firstName' => $user->firstName,
+                    'lastName' => $user->lastName,
+                    'email' => $user->email,
+                    'userType' => $user->userType,
+                    'userStatus' => $user->userStatus
+                ],
+                'token' => $token,
                 'message' => 'Regisztráció sikeres. Várja az admin jóváhagyását.'
             ], 201);
 
@@ -60,6 +75,7 @@ class AuthController extends Controller
             ]);
             
             return response()->json([
+                'success' => false,
                 'message' => 'Szerver hiba történt',
                 'error' => $e->getMessage()
             ], 500);
@@ -81,21 +97,25 @@ class AuthController extends Controller
             if (!$user) {
                 Log::warning('Felhasználó nem található', ['email' => $request->email]);
                 return response()->json([
+                    'success' => false,
                     'message' => 'Hibás bejelentkezési adatok'
                 ], 401);
             }
 
-            if (!Hash::check($request->password, $user->password_hash)) {
+            // JAVÍTVA: 'password' mezőt ellenőrizzük, nem 'password_hash'-t!
+            if (!Hash::check($request->password, $user->password)) {
                 Log::warning('Hibás jelszó', ['email' => $request->email]);
                 return response()->json([
+                    'success' => false,
                     'message' => 'Hibás bejelentkezési adatok'
                 ], 401);
             }
 
             // Ellenőrizzük, hogy aktív-e
-            if ($user->status !== 'active') {
+            if ($user->userStatus !== 'active') {
                 Log::warning('Inaktív felhasználó', ['user_id' => $user->id]);
                 return response()->json([
+                    'success' => false,
                     'message' => 'Felhasználó nincs aktiválva. Várja az admin jóváhagyását.'
                 ], 403);
             }
@@ -105,9 +125,16 @@ class AuthController extends Controller
             Log::info('Sikeres bejelentkezés', ['user_id' => $user->id]);
 
             return response()->json([
-                'user' => $user,
-                'access_token' => $token,
-                'token_type' => 'Bearer',
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'firstName' => $user->firstName,
+                    'lastName' => $user->lastName,
+                    'email' => $user->email,
+                    'userType' => $user->userType,
+                    'userStatus' => $user->userStatus
+                ],
+                'token' => $token,
             ]);
 
         } catch (\Exception $e) {
@@ -117,6 +144,7 @@ class AuthController extends Controller
             ]);
             
             return response()->json([
+                'success' => false,
                 'message' => 'Szerver hiba történt',
                 'error' => $e->getMessage()
             ], 500);
@@ -130,6 +158,7 @@ class AuthController extends Controller
             Log::info('Sikeres kijelentkezés', ['user_id' => $request->user()->id]);
             
             return response()->json([
+                'success' => true,
                 'message' => 'Sikeres kijelentkezés'
             ]);
         } catch (\Exception $e) {
@@ -138,6 +167,7 @@ class AuthController extends Controller
             ]);
             
             return response()->json([
+                'success' => false,
                 'message' => 'Hiba történt a kijelentkezés során'
             ], 500);
         }
@@ -145,6 +175,9 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json([
+            'success' => true,
+            'user' => $request->user()
+        ]);
     }
 }

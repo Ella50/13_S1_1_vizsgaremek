@@ -5,11 +5,11 @@
             <form @submit.prevent="handleRegister">
                 <div class="form-group">
                     <label>Keresztnév</label>
-                    <input type="text" v-model="form.first_name" required>
+                    <input type="text" v-model="form.firstName" required>
                 </div>
                 <div class="form-group">
                     <label>Vezetéknév</label>
-                    <input type="text" v-model="form.last_name" required>
+                    <input type="text" v-model="form.lastName" required>
                 </div>
                 <div class="form-group">
                     <label>Email cím (iskolai)</label>
@@ -53,12 +53,12 @@ export default {
     data() {
         return {
             form: {
-                first_name: '',
-                last_name: '',
+                firstName: '',
+                lastName: '',
                 email: '',
                 password: '',
                 password_confirmation: '',
-                user_type: 'Tanuló'
+                userType: 'Tanuló'
             },
             loading: false,
             error: '',
@@ -81,12 +81,12 @@ export default {
                 
                 this.success = response.data.message
                 this.form = {
-                    first_name: '',
-                    last_name: '',
+                    firstName: '',
+                    lastName: '',
                     email: '',
                     password: '',
                     password_confirmation: '',
-                    user_type: 'Tanuló'
+                    userType: 'Tanuló'
                 }
                 
             } catch (error) {
