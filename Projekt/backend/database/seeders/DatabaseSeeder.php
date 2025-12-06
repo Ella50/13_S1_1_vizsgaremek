@@ -16,12 +16,13 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         $this->call([
-            CountyTableSeeder::class,
+            UserSeeder::class,
+            ClassSeeder::class,
+            /*CountyTableSeeder::class,
             CityTableSeeder::class,
-            ClassTableSeeder::class,
+
             GroupTableSeeder::class,
             RfidCardTableSeeder::class,
-            UserTableSeeder::class,
             MealTableSeeder::class,
             MenuItemTableSeeder::class,
             AllergenTableSeeder::class,
@@ -29,7 +30,7 @@ class DatabaseSeeder extends Seeder
             IngredientTableSeeder::class,
             IngredientAllergenTableSeeder::class,
             InvoiceTableSeeder::class,
-            MealIngredientTableSeeder::class,
+            MealIngredientTableSeeder::class,*/
             
         ]);
 
