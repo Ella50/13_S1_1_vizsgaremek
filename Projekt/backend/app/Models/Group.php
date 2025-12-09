@@ -9,9 +9,9 @@ class Group extends Model
 {
     use HasFactory;
 
-     protected $table = 'group';
+     protected $table = 'groups';
     protected $fillable = [
-        'name'
+        'groupName'
     ];
 
     // Kapcsolat User modellel

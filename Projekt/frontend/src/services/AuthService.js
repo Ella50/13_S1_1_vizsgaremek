@@ -72,7 +72,6 @@ class AuthService {
   }
 
   logout() {
-    // API hívás a token törléséhez a backend-en
     if (this.getToken()) {
       this.api.post('/logout').catch(error => {
         console.error('Logout API error:', error)
@@ -99,11 +98,15 @@ class AuthService {
   }
 
   isAuthenticated() {
-    return !!this.getToken()
+    const token = localStorage.getItem('auth_token')
+    console.log('AuthService.isAuthenticated():', {
+        hasToken: !!token,
+        token: token ? token.substring(0, 20) + '...' : null
+    })
+    return !!token
   }
 
-// GETTERS:
-  
+// Getters
   getUserRole() {
     const user = this.getUser()
     return user?.userType || null
@@ -138,7 +141,6 @@ class AuthService {
     return allowedRoles.includes(this.getUserRole())
   }
 
-  // Összes role info egy objektumban
   getRoleInfo() {
     const role = this.getUserRole()
     return {
@@ -154,8 +156,6 @@ class AuthService {
                    role === 'Tanár' ? 'Tanár' : role
     }
   }
-
-
   
   async getCurrentUser() {
     try {

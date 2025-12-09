@@ -9,7 +9,7 @@ class RfidCard extends Model
 {
     use HasFactory;
 
-    protected $table = 'rfidCard';
+    protected $table = 'rfidCards';
 
     protected $fillable = [
         'cardNumber',

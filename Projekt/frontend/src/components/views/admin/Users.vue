@@ -20,7 +20,7 @@
           <option value="Külsős">Külsős</option>
         </select>
         
-        <select v-model="filters.status" @change="fetchUsers">
+        <select v-model="filters.userStatus" @change="fetchUsers">
           <option value="">Összes státusz</option>
           <option value="active">Aktív</option>
           <option value="inactive">Inaktív</option>
@@ -144,7 +144,7 @@ export default {
       search: '',
       filters: {
         userType: '',
-        status: ''
+        userStatus: ''
       },
       loading: false,
       error: '',
@@ -173,37 +173,51 @@ export default {
           search: this.search,
           ...this.filters
         }
-        
+
+        //Üres paraméterek törlése
+
+        Object.keys(params).forEach(key => {
+          if (params[key] === '' || params[key] === null) {
+            delete params[key]
+          }
+        })
+
+        console.log('Fetching users with params:', params)  // DEBUG
+    
         const response = await AuthService.api.get('/admin/users', { params })
+        console.log('API response:', response.data)  // DEBUG
+
         this.users = response.data
-      } catch (error) {
+      } 
+
+      catch (error) {
         console.error('Felhasználók betöltése sikertelen:', error)
         this.error = error.response?.data?.message || 'Hiba történt a felhasználók betöltése során'
-      } finally {
+      } 
+
+      finally {
         this.loading = false
       }
     },
     
-    async updateStatus(userId, status) {
-      if (!confirm(`Biztosan ${status === 'active' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
+    async updateStatus(userId, newUserStatus) {
+      if (!confirm(`Biztosan ${newUserStatus === 'active' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
         return
       }
       
       try {
         await AuthService.api.put(`/admin/users/${userId}/status`, {
-          userStatus: status
+          userStatus: newUserStatus
         })
         
-        // Frissítsd a listát
-        this.fetchUsers()
+        /* this.fetchUsers()*/
         
-        // VAGY frissítsd csak az adott felhasználót
         const userIndex = this.users.data.findIndex(u => u.id === userId)
         if (userIndex !== -1) {
-          this.users.data[userIndex].userStatus = status
+          this.users.data[userIndex].userStatus = newUserStatus
         }
         
-        alert(`Felhasználó státusza sikeresen frissítve: ${status}`)
+        alert(`Felhasználó státusza sikeresen frissítve: ${newUserStatus}`)
       } catch (error) {
         console.error('Státusz frissítés sikertelen:', error)
         alert(error.response?.data?.message || 'Hiba történt a státusz frissítése során')
