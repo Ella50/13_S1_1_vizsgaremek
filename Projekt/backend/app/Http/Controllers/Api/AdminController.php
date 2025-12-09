@@ -122,7 +122,7 @@ class AdminController extends Controller
         }
     }
     
-    // Felhasználó törlése
+    /*
     public function deleteUser(Request $request, $id)
     {
         try {
@@ -154,7 +154,7 @@ class AdminController extends Controller
                 'message' => 'Hiba történt'
             ], 500);
         }
-    }
+    }*/
 
     public function getUserDetails($id)
     {

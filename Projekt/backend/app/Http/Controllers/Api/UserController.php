@@ -290,7 +290,7 @@ class UserController extends Controller
         }
     }
 
-    public function changePassword(Request $request)
+    /*public function changePassword(Request $request)
     {
         try {
             $request->validate([
@@ -321,5 +321,6 @@ class UserController extends Controller
                 'message' => 'Hiba történt'
             ], 500);
         }
-    }
+    }*/
+    
 }
