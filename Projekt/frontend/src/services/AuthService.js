@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+
 const API_URL = 'http://localhost:8000/api'
 
 class AuthService {
@@ -80,6 +81,11 @@ class AuthService {
     
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
+
+    axios.post('http://localhost:8000/api/logout')
+            .catch(() => {})
+
+
     delete this.api.defaults.headers.common['Authorization']
   }
 
@@ -96,6 +102,61 @@ class AuthService {
     return !!this.getToken()
   }
 
+// GETTERS:
+  
+  getUserRole() {
+    const user = this.getUser()
+    return user?.userType || null
+  }
+
+  isAdmin() {
+    return this.getUserRole() === 'Admin'
+  }
+
+  isKitchen() {
+    return this.getUserRole() === 'Konyha'
+  }
+
+  isStudent() {
+    return this.getUserRole() === 'Tanuló'
+  }
+
+  isTeacher() {
+    return this.getUserRole() === 'Tanár'
+  }
+
+  isEmployee() {
+    return this.getUserRole() === 'Dolgozó'
+  }
+
+  isExternal() {
+    return this.getUserRole() === 'Külsős'
+  }
+
+  canViewMenu() {
+    const allowedRoles = ['Tanuló', 'Tanár', 'Dolgozó', 'Külsős']
+    return allowedRoles.includes(this.getUserRole())
+  }
+
+  // Összes role info egy objektumban
+  getRoleInfo() {
+    const role = this.getUserRole()
+    return {
+      role,
+      isAdmin: role === 'Admin',
+      isKitchen: role === 'Konyha',
+      isStudent: role === 'Tanuló',
+      isTeacher: role === 'Tanár',
+      isEmployee: role === 'Dolgozó',
+      isExternal: role === 'Külsős',
+      canViewMenu: ['Tanuló', 'Tanár', 'Dolgozó', 'Külsős'].includes(role),
+      displayName: role === 'Tanuló' ? 'Tanuló' : 
+                   role === 'Tanár' ? 'Tanár' : role
+    }
+  }
+
+
+  
   async getCurrentUser() {
     try {
       const response = await this.api.get('/user')

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Beállítjuk az alap URL-t a Laravel API-hoz
-axios.defaults.baseURL = 'http://localhost:8000/api/v1/'
+axios.defaults.baseURL = 'http://localhost:8000/api/'
 
 // Request interceptor - token hozzáadása
 axios.interceptors.request.use(
@@ -18,6 +18,7 @@ axios.interceptors.request.use(
 )
 
 // Response interceptor - hibakezelés
+
 axios.interceptors.response.use(
   response => response,
   error => {
