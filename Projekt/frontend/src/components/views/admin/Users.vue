@@ -6,7 +6,7 @@
         <input 
           v-model="search" 
           type="text" 
-          placeholder="Keresés név/email alapján"
+          placeholder="Keresés"
           @input="fetchUsers"
         >
         
@@ -50,6 +50,7 @@
             <th>Státusz</th>
             <th>Regisztráció</th>
             <th>Műveletek</th>
+            <th>Felfüggesztés</th>
           </tr>
         </thead>
         <tbody>
@@ -73,8 +74,7 @@
                 v-if="user.userStatus === 'inactive'"
                 @click="updateStatus(user.id, 'active')"
                 class="btn-activate"
-                title="Aktiválás"
-              >
+                title="Aktiválás">
                 ✅
               </button>
               
@@ -82,27 +82,35 @@
                 v-if="user.userStatus === 'active'"
                 @click="updateStatus(user.id, 'inactive')"
                 class="btn-deactivate"
-                title="Deaktiválás"
-              >
+                title="Deaktiválás">
                 ⏸️
               </button>
-              
+
               <button 
-                v-if="user.userStatus !== 'suspended'"
-                @click="updateStatus(user.id, 'suspended')"
-                class="btn-suspend"
-                title="Felfüggesztés"
-              >
-                ⚠️
+                  @click="openEditModal(user.id)"
+                  class="btn-edit"
+                  title="Szerkesztés">
+                  XX
               </button>
               
-              <button 
+
+              
+              <!--<button 
                 v-if="user.id !== currentUser.id"
                 @click="deleteUser(user.id)"
                 class="btn-delete"
                 title="Törlés"
               >
                 🗑️
+              </button>-->
+            </td>
+            <td>
+              <button 
+                v-if="user.userStatus !== 'suspended'"
+                @click="updateStatus(user.id, 'suspended')"
+                class="btn-suspend"
+                title="Felfüggesztés">
+                ⚠️
               </button>
             </td>
           </tr>
@@ -148,7 +156,26 @@ export default {
       },
       loading: false,
       error: '',
-      currentPage: 1
+      currentPage: 1,
+
+      //Szerkesztéshez:
+      showEditModal: false,
+      editUser: {
+        id: null,
+        firstName: '',
+        lastName: '',
+        thirdName: '',
+        email: '',
+        userType: 'Tanuló',
+        userStatus: 'active',
+        phone: '',
+        address: '',
+        hasDiscount: false,
+        newPassword: '',
+        confirmPassword: ''
+      },
+      editLoading: false,
+      saving: false
     }
   },
   
@@ -199,6 +226,103 @@ export default {
         this.loading = false
       }
     },
+
+// Modal kezelés (Szerkesztés)
+    async openEditModal(userId) {
+      this.showEditModal = true
+      this.editLoading = true
+      
+      try {
+        const response = await AuthService.api.get(`/admin/users/${userId}`)
+        if (response.data.success) {
+          const userData = response.data.data
+          
+          this.editUser = {
+            id: userData.id,
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            thirdName: userData.thirdName || '',
+            email: userData.email || '',
+            userType: userData.userType || 'Tanuló',
+            userStatus: userData.userStatus || 'active',
+            phone: userData.phone || '',
+            address: userData.address || '',
+            hasDiscount: userData.hasDiscount || false,
+            newPassword: '',
+            confirmPassword: ''
+          }
+        }
+      } catch (error) {
+        console.error('Felhasználó adatok betöltése sikertelen:', error)
+        alert('Nem sikerült betölteni a felhasználó adatait')
+        this.closeEditModal()
+      } finally {
+        this.editLoading = false
+      }
+    },
+    
+    closeEditModal() {
+      this.showEditModal = false
+      this.editUser = {
+        id: null,
+        firstName: '',
+        lastName: '',
+        thirdName: '',
+        email: '',
+        userType: 'Tanuló',
+        userStatus: 'active',
+        phone: '',
+        address: '',
+        hasDiscount: false,
+        newPassword: '',
+        confirmPassword: ''
+      }
+    },
+    
+    async saveUserChanges() {
+
+      if (!confirm('Biztosan menti a módosításokat?')) {
+        return
+      }
+      
+      this.saving = true
+      
+      try {
+        const updateData = {
+          firstName: this.editUser.firstName,
+          lastName: this.editUser.lastName,
+          thirdName: this.editUser.thirdName,
+          email: this.editUser.email,
+          userType: this.editUser.userType,
+          userStatus: this.editUser.userStatus,
+          phone: this.editUser.phone,
+          address: this.editUser.address,
+          hasDiscount: this.editUser.hasDiscount
+        }
+        
+        const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
+        
+        if (response.data.success) {
+          // Frissítjük a listában a felhasználót
+          const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
+          if (userIndex !== -1) {
+            this.users.data[userIndex] = {
+              ...this.users.data[userIndex],
+              ...updateData
+            }
+          }
+          
+          alert('Felhasználó sikeresen frissítve!')
+          this.closeEditModal()
+        }
+      } catch (error) {
+        console.error('Felhasználó frissítése sikertelen:', error)
+        alert(error.response?.data?.message || 'Hiba történt a mentés során')
+      } finally {
+        this.saving = false
+      }
+    },
+
     
     async updateStatus(userId, newUserStatus) {
       if (!confirm(`Biztosan ${newUserStatus === 'active' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
