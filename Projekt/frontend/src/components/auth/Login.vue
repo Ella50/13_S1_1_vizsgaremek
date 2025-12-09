@@ -4,10 +4,7 @@
 
     <form @submit.prevent="handleLogin" class="login-form">
       <input type="email" v-model="form.email" placeholder="Email" required>
-      <input type="password" v-model="form.password" placeholder="Jelszó" required>
-
-    
- 
+      <input type="password" v-model="form.password" placeholder="Jelszó" required> 
       <button type="submit" :disabled="loading">{{ loading ? 'Bejelentkezés...' : 'Bejelentkezés' }}</button>
 
         <a class="forgot" href="#">Elfelejtette a jelszavát?</a>
@@ -27,8 +24,7 @@ import AuthLayout from './AuthLAyout.vue'
 import axios from '../../axios'
 
 export default {
-    components: {AuthLayout},
-    
+  components: { AuthLayout },
     data() {
         return {
             form: {
@@ -105,5 +101,4 @@ export default {
         }
     }
   }
-
 </script>
