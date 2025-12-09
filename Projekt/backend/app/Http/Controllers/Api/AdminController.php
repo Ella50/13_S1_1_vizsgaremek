@@ -19,6 +19,7 @@ class AdminController extends Controller
             $search = $request->get('search', '');
             
             $query = User::query();
+            //$query = User::with(['city', 'studentClass', 'group', 'rfidCard']); // Kapcsolatok betöltése
             
             // Keresés
             if ($search) {
@@ -30,13 +31,13 @@ class AdminController extends Controller
             }
             
             // Szűrés userType alapján
-            if ($request->has('user_type')) {
-                $query->where('userType', $request->user_type);
+            if ($request->has('userType')) {
+                $query->where('userType', $request->userType);
             }
             
             // Szűrés status alapján
-            if ($request->has('status')) {
-                $query->where('userStatus', $request->status);
+            if ($request->has('userStatus')) {
+                $query->where('userStatus', $request->userStatus);
             }
             
             // Rendezés
@@ -48,20 +49,25 @@ class AdminController extends Controller
             
             return response()->json([
                 'success' => true,
-                'users' => $users,
-                'total' => $users->total()
+                'data' => $users->items(), // Ez lesz a users.data a vue-ban
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem()
             ]);
             
         } catch (\Exception $e) {
             Log::error('Admin user list error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Hiba történt'
+                'message' => 'Hiba történt a felhasználók betöltése során'
             ], 500);
         }
     }
     
-    // Felhasználó státuszának frissítése
+    // Felhasználó státusz frissítése
     public function updateUserStatus(Request $request, $id)
     {
         try {
@@ -93,16 +99,25 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Felhasználó státusza frissítve',
-                'user' => [
-                    'id' => $user->id,
-                    'userStatus' => $user->userStatus
-                ]
+                //'user' => $user->fresh(['city', 'studentClass', 'group', 'rfidCard'])
+                'user' => $user->fresh()
+
             ]);
             
-        } catch (\Exception $e) {
+        } 
+        catch (\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hiba történt'
+                'message' => 'Validációs hiba',
+                'errors' => $e->errors()
+            ], 422);
+        } 
+
+        catch (\Exception $e) {
+            Log::error('User status update error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a státusz frissítése során'
             ], 500);
         }
     }
@@ -138,6 +153,24 @@ class AdminController extends Controller
                 'success' => false,
                 'message' => 'Hiba történt'
             ], 500);
+        }
+    }
+
+    public function getUserDetails($id)
+    {
+        try {
+            $user = User::with(['city', 'studentClass', 'group', 'rfidCard'])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Felhasználó nem található'
+            ], 404);
         }
     }
 }

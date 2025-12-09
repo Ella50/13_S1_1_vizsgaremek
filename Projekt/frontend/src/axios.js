@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-// Beállítjuk az alap URL-t a Laravel API-hoz
 axios.defaults.baseURL = 'http://localhost:8000/api/'
 
-// Request interceptor - token hozzáadása
+//Token hozzáadása
+
 axios.interceptors.request.use(
   config => {
     const token = localStorage.getItem('auth_token')
@@ -17,7 +17,7 @@ axios.interceptors.request.use(
   }
 )
 
-// Response interceptor - hibakezelés
+//Hibakezelés
 
 axios.interceptors.response.use(
   response => response,
@@ -25,7 +25,6 @@ axios.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
     }
     return Promise.reject(error)
   }

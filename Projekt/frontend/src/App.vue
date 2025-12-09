@@ -1,4 +1,3 @@
-<!-- src/App.vue -->
 <template>
   <div id="app">
     <Navigation v-if="showNavigation" />

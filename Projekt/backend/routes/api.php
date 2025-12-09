@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\KitchenController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+
 // Védett útvonalak
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
@@ -35,8 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin útvonalak
     Route::prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
-        Route::put('/users/{id}/status', [AdminController::class, 'updateUserStatus']);
-        Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+        Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+        Route::get('/users/{user}', [AdminController::class, 'getUserDetails']);
     });
     
     // Konyha útvonalak
