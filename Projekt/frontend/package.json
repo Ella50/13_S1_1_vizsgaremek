@@ -14,7 +14,8 @@
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "vue": "^3.3.4",
-    "vue-router": "^4.2.2"
+    "vue-router": "^4.2.2",
+    "vuex": "^4.0.2"
   },
   "devDependencies": {
     "@testing-library/user-event": "^14.4.3",

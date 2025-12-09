@@ -66,16 +66,39 @@ export default {
             try {
                 const response = await axios.post('/login', this.form)
                 
+                console.log('Login response:', response.data) // DEBUG
+                
+                // 1. PRÓBÁLD KI EZEKET A TOKEN NEVEKET:
+                const token = response.data.token || 
+                            response.data.access_token || 
+                            response.data.accessToken
+                
+                if (!token) {
+                    console.error('No token in response:', response.data)
+                    throw new Error('No token received from server')
+                }
+                
                 // Token mentése
-                localStorage.setItem('auth_token', response.data.access_token)
+                localStorage.setItem('auth_token', token)
+                console.log('Token saved:', token.substring(0, 20) + '...')
                 
                 // User adatok mentése
-                localStorage.setItem('user', JSON.stringify(response.data.user))
+                if (response.data.user) {
+                    localStorage.setItem('user', JSON.stringify(response.data.user))
+                } else {
+                    // Ha nincs user objektum, mentheted a teljes response-t
+                    localStorage.setItem('auth_data', JSON.stringify(response.data))
+                }
                 
                 // Átirányítás dashboardra
                 this.$router.push('/dashboard')
                 
             } catch (error) {
+                console.error('Login error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+                })
                 this.error = error.response?.data?.message || 'Bejelentkezési hiba'
             } finally {
                 this.loading = false
