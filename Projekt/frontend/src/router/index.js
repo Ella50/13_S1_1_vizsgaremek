@@ -1,20 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../components/auth/Login.vue'
 import Register from '../components/auth/Register.vue'
-import Dashboard from '../components/Dashboard.vue'
+import Dashboard from '../components/views/Dashboard.vue'
+import Users from '../components/views/admin/Users.vue'
+import TodayMenu from '../components/views/menu/TodayMenu.vue'
+import WeeklyMenu from '../components/views/menu/WeeklyMenu.vue'
+import Meals from '../components/views/kitchen/Meals.vue'
+
+
 
 const routes = [
+    {
+        path: '/',
+        //redirect: '/login'
+    },
     {
         path: '/login',
         name: 'login',
         component: Login,
-        meta: { guest: true }
+        meta: { requiresAuth: false }
     },
     {
         path: '/register',
         name: 'register',
         component: Register,
-        meta: { guest: true }
+        meta: { grequiresAuth: false }
     },
     {
         path: '/dashboard',
@@ -22,10 +32,32 @@ const routes = [
         component: Dashboard,
         meta: { requiresAuth: true }
     },
+
     {
-        path: '/',
-        redirect: '/login'
-    }
+         path: '/admin/users',
+        name: 'AdminUsers',
+        component: Users,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/menu/today',
+        name: 'TodayMenu',
+        component: TodayMenu,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/menu/week',
+        name: 'WeeklyMenu',
+        component: WeeklyMenu,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/kitchen/meals',
+        name: 'KitchenMeals',
+        component: Meals,
+        meta: { requiresAuth: true }
+    },
+    
 ]
 
 const router = createRouter({
@@ -33,17 +65,17 @@ const router = createRouter({
     routes
 })
 
-// Auth middleware
 router.beforeEach((to, from, next) => {
-    const token = localStorage.getItem('auth_token')
-    
-    if (to.meta.requiresAuth && !token) {
-        next('/login')
-    } else if (to.meta.guest && token) {
-        next('/dashboard')
-    } else {
-        next()
-    }
+  const isAuthenticated = localStorage.getItem('auth_token')
+  
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login')
+  } else if (!to.meta.requiresAuth && isAuthenticated && 
+             (to.path === '/login' || to.path === '/register')) {
+    next('/dashboard')
+  } else {
+    next()
+  }
 })
 
 export default router

@@ -289,4 +289,37 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function changePassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'current_password' => 'required',
+                'new_password' => 'required|min:8|confirmed',
+            ]);
+            
+            $user = $request->user();
+            
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A jelenlegi jelszó helytelen'
+                ], 422);
+            }
+            
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Jelszó sikeresen megváltoztatva'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt'
+            ], 500);
+        }
+    }
 }

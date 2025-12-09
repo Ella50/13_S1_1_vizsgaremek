@@ -1,12 +1,30 @@
+<!-- src/App.vue -->
 <template>
   <div id="app">
-    <router-view />
+    <Navigation v-if="showNavigation" />
+    <main :class="{ 'with-nav': showNavigation }">
+      <router-view />
+    </main>
   </div>
 </template>
 
 <script>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import Navigation from './components/Navigation.vue'
+
 export default {
-  name: 'App'
+  components: { Navigation },
+  
+  setup() {
+    const route = useRoute()
+    
+    const showNavigation = computed(() => {
+      return !['/login', '/register'].includes(route.path)
+    })
+    
+    return { showNavigation }
+  }
 }
 </script>
 
@@ -18,11 +36,16 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background: #f5f5f5;
 }
 
-#app {
-  min-height: 100vh;
+main {
+  min-height: calc(100vh - 64px);
+}
+
+main.with-nav {
+  padding-top: 0;
 }
 </style>
