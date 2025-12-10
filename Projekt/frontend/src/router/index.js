@@ -13,7 +13,7 @@ import ResetPassword from '../components/auth/ResetPassword.vue'
 const routes = [
     {
         path: '/',
-        //redirect: '/login'
+        redirect: '/login'
     },
     {
         path: '/login',

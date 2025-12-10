@@ -53,9 +53,9 @@ class User extends Authenticatable
         return $this->belongsTo(City::class);
     }
 
-    public function class()
+    public function studentClass()
     {
-        return $this->belongsTo(ClassModel::class, 'class_id');
+        return $this->belongsTo(studentClass::class, 'class_id');
     }
 
     public function group()
@@ -69,27 +69,3 @@ class User extends Authenticatable
     }
 }
 
-
-
-    // Kapcsolatok
-    /*
-    public function city()
-    {
-        return $this->belongsTo(City::class, 'city_id');
-    }
-
-    public function studentClass()
-    {
-        return $this->belongsTo(StudentClass::class, 'class_id');
-    }
-
-    public function group() 
-    {
-        return $this->belongsTo(Group::class, 'group_id');
-    }
-
-    public function rfidCard()
-    {
-        return $this->belongsTo(RfidCard::class, 'rfidCard_id');
-    }
-    */

@@ -42,9 +42,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin Ăştvonalak
     Route::prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
+        
         Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
-        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+
         Route::get('/users/{user}', [AdminController::class, 'getUserDetails']);
+        Route::put('/users/{user}', [AdminController::class, 'updateUser']);
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
     });
     
     // Konyha Ăştvonalak

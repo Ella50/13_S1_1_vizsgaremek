@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
-    
-    
     // Összes felhasználó lekérdezése
     public function getUsers(Request $request)
     {
@@ -19,7 +20,6 @@ class AdminController extends Controller
             $search = $request->get('search', '');
             
             $query = User::query();
-            //$query = User::with(['city', 'studentClass', 'group', 'rfidCard']); // Kapcsolatok betöltése
             
             // Keresés
             if ($search) {
@@ -31,17 +31,17 @@ class AdminController extends Controller
             }
             
             // Szűrés userType alapján
-            if ($request->has('userType')) {
+            if ($request->has('userType') && $request->userType !== '') {
                 $query->where('userType', $request->userType);
             }
             
-            // Szűrés status alapján
-            if ($request->has('userStatus')) {
+            // Szűrés userStatus alapján
+            if ($request->has('userStatus') && $request->userStatus !== '') {
                 $query->where('userStatus', $request->userStatus);
             }
             
             // Rendezés
-            $sortBy = $request->get('sort_by', 'created_at');
+            $sortBy = $request->get('sort_by', 'id');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
             
@@ -49,7 +49,7 @@ class AdminController extends Controller
             
             return response()->json([
                 'success' => true,
-                'data' => $users->items(), // Ez lesz a users.data a vue-ban
+                'data' => $users->items(),
                 'current_page' => $users->currentPage(),
                 'last_page' => $users->lastPage(),
                 'per_page' => $users->perPage(),
@@ -99,21 +99,16 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Felhasználó státusza frissítve',
-                //'user' => $user->fresh(['city', 'studentClass', 'group', 'rfidCard'])
                 'user' => $user->fresh()
-
             ]);
             
-        } 
-        catch (\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validációs hiba',
                 'errors' => $e->errors()
             ], 422);
-        } 
-
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error('User status update error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
@@ -122,7 +117,110 @@ class AdminController extends Controller
         }
     }
     
-    /*
+    // Felhasználó részletes adatainak lekérése
+    public function getUserDetails($id)
+    {
+        try {
+            Log::info('getUserDetails called', ['id' => $id]);
+            
+            // Ellenőrizzük, hogy szám-e
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Érvénytelen felhasználó azonosító'
+                ], 400);
+            }
+            
+            $user = User::with(['city', 'studentClass', 'group', 'rfidCard'])->find($id);
+            
+            if (!$user) {
+                Log::warning('User not found', ['id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Felhasználó nem található'
+                ], 404);
+            }
+            
+            Log::info('User found', ['id' => $user->id, 'name' => $user->firstName]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('getUserDetails error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a felhasználó betöltése során'
+            ], 500);
+        }
+    }
+    
+    // Felhasználó frissítése
+    public function updateUser(Request $request, $id)
+    {
+        try {
+            Log::info('updateUser called', ['id' => $id, 'data' => $request->all()]);
+            
+            $user = User::findOrFail($id);
+            
+            // Validáció
+            $validator = Validator::make($request->all(), [
+                'firstName' => 'required|string|max:255',
+                'lastName' => 'required|string|max:255',
+                'thirdName' => 'nullable|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $id,
+                'userType' => 'required|in:Tanuló,Tanár,Admin,Konyha,Dolgozó,Külsős',
+                'userStatus' => 'required|in:active,inactive,suspended',
+                'address' => 'nullable|string|max:500',
+                'hasDiscount' => 'boolean',
+                'password' => 'nullable|string|min:8|confirmed'
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validációs hiba',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            $data = $request->all();
+            
+            // Jelszó titkosítása, ha meg van adva
+            if ($request->has('password') && $request->password) {
+                $data['password'] = Hash::make($request->password);
+            } else {
+                unset($data['password']);
+            }
+            
+            // Jelszó megerősítés mező eltávolítása
+            unset($data['password_confirmation']);
+            
+            $user->update($data);
+            
+            Log::info('User updated successfully', [
+                'user_id' => $user->id,
+                'updated_fields' => array_keys($data)
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Felhasználó sikeresen frissítve',
+                'data' => $user->fresh()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('updateUser error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a felhasználó frissítése során: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    // Felhasználó törlése
     public function deleteUser(Request $request, $id)
     {
         try {
@@ -149,28 +247,11 @@ class AdminController extends Controller
             ]);
             
         } catch (\Exception $e) {
+            Log::error('deleteUser error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Hiba történt'
+                'message' => 'Hiba történt a felhasználó törlése során'
             ], 500);
-        }
-    }*/
-
-    public function getUserDetails($id)
-    {
-        try {
-            $user = User::with(['city', 'studentClass', 'group', 'rfidCard'])->findOrFail($id);
-            
-            return response()->json([
-                'success' => true,
-                'data' => $user
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Felhasználó nem található'
-            ], 404);
         }
     }
 }
