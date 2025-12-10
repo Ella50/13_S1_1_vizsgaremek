@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-
 const API_URL = 'http://localhost:8000/api'
 
 class AuthService {
@@ -26,14 +25,35 @@ class AuthService {
       }
     )
 
-    // Response interceptor
+    // Response interceptor - JAVÍTVA
     this.api.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Ha a válasz tartalmaz BOM-ot, töröljük
+        if (typeof response.data === 'string') {
+          response.data = response.data.replace(/^\uFEFF/, '')
+          try {
+            response.data = JSON.parse(response.data)
+          } catch (e) {
+            // Ha nem JSON, akkor marad string
+          }
+        }
+        return response
+      },
       (error) => {
+        console.error('API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        })
+        
         if (error.response?.status === 401) {
-          this.logout()
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login'
+          // Ne redirectoljunk, ha logout endpointon vagyunk
+          if (!error.config.url.includes('/logout')) {
+            console.log('Unauthorized, clearing auth data...')
+            this.clearAuth()
+            if (window.location.pathname !== '/login') {
+              window.location.href = '/login'
+            }
           }
         }
         return Promise.reject(error)
@@ -43,49 +63,94 @@ class AuthService {
 
   async login(credentials) {
     try {
+      console.log('Login attempt with:', { email: credentials.email })
       const response = await this.api.post('/login', credentials)
+      console.log('Login response:', response.data)
       
       if (response.data.token) {
         localStorage.setItem('auth_token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
+        // Set default header for future requests
+        this.api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
       }
       
       return response.data
     } catch (error) {
+      console.error('Login error:', error)
       throw error.response?.data || error
     }
   }
 
   async register(userData) {
     try {
+      console.log('Registration attempt:', { 
+        email: userData.email, 
+        userType: userData.userType 
+      })
       const response = await this.api.post('/register', userData)
+      console.log('Registration response:', response.data)
       
-      if (response.data.token) {
-        localStorage.setItem('auth_token', response.data.token)
-        localStorage.setItem('user', JSON.stringify(response.data.user))
-      }
+      // Regisztráció után NEM állítunk be tokent, mert a felhasználó inaktív
+      // Csak akkor, ha a backend visszaad tokent (ami nem kéne)
       
       return response.data
     } catch (error) {
+      console.error('Registration error:', error)
       throw error.response?.data || error
     }
   }
 
-  logout() {
-    if (this.getToken()) {
-      this.api.post('/logout').catch(error => {
-        console.error('Logout API error:', error)
-      })
+  async logout() {
+    const token = this.getToken()
+    
+    if (!token) {
+      console.log('No token, clearing local auth only')
+      this.clearAuth()
+      return { success: true }
     }
     
+    try {
+      console.log('Attempting logout...')
+      const response = await this.api.post('/logout')
+      console.log('Logout successful:', response.data)
+      this.clearAuth()
+      return response.data
+    } catch (error) {
+      console.error('Logout API error:', {
+        status: error.response?.status,
+        data: error.response?.data
+      })
+      
+      // 401 esetén a token már érvénytelen, csak töröljük lokálisan
+      if (error.response?.status === 401) {
+        console.log('Token expired or invalid, clearing local auth')
+        this.clearAuth()
+        return { success: true }
+      }
+      
+      // Egyéb hiba esetén is töröljük lokálisan
+      this.clearAuth()
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Logout failed' 
+      }
+    }
+  }
+
+  clearAuth() {
+    console.log('Clearing auth data...')
+    
+    // Töröljük az összes auth adatot
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
-
-    axios.post('http://localhost:8000/api/logout')
-            .catch(() => {})
-
-
+    localStorage.removeItem('userType')
+    localStorage.removeItem('userStatus')
+    
+    // Axios default header törlése
     delete this.api.defaults.headers.common['Authorization']
+    
+    // Ne redirectoljunk automatikusan, hadd kezelje a komponens
+    console.log('Auth data cleared')
   }
 
   getToken() {

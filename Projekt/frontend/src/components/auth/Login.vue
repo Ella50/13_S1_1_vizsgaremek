@@ -106,6 +106,11 @@ export default {
         } else {
             this.error = error.message || 'Bejelentkezési hiba'
         }
+        if (error.response?.status === 403) {
+            this.error = error.response?.data?.message || 'Inaktív felhasználó'
+        } else {
+            this.error = error.message || 'Bejelentkezési hiba'
+        }
     } finally {
         this.loading = false
     }
