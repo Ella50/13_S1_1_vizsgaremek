@@ -16,11 +16,11 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/reset-password', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']);
-// OpcionĂˇlis: token ellenĹ‘rzĂ©s
+// Opcionális tokenellenőrzés
 Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 
 
-// VĂ©dett Ăştvonalak
+// védett utvonalak
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -33,13 +33,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/password', [UserController::class, 'changePassword']);
     });
     
-    // Menu (minden bejelentkezett felhasznĂˇlĂł szĂˇmĂˇra)
+    // Menu (minden bejelentkezettnek)
     Route::prefix('menu')->group(function () {
         Route::get('/today', [MenuController::class, 'getTodayMenu']);
         Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
     });
     
-    // Admin Ăştvonalak
+    // Admin
     Route::prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
         
@@ -48,9 +48,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users/{user}', [AdminController::class, 'getUserDetails']);
         Route::put('/users/{user}', [AdminController::class, 'updateUser']);
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+
+        Route::get('/counties', [AdminController::class, 'getCounties']);
+        Route::get('/cities/by-county/{county_id}', [AdminController::class, 'getCitiesByCounty']);
+        Route::get('/cities/search', [AdminController::class, 'searchCities']);
     });
     
-    // Konyha Ăştvonalak
+    // Konyha
     Route::prefix('kitchen')->group(function () {
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::post('/meals', [KitchenController::class, 'createMeal']);

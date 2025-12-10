@@ -26,7 +26,7 @@ const routes = [
         path: '/register',
         name: 'register',
         component: Register,
-        meta: { grequiresAuth: false }
+        meta: { requiresAuth: false }
     },
    /* {
         path: '/forgotpassword',
