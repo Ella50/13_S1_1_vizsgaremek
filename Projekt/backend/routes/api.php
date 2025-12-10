@@ -36,9 +36,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin útvonalak
     Route::prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
+        
         Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
-        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+
         Route::get('/users/{user}', [AdminController::class, 'getUserDetails']);
+        Route::put('/users/{user}', [AdminController::class, 'updateUser']);
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
     });
     
     // Konyha útvonalak
@@ -47,4 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/meals', [KitchenController::class, 'createMeal']);
         Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });
+
+    /*Route::prefix('users')->group(function () {
+        Route::get('/{id}', [UserController::class, 'show']);      // HIÁNYZIK!
+        Route::put('/{id}', [UserController::class, 'update']);    // HIÁNYZIK!
+    });*/
 });
