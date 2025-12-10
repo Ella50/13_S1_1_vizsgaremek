@@ -19,17 +19,25 @@ class AuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'firstName' => 'required|string|max:255',
                 'lastName' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:users', //|regex:/^[a-z]+\.[a-z]+@iskola\.hu$/
                 'password' => 'required|string|min:8|confirmed',
-                'userType' => 'required|in:Tanuló,Külsős,Tanár,Dolgozó',
+                'userType' => 'required|in:Tanuló,Tanár,Dolgozó',
             ]);
 
             if ($validator->fails()) {
                 Log::error('Validációs hiba', $validator->errors()->toArray());
-                return response()->json([
-                    'errors' => $validator->errors(),
-                    'message' => 'Validációs hiba'
-                ], 422);
+
+                $errors = $validator->errors();
+                if ($errors->has('email')) {
+                    return response()->json([
+                        'errors' => $errors,
+                        'message' => /*$errors->first('email') ??*/ 'Érvénytelen email formátum'
+                    ], 422);
+                }
+                    return response()->json([
+                        'errors' => $validator->errors(),
+                        'message' => 'Validációs hiba'
+                    ], 422);
             }
 
             $user = User::create([
