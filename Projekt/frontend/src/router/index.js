@@ -12,7 +12,7 @@ import Meals from '../components/views/kitchen/Meals.vue'
 const routes = [
     {
         path: '/',
-        //redirect: '/login'
+        redirect: '/login'
     },
     {
         path: '/login',
