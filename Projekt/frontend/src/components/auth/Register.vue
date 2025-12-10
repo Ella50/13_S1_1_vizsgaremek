@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import AuthLayout from './AuthLAyout.vue'
+import AuthLayout from './AuthLayout.vue'
 import axios from '../../axios'
 
 export default {

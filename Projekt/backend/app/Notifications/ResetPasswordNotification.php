@@ -1,48 +1,39 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Notifications;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 
-class PasswordResetController extends Controller
+class ResetPasswordNotification extends Notification
 {
-    /**
-     * Jelszó visszaállító link küldése
-     */
-    public function sendResetLinkEmail(Request $request)
+    use Queueable;
+    
+    public $token;
+    public $email;
+
+    public function __construct($token, $email)
     {
-        // Alap validáció - csak email formátum
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|max:255'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kérjük, adj meg egy érvényes email címet.',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // MINDIG sikeres válasz (biztonsági okokból)
-        return response()->json([
-            'success' => true,
-            'message' => 'Ha létezik ilyen email cím a rendszerünkben, elküldtük a visszaállítási linket.',
-            'timestamp' => date('Y-m-d H:i:s'),
-            'received_email' => $request->input('email')
-        ], 200);
+        $this->token = $token;
+        $this->email = $email;
     }
 
-    /**
-     * Jelszó visszaállítása
-     */
-    public function reset(Request $request)
+    public function via($notifiable)
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'Jelszó visszaállítási endpoint (még nincs implementálva)'
-        ], 200);
+        return ['mail'];
+    }
+
+    public function toMail($notifiable)
+    {
+        $url = url(config('app.frontend_url') . '/reset-password/' . $this->token . '?email=' . urlencode($this->email));
+        
+        return (new MailMessage)
+            ->subject('Jelszó visszaállítás')
+            ->line('Kaptál egy jelszó visszaállítási kérelmet.')
+            ->action('Jelszó visszaállítása', $url)
+            ->line('Ez a link 60 percig érvényes.')
+            ->line('Ha nem te kérted, hagyd figyelmen kívül!');
     }
 }

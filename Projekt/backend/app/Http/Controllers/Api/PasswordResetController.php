@@ -1,49 +1,49 @@
 ﻿<?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class PasswordResetController extends Controller
 {
-    /**
-     * Jelszó visszaállító link küldése
-     */
-    public function sendResetLinkEmail(Request $request)
+    public function sendResetLink(Request $request)
     {
-        // 1. Alap validáció - csak email formátum ellenőrzés
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|max:255'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kérjük, adj meg egy érvényes email címet.',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // 2. MINDIG sikeres válasz (biztonsági okokból)
-        // A valós rendszerben itt küldenénk emailt
-        return response()->json([
-            'success' => true,
-            'message' => 'Ha létezik ilyen email cím a rendszerünkben, elküldtük a visszaállítási linket.',
-            'timestamp' => date('Y-m-d H:i:s'),
-            'received_email' => $request->input('email')
-        ], 200);
+        $request->validate(['email' => 'required|email']);
+        
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+        
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['success' => true, 'message' => 'Link elküldve'])
+            : response()->json(['success' => false, 'message' => 'Hiba történt'], 500);
     }
-
-    /**
-     * Jelszó visszaállítása - üres metódus, ha később kell
-     */
-    public function reset(Request $request)
+    
+    public function resetPassword(Request $request)
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'Jelszó visszaállítási endpoint (még nincs implementálva)'
-        ], 200);
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+        
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->setRememberToken(Str::random(60));
+                
+                $user->save();
+            }
+        );
+        
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['success' => true, 'message' => 'Jelszó megváltozott'])
+            : response()->json(['success' => false, 'message' => 'Hiba'], 400);
     }
 }
