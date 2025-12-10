@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::create('cities', function (Blueprint $table) {
             $table->id();
             $table->string('cityName');
-            $table->integer('zipCode');
+            $table->string('zipCode');
             $table->foreignId('county_id')->constrained('counties');
         });
 
