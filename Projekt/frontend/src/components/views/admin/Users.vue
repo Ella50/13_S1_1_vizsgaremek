@@ -82,11 +82,20 @@
                   <option value="suspended">Felfüggesztett</option>
                 </select>
               </div>
-              
+
+              <div class="form-group">
+                <label>Vármegye *</label>
+                <input v-model="editUser.county" type="text">
+              </div>
+
+              <div class="form-group">
+                <label>Város *</label>
+                <input v-model="editUser.city" type="text">
+              </div>
               
               
               <div class="form-group">
-                <label>Cím</label>
+                <label>Lakcím *</label>
                 <input v-model="editUser.address" type="text">
               </div>
               

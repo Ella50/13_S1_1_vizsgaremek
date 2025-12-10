@@ -62,6 +62,20 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
+#Iskolai adatbázis
+        'mysql_school' => [
+            'driver' => 'mysql',
+            'host' => env('DB_SCHOOL_HOST', '127.0.0.1'),
+            'port' => env('DB_SCHOOL_PORT', '3306'),
+            'database' => env('DB_SCHOOL_DATABASE', 'school_db'),
+            'username' => env('DB_SCHOOL_USERNAME', 'root'),
+            'password' => env('DB_SCHOOL_PASSWORD', 'mysql'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
 
         'mariadb' => [
             'driver' => 'mariadb',
