@@ -110,22 +110,6 @@ class UserSeeder extends Seeder
             'hasDiscount' => false,
         ]);
 
-        // KÜLSŐS felhasználó
-        User::create([
-            'firstName' => 'Varga',
-            'lastName' => 'Márta',
-            'email' => 'varga.marta@iskola.com',
-            'password' => Hash::make('kulsos123'),
-            'userType' => 'Külsős',
-            'userStatus' => 'active',
-            'city_id' => null,
-            'address' => 'Vendég utca 7.',
-            'thirdName' => null,
-            'rfidCard_id' => null,
-            'class_id' => null,
-            'group_id' => null,
-            'hasDiscount' => false,
-        ]);
 
         // KONYHA dolgozó
         User::create([
