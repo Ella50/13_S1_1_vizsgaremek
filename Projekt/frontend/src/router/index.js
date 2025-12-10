@@ -28,7 +28,7 @@ const routes = [
         component: Register,
         meta: { grequiresAuth: false }
     },
-    {
+   /* {
         path: '/forgotpassword',
         name: 'forgotpassword',
         component: ResetPassword,
@@ -39,7 +39,7 @@ const routes = [
         name: 'resetpassword',
         component: PasswordResetForm,
         meta: { guestOnly: true }
-    },
+    },*/
     {
         path: '/dashboard',
         name: 'dashboard',

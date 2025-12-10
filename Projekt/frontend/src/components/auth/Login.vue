@@ -7,7 +7,7 @@
       <input type="password" v-model="form.password" placeholder="Jelszó" required> 
       <button type="submit" :disabled="loading">{{ loading ? 'Bejelentkezés...' : 'Bejelentkezés' }}</button>
 
-        <a class="forgot" href="/forgotpassword">Elfelejtette a jelszavát?</a>
+        <a class="forgot" href="/resetpassword">Elfelejtette a jelszavát?</a>
 
       <p v-if="error" class="error">{{ error }}</p>
     </form>
@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import AuthLayout from './AuthLayout.vue'
+import AuthLayout from './AuthLAyout.vue'
 import axios from '../../axios'
 
 export default {

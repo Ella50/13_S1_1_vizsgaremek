@@ -2,8 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminController;
@@ -13,86 +11,72 @@ use App\Http\Controllers\Api\PasswordResetController;
 
 
 // Publikus Ăştvonalak
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/reset-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']);
+// OpcionĂˇlis: token ellenĹ‘rzĂ©s
+Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 
 
-Route::post('/reset-password', function (Request $request) {
-    // 1. SIMA VALIDÁCIÓ - NEM kérjük, hogy létezzen az email
-    $validated = $request->validate([
-        'email' => 'required|email|max:255'
-    ]);
+// VĂ©dett Ăştvonalak
+Route::middleware('auth:sanctum')->group(function () {
+    // Auth
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
     
-    $email = $validated['email'];
+    // User profile
+    Route::prefix('user')->group(function () {
+        Route::get('/profile', [UserController::class, 'profile']);
+        Route::put('/profile', [UserController::class, 'updateProfile']);
+        Route::put('/password', [UserController::class, 'changePassword']);
+    });
     
-    // 2. Ellenőrizzük, de ne közöljük a felhasználóval
-    $userExists = DB::table('users')->where('email', $email)->exists();
+    // Menu (minden bejelentkezett felhasznĂˇlĂł szĂˇmĂˇra)
+    Route::prefix('menu')->group(function () {
+        Route::get('/today', [MenuController::class, 'getTodayMenu']);
+        Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
+    });
     
-    if (!$userExists) {
-        // Ha nincs ilyen user, akkor is sikeres választ adunk (biztonsági okokból)
-        return response()->json([
-            'success' => true,
-            'message' => 'Ha létezik ilyen email cím a rendszerünkben, elküldtük a visszaállítási linket.'
-        ], 200);
-    }
-    
-    // 3. Ha van user, küldjük a linket
-    try {
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+    // Admin Ăştvonalak
+    Route::prefix('admin')->group(function () {
+        Route::get('/users', [AdminController::class, 'getUsers']);
         
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Jelszó visszaállítási linket elküldtük az email címedre!'
-            ], 200);
-        }
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Hiba történt az email küldése során.'
-        ], 500);
-        
-    } catch (\Exception $e) {
-        // Ha email küldés hibás, akkor is sikeres választ adunk
-        return response()->json([
-            'success' => true,
-            'message' => 'A jelszó visszaállítási folyamat elindult.',
-            'note' => 'Email küldés letiltva teszt módban'
-        ], 200);
-    }
+        Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
+
+        Route::get('/users/{user}', [AdminController::class, 'getUserDetails']);
+        Route::put('/users/{user}', [AdminController::class, 'updateUser']);
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+    });
+    
+    // Konyha Ăştvonalak
+    Route::prefix('kitchen')->group(function () {
+        Route::get('/meals', [KitchenController::class, 'getMeals']);
+        Route::post('/meals', [KitchenController::class, 'createMeal']);
+        Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
+    });
 });
+Route::post('/reset-password', [App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLinkEmail']);
 
-Route::post('/reset-password/confirm', function (Request $request) {
-    $request->validate([
-        'token' => 'required',
-        'email' => 'required|email',
-        'password' => 'required|min:8|confirmed',
-    ]);
-    
-    $status = Password::reset(
-        $request->only('email', 'password', 'password_confirmation', 'token'),
-        function ($user, $password) {
-            $user->forceFill([
-                'password' => bcrypt($password)
-            ])->save();
-        }
-    );
-    
-    if ($status === Password::PASSWORD_RESET) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Jelszavad sikeresen megváltozott!'
-        ], 200);
-    }
-    
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+// Very simple password reset
+Route::post("/api/simple-password-reset", [App\Http\Controllers\VerySimplePasswordController::class, "sendReset"]);
+
+
+// SUPER SIMPLE TEST ENDPOINT
+Route::post("/test-password", function(Illuminate\Http\Request $request) {
     return response()->json([
-        'success' => false,
-        'message' => 'Érvénytelen vagy lejárt token.'
-    ], 400);
-});
-
-
-// TEST ROUTE
-Route::get("/test-health", function() {
-    return response()->json(["status" => "healthy", "time" => now()]);
+        "status" => "OK",
+        "message" => "Backend működik!",
+        "received_email" => $request->input("email", "nincs"),
+        "server_time" => date("Y-m-d H:i:s")
+    ]);
 });
