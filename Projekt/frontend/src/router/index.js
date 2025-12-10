@@ -7,6 +7,7 @@ import TodayMenu from '../components/views/menu/TodayMenu.vue'
 import WeeklyMenu from '../components/views/menu/WeeklyMenu.vue'
 import Meals from '../components/views/kitchen/Meals.vue'
 import ResetPassword from '../components/auth/ResetPassword.vue'
+import PasswordResetForm from '../components/auth/PasswordResetForm.vue'
 
 
 
@@ -27,12 +28,18 @@ const routes = [
         component: Register,
         meta: { grequiresAuth: false }
     },
-    {
-        path: '/resetpassword',
-        name: 'resetpassword',
+   /* {
+        path: '/forgotpassword',
+        name: 'forgotpassword',
         component: ResetPassword,
-        meta: { requiresAuth: false }
+        meta: { guestOnly: true }
     },
+    {
+        path: '/resetpassword/:token?',
+        name: 'resetpassword',
+        component: PasswordResetForm,
+        meta: { guestOnly: true }
+    },*/
     {
         path: '/dashboard',
         name: 'dashboard',

@@ -43,9 +43,9 @@ class User extends Authenticatable
 
     // Jelszó visszaállító értesítés küldése
     public function sendPasswordResetNotification($token)
-    {
-        $this->notify(new ResetPasswordNotification($token, $this->email));
-    }
+{
+    $this->notify(new \App\Notifications\ResetPasswordNotification($token, $this->email));
+}
 
     // Kapcsolatok
     public function city()

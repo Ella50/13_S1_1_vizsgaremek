@@ -1,24 +1,69 @@
 <template>
-    <AuthLayout title="Jelszó visszaállítása">
-        <form @submit.prevent="handleResetPassword" class="auth-form">
-        <div class="form-group">
-            <label for="email">Email cím</label>
-            <input
-            type="email"
-            id="email"
-            v-model="form.email"
-            required
-            placeholder="Írd be az email címed"
-            />
+    <AuthLayout title="Elfelejtett jelszó">
+        <div class="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Jelszó visszaállítása</h2>
+            
+            <!-- Sikeres üzenet -->
+            <div v-if="successMessage" class="mb-4 p-4 bg-green-100 text-green-700 rounded">
+                ✅ {{ successMessage }}
+            </div>
+            
+            <!-- Hiba üzenet -->
+            <div v-if="error" class="mb-4 p-4 bg-red-100 text-red-700 rounded">
+                ❌ {{ error }}
+            </div>
+            
+            <!-- Email form (csak ha még nem küldtük el) -->
+            <div v-if="!emailSent">
+                <p class="mb-4 text-gray-600">Add meg az email címed, és küldünk egy visszaállítási linket.</p>
+                
+                <form @submit.prevent="handleResetPassword">
+                    <div class="mb-4">
+                        <label for="email" class="block text-gray-700 mb-2">Email cím</label>
+                        <input
+                            id="email"
+                            v-model="form.email"
+                            type="email"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="email@pelda.hu"
+                            :disabled="loading"
+                        >
+                    </div>
+                    
+                    <button
+                        type="submit"
+                        :disabled="loading"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span v-if="loading">Küldés...</span>
+                        <span v-else>Link küldése</span>
+                    </button>
+                </form>
+                
+                <div class="mt-4 text-center">
+                    <router-link to="/login" class="text-blue-600 hover:underline">
+                        Vissza a bejelentkezéshez
+                    </router-link>
+                </div>
+            </div>
+            
+            <!-- Ha már elküldtük -->
+            <div v-else class="text-center py-8">
+                <div class="text-green-600 text-5xl mb-4">✓</div>
+                <h3 class="text-xl font-semibold mb-2">Email elküldve!</h3>
+                <p class="text-gray-600 mb-4">Ellenőrizd az emailed a további utasításokért.</p>
+                <p class="text-sm text-gray-500 mb-6">
+                    Ha nem találod az emailt, nézd meg a spam mappában is.
+                </p>
+                <button
+                    @click="resetForm"
+                    class="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 transition"
+                >
+                    Új email küldése
+                </button>
+            </div>
         </div>
-    
-        <button type="submit" :disabled="loading">
-            {{ loading ? 'Feldolgozás...' : 'Jelszó visszaállítása' }}
-        </button>
-    
-        <p v-if="error" class="error-message">{{ error }}</p>
-        <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
-        </form>
     </AuthLayout>
 </template>
 
@@ -35,12 +80,13 @@ export default {
             },
             loading: false,
             error: '',
-            successMessage: ''
+            successMessage: '',
+            emailSent: false
         }
     },
     methods: {
         async handleResetPassword() {
-            // Alap validáció
+            // Validáció
             if (!this.form.email) {
                 this.error = 'Kérjük, add meg az email címed!'
                 return
@@ -56,43 +102,64 @@ export default {
             this.successMessage = ''
 
             try {
-                console.log('Küldés...', this.form.email)
+                console.log('📧 Jelszó reset kérelem:', this.form.email)
                 
-                // API hívás
                 const response = await axios.post('/api/reset-password', {
                     email: this.form.email
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
                 })
                 
-                console.log('Válasz:', response.data)
+                console.log('✅ Backend válasz:', response.data)
                 
-                // Sikeres válasz kezelése
                 if (response.data.success) {
                     this.successMessage = response.data.message
-                    this.form.email = '' // Form reset
+                    this.emailSent = true
                     
-                    // Opcionális: timeout után átirányítás
-                    setTimeout(() => {
-                        this.$router.push('/login')
-                    }, 3000)
+                    // Email ürítése
+                    this.form.email = ''
+                } else {
+                    this.error = response.data.message || 'Ismeretlen hiba'
                 }
                 
             } catch (err) {
-                console.error('Hiba:', err.response?.data || err.message)
+                console.error('❌ Hiba:', err)
                 
-                // Hiba kezelés
-                if (err.response?.status === 422) {
-                    // Validációs hiba
-                    this.error = err.response.data.message || 'Érvénytelen email cím.'
-                } else if (err.response?.status === 500) {
-                    // Szerver hiba
-                    this.error = 'Szerver hiba. Kérjük, próbáld újra később.'
+                if (err.response) {
+                    const status = err.response.status
+                    const data = err.response.data
+                    
+                    if (status === 422) {
+                        // Validációs hiba
+                        if (data.errors && data.errors.email) {
+                            this.error = data.errors.email[0]
+                        } else {
+                            this.error = data.message || 'Érvénytelen email cím'
+                        }
+                    } else if (status === 404) {
+                        this.error = 'Nem található ilyen email cím a rendszerünkben.'
+                    } else if (status === 500) {
+                        this.error = 'Szerver hiba. Kérjük, próbáld újra később.'
+                    } else {
+                        this.error = data.message || `Hiba (${status})`
+                    }
+                } else if (err.request) {
+                    this.error = 'Nincs kapcsolat a szerverrel.'
                 } else {
-                    // Egyéb hiba
-                    this.error = 'Hiba történt. Kérjük, próbáld újra.'
+                    this.error = 'Váratlan hiba történt.'
                 }
             } finally {
                 this.loading = false
             }
+        },
+        
+        resetForm() {
+            this.emailSent = false
+            this.error = ''
+            this.successMessage = ''
         }
     }
 }
