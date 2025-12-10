@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -7,14 +7,20 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\KitchenController;
+use App\Http\Controllers\Api\PasswordResetController;
 
 
-// Publikus útvonalak
+// Publikus Ăştvonalak
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::post('/reset-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']);
+// OpcionĂˇlis: token ellenĹ‘rzĂ©s
+Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 
-// Védett útvonalak
+
+// VĂ©dett Ăştvonalak
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -27,13 +33,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/password', [UserController::class, 'changePassword']);
     });
     
-    // Menu (minden bejelentkezett felhasználó számára)
+    // Menu (minden bejelentkezett felhasznĂˇlĂł szĂˇmĂˇra)
     Route::prefix('menu')->group(function () {
         Route::get('/today', [MenuController::class, 'getTodayMenu']);
         Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
     });
     
-    // Admin útvonalak
+    // Admin Ăştvonalak
     Route::prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
         
@@ -44,15 +50,33 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
     });
     
-    // Konyha útvonalak
+    // Konyha Ăştvonalak
     Route::prefix('kitchen')->group(function () {
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::post('/meals', [KitchenController::class, 'createMeal']);
         Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });
+});
+Route::post('/reset-password', [App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLinkEmail']);
 
-    /*Route::prefix('users')->group(function () {
-        Route::get('/{id}', [UserController::class, 'show']);      // HIÁNYZIK!
-        Route::put('/{id}', [UserController::class, 'update']);    // HIÁNYZIK!
-    });*/
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
+
+// Very simple password reset
+Route::post("/api/simple-password-reset", [App\Http\Controllers\VerySimplePasswordController::class, "sendReset"]);
+
+
+// SUPER SIMPLE TEST ENDPOINT
+Route::post("/test-password", function(Illuminate\Http\Request $request) {
+    return response()->json([
+        "status" => "OK",
+        "message" => "Backend működik!",
+        "received_email" => $request->input("email", "nincs"),
+        "server_time" => date("Y-m-d H:i:s")
+    ]);
 });

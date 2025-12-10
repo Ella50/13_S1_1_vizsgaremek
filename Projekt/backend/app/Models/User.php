@@ -41,6 +41,12 @@ class User extends Authenticatable
         return $this->password;
     }
 
+    // Jelszó visszaállító értesítés küldése
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token, $this->email));
+    }
+
     // Kapcsolatok
     public function city()
     {

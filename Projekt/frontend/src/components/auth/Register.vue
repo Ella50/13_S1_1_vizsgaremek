@@ -13,7 +13,6 @@
           <option value="Tanuló">Tanuló</option>
           <option value="Tanár">Tanár</option>
           <option value="Dolgozó">Dolgozó</option>
-          <option value="Külsős">Külsős</option>
       </select>
 
       <button type="submit" :disabled="loading">{{ loading ? 'Regisztrálás...' : 'Regisztrálás' }}</button>
