@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import AuthLayout from './AuthLAyout.vue'
+import AuthLayout from './AuthLayout.vue'
 import axios from '../../axios'
 
 export default {
@@ -37,68 +37,79 @@ export default {
     },
     methods: {
         async handleLogin() {
-            this.loading = true
-            this.error = ''
-            
+    this.loading = true
+    this.error = ''
+    
+    try {
+        const response = await axios.post('/login', this.form)
+        
+        console.log('Raw response data:', response.data)
+        console.log('Response data type:', typeof response.data)
+        console.log('Response keys:', Object.keys(response.data))
+        
+        // 1. Tisztítsd meg a választ BOM karaktertől
+        let responseData = response.data
+        
+        // Ha string a válasz, parse-oljuk JSON-né
+        if (typeof responseData === 'string') {
+            // Távolítsuk el a BOM karaktert
+            responseData = responseData.replace(/^\uFEFF/, '')
             try {
-                const response = await axios.post('/login', this.form)
-                
-                console.log('Login response:', response.data)
-                
-                const token = response.data.token || 
-                            response.data.access_token || 
-                            response.data.accessToken
-                
-                if (!token) {
-                    console.error('No token in response:', response.data)
-                    throw new Error('A szerver nem küldött érvényes tokent')
-                }
-                
-                localStorage.setItem('auth_token', token)
-                console.log('Token saved:', token.substring(0, 20) + '...')
-                
-                if (response.data.user) {
-                    localStorage.setItem('user', JSON.stringify(response.data.user))
-                } else {
-                    localStorage.setItem('auth_data', JSON.stringify(response.data))
-                }
-                
-                // Átirányítás dashboardra
-                this.$router.push('/dashboard')
-                
-            } 
-
-            catch (error) {
-                console.error('Login error details:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status
-                })
-
-                if (error.response?.status === 401) {
-                  // Laravel alapértelmezett hibája
-                  this.error = error.response?.data?.message || 'Hibás email vagy jelszó'
-                } else if (error.response?.status === 422) {
-                    // Validációs hiba
-                    this.error = 'Érvénytelen adatok. Ellenőrizd a mezőket.'
-                } else if (error.response?.status === 404) {
-                    this.error = 'A bejelentkezési szolgáltatás nem elérhető'
-                } else if (error.code === 'ERR_NETWORK') {
-                    this.error = 'Hálózati hiba. Ellenőrizd az internetkapcsolatot.'
-                } else if (error.message.includes('timeout')) {
-                    this.error = 'Időtúllépés. Kérjük, próbáld újra.'
-                } else {
-                    this.error = error.response?.data?.message || 
-                                error.message || 
-                                'Ismeretlen bejelentkezési hiba'
-                }
-                
-            } 
-
-            finally {
-                this.loading = false
+                responseData = JSON.parse(responseData)
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError)
+                throw new Error('Érvénytelen válasz formátum')
             }
         }
+        
+        console.log('Cleaned response:', responseData)
+        
+        // 2. Token keresése - most már biztosan objektum
+        const token = responseData.token || 
+                     responseData.access_token || 
+                     responseData.accessToken
+        
+        console.log('Token found:', token)
+        
+        if (!token) {
+            console.error('No token in cleaned response:', responseData)
+            this.error = 'A szerver nem küldött érvényes tokent'
+            return
+        }
+        
+        // 3. Token mentése
+        localStorage.setItem('auth_token', token)
+        console.log('Token saved to localStorage')
+        
+        // 4. User adatok mentése
+        if (responseData.user) {
+            localStorage.setItem('user', JSON.stringify(responseData.user))
+            console.log('User saved:', responseData.user)
+        }
+        
+        // 5. Axios header beállítása
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        console.log('Axios header set')
+        
+        // 6. Redirect
+        this.$router.push('/dashboard')
+        
+    } catch (error) {
+        console.error('Login error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        })
+        
+        if (error.response?.status === 401) {
+            this.error = error.response?.data?.message || 'Hibás email vagy jelszó'
+        } else {
+            this.error = error.message || 'Bejelentkezési hiba'
+        }
+    } finally {
+        this.loading = false
+    }
+}
     }
   }
 </script>

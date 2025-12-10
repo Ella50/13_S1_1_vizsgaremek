@@ -43,6 +43,7 @@
           
           <form v-else @submit.prevent="saveUserChanges" class="edit-form">
             <div class="form-grid">
+
               <div class="form-group">
                 <label>Keresztnév *</label>
                 <input v-model="editUser.firstName" type="text" required>
@@ -85,12 +86,27 @@
 
               <div class="form-group">
                 <label>Vármegye *</label>
-                <input v-model="editUser.county" type="text">
+                <!--<input v-model="editUser.county_id" @change="loadCitiesForCounty" type="text">-->
+                <select v-model="editUser.county_id" @change="loadCitiesForCounty" required>
+                  <option value="">Válassz megyét</option>
+                  <option v-for="county in counties" :key="county.id" :value="county.id">
+                    {{ county.countyName }}
+                  </option>
+                </select>
               </div>
 
               <div class="form-group">
                 <label>Város *</label>
-                <input v-model="editUser.city" type="text">
+                <!--<input v-model="editUser.city" type="text">-->
+                <select v-model="editUser.city_id" required :disabled="!editUser.county_id">
+                  <option value="">Válassz várost</option>
+                  <option v-for="city in citiesForCounty" :key="city.id" :value="city.id">
+                    {{ city.zipCode }} - {{ city.cityName }}
+                  </option>
+                </select>
+                <small v-if="!editUser.county_id" class="text-muted">
+                  Először válassz megyét
+                </small>
               </div>
               
               
@@ -240,6 +256,9 @@ export default {
       error: '',
       currentPage: 1,
 
+      counties: [],
+      citiesForCounty: [],
+
       // Szerkesztéshez
       showEditModal: false,
       editUser: {
@@ -266,6 +285,7 @@ export default {
   
   mounted() {
     this.fetchUsers()
+    this.loadCounties()
   },
   
   methods: {
@@ -287,121 +307,225 @@ export default {
         })
 
         console.log('Fetching users with params:', params)
-    
-        const response = await AuthService.api.get('/admin/users', { params })
-        console.log('API response:', response.data)
 
-        this.users = response.data
+        const response = await AuthService.api.get('/admin/users', { params })
+        console.log('Raw API response:', response.data)
+        
+        // 1. STRING-RE KONVERTÁLÁS ÉS BOM TÁVOLÍTÁS
+        let responseData = response.data
+        
+        // Ha string, távolítsuk el a BOM-ot
+        if (typeof responseData === 'string') {
+          console.log('Response is string, cleaning BOM...')
+          responseData = responseData.replace(/^\uFEFF/, '')
+          responseData = JSON.parse(responseData)
+        }
+        // Ha már objektum, de van BOM a JSON.stringify-ben
+        else if (typeof responseData === 'object') {
+          console.log('Response is object, checking for BOM in stringified version...')
+          const jsonString = JSON.stringify(responseData)
+          if (jsonString.charCodeAt(0) === 0xFEFF) {
+            console.log('BOM found in object, cleaning...')
+            const cleanString = jsonString.replace(/^\uFEFF/, '')
+            responseData = JSON.parse(cleanString)
+          }
+        }
+        
+        console.log('Cleaned response data:', responseData)
+        
+        // 2. ELLENŐRIZZÜK A SZERKEZETET
+        if (responseData.success && responseData.data) {
+          this.users = responseData
+        } else {
+          console.error('Invalid response structure:', responseData)
+          this.error = 'Érvénytelen válasz formátum'
+        }
+        
       } catch (error) {
         console.error('Felhasználók betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'Hiba történt a felhasználók betöltése során'
+        this.error = error.response?.data?.message || 'php artisan serve - Hiba történt a felhasználók betöltése során'
       } finally {
         this.loading = false
       }
     },
 
+
+    // Megyék betöltése
+    async loadCounties() {
+      try {
+        console.log('Loading counties...');
+        const response = await AuthService.api.get('/admin/counties');
+        
+        if (response.data.success) {
+          this.counties = response.data.data;
+          console.log(`Loaded ${this.counties.length} counties`);
+        } else {
+          console.error('API error:', response.data.message);
+ 
+        }
+      } catch (error) {
+        console.error('Counties load failed:', error);
+        
+        // Részletes debug info
+        if (error.response) {
+          console.error('Response status:', error.response.status);
+          console.error('Response data:', error.response.data);
+        }
+        
+      }
+    },
+    
+    // Városok betöltése kiválasztott megyéhez
+    async loadCitiesForCounty() {
+      if (!this.editUser.county_id) {
+        this.citiesForCounty = [];
+        this.editUser.city_id = null;
+        return;
+      }
+      
+      try {
+        console.log(`Loading cities for county: ${this.editUser.county_id}`);
+        const response = await AuthService.api.get(`/admin/cities/by-county/${this.editUser.county_id}`);
+        
+        if (response.data.success) {
+          this.citiesForCounty = response.data.data;
+          console.log(`Loaded ${this.citiesForCounty.length} cities`);
+          
+          // Ha a felhasználónak már van városa, ellenőrizzük, hogy a listában van-e
+          if (this.editUser.city_id) {
+            const cityExists = this.citiesForCounty.some(city => city.id == this.editUser.city_id);
+            if (!cityExists) {
+              console.warn('User city not found in county list, resetting...');
+              this.editUser.city_id = null;
+            }
+          }
+        } else {
+          console.error('Cities API error:', response.data.message);
+          this.citiesForCounty = [];
+        }
+      } catch (error) {
+        console.error('Cities load failed:', error);
+        this.citiesForCounty = [];
+      }
+    },
+
+
+
+
     // Modal kezelés (Szerkesztés)
     async openEditModal(userId) {
-  console.log('Opening edit modal for user:', userId)
-  
-  this.showEditModal = true
-  this.editLoading = true
-  
-  try {
-    // 1. Először a listából betöltés (azonnal)
-    const userFromList = this.users.data.find(u => u.id == userId)
-    
-    if (userFromList) {
-      console.log('Loading basic data from list')
-      this.editUser = {
-        id: userFromList.id,
-        firstName: userFromList.firstName || '',
-        lastName: userFromList.lastName || '',
-        thirdName: userFromList.thirdName || '',
-        email: userFromList.email || '',
-        userType: userFromList.userType || 'Tanuló',
-        userStatus: userFromList.userStatus || 'active',
-        address: '', // Ezek nincsenek a listában
-        hasDiscount: userFromList.hasDiscount || false,
-      }
-    }
-    
-    // 2. Háttérben teljes adatok betöltése UserController-rel
-    console.log('Loading full details from UserController...')
-    const response = await AuthService.api.get(`/admin/users/${userId}`)
-    
-    console.log('UserController response:', response.data)
-    
-    if (response.data.success) {
-      const userData = response.data.data
+      console.log('Opening edit modal for user:', userId)
       
-      // Frissítsd a hiányzó mezőket
-      this.editUser = {
-        ...this.editUser,
-        address: userData.address || this.editUser.address,
-        thirdName: userData.thirdName || this.editUser.thirdName,
-        hasDiscount: userData.hasDiscount || this.editUser.hasDiscount
-      }
+      this.showEditModal = true
+      this.editLoading = true
+      this.citiesForCounty = []
       
-      console.log('Full user data loaded successfully')
-    }
-  } catch (error) {
-    console.error('Failed to load full user details:', error.message)
-    console.log('Using basic data from list')
-    
-    // Ha nincs felhasználó a listában se
-    if (!this.editUser.id) {
-      alert('Felhasználó nem található')
-      this.closeEditModal()
-      return
-    }
-  } finally {
-    this.editLoading = false
-  }
-},
-    
-    // Segédfüggvény a listából való betöltéshez
-    fallbackToLocalData(userId) {
-      console.log('DEBUG: Falling back to local data for user ID:', userId)
-      console.log('DEBUG: Available users:', this.users.data)
-      
-      const user = this.users.data.find(u => u.id == userId)
-      
-      if (user) {
-        console.log('DEBUG: Found user in local data:', user)
-        this.editUser = {
-          id: user.id,
-          firstName: user.firstName || '',
-          lastName: user.lastName || '',
-          thirdName: user.thirdName || '',
-          email: user.email || '',
-          userType: user.userType || 'Tanuló',
-          userStatus: user.userStatus || 'active',
-          address: user.address || '',
-          hasDiscount: user.hasDiscount || false,
-
+      try {
+        // 1. Először a listából betöltés (azonnal)
+        const userFromList = this.users.data.find(u => u.id == userId)
+        
+        if (userFromList) {
+          console.log('Loading basic data from list')
+          this.editUser = {
+            id: userFromList.id,
+            firstName: userFromList.firstName || '',
+            lastName: userFromList.lastName || '',
+            thirdName: userFromList.thirdName || '',
+            email: userFromList.email || '',
+            userType: userFromList.userType || 'Tanuló',
+            userStatus: userFromList.userStatus || 'active',
+            county_id: userFromList.county_id || null,
+            city_id: userFromList.city_id || null,
+            address: '', // Ezek nincsenek a listában
+            hasDiscount: userFromList.hasDiscount || false,
+          }
         }
-      } else {
-        console.error('DEBUG: User not found in local data either')
-        alert('Felhasználó nem található')
-        this.closeEditModal()
+        
+        // 2. Háttérben teljes adatok betöltése UserController-rel
+        console.log('Loading full details from UserController...')
+        const response = await AuthService.api.get(`/admin/users/${userId}`)
+        
+        console.log('UserController response:', response.data)
+        
+        if (response.data.success) {
+          const userData = response.data.data
+          
+          // Frissítsd a hiányzó mezőket
+          this.editUser = {
+            ...this.editUser,
+            address: userData.address || this.editUser.address,
+            thirdName: userData.thirdName || this.editUser.thirdName,
+            hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
+            county_id: userData.county_id || this.editUser.county_id,
+            city_id: userData.city_id || this.editUser.city_id
+          }
+          if (this.editUser.county_id) {
+            await this.loadCitiesForCounty()
+          }
+          console.log('Full user data loaded successfully')
+        }
+      } 
+      catch (error) {
+        console.error('Failed to load full user details:', error.message)
+        console.log('Using basic data from list')
+        
+        // Ha nincs felhasználó a listában se
+        if (!this.editUser.id) {
+          alert('Felhasználó nem található')
+          this.closeEditModal()
+          return
+        }
+      } 
+      finally {
+        this.editLoading = false
       }
     },
-    
-    closeEditModal() {
-      this.showEditModal = false
-      this.editUser = {
-        id: null,
-        firstName: '',
-        lastName: '',
-        thirdName: '',
-        email: '',
-        userType: 'Tanuló',
-        userStatus: 'active',
-        address: '',
-        hasDiscount: false,
-      }
-    },
+        
+        // Segédfüggvény a listából való betöltéshez
+    fallbackToLocalData(userId) {
+          console.log('DEBUG: Falling back to local data for user ID:', userId)
+          console.log('DEBUG: Available users:', this.users.data)
+          
+          const user = this.users.data.find(u => u.id == userId)
+          
+          if (user) {
+            console.log('DEBUG: Found user in local data:', user)
+            this.editUser = {
+              id: user.id,
+              firstName: user.firstName || '',
+              lastName: user.lastName || '',
+              thirdName: user.thirdName || '',
+              email: user.email || '',
+              userType: user.userType || 'Tanuló',
+              userStatus: user.userStatus || 'active',
+              county_id: userData.county_id || this.editUser.county_id,
+              city_id: userData.city_id || this.editUser.city_id,
+              address: user.address || '',
+              hasDiscount: user.hasDiscount || false,
+
+            }
+          } else {
+            console.error('DEBUG: User not found in local data either')
+            alert('Felhasználó nem található')
+            this.closeEditModal()
+          }
+      },
+        
+        closeEditModal() {
+          this.showEditModal = false
+          this.citiesForCounty = [] 
+          this.editUser = {
+            id: null,
+            firstName: '',
+            lastName: '',
+            thirdName: '',
+            email: '',
+            userType: 'Tanuló',
+            userStatus: 'active',
+            address: '',
+            hasDiscount: false,
+          }
+        },
     
     async saveUserChanges() {
   if (!confirm('Biztosan menti a módosításokat?')) {

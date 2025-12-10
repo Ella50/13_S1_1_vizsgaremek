@@ -1,7 +1,7 @@
 ﻿<?php
 
 use Illuminate\Support\Facades\Route;
-
+/*
 Route::get('/', function () {
     return response()->json([
         'status' => 'ok',
@@ -13,4 +13,4 @@ Route::get('/', function () {
             'test' => 'GET /test.php'
         ]
     ]);
-});
+});*/
