@@ -1,25 +1,26 @@
-<!-- Navigation.vue - egyszerűbb verzió -->
 <template>
   <nav>
     <template v-if="AuthService.isAuthenticated()">
       <router-link to="/dashboard">Főoldal</router-link>
       
-      <!-- Csak admin -->
+      <!-- Admin -->
       <router-link v-if="AuthService.isAdmin()" to="/admin/users">
         Felhasználók
       </router-link>
       
-      <!-- Menü -->
+
+
       <router-link v-if="AuthService.canViewMenu()" to="/menu/today">
-        Mai Menü
+        Menü
       </router-link>
       
+
       <!-- Konyha -->
       <router-link v-if="AuthService.isKitchen()" to="/kitchen/meals">
         Ételek
       </router-link>
       
-      <button @click="logout">Kijelentkezés</button>
+      <button @click="logout" id="logout">Kijelentkezés</button>
     </template>
     
     <template v-else>
@@ -66,14 +67,15 @@ nav {
   display: flex;
   gap: 1rem;
   padding: 1rem;
-  background: #2c3e50;
+  background: #ffd294;
 }
 
 nav a {
-  color: white;
+  color: #8a1212;
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  font-weight: bold;
 }
 
 nav a:hover {
@@ -97,4 +99,12 @@ button {
   display: flex;
   gap: 1rem;
 }
+
+#logout{
+  width: 10%;
+  min-width: 130px;
+  margin-left: auto;
+  float: right;
+}
+
 </style>

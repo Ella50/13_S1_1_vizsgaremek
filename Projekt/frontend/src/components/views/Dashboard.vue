@@ -7,30 +7,25 @@
     <div class="quick-links">
       <div v-if="isAdmin" class="admin-links">
         <router-link to="/admin/users" class="link-card">
-          <h3>👑 Admin Panel</h3>
-          <p>Felhasználók kezelése</p>
+          <h4>Felhasználók kezelése</h4>
         </router-link>
       </div>
       
       <div v-if="canViewMenu" class="menu-links">
         <router-link to="/menu/today" class="link-card">
-          <h3>📋 Mai menü</h3>
-          <p>Mai étlap megtekintése</p>
+          <h4>Mai menü</h4>
         </router-link>
         <router-link to="/menu/week" class="link-card">
-          <h3>📅 Heti menü</h3>
-          <p>Heti étlap megtekintése</p>
+          <h4>Heti menü</h4>
         </router-link>
       </div>
       
       <div v-if="isKitchen" class="kitchen-links">
         <router-link to="/kitchen/meals" class="link-card">
-          <h3>🍽️ Ételek</h3>
-          <p>Ételek kezelése</p>
+          <h3>Ételek kezelése</h3>
         </router-link>
         <router-link to="/kitchen/orders" class="link-card">
-          <h3>📋 Rendelések</h3>
-          <p>Mai rendelések</p>
+          <h3>Rendelések</h3>
         </router-link>
       </div>
     </div>
@@ -67,10 +62,10 @@ export default {
   },
   
   mounted() {
-    // Frissítsd a user adatokat ha van token
+    // a user adatokat frissíteni ha van token
     /*if (this.isAuthenticated) {
       AuthService.getCurrentUser().catch(() => {
-        // Ha hiba van, automatikus logout
+        
       })
     }*/
   }
