@@ -390,7 +390,7 @@ export default {
 }
 
 .meal-category {
-  background: #3498db;
+  background: #ffd294;
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;

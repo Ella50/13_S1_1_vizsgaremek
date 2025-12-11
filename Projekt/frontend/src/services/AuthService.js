@@ -104,7 +104,6 @@ class AuthService {
     const token = this.getToken()
     
     if (!token) {
-      console.log('No token, clearing local auth only')
       this.clearAuth()
       return { success: true }
     }
@@ -132,13 +131,12 @@ class AuthService {
       this.clearAuth()
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Logout failed' 
+        message: error.response?.data?.message || 'Sikertelen kijelentkezés' 
       }
     }
   }
 
   clearAuth() {
-    console.log('Clearing auth data...')
     
     // Töröljük az összes auth adatot
     localStorage.removeItem('auth_token')

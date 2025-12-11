@@ -208,7 +208,7 @@
                 @click="updateStatus(user.id, 'suspended')"
                 class="btn-suspend"
                 title="Felfüggesztés">
-                ⚠️
+                Felfüggesztés
               </button>
             </td>
           </tr>
@@ -673,8 +673,8 @@ export default {
 }
 
 .users-table th {
-  background: #2c3e50;
-  color: white;
+  background: #ffd294;
+  color: black;
   text-align: left;
   padding: 1rem;
   font-weight: 500;
@@ -771,7 +771,7 @@ export default {
 }
 
 .btn-edit {
-  background: #3498db;
+  background: #a1bacc;
   color: white;
 }
 

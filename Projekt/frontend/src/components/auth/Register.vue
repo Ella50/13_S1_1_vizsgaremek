@@ -56,7 +56,7 @@ export default {
         this.success = response.data.message
         this.form = { firstName:'', lastName:'', email:'', password:'', password_confirmation:'', userType:'Tanuló' }
       } catch (err) {
-        this.error = err.response?.data?.message || err.response?.data?.errors || 'Regisztrációs hiba'
+        this.error =  'Regisztrációs hiba'
       } finally { this.loading = false }
     }
   }
