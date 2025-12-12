@@ -12,13 +12,13 @@
                 <img src="../../../faag.png" alt="">
             </div>
             <div class="bottom-right">
-                <!-- Abrosz kép háttérként -->
+                <!-- Abrosz kép háttérként????? -->
             </div>
         </div>
     </div>
 
     <div class="right-side row-12">
-      <!-- A form tartalmát a slot-on keresztül adod át -->
+      <!-- A form tartalma-->
       <slot></slot>
     </div>
   </div>

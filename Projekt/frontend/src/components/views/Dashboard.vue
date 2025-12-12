@@ -1,4 +1,3 @@
-<!-- src/views/Dashboard.vue -->
 <template>
   <div class="dashboard">
     <h1>Üdvözöljük, {{ userName }}!</h1>

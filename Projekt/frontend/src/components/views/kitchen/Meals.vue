@@ -1,4 +1,3 @@
-<!-- src/views/kitchen/Meals.vue -->
 <template>
   <div class="meals-management">
     <div class="header">
@@ -8,7 +7,6 @@
       </button>
     </div>
     
-    <!-- Keresés és szűrés -->
     <div class="filters">
       <input 
         v-model="search" 
@@ -23,11 +21,9 @@
       </select>
     </div>
     
-    <!-- Betöltés/error állapotok -->
     <div v-if="loading" class="loading">Betöltés...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
-    
-    <!-- Ételek táblázata -->
+
     <div v-else class="meals-container">
       <div v-if="meals.length === 0" class="no-meals">
         <p>Nincs még étel hozzáadva.</p>
@@ -65,7 +61,6 @@
       </div>
     </div>
     
-    <!-- Modal -->
     <div v-if="showAddModal || editingMeal" class="modal-overlay">
       <div class="modal">
         <h2>{{ editingMeal ? 'Étel szerkesztése' : 'Új étel hozzáadása' }}</h2>
@@ -131,7 +126,6 @@ export default {
       showAddModal: false,
       editingMeal: null,
       
-      // Új étel form
       mealForm: {
         name: '',
         category: '',
@@ -170,7 +164,6 @@ export default {
         console.error('Ételek betöltése sikertelen:', error)
         this.error = error.response?.data?.message || 'Hiba történt'
         
-        // Ha nincs jogosultság, irányítsd vissza
         if (error.response?.status === 403) {
           this.$router.push('/dashboard')
         }
@@ -296,7 +289,6 @@ export default {
   min-width: 200px;
 }
 
-/* Ételek grid */
 .meals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -407,7 +399,6 @@ export default {
   background: #c0392b;
 }
 
-/* Modal stílusok */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -540,7 +531,6 @@ small {
   background: #219653;
 }
 
-/* Loading, error, no data states */
 .loading, .error, .no-meals {
   text-align: center;
   padding: 3rem;

@@ -86,7 +86,7 @@ export default {
         if (error.response?.status === 401) {
             this.error = 'Hibás email vagy jelszó'
         } else {
-            this.error =  'Bejelentkezési hiba'
+            this.error =  'Hibás email vagy jelszó'
         }
         if (error.response?.status === 403) {
             this.error = 'Inaktív felhasználó'

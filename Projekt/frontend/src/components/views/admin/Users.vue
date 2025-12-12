@@ -27,7 +27,6 @@
       </div>
     </div>
     
-    <!-- Szerkesztés Modal -->
     <div v-if="showEditModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -215,7 +214,6 @@
         </tbody>
       </table>
       
-      <!-- Pagination -->
       <div v-if="users.data && users.data.length > 0" class="pagination">
         <button 
           @click="changePage(users.current_page - 1)"
@@ -259,7 +257,6 @@ export default {
       counties: [],
       citiesForCounty: [],
 
-      // Szerkesztéshez
       showEditModal: false,
       editUser: {
         id: null,
@@ -311,16 +308,15 @@ export default {
         const response = await AuthService.api.get('/admin/users', { params })
         console.log('Raw API response:', response.data)
         
-        // 1. STRING-RE KONVERTÁLÁS ÉS BOM TÁVOLÍTÁS
+        // BOM ELTÁVOLÍTÁS
         let responseData = response.data
         
-        // Ha string, távolítsuk el a BOM-ot
         if (typeof responseData === 'string') {
           console.log('Response is string, cleaning BOM...')
           responseData = responseData.replace(/^\uFEFF/, '')
           responseData = JSON.parse(responseData)
         }
-        // Ha már objektum, de van BOM a JSON.stringify-ben
+
         else if (typeof responseData === 'object') {
           console.log('Response is object, checking for BOM in stringified version...')
           const jsonString = JSON.stringify(responseData)
@@ -333,11 +329,9 @@ export default {
         
         console.log('Cleaned response data:', responseData)
         
-        // 2. ELLENŐRIZZÜK A SZERKEZETET
         if (responseData.success && responseData.data) {
           this.users = responseData
         } else {
-          console.error('Invalid response structure:', responseData)
           this.error = 'Érvénytelen válasz formátum'
         }
         
@@ -349,24 +343,20 @@ export default {
       }
     },
 
-
-    // Megyék betöltése
     async loadCounties() {
       try {
-        console.log('Loading counties...');
         const response = await AuthService.api.get('/admin/counties');
         
         if (response.data.success) {
           this.counties = response.data.data;
-          console.log(`Loaded ${this.counties.length} counties`);
         } else {
           console.error('API error:', response.data.message);
  
         }
       } catch (error) {
-        console.error('Counties load failed:', error);
+        console.error('Counties betöltése failed:', error);
         
-        // Részletes debug info
+        // Hiba? 
         if (error.response) {
           console.error('Response status:', error.response.status);
           console.error('Response data:', error.response.data);
@@ -374,8 +364,7 @@ export default {
         
       }
     },
-    
-    // Városok betöltése kiválasztott megyéhez
+
     async loadCitiesForCounty() {
       if (!this.editUser.county_id) {
         this.citiesForCounty = [];
@@ -384,18 +373,14 @@ export default {
       }
       
       try {
-        console.log(`Loading cities for county: ${this.editUser.county_id}`);
         const response = await AuthService.api.get(`/admin/cities/by-county/${this.editUser.county_id}`);
         
         if (response.data.success) {
           this.citiesForCounty = response.data.data;
-          console.log(`Loaded ${this.citiesForCounty.length} cities`);
           
-          // Ha a felhasználónak már van városa, ellenőrizzük, hogy a listában van-e
           if (this.editUser.city_id) {
             const cityExists = this.citiesForCounty.some(city => city.id == this.editUser.city_id);
             if (!cityExists) {
-              console.warn('User city not found in county list, resetting...');
               this.editUser.city_id = null;
             }
           }
@@ -404,28 +389,22 @@ export default {
           this.citiesForCounty = [];
         }
       } catch (error) {
-        console.error('Cities load failed:', error);
+        console.error('Cities betöltése failed:', error);
         this.citiesForCounty = [];
       }
     },
 
 
-
-
-    // Modal kezelés (Szerkesztés)
     async openEditModal(userId) {
-      console.log('Opening edit modal for user:', userId)
       
       this.showEditModal = true
       this.editLoading = true
       this.citiesForCounty = []
       
       try {
-        // 1. Először a listából betöltés (azonnal)
         const userFromList = this.users.data.find(u => u.id == userId)
         
         if (userFromList) {
-          console.log('Loading basic data from list')
           this.editUser = {
             id: userFromList.id,
             firstName: userFromList.firstName || '',
@@ -440,17 +419,13 @@ export default {
             hasDiscount: userFromList.hasDiscount || false,
           }
         }
-        
-        // 2. Háttérben teljes adatok betöltése UserController-rel
-        console.log('Loading full details from UserController...')
+
         const response = await AuthService.api.get(`/admin/users/${userId}`)
-        
-        console.log('UserController response:', response.data)
+
         
         if (response.data.success) {
           const userData = response.data.data
           
-          // Frissítsd a hiányzó mezőket
           this.editUser = {
             ...this.editUser,
             address: userData.address || this.editUser.address,
@@ -469,7 +444,6 @@ export default {
         console.error('Failed to load full user details:', error.message)
         console.log('Using basic data from list')
         
-        // Ha nincs felhasználó a listában se
         if (!this.editUser.id) {
           alert('Felhasználó nem található')
           this.closeEditModal()
@@ -480,8 +454,7 @@ export default {
         this.editLoading = false
       }
     },
-        
-        // Segédfüggvény a listából való betöltéshez
+    //Segédfüggvény
     fallbackToLocalData(userId) {
           console.log('DEBUG: Falling back to local data for user ID:', userId)
           console.log('DEBUG: Available users:', this.users.data)
@@ -550,13 +523,11 @@ export default {
     console.log('DEBUG: Sending update to /admin/users/' + this.editUser.id)
     console.log('DEBUG: Update data:', updateData)
     
-    // HASZNÁLD AZ ADMIN CONTROLLER UPDATE METÓDUSÁT
     const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
     
     console.log('DEBUG: Update response:', response.data)
     
     if (response.data.success) {
-      // Frissítsd a helyi listát
       const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
       if (userIndex !== -1) {
         Object.keys(updateData).forEach(key => {
@@ -573,8 +544,7 @@ export default {
     }
   } catch (error) {
     console.error('DEBUG: Update failed:', error)
-    
-    // Részletes hibaüzenet
+
     if (error.response?.data?.errors) {
       const errors = Object.values(error.response.data.errors).flat()
       alert('Validációs hibák:\n' + errors.join('\n'))
@@ -662,7 +632,6 @@ export default {
   min-width: 300px;
 }
 
-/* Table */
 .users-table {
   width: 100%;
   border-collapse: collapse;
@@ -689,7 +658,6 @@ export default {
   background: #f8f9fa;
 }
 
-/* Badges */
 .role-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -746,7 +714,6 @@ export default {
   color: #721c24;
 }
 
-/* Műveletek */
 .actions {
   display: flex;
   gap: 0.5rem;
@@ -790,7 +757,7 @@ export default {
   color: #721c24;
 }
 
-/* Pagination */
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -817,7 +784,7 @@ export default {
   color: #7f8c8d;
 }
 
-/* Loading & Error */
+
 .loading {
   text-align: center;
   padding: 3rem;
@@ -854,20 +821,20 @@ export default {
   cursor: pointer;
 }
 
-/* Modal stílusok */
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7); /* Sötétebb háttér */
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  opacity: 1; /* Explicit beállítás */
-  visibility: visible; /* Fontos! */
+  opacity: 1;
+  visibility: visible;
 }
 
 .modal {
@@ -880,9 +847,9 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: relative !important;
   z-index: 1001;
-  transform: translateY(0); /* Reset transform */
-  opacity: 1; /* Explicit beállítás */
-  visibility: visible !important; /* Fontos! */
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible !important;
   display: block !important;
 }
 
@@ -936,7 +903,7 @@ export default {
 
 .form-group label {
   font-weight: 500;
-  color: #2c3e50;
+  color: #476079;
 }
 
 .form-group input,
@@ -984,7 +951,7 @@ export default {
 
 .btn-save {
   padding: 0.75rem 1.5rem;
-  background: #2ecc71;
+  background: #069642;
   color: white;
   border: none;
   border-radius: 4px;
@@ -998,7 +965,7 @@ export default {
 }
 
 .btn-save:hover:not(:disabled) {
-  background: #27ae60;
+  background: #6fce97;
 }
 
 .loading-small {
@@ -1010,7 +977,7 @@ export default {
   width: 30px;
   height: 30px;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
+  border-top: 3px solid #a0d3f5;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem auto;
