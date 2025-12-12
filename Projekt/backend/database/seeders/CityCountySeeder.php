@@ -11,13 +11,11 @@ class CityCountySeeder extends Seeder
 {
     public function run(): void
     {
-        // Töröljük a régi adatokat
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         City::truncate();
         County::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        // CSV fájl beolvasása
         $csvPath = storage_path('iranyitoszamok.csv');
         
         if (!file_exists($csvPath)) {
@@ -25,10 +23,8 @@ class CityCountySeeder extends Seeder
             return;
         }
 
-        // Olvassuk be a fájlt soronként
         $lines = file($csvPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         
-        // Fejléc eltávolítása (első sor)
         array_shift($lines);
 
         $counties = [];
@@ -38,12 +34,11 @@ class CityCountySeeder extends Seeder
         foreach ($lines as $line) {
             $counter++;
             
-            // Debug minden 1000. sor
+            // Debug (minden 1000 sor)
             if ($counter % 1000 === 0) {
                 $this->command->info("Feldolgozva: $counter sor");
             }
             
-            // Szétválasztjuk pontosvesszővel
             $row = explode(';', $line);
             
             if (count($row) < 3) continue;
@@ -52,28 +47,24 @@ class CityCountySeeder extends Seeder
             $cityName = trim($row[1]);
             $countyName = trim($row[2]);
             
-            // Üres értékek ellenőrzése
             if (empty($zipCode) || empty($cityName) || empty($countyName)) {
                 continue;
             }
             
-            // Megyék mentése - KIJAVÍTVA: timestamps nélkül
             if (!isset($counties[$countyName])) {
-                // Közvetlen SQL insert, hogy ne próbáljon timestamps-t beszúrni
                 $countyId = DB::table('counties')->insertGetId([
                     'countyName' => $countyName
                 ]);
                 $counties[$countyName] = $countyId;
             }
 
-            // Városok mentése
             $cities[] = [
                 'cityName' => $cityName,
                 'zipCode' => $zipCode,
                 'county_id' => $counties[$countyName],
             ];
             
-            // Batch insert minden 500 rekord után
+            // Batch insert (minden 500)
             if (count($cities) >= 500) {
                 try {
                     DB::table('cities')->insert($cities);
@@ -85,7 +76,6 @@ class CityCountySeeder extends Seeder
             }
         }
 
-        // Maradék városok beszúrása
         if (!empty($cities)) {
             try {
                 DB::table('cities')->insert($cities);
