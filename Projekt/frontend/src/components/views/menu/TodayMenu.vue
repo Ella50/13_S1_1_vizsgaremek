@@ -20,8 +20,6 @@
             <h3>{{ item.meal?.name || 'Étel' }}</h3>
             <p>{{ item.meal?.description || '' }}</p>
             <div class="meal-info">
-              <span class="price">{{ item.meal?.price || 0 }} Ft</span>
-              <span v-if="item.meal?.is_vegetarian" class="veg-badge">🌱 Vegetáriánus</span>
             </div>
           </div>
         </div>
@@ -54,9 +52,7 @@ export default {
     
     groupedMenu() {
       const grouped = {
-        reggeli: [],
         ebéd: [],
-        vacsora: []
       }
       
       this.menuItems.forEach(item => {
@@ -83,7 +79,7 @@ export default {
         this.menuItems = response.data.menu_items || []
       } catch (error) {
         console.error('Mai menü betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'Hiba történt'
+        this.error = error.response?.data?.message || 'Hiba'
       } finally {
         this.loading = false
       }
@@ -91,9 +87,7 @@ export default {
     
     getMealTypeName(type) {
       const names = {
-        'reggeli': '🌅 Reggeli',
         'ebéd': '🍽️ Ebéd',
-        'vacsora': '🌙 Vacsora'
       }
       return names[type] || type
     }

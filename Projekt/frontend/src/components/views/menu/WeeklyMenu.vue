@@ -2,11 +2,11 @@
 <template>
   <div class="weekly-menu">
     <div class="header">
-      <h1>📅 Heti menü</h1>
+      <h1>Heti menü</h1>
       <div class="week-navigation">
-        <button @click="prevWeek" class="nav-btn">◀ Előző hét</button>
+        <button @click="prevWeek" class="nav-btn">Előző hét</button>
         <span class="week-range">{{ weekDisplay }}</span>
-        <button @click="nextWeek" class="nav-btn">Következő hét ▶</button>
+        <button @click="nextWeek" class="nav-btn">Következő hét</button>
       </div>
     </div>
     
@@ -39,10 +39,6 @@
             <div class="item-details">
               <span class="item-price">{{ item.meal?.price || 0 }} Ft</span>
               
-              <div class="item-tags">
-                <span v-if="item.meal?.is_vegetarian" class="tag veg">🌱 Vegetáriánus</span>
-                <span v-if="item.meal?.is_vegan" class="tag vegan">🥬 Vegan</span>
-              </div>
               
               <div v-if="item.meal?.allergens && item.meal.allergens.length" class="item-allergens">
                 <small>Allergének: {{ item.meal.allergens.join(', ') }}</small>
@@ -92,7 +88,7 @@ export default {
   },
   
   mounted() {
-    // Az aktuális hét kezdetét állítsuk be
+
     this.setCurrentWeekStart()
     this.fetchWeeklyMenu()
   },
@@ -100,10 +96,8 @@ export default {
   methods: {
     setCurrentWeekStart() {
       const today = new Date()
-      const dayOfWeek = today.getDay() // 0 = vasárnap, 1 = hétfő, stb.
+      const dayOfWeek = today.getDay() // 0 = vasárnap, 1 = hétfő
       
-      // Magyar hét kezdete: hétfő (1), de Laravelben vasárnap (0) lehet
-      // Állítsuk be hétfőre
       const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
       const monday = new Date(today)
       monday.setDate(today.getDate() + diff)
@@ -126,7 +120,7 @@ export default {
         this.weeklyMenu = response.data.weekly_menu || {}
       } catch (error) {
         console.error('Heti menü betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'Hiba történt a heti menü betöltése során'
+        this.error = error.response?.data?.message || 'Hiba történt a heti menü betöltésekor'
       } finally {
         this.loading = false
       }
@@ -162,9 +156,7 @@ export default {
     
     getMealTypeName(type) {
       const names = {
-        'reggeli': '🌅 Reggeli',
-        'ebéd': '🍽️ Ebéd',
-        'vacsora': '🌙 Vacsora'
+        'ebéd': 'Ebéd',
       }
       return names[type] || type
     }
@@ -218,7 +210,6 @@ export default {
   background: #2980b9;
 }
 
-/* Heti schedule */
 .weekly-schedule {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -346,7 +337,6 @@ export default {
   border: 2px dashed #dee2e6;
 }
 
-/* Loading & error states */
 .loading {
   text-align: center;
   padding: 3rem;
@@ -387,7 +377,7 @@ export default {
   background: #2980b9;
 }
 
-/* Responsive design */
+
 @media (max-width: 768px) {
   .weekly-schedule {
     grid-template-columns: 1fr;

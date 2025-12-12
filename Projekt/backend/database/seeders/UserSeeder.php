@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // ADMIN felhasználó
+        // ADMIN
         User::create([
             'firstName' => 'Admin',
             'lastName' => 'Felhasználó',
@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
             'hasDiscount' => false,
         ]);
 
-        // TANÁR felhasználók
+        // TANÁR
         User::create([
             'firstName' => 'Kovács',
             'lastName' => 'János',
@@ -60,7 +60,7 @@ class UserSeeder extends Seeder
             'hasDiscount' => false,
         ]);
 
-        // TANULÓ felhasználók
+        // TANULÓ
         User::create([
             'firstName' => 'Tóth',
             'lastName' => 'Bence',
@@ -83,7 +83,7 @@ class UserSeeder extends Seeder
             'email' => 'kiss.erika@eiskola.hu',
             'password' => Hash::make('tanulo456'),
             'userType' => 'Tanuló',
-            'userStatus' => 'inactive', // Inaktív - adminnak kell aktiválnia
+            'userStatus' => 'inactive',
             'city_id' => 2,
             'address' => 'Tanuló utca 5.',
             'thirdName' => null,
@@ -93,7 +93,7 @@ class UserSeeder extends Seeder
             'hasDiscount' => true,
         ]);
 
-        // DOLGOZÓ felhasználó
+        // DOLGOZÓ
         User::create([
             'firstName' => 'Szabó',
             'lastName' => 'Gábor',
@@ -111,7 +111,7 @@ class UserSeeder extends Seeder
         ]);
 
 
-        // KONYHA dolgozó
+        // KONYHA
         User::create([
             'firstName' => 'Farkas',
             'lastName' => 'Ilona',
@@ -128,17 +128,17 @@ class UserSeeder extends Seeder
             'hasDiscount' => false,
         ]);
 
-        echo "Teszt felhasználók sikeresen létrehozva!\n";
+        echo "Teszt felhasználók sikeresen létrehozva\n";
         echo "==========================\n";
-        echo "Admin belépés:\n";
+        echo "Admin:\n";
         echo "Email: admin@iskola.hu\n";
         echo "Jelszó: admin123\n";
         echo "==========================\n";
-        echo "Tanár belépés:\n";
+        echo "Tanár (inaktív):\n";
         echo "Email: kovacs.janos@iskola.hu\n";
         echo "Jelszó: tanar123\n";
         echo "==========================\n";
-        echo "Tanuló belépés:\n";
+        echo "Tanuló:\n";
         echo "Email: toth.bence@iskola.hu\n";
         echo "Jelszó: tanulo123\n";
         echo "==========================\n";
