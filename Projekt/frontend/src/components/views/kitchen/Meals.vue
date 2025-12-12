@@ -1,37 +1,29 @@
-<!-- src/views/kitchen/Meals.vue -->
 <template>
   <div class="meals-management">
     <div class="header">
-      <h1>🍽️ Ételek kezelése</h1>
+      <h1>Ételek kezelése</h1>
       <button @click="showAddModal = true" class="btn-add">
         + Új étel
       </button>
     </div>
     
-    <!-- Keresés és szűrés -->
     <div class="filters">
       <input 
         v-model="search" 
-        placeholder="Keresés étel neve vagy leírása alapján"
+        placeholder="Keresés"
         @input="fetchMeals"
       />
       <select v-model="selectedCategory" @change="fetchMeals">
         <option value="">Összes kategória</option>
-        <option value="Reggeli">Reggeli</option>
         <option value="Leves">Leves</option>
         <option value="Főétel">Főétel</option>
         <option value="Köret">Köret</option>
-        <option value="Saláta">Saláta</option>
-        <option value="Desszert">Desszert</option>
-        <option value="Ital">Ital</option>
       </select>
     </div>
     
-    <!-- Betöltés/error állapotok -->
     <div v-if="loading" class="loading">Betöltés...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
-    
-    <!-- Ételek táblázata -->
+
     <div v-else class="meals-container">
       <div v-if="meals.length === 0" class="no-meals">
         <p>Nincs még étel hozzáadva.</p>
@@ -50,21 +42,15 @@
           <p class="meal-description">{{ meal.description || 'Nincs leírás' }}</p>
           
           <div class="meal-details">
-            <div class="price">{{ meal.price }} Ft</div>
             
-            <div class="meal-tags">
-              <span v-if="meal.is_vegetarian" class="tag veg">🌱 Vegetáriánus</span>
-              <span v-if="meal.is_vegan" class="tag vegan">🥬 Vegan</span>
-              <span v-if="meal.is_gluten_free" class="tag gf">🌾 Gluténmentes</span>
-            </div>
             
             <div v-if="meal.allergens && meal.allergens.length" class="allergens">
               <strong>Allergének:</strong> {{ meal.allergens.join(', ') }}
             </div>
-            
+            <!--
             <div v-if="meal.calories" class="calories">
               <strong>Kalória:</strong> {{ meal.calories }} kcal
-            </div>
+            </div>-->
           </div>
           
           <div class="meal-actions">
@@ -75,7 +61,6 @@
       </div>
     </div>
     
-    <!-- Modal új étel hozzáadásához/szerkesztéséhez -->
     <div v-if="showAddModal || editingMeal" class="modal-overlay">
       <div class="modal">
         <h2>{{ editingMeal ? 'Étel szerkesztése' : 'Új étel hozzáadása' }}</h2>
@@ -90,61 +75,27 @@
             <label>Kategória *</label>
             <select v-model="mealForm.category" required>
               <option value="">Válassz kategóriát</option>
-              <option value="Reggeli">Reggeli</option>
               <option value="Leves">Leves</option>
               <option value="Főétel">Főétel</option>
               <option value="Köret">Köret</option>
-              <option value="Saláta">Saláta</option>
-              <option value="Desszert">Desszert</option>
-              <option value="Ital">Ital</option>
             </select>
           </div>
           
-          <div class="form-group">
-            <label>Ár (Ft) *</label>
-            <input v-model.number="mealForm.price" type="number" min="0" required />
-          </div>
           
           <div class="form-group">
             <label>Leírás</label>
             <textarea v-model="mealForm.description" rows="3"></textarea>
           </div>
           
-          <div class="form-group">
+          <!--<div class="form-group">
             <label>Kalória (opcionális)</label>
             <input v-model.number="mealForm.calories" type="number" min="0" />
-          </div>
+          </div>-->
           
-          <div class="form-row">
-            <div class="form-group">
-              <label>
-                <input v-model="mealForm.is_vegetarian" type="checkbox" />
-                Vegetáriánus
-              </label>
-            </div>
-            
-            <div class="form-group">
-              <label>
-                <input v-model="mealForm.is_vegan" type="checkbox" />
-                Vegan
-              </label>
-            </div>
-            
-            <div class="form-group">
-              <label>
-                <input v-model="mealForm.is_gluten_free" type="checkbox" />
-                Gluténmentes
-              </label>
-            </div>
-          </div>
           
           <div class="form-group">
-            <label>Allergének (vesszővel elválasztva)</label>
-            <input 
-              v-model="allergensInput" 
-              placeholder="pl: glutén, tej, tojás, hal"
-            />
-            <small>Vesszővel elválasztva add meg az allergéneket</small>
+            <label>Allergének</label>
+            <!--<input v-model="allergensInput"/>-->
           </div>
           
           <div class="modal-actions">
@@ -175,17 +126,12 @@ export default {
       showAddModal: false,
       editingMeal: null,
       
-      // Új étel form
       mealForm: {
         name: '',
         category: '',
-        price: 0,
         description: '',
         calories: null,
         allergens: [],
-        is_vegetarian: false,
-        is_vegan: false,
-        is_gluten_free: false
       },
       
       allergensInput: ''
@@ -197,16 +143,8 @@ export default {
   },
   
   watch: {
-    // Ha változik az allergensInput, alakítsd át tömbbé
     allergensInput(newValue) {
-      if (newValue.trim() === '') {
-        this.mealForm.allergens = []
-      } else {
-        this.mealForm.allergens = newValue
-          .split(',')
-          .map(item => item.trim())
-          .filter(item => item.length > 0)
-      }
+      
     }
   },
   
@@ -226,7 +164,6 @@ export default {
         console.error('Ételek betöltése sikertelen:', error)
         this.error = error.response?.data?.message || 'Hiba történt'
         
-        // Ha nincs jogosultság, irányítsd vissza
         if (error.response?.status === 403) {
           this.$router.push('/dashboard')
         }
@@ -245,11 +182,9 @@ export default {
     async saveMeal() {
       try {
         if (this.editingMeal) {
-          // Szerkesztés
           await AuthService.api.put(`/kitchen/meals/${this.editingMeal.id}`, this.mealForm)
           this.$toast?.success('Étel sikeresen frissítve')
         } else {
-          // Új étel
           await AuthService.api.post('/kitchen/meals', this.mealForm)
           this.$toast?.success('Étel sikeresen hozzáadva')
         }
@@ -263,7 +198,7 @@ export default {
     },
     
     async deleteMeal(mealId) {
-      if (!confirm('Biztosan törölni szeretnéd ezt az ételt?')) {
+      if (!confirm('Biztosan törölni szeretné ezt az ételt?')) {
         return
       }
       
@@ -287,13 +222,9 @@ export default {
       this.mealForm = {
         name: '',
         category: '',
-        price: 0,
         description: '',
         calories: null,
         allergens: [],
-        is_vegetarian: false,
-        is_vegan: false,
-        is_gluten_free: false
       }
       this.allergensInput = ''
     }
@@ -328,6 +259,8 @@ export default {
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
+  width: 10%;
+  min-width: 150px;
 }
 
 .btn-add:hover {
@@ -356,7 +289,6 @@ export default {
   min-width: 200px;
 }
 
-/* Ételek grid */
 .meals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -409,13 +341,6 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-.price {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #27ae60;
-  margin-bottom: 0.5rem;
-}
-
 .meal-tags {
   display: flex;
   flex-wrap: wrap;
@@ -430,15 +355,6 @@ export default {
   font-weight: 500;
 }
 
-.tag.veg {
-  background: #d4edda;
-  color: #155724;
-}
-
-.tag.vegan {
-  background: #d1ecf1;
-  color: #0c5460;
-}
 
 .tag.gf {
   background: #fff3cd;
@@ -483,32 +399,48 @@ export default {
   background: #c0392b;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  opacity: 1; 
+  visibility: visible; 
 }
 
 .modal {
   background: white;
   border-radius: 8px;
-  padding: 2rem;
   width: 90%;
-  max-width: 600px;
+  max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative !important;
+  z-index: 1001;
+  transform: translateY(0);
+  opacity: 1; 
+  visibility: visible !important;
+  display: block !important;
+  padding: 35px;
 }
 
-.modal h2 {
-  margin: 0 0 1.5rem 0;
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
   color: #2c3e50;
 }
 
@@ -599,7 +531,6 @@ small {
   background: #219653;
 }
 
-/* Loading, error, no data states */
 .loading, .error, .no-meals {
   text-align: center;
   padding: 3rem;

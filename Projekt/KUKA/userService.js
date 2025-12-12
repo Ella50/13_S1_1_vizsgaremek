@@ -1,4 +1,4 @@
-import api from './api.js'
+import api from '../frontend/src/services/api.js'
 
 export const userService = {
     async getAll() {

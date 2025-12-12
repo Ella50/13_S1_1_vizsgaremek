@@ -36,7 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Menu (minden bejelentkezettnek)
     Route::prefix('menu')->group(function () {
         Route::get('/today', [MenuController::class, 'getTodayMenu']);
-        Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
+        //Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
     });
     
     // Admin
@@ -71,11 +71,8 @@ Route::post('/test-simple', function() { return response()->json(['ok' => true])
 
 Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
 
-// Very simple password reset
 Route::post("/api/simple-password-reset", [App\Http\Controllers\VerySimplePasswordController::class, "sendReset"]);
 
-
-// SUPER SIMPLE TEST ENDPOINT
 Route::post("/test-password", function(Illuminate\Http\Request $request) {
     return response()->json([
         "status" => "OK",
