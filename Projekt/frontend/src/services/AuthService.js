@@ -44,13 +44,17 @@ class AuthService {
           message: error.message
         })
         
+        // Fontos: logout API hívásnál NE töröljünk automatikusan
+        // és NE redirecteljünk
         if (error.response?.status === 401) {
-          if (!error.config.url.includes('/logout')) {
+          const url = error.config?.url || ''
+          
+          // Csak logout NEM ÉS más URL esetén
+          if (!url.includes('/logout')) {
             console.log('Unauthorized, clearing auth data...')
             this.clearAuth()
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login'
-            }
+            // Fontos: Itt NE redirecteljünk automatikusan
+            // A komponens fog kezelni
           }
         }
         return Promise.reject(error)
@@ -81,9 +85,6 @@ class AuthService {
   async register(userData) {
     try {
       const response = await this.api.post('/register', userData)
-      
-
-      
       return response.data
     } catch (error) {
       console.error('Regisztráció error:', error)
@@ -109,13 +110,20 @@ class AuthService {
         data: error.response?.data
       })
       
+      // Fontos: itt NEM hívjuk meg a clearAuth()-t
+      // mert az interceptor már meghívhatta volna
+      // Csak ha 401-es hiba volt és logout hívás volt
       if (error.response?.status === 401) {
-        console.log('401:token már érvénytelen, csak töröljük lokálisan')
-        this.clearAuth()
+        console.log('401: token már érvénytelen, csak töröljük lokálisan')
+        // clearAuth() már meghívódhatott az interceptorból
+        // De ellenőrizzük, hogy még van-e token
+        if (this.getToken()) {
+          this.clearAuth()
+        }
         return { success: true }
       }
       
-      // hiba esetén is töröljük lokálisan
+      // Egyéb hibák esetén is töröljük
       this.clearAuth()
       return { 
         success: false, 
@@ -125,15 +133,13 @@ class AuthService {
   }
 
   clearAuth() {
-    
-    //összes auth adat törlése
+    // Összes auth adat törlése
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     localStorage.removeItem('userType')
     localStorage.removeItem('userStatus')
     
     delete this.api.defaults.headers.common['Authorization']
-    
   }
 
   getToken() {
@@ -154,7 +160,7 @@ class AuthService {
     return !!token
   }
 
-// Getters
+  // Getters
   getUserRole() {
     const user = this.getUser()
     return user?.userType || null
@@ -210,18 +216,22 @@ class AuthService {
       const response = await this.api.get('/user')
       return response.data
     } catch (error) {
-      this.logout()
+      // Ne hívjunk logout()-ot itt, mert az ciklust okozhat
+      if (error.response?.status === 401) {
+        this.clearAuth()
+      }
       throw error
     }
   }
+  
   async getCities() {
-  try {
-    const response = await this.api.get('/cities');
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
+    try {
+      const response = await this.api.get('/cities');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
   }
-}
 }
 
 export default new AuthService()

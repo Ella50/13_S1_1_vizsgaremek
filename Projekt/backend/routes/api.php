@@ -57,7 +57,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Konyha
     Route::prefix('kitchen')->group(function () {
         Route::get('/meals', [KitchenController::class, 'getMeals']);
-        Route::post('/meals', [KitchenController::class, 'createMeal']);
+        Route::post('/meals', [KitchenController::class, 'storeMeal']);
+        Route::get('/meals/{id}', [KitchenController::class, 'showMeal']);
+        Route::put('/meals/{id}', [KitchenController::class, 'updateMeal']);
+        Route::delete('/meals/{id}', [KitchenController::class, 'deleteMeal']);
+    
+    // Kategóriák
+    Route::get('/categories', [KitchenController::class, 'getCategories']);
+
+
         Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });
 });

@@ -9,7 +9,7 @@ class Meal extends Model
 {
     use HasFactory;
 
-    protected $table = 'meal';
+    protected $table = 'meals';
 
     protected $fillable = [
         'mealName',
@@ -18,7 +18,7 @@ class Meal extends Model
         'picture'
     ];
 
-    /* Kapcsolat User modellel
+    /* Kapcsolat modellel
     public function user()
     {
         return $this->hasOne(User::class, 'rfidCard_id');

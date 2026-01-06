@@ -20,7 +20,15 @@
         Ételek
       </router-link>
       
-      <button @click="logout" id="logout">Kijelentkezés</button>
+      <button 
+        @click="logout" 
+        id="logout"
+        :disabled="loggingOut"
+      >
+        <span v-if="loggingOut">Kijelentkezés...</span>
+        <span v-else>Kijelentkezés</span>
+      </button>
+
     </template>
     
     <template v-else>
@@ -34,9 +42,10 @@
 import AuthService from '../services/authService'
 
 export default {
-  data(){
-    return{
-      AuthService
+  data() {
+    return {
+      AuthService,
+      loggingOut: false
     }
   },
   computed: {
@@ -54,9 +63,29 @@ export default {
     }
   },
   methods: {
-    logout() {
-      AuthService.logout()
-      this.$router.push('/login')
+    async logout() {
+      // Már fut a kijelentkezés
+      if (this.loggingOut) return
+      
+      this.loggingOut = true
+      
+      try {
+        // 1. Először hívjuk meg a logout API-t
+        await AuthService.logout()
+        
+        // 2. Kis várakozás a render frissítéséhez
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // 3. Csak ezután navigáljunk
+        this.$router.push('/login')
+        
+      } catch (error) {
+        console.error('Logout error:', error)
+        // Hiba esetén is navigáljunk
+        this.$router.push('/login')
+      } finally {
+        this.loggingOut = false
+      }
     }
   }
 }

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ClassSeeder::class,
             CityCountySeeder::class,
             UserSeeder::class,
+            MealSeeder::class,
             /*CountyTableSeeder::class,
             CityTableSeeder::class,
 
