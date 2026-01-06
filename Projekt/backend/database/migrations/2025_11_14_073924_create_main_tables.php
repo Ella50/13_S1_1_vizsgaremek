@@ -23,7 +23,7 @@ return new class extends Migration
     Schema::create('meals', function (Blueprint $table) {
         $table->id();
         $table->string('mealName');
-        $table->enum('mealType', ['Leves', 'Főétel', 'Bónusz']);
+        $table->enum('mealType', ['Leves', 'Főétel', 'Egyéb']);
         $table->text('description')->nullable();
         $table->string('picture', 1024)->nullable();
         $table->timestamps();

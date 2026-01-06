@@ -17,7 +17,6 @@
         <option value="">Összes kategória</option>
         <option value="Leves">Leves</option>
         <option value="Főétel">Főétel</option>
-        <option value="Köret">Köret</option>
       </select>
     </div>
     
@@ -27,9 +26,6 @@
     <div v-else class="meals-container">
       <div v-if="meals.length === 0" class="no-meals">
         <p>Nincs még étel hozzáadva.</p>
-        <button @click="showAddModal = true" class="btn-add-first">
-          Adj hozzá első ételed!
-        </button>
       </div>
       
       <div v-else class="meals-grid">
@@ -77,7 +73,6 @@
               <option value="">Válassz kategóriát</option>
               <option value="Leves">Leves</option>
               <option value="Főétel">Főétel</option>
-              <option value="Köret">Köret</option>
             </select>
           </div>
           
@@ -184,9 +179,11 @@ export default {
         if (this.editingMeal) {
           await AuthService.api.put(`/kitchen/meals/${this.editingMeal.id}`, this.mealForm)
           this.$toast?.success('Étel sikeresen frissítve')
+          alert('Étel sikeresen frissítve')
         } else {
           await AuthService.api.post('/kitchen/meals', this.mealForm)
           this.$toast?.success('Étel sikeresen hozzáadva')
+          alert('Étel sikeresen hozzáadva')
         }
         
         this.closeModal()
