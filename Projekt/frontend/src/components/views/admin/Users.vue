@@ -178,28 +178,30 @@
             </td>
             <td>{{ formatDate(user.created_at) }}</td>
             <td class="actions">
-              <button 
-                @click="openEditModal(user.id)"
-                class="btn-edit"
-                title="Szerkesztés">
-                ✏️
-              </button>
+              <div class="actions-inner">
+                <button 
+                  @click="openEditModal(user.id)"
+                  class="btn-edit"
+                  title="Szerkesztés">
+                  ✏️
+                </button>
 
-              <button 
-                v-if="user.userStatus === 'inactive'"
-                @click="updateStatus(user.id, 'active')"
-                class="btn-activate"
-                title="Aktiválás">
-                ✅
-              </button>
-              
-              <button 
-                v-if="user.userStatus === 'active'"
-                @click="updateStatus(user.id, 'inactive')"
-                class="btn-deactivate"
-                title="Deaktiválás">
-                ⏸️
-              </button>
+                <button 
+                  v-if="user.userStatus === 'inactive'"
+                  @click="updateStatus(user.id, 'active')"
+                  class="btn-activate"
+                  title="Aktiválás">
+                  ✅
+                </button>
+                
+                <button 
+                  v-if="user.userStatus === 'active'"
+                  @click="updateStatus(user.id, 'inactive')"
+                  class="btn-deactivate"
+                  title="Deaktiválás">
+                  ⏸️
+                </button>
+              </div>
             </td>
             <td>
               <button 
@@ -644,7 +646,7 @@ export default {
 .users-table th {
   background: #ffd294;
   color: black;
-  text-align: left;
+  text-align: center;
   padding: 1rem;
   font-weight: 500;
 }
@@ -652,6 +654,7 @@ export default {
 .users-table td {
   padding: 1rem;
   border-bottom: 1px solid #eee;
+  text-align: center;
 }
 
 .users-table tr:hover {
@@ -715,8 +718,15 @@ export default {
 }
 
 .actions {
-  display: flex;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.actions-inner {
+  display: inline-flex;
   gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
 }
 
 .actions button {
