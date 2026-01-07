@@ -8,6 +8,7 @@
     </div>
 
     <!-- MODAL -->
+     <pre>{{ meals }}</pre>
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
         <!-- STEP 1: Dátum -->
@@ -59,7 +60,7 @@
             </li>
           </ul>
 
-          <button @click="saveMenu">💾 Mentés</button>
+          <button @click="saveMenu" :disabled="!canSave">Mentés</button>
           <button class="secondary" @click="closeModal">Mégse</button>
         </div>
       </div>
@@ -69,6 +70,9 @@
 
 <script>
 import AuthService from '../../../services/authService'
+
+import api from '@/services/api'
+
 
 export default {
   data() {
@@ -82,14 +86,26 @@ export default {
       meals: [],
       mealTypes: ['Leves', 'Főétel', 'Egyéb'],
       activeMealType: 'Leves',
-      selectedMeals: []
+      selectedMeals: {
+        soup: null,
+        optionA: null,
+        optionB: null
+      },
+      activeCategory: 'Leves', 
+      meals: [],
+      selectedDate: null,
+      
     }
   },
 
   computed: {
     filteredMeals() {
-      return this.meals.filter(m => m.mealType === this.activeMealType)
-    }
+    return this.meals.filter(
+      meal => meal.meal_type === this.activeCategory
+    )
+  }
+
+
   },
 
   methods: {
@@ -141,8 +157,12 @@ export default {
     },
 
     async fetchMeals() {
-      const res = await AuthService.api.get('/meals')
-      this.meals = res.data
+      try {
+        const res = await AuthService.api.get('/kitchen/meals')
+        this.meals = Array.isArray(res.data) ? res.data : res.data.meals
+      } catch (e) {
+        console.error('Ételek betöltése sikertelen', e)
+      }
     },
 
     async onDateSelected() {
@@ -164,22 +184,34 @@ export default {
       }
     },
 
+    canSave() {
+      return (
+    this.selectedDate &&
+    this.selectedSoup &&
+    this.selectedOptionA &&
+    this.selectedOptionB
+  )
+},
+
+
     async saveMenu() {
-      // replace alapú mentés: a backend a teljes napi menüt felülírja
-      await AuthService.api.post('/menu', {
-        date: this.selectedDate,
-        meals: this.selectedMeals.map((m, index) => ({
-          id: m.id,
-          order: index
-        }))
-      }).then(() => {
-      this.closeModal()
-      this.$emit('menu-updated')
-      window.dispatchEvent(new Event('menu-updated'))
-    })
-      this.closeModal()
-      this.$emit('menu-updated')
+      if (!this.canSave) return
+
+      try {
+        await api.post('/menu', {
+          day: this.selectedDate,
+          soup: this.selectedSoup.id,
+          optionA: this.selectedOptionA.id,
+          optionB: this.selectedOptionB.id
+        })
+
+        this.closeModal()
+        await this.fetchMenus()
+      } catch (e) {
+        console.error('Mentés sikertelen', e)
+      }
     }
+
   }
 }
 </script>
@@ -216,9 +248,18 @@ button.active { background: #3498db; color: white; }
 
 .modal {
   background: white;
-  padding: 2rem;
-  width: 520px;
   border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative !important;
+  z-index: 1001;
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible !important;
+  display: block !important;
 }
 
 .meal-types { display: flex; gap: 0.5rem; margin-bottom: 1rem; }

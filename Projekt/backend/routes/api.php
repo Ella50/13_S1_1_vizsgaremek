@@ -5,9 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\KitchenController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\MenuController;
 
 
 // Publikus Ăştvonalak
@@ -18,6 +18,14 @@ Route::post('/reset-password', [PasswordResetController::class, 'sendResetLinkEm
 Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']);
 // Opcionális tokenellenőrzés
 Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
+
+
+Route::get('/menu/available-dates', [MenuController::class, 'availableDates']);
+Route::get('/menu/existing-dates', [MenuController::class, 'existingDates']);
+Route::get('/menu/{date}', [MenuController::class, 'getMenuByDate']);
+Route::post('/menu', [MenuController::class, 'saveMenu']);
+Route::post('/menu', [MenuController::class, 'store']);
+
 
 
 // védett utvonalak
