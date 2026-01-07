@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Meal;
+use App\Models\Meals;
 use App\Enums\MealType;
 
 class KitchenController extends Controller
@@ -14,7 +14,7 @@ class KitchenController extends Controller
     public function getMeals(Request $request)
         {
             try {
-                $query = Meal::query();
+                $query = Meals::query();
                 
                 // Keresés
                 if ($request->has('search') && !empty($request->search)) {
@@ -132,7 +132,7 @@ class KitchenController extends Controller
             }
             
             // Étel létrehozása
-            $meal = Meal::create([
+            $meal = Meals::create([
                 'mealName' => $request->name,
                 'mealType' => $request->category,
                 'description' => $request->description,
@@ -172,7 +172,7 @@ class KitchenController extends Controller
     {
         try {
             // Étel megkeresése
-            $meal = Meal::find($id);
+            $meal = Meals::find($id);
             
             if (!$meal) {
                 return response()->json([
@@ -245,7 +245,7 @@ class KitchenController extends Controller
     {
         try {
             // Étel megkeresése
-            $meal = Meal::find($id);
+            $meal = Meals::find($id);
             
             if (!$meal) {
                 return response()->json([
@@ -288,7 +288,7 @@ class KitchenController extends Controller
     public function showMeal($id)
     {
         try {
-            $meal = Meal::find($id);
+            $meal = Meals::find($id);
             
             if (!$meal) {
                 return response()->json([
@@ -347,7 +347,7 @@ class KitchenController extends Controller
             \Log::info('=== START getMealIngredients for ID: ' . $id . ' ===');
             
             // 1. Ellenőrizzük az ételt
-            $meal = Meal::find($id);
+            $meal = Meals::find($id);
             
             if (!$meal) {
                 \Log::warning('Meal not found with ID: ' . $id);
