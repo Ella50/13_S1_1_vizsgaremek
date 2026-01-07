@@ -69,10 +69,13 @@
       </div>
     </div>
     
-    <!-- Új étel / Szerkesztés modal -->
-    <div v-if="showAddModal || editingMeal" class="modal-overlay">
+    <!-- Új étel modal -->
+    <div v-if="showAddModal && !editingMeal" class="modal-overlay">
       <div class="modal">
-        <h2>{{ editingMeal ? 'Étel szerkesztése' : 'Új étel hozzáadása' }}</h2>
+        <div class="modal-header">
+          <h2>Új étel hozzáadása</h2>
+          <button @click="closeModal" class="close-btn">&times;</button>
+        </div>
         
         <form @submit.prevent="saveMeal">
           <div class="form-group">
@@ -100,14 +103,243 @@
               Mégse
             </button>
             <button type="submit" class="btn-save">
-              {{ editingMeal ? 'Mentés' : 'Hozzáadás' }}
+              Hozzáadás
             </button>
           </div>
         </form>
       </div>
     </div>
     
-    <!-- Összetevők modal -->
+    <!-- Ételszerkesztés modal - INNEN KEZDŐDIK AZ ÚJ RÉSZ -->
+    <div v-if="showAddModal && editingMeal" class="modal-overlay">
+      <div class="modal edit-meal-modal">
+        <div class="modal-header">
+          <h2>{{ editingMeal?.name }} szerkesztése</h2>
+          <button @click="closeModal" class="close-btn">&times;</button>
+        </div>
+        
+        <form @submit.prevent="saveMeal">
+          <!-- Alapadatok -->
+          <div class="basic-info-section">
+            <h3>Alapadatok</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Étel neve *</label>
+                <input v-model="mealForm.name" required maxlength="255" />
+              </div>
+              
+              <div class="form-group">
+                <label>Kategória *</label>
+                <select v-model="mealForm.category" required>
+                  <option value="">Válassz kategóriát</option>
+                  <option value="Leves">Leves</option>
+                  <option value="Főétel">Főétel</option>
+                  <option value="Egyéb">Egyéb</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Leírás</label>
+              <textarea v-model="mealForm.description" rows="2"></textarea>
+            </div>
+          </div>
+          
+          <!-- Összetevők szerkesztése -->
+          <div class="ingredients-section">
+            <div class="section-header">
+              <h3>Összetevők</h3>
+              <span class="section-subtitle">Összesen: {{ editIngredientsList.length }} hozzávaló</span>
+            </div>
+            
+            <!-- Új hozzávaló hozzáadása -->
+            <div class="add-ingredient-section">
+              <h4>Új hozzávaló hozzáadása</h4>
+              <div class="add-ingredient-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Hozzávaló *</label>
+                    <div class="search-container">
+                      <input 
+                        v-model="newIngredient.search" 
+                        @input="searchIngredients"
+                        placeholder="Keresés hozzávaló között..."
+                        type="search"
+                        class="search-input"
+                      />
+                      <div v-if="searchResults.length > 0" class="search-results">
+                        <div 
+                          v-for="result in searchResults" 
+                          :key="result.id"
+                          class="search-result-item"
+                          @click="selectIngredient(result)"
+                        >
+                          <span class="result-name">{{ result.name }}</span>
+                          <span class="result-type">{{ result.ingredientType }}</span>
+                          <span class="result-info">{{ result.energy }} kcal</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Mennyiség *</label>
+                    <input 
+                      v-model="newIngredient.amount" 
+                      type="number" 
+                      step="0.1" 
+                      min="0"
+                      placeholder="100"
+                      class="amount-input"
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Mértékegység *</label>
+                    <select v-model="newIngredient.unit" class="unit-select">
+                      <option value="g">g</option>
+                      <option value="kg">kg</option>
+                      <option value="ml">ml</option>
+                      <option value="l">l</option>
+                      <option value="db">db</option>
+                      <option value="tk">tk</option>
+                      <option value="ek">ek</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button 
+                      type="button" 
+                      @click="addIngredient" 
+                      class="btn-add-ingredient"
+                      :disabled="!canAddIngredient"
+                    >
+                      Hozzáadás
+                    </button>
+                  </div>
+                </div>
+                
+                <div v-if="selectedIngredientForAdd" class="selected-ingredient-info">
+                  <strong>Kiválasztott hozzávaló:</strong> {{ selectedIngredientForAdd.name }}
+                  <span class="ingredient-details">
+                    {{ selectedIngredientForAdd.energy }} kcal/100g | 
+                    {{ selectedIngredientForAdd.protein }}g fehérje | 
+                    {{ selectedIngredientForAdd.carbohydrate }}g szénhidrát
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Meglévő hozzávalók listája -->
+            <div class="current-ingredients-section">
+              <h4>Jelenlegi hozzávalók</h4>
+              
+              <div v-if="editIngredientsList.length === 0" class="no-current-ingredients">
+                <p>Még nincsenek hozzávalók hozzáadva.</p>
+              </div>
+              
+              <div v-else class="current-ingredients-list">
+                <div class="current-ingredients-table-container">
+                  <table class="current-ingredients-table">
+                    <thead>
+                      <tr>
+                        <th>Hozzávaló</th>
+                        <th>Mennyiség</th>
+                        <th>Egység</th>
+                        <th>Kalória</th>
+                        <th>Törlés</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(ingredient, index) in editIngredientsList" :key="ingredient.id || ingredient.tempId">
+                        <td>
+                          <div class="ingredient-name">
+                            {{ ingredient.name }}
+                            <div class="ingredient-nutrition">
+                              <small class="ingredient-type" :class="getIngredientTypeClass(ingredient.ingredientType)">
+                                {{ ingredient.ingredientType }}
+                              </small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <input 
+                            v-model="ingredient.pivot.amount" 
+                            type="number" 
+                            step="0.1" 
+                            min="0"
+                            @change="updateIngredientAmount(ingredient)"
+                            class="amount-input small"
+                          />
+                        </td>
+                        <td>
+                          <select 
+                            v-model="ingredient.pivot.unit"
+                            @change="updateIngredientUnit(ingredient)"
+                            class="unit-select small"
+                          >
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="l">l</option>
+                            <option value="db">db</option>
+                            <option value="tk">tk</option>
+                            <option value="ek">ek</option>
+                          </select>
+                        </td>
+                        <td>
+                          <span class="calories-display">
+                            {{ calculateIngredientCalories(ingredient) }} kcal
+                          </span>
+                        </td>
+                        <td>
+                          <button 
+                            @click="removeIngredientFromList(index)" 
+                            class="btn-remove-ingredient"
+                            title="Eltávolítás"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <!-- Összegzés -->
+                <div class="edit-summary">
+                  <div class="summary-item">
+                    <div class="summary-label">Összes hozzávaló:</div>
+                    <div class="summary-value">{{ editIngredientsList.length }} db</div>
+                  </div>
+                  <div class="summary-item">
+                    <div class="summary-label">Teljes mennyiség:</div>
+                    <div class="summary-value">{{ calculateEditTotalAmount() }}</div>
+                  </div>
+                  <div class="summary-item">
+                    <div class="summary-label">Teljes kalória:</div>
+                    <div class="summary-value">{{ calculateEditTotalCalories() }} kcal</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Modal gombok -->
+          <div class="modal-actions">
+            <button type="button" @click="closeModal" class="btn-cancel">
+              Mégse
+            </button>
+            <button type="submit" class="btn-save" :disabled="savingMeal">
+              {{ savingMeal ? 'Mentés...' : 'Mentés' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Összetevők megtekintése modal (CSAK megtekintés) -->
     <div v-if="showIngredientsModal" class="modal-overlay">
       <div class="modal ingredients-modal">
         <div class="modal-header">
@@ -216,9 +448,6 @@
           <button @click="closeIngredientsModal" class="btn-cancel">
             Bezárás
           </button>
-          <button v-if="canEdit" @click="editIngredients(selectedMeal)" class="btn-edit">
-            Összetevők szerkesztése
-          </button>
         </div>
       </div>
     </div>
@@ -243,6 +472,20 @@ export default {
       selectedMeal: null,
       loadingIngredients: false,
       ingredientsError: '',
+      savingMeal: false,
+      
+      // Összetevők szerkesztése
+      editIngredientsList: [],
+      
+      // Új hozzávaló hozzáadása
+      newIngredient: {
+        search: '',
+        amount: '',
+        unit: 'g'
+      },
+      searchResults: [],
+      selectedIngredientForAdd: null,
+      allIngredients: [],
       
       mealForm: {
         name: '',
@@ -253,14 +496,20 @@ export default {
   },
   
   computed: {
-    // Computed property a jogosultságok ellenőrzésére
     canEdit() {
       return AuthService.isKitchen() || AuthService.isAdmin()
+    },
+    
+    canAddIngredient() {
+      return this.selectedIngredientForAdd && 
+             this.newIngredient.amount && 
+             parseFloat(this.newIngredient.amount) > 0
     }
   },
   
   mounted() {
     this.checkAuthAndFetch()
+    this.loadAllIngredients()
   },
   
   methods: {
@@ -288,15 +537,7 @@ export default {
         if (this.search) params.search = this.search
         if (this.selectedCategory) params.category = this.selectedCategory
         
-        console.log('Fetching meals with AuthService:', {
-          isAuthenticated: AuthService.isAuthenticated(),
-          userRole: AuthService.getUserRole(),
-          tokenExists: !!AuthService.getToken()
-        })
-        
         const response = await AuthService.api.get('/kitchen/meals', { params })
-        
-        console.log('Meals response:', response.data)
         
         if (response.data.success) {
           this.meals = response.data.meals || []
@@ -319,56 +560,35 @@ export default {
       }
     },
     
-     async viewIngredients(meal) {
+    // ÖSSZETEVŐK BETÖLTÉSE (csak megtekintés)
+    async viewIngredients(meal) {
       this.selectedMeal = meal
       this.showIngredientsModal = true
       this.loadingIngredients = true
       this.ingredientsError = ''
       
       try {
-        console.log('Loading ingredients for meal:', {
-          id: meal.id,
-          name: meal.name,
-          hasIngredients: meal.ingredients && meal.ingredients.length > 0
-        })
-        
-        // Ha nincsenek betöltve az összetevők, betöltjük őket
         if (!meal.ingredients || meal.ingredients.length === 0) {
-          console.log('Fetching ingredients from API...')
-          
           const response = await AuthService.api.get(`/kitchen/meals/${meal.id}/ingredients`)
           
-          console.log('API Response:', {
-            success: response.data.success,
-            ingredientsCount: response.data.ingredients?.length || 0
-          })
-          
           if (response.data.success) {
-            // Ellenőrizzük és formázzuk az adatokat
-            this.selectedMeal.ingredients = (response.data.ingredients || []).map(ingredient => {
-              // Biztosítjuk, hogy minden mező létezik
-              return {
-                id: ingredient.id || 0,
-                name: ingredient.name || 'Ismeretlen',
-                ingredientType: ingredient.ingredientType || 'Egyéb',
-                energy: parseFloat(ingredient.energy) || 0,
-                protein: parseFloat(ingredient.protein) || 0,
-                carbohydrate: parseFloat(ingredient.carbohydrate) || 0,
-                fat: parseFloat(ingredient.fat) || 0,
-                pivot: {
-                  amount: parseFloat(ingredient.pivot?.amount) || 0,
-                  unit: ingredient.pivot?.unit || 'g'
-                }
+            this.selectedMeal.ingredients = (response.data.ingredients || []).map(ingredient => ({
+              id: ingredient.id || 0,
+              name: ingredient.name || 'Ismeretlen',
+              ingredientType: ingredient.ingredientType || 'Egyéb',
+              energy: parseFloat(ingredient.energy) || 0,
+              protein: parseFloat(ingredient.protein) || 0,
+              carbohydrate: parseFloat(ingredient.carbohydrate) || 0,
+              fat: parseFloat(ingredient.fat) || 0,
+              pivot: {
+                amount: parseFloat(ingredient.pivot?.amount) || 0,
+                unit: ingredient.pivot?.unit || 'g'
               }
-            })
-            
-            console.log('Formatted ingredients:', this.selectedMeal.ingredients)
+            }))
           } else {
             this.ingredientsError = response.data.message || 'Nem sikerült betölteni az összetevőket'
           }
         } else {
-          console.log('Using existing ingredients:', meal.ingredients.length)
-          // Ellenőrizzük a meglévő adatokat
           this.selectedMeal.ingredients = meal.ingredients.map(ingredient => ({
             ...ingredient,
             pivot: {
@@ -378,39 +598,8 @@ export default {
           }))
         }
       } catch (error) {
-        console.error('Összetevők betöltése sikertelen:', {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data
-        })
-        
+        console.error('Összetevők betöltése sikertelen:', error)
         this.ingredientsError = 'Nem sikerült betölteni az összetevőket'
-        
-
-        this.selectedMeal.ingredients = [
-          {
-            id: 1,
-            name: 'Teszt összetevő 1',
-            ingredientType: 'Zöldség',
-            energy: 50,
-            protein: 2,
-            carbohydrate: 10,
-            fat: 1,
-            pivot: { amount: 100, unit: 'g' }
-          },
-          {
-            id: 2,
-            name: 'Teszt összetevő 2',
-            ingredientType: 'Hús',
-            energy: 200,
-            protein: 25,
-            carbohydrate: 0,
-            fat: 12,
-            pivot: { amount: 150, unit: 'g' }
-          }
-        ]
-        
-        console.log('Tesztadatok')
       } finally {
         this.loadingIngredients = false
       }
@@ -422,29 +611,61 @@ export default {
       this.ingredientsError = ''
     },
     
-    editMeal(meal) {
+    // ÉTEL SZERKESZTÉSE - A FŐ FUNKCIÓ
+    async editMeal(meal) {
       this.editingMeal = meal
+      this.showAddModal = true
+      
+      // Alapadatok betöltése
       this.mealForm = { 
         name: meal.name,
         category: meal.category,
         description: meal.description
       }
-      this.showAddModal = true
+      
+      // Összetevők betöltése szerkesztéshez
+      this.editIngredientsList = []
+      
+      try {
+        const response = await AuthService.api.get(`/kitchen/meals/${meal.id}/ingredients`)
+        if (response.data.success && response.data.ingredients) {
+          this.editIngredientsList = response.data.ingredients.map(ingredient => ({
+            id: ingredient.id,
+            name: ingredient.name,
+            ingredientType: ingredient.ingredientType,
+            energy: parseFloat(ingredient.energy) || 0,
+            protein: parseFloat(ingredient.protein) || 0,
+            carbohydrate: parseFloat(ingredient.carbohydrate) || 0,
+            fat: parseFloat(ingredient.fat) || 0,
+            pivot: {
+              amount: parseFloat(ingredient.pivot?.amount) || 0,
+              unit: ingredient.pivot?.unit || 'g'
+            }
+          }))
+        }
+      } catch (error) {
+        console.error('Hozzávalók betöltése szerkesztéshez sikertelen:', error)
+        // Ha van helyi adat, azt használjuk
+        if (meal.ingredients && meal.ingredients.length > 0) {
+          this.editIngredientsList = meal.ingredients.map(ingredient => ({
+            ...ingredient,
+            pivot: {
+              amount: parseFloat(ingredient.pivot?.amount) || 0,
+              unit: ingredient.pivot?.unit || 'g'
+            }
+          }))
+        }
+      }
     },
     
+    // ÉTEL MENTÉSE ÖSSZETEVŐKKEL EGYÜTT
     async saveMeal() {
-      try {
-        if (this.editingMeal) {
-          const response = await AuthService.api.put(`/kitchen/meals/${this.editingMeal.id}`, this.mealForm)
-          if (response.data.success) {
-            this.$toast?.success('Étel sikeresen frissítve')
-            this.closeModal()
-            this.fetchMeals()
-          } else {
-            alert(response.data.message)
-          }
-        } else {
+      if (!this.editingMeal) {
+        // Új étel létrehozása (nincsenek összetevők)
+        try {
+          this.savingMeal = true
           const response = await AuthService.api.post('/kitchen/meals', this.mealForm)
+          
           if (response.data.success) {
             this.$toast?.success('Étel sikeresen hozzáadva')
             this.closeModal()
@@ -452,14 +673,262 @@ export default {
           } else {
             alert(response.data.message)
           }
+        } catch (error) {
+          console.error('Étel mentése sikertelen:', error)
+          const errorMessage = error.response?.data?.message || 
+                             error.response?.data?.errors ? 
+                             Object.values(error.response.data.errors).flat().join(', ') : 
+                             'Hiba történt a mentés során'
+          alert(errorMessage)
+        } finally {
+          this.savingMeal = false
+        }
+      } else {
+        // Meglévő étel frissítése összetevőkkel
+        await this.saveMealWithIngredients()
+      }
+    },
+    
+    async saveMealWithIngredients() {
+  try {
+    this.savingMeal = true
+    
+    console.log('=== START saveMealWithIngredients ===');
+    console.log('Meal ID:', this.editingMeal.id);
+    console.log('Meal form:', this.mealForm);
+    console.log('Ingredients to save:', this.editIngredientsList);
+    
+    // 1. Alapadatok mentése
+    console.log('1. Saving meal basic data...');
+    const mealResponse = await AuthService.api.put(
+      `/kitchen/meals/${this.editingMeal.id}`, 
+      this.mealForm
+    )
+    
+    if (!mealResponse.data.success) {
+      console.error('Meal save failed:', mealResponse.data);
+      alert(mealResponse.data.message || 'Hiba történt az étel mentése során')
+      return
+    }
+    
+    console.log('Meal saved successfully');
+    
+    // 2. Összetevők mentése
+    console.log('2. Preparing ingredients data...');
+    const ingredientsData = this.editIngredientsList.map(ingredient => {
+      const amount = parseFloat(ingredient.pivot?.amount) || 0;
+      const unit = ingredient.pivot?.unit || 'g';
+      
+      console.log(`Ingredient ${ingredient.id}: amount=${amount}, unit=${unit}`);
+      
+      return {
+        ingredient_id: ingredient.id,
+        amount: amount,
+        unit: unit
+      }
+    })
+    
+    console.log('Ingredients data to send:', {
+      ingredients: ingredientsData,
+      count: ingredientsData.length
+    });
+    
+    // Küldés előtti ellenőrzés
+    if (ingredientsData.length === 0) {
+      console.log('No ingredients to save, skipping...');
+      this.$toast?.success('Étel sikeresen mentve (nincsenek összetevők)');
+      this.closeModal();
+      await this.fetchMeals();
+      return;
+    }
+    
+    console.log('3. Sending ingredients to API...');
+    const ingredientsResponse = await AuthService.api.put(
+      `/kitchen/meals/${this.editingMeal.id}/ingredients`,
+      { ingredients: ingredientsData }
+    )
+    
+    console.log('Ingredients API response:', ingredientsResponse.data);
+    
+    if (ingredientsResponse.data.success) {
+      console.log('Ingredients saved successfully');
+      this.$toast?.success('Étel és összetevők sikeresen mentve')
+      this.closeModal()
+      await this.fetchMeals()
+    } else {
+      console.error('Ingredients save failed:', ingredientsResponse.data);
+      alert('Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message)
+    }
+    
+  } catch (error) {
+    console.error('=== ERROR in saveMealWithIngredients ===');
+    console.error('Error object:', error);
+    console.error('Error message:', error.message);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+    console.error('Error config:', error.config);
+    
+    // Részletes hibajelzés
+    if (error.response) {
+      // A kérés elküldésre került és a szerver válaszolt, de nem 2xx státusz kódot adott
+      console.error('Server responded with error:', error.response.status);
+      
+      if (error.response.data) {
+        console.error('Error data:', error.response.data);
+        
+        // Validációs hibák esetén
+        if (error.response.data.errors) {
+          const validationErrors = Object.values(error.response.data.errors).flat().join('\n');
+          alert(`Validációs hibák:\n${validationErrors}`);
+        } else if (error.response.data.message) {
+          alert(`Szerver hiba: ${error.response.data.message}`);
+        } else if (typeof error.response.data === 'string') {
+          // Ha a válasz string formátumban van
+          try {
+            const parsedError = JSON.parse(error.response.data);
+            alert(`Hiba: ${parsedError.message || 'Ismeretlen hiba'}`);
+          } catch (e) {
+            alert(`Szerver hiba: ${error.response.data.substring(0, 100)}...`);
+          }
+        }
+      }
+    } else if (error.request) {
+      // A kérés elküldésre került, de nem érkezett válasz
+      console.error('No response received:', error.request);
+      alert('Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!');
+    } else {
+      // Valami más hiba történt
+      console.error('Request setup error:', error.message);
+      const errorMessage = error.message || 'Ismeretlen hiba történt a mentés során';
+      alert(errorMessage);
+    }
+    
+  } finally {
+    console.log('=== END saveMealWithIngredients ===');
+    this.savingMeal = false
+  }
+},
+    
+    // HOZZÁVALÓK KERESÉSE ÉS KEZELÉSE
+    async loadAllIngredients() {
+      try {
+        // Használd a helyes végpontot a config alapján
+        const response = await AuthService.api.get('/kitchen/ingredients');
+        if (response.data.success) {
+          this.allIngredients = response.data.ingredients || []
         }
       } catch (error) {
-        console.error('Étel mentése sikertelen:', error)
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.errors ? 
-                           Object.values(error.response.data.errors).flat().join(', ') : 
-                           'Hiba történt a mentés során'
-        alert(errorMessage)
+        console.error('Hozzávalók betöltése sikertelen:', error)
+        // Ha a /kitchen/ingredients nem működik, próbáld meg a /ingredients-t
+        try {
+          const response2 = await AuthService.api.get('/ingredients');
+          if (response2.data.success) {
+            this.allIngredients = response2.data.ingredients || []
+          }
+        } catch (error2) {
+          console.error('Alternatív hozzáférés is sikertelen:', error2)
+        }
+      }
+    },
+    
+    searchIngredients() {
+      if (!this.newIngredient.search || this.newIngredient.search.length < 2) {
+        this.searchResults = []
+        return
+      }
+      
+      const searchTerm = this.newIngredient.search.toLowerCase()
+      this.searchResults = this.allIngredients
+        .filter(ingredient => 
+          ingredient.name.toLowerCase().includes(searchTerm) ||
+          (ingredient.ingredientType && ingredient.ingredientType.toLowerCase().includes(searchTerm))
+        )
+        .slice(0, 8)
+    },
+    
+    selectIngredient(ingredient) {
+      this.selectedIngredientForAdd = ingredient
+      this.newIngredient.search = ingredient.name
+      this.searchResults = []
+    },
+    
+    addIngredient() {
+      if (!this.selectedIngredientForAdd || !this.newIngredient.amount) return
+      
+      // Ellenőrizzük, hogy már hozzá van-e adva
+      const alreadyExists = this.editIngredientsList.some(
+        item => item.id === this.selectedIngredientForAdd.id
+      )
+      
+      if (alreadyExists) {
+        alert('Ez a hozzávaló már hozzá van adva! Módosítsd a mennyiséget.')
+        return
+      }
+      
+      // Új hozzávaló hozzáadása
+      const newIngredient = {
+        ...this.selectedIngredientForAdd,
+        pivot: {
+          amount: parseFloat(this.newIngredient.amount),
+          unit: this.newIngredient.unit
+        },
+        tempId: Date.now()
+      }
+      
+      this.editIngredientsList.push(newIngredient)
+      
+      // Űrlap reset
+      this.newIngredient = { search: '', amount: '', unit: 'g' }
+      this.selectedIngredientForAdd = null
+      this.searchResults = []
+    },
+    
+    removeIngredientFromList(index) {
+      if (confirm('Biztosan eltávolítod ezt a hozzávalót?')) {
+        this.editIngredientsList.splice(index, 1)
+      }
+    },
+    
+    updateIngredientAmount(ingredient) {
+      ingredient.pivot.amount = parseFloat(ingredient.pivot.amount) || 0
+    },
+    
+    updateIngredientUnit(ingredient) {
+      // Unit frissítése
+    },
+    
+    // SZÁMOLÁSI SEGÉDFÜGGVÉNYEK
+    calculateEditTotalAmount() {
+      const total = this.editIngredientsList.reduce((sum, ingredient) => {
+        const amount = ingredient.pivot?.amount
+        const numericAmount = parseFloat(amount) || 0
+        return sum + numericAmount
+      }, 0)
+      
+      return total.toFixed(0) + ' g'
+    },
+    
+    calculateEditTotalCalories() {
+      const totalCalories = this.editIngredientsList.reduce((sum, ingredient) => {
+        const calories = this.calculateIngredientCalories(ingredient)
+        return sum + (parseFloat(calories) || 0)
+      }, 0)
+      
+      return Math.round(totalCalories)
+    },
+    
+    closeModal() {
+      this.showAddModal = false
+      this.editingMeal = null
+      this.editIngredientsList = []
+      this.resetForm()
+    },
+    
+    resetForm() {
+      this.mealForm = {
+        name: '',
+        category: '',
+        description: ''
       }
     },
     
@@ -483,28 +952,9 @@ export default {
       }
     },
     
-    closeModal() {
-      this.showAddModal = false
-      this.editingMeal = null
-      this.resetForm()
-    },
-    
-    resetForm() {
-      this.mealForm = {
-        name: '',
-        category: '',
-        description: ''
-      }
-    },
-    
-    editIngredients(meal) {
-      alert(`Összetevők szerkesztése: ${meal.name} - Ez a funkció hamarosan elérhető lesz.`)
-    },
-    
-    // Segédfüggvények
+    // MEGTEKINTÉSHEZ SZÜKSÉGES SEGÉDFÜGGVÉNYEK
     getIngredientTypeClass(type) {
       if (!type) return 'type-other'
-      
       const classes = {
         'Hús': 'type-meat',
         'Tejtermék': 'type-dairy',
@@ -516,112 +966,83 @@ export default {
     
     calculateIngredientCalories(ingredient) {
       if (!ingredient || typeof ingredient.energy === 'undefined') return 0
-      
       const amount = ingredient.pivot?.amount
       const caloriesPer100g = ingredient.energy || 0
-      
-      // Konvertáljuk számmá
       const numericAmount = parseFloat(amount) || 0
       const numericCalories = parseFloat(caloriesPer100g) || 0
-      
       return Math.round((numericAmount / 100) * numericCalories)
     },
     
     calculateIngredientProtein(ingredient) {
       if (!ingredient || typeof ingredient.protein === 'undefined') return '0'
-      
       const amount = ingredient.pivot?.amount
       const proteinPer100g = ingredient.protein || 0
-      
       const numericAmount = parseFloat(amount) || 0
       const numericProtein = parseFloat(proteinPer100g) || 0
-      
       return ((numericAmount / 100) * numericProtein).toFixed(1)
     },
     
     calculateIngredientCarbohydrate(ingredient) {
       if (!ingredient || typeof ingredient.carbohydrate === 'undefined') return '0'
-      
       const amount = ingredient.pivot?.amount
       const carbPer100g = ingredient.carbohydrate || 0
-      
       const numericAmount = parseFloat(amount) || 0
       const numericCarb = parseFloat(carbPer100g) || 0
-      
       return ((numericAmount / 100) * numericCarb).toFixed(1)
     },
     
     calculateIngredientFat(ingredient) {
       if (!ingredient || typeof ingredient.fat === 'undefined') return '0'
-      
       const amount = ingredient.pivot?.amount
       const fatPer100g = ingredient.fat || 0
-      
       const numericAmount = parseFloat(amount) || 0
       const numericFat = parseFloat(fatPer100g) || 0
-      
       return ((numericAmount / 100) * numericFat).toFixed(1)
     },
     
     calculateTotalAmount() {
       if (!this.selectedMeal?.ingredients) return '0 g'
-      
       const totalAmount = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
         const amount = ingredient.pivot?.amount
-        // Konvertáljuk számmá, ha string
         const numericAmount = parseFloat(amount) || 0
         return sum + numericAmount
       }, 0)
-      
-      // Ellenőrizzük, hogy szám-e
-      if (typeof totalAmount !== 'number' || isNaN(totalAmount)) {
-        return '0 g'
-      }
-      
       return totalAmount.toFixed(0) + ' g'
     },
     
     calculateTotalCalories() {
       if (!this.selectedMeal?.ingredients) return 0
-      
       const totalCalories = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
         const calories = this.calculateIngredientCalories(ingredient)
         return sum + (parseFloat(calories) || 0)
       }, 0)
-      
       return Math.round(totalCalories)
     },
     
     calculateTotalProtein() {
       if (!this.selectedMeal?.ingredients) return '0'
-      
       const totalProtein = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
         const protein = this.calculateIngredientProtein(ingredient)
         return sum + (parseFloat(protein) || 0)
       }, 0)
-      
       return parseFloat(totalProtein).toFixed(1)
     },
     
     calculateTotalCarbohydrate() {
       if (!this.selectedMeal?.ingredients) return '0'
-      
       const totalCarb = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
         const carb = this.calculateIngredientCarbohydrate(ingredient)
         return sum + (parseFloat(carb) || 0)
       }, 0)
-      
       return parseFloat(totalCarb).toFixed(1)
     },
     
     calculateTotalFat() {
       if (!this.selectedMeal?.ingredients) return '0'
-      
       const totalFat = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
         const fat = this.calculateIngredientFat(ingredient)
         return sum + (parseFloat(fat) || 0)
       }, 0)
-      
       return parseFloat(totalFat).toFixed(1)
     },
     
@@ -653,11 +1074,11 @@ export default {
 </script>
 
 
+
 <style scoped>
 button{
   width: 20%;
 }
-
 /* Alap stílusok */
 .meals-management {
   padding: 2rem;
@@ -675,6 +1096,7 @@ button{
 .header h1 {
   margin: 0;
   color: #2c3e50;
+  font-size: 1.8rem;
 }
 
 .btn-add {
@@ -686,6 +1108,7 @@ button{
   cursor: pointer;
   font-weight: 500;
   min-width: 150px;
+  transition: background 0.3s ease;
 }
 
 .btn-add:hover {
@@ -698,19 +1121,19 @@ button{
   margin-bottom: 2rem;
 }
 
-.filters input {
-  flex: 1;
+.filters input,
+.filters select {
   padding: 0.75rem 1rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
 }
 
+.filters input {
+  flex: 1;
+}
+
 .filters select {
-  padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
   min-width: 200px;
 }
 
@@ -748,7 +1171,7 @@ button{
 }
 
 .meal-category {
-  background: #ffd294;
+  background: #3498db;
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -815,6 +1238,7 @@ button{
   justify-content: center;
   gap: 0.25rem;
   font-size: 0.875rem;
+  transition: background 0.3s ease;
 }
 
 .btn-edit {
@@ -856,6 +1280,7 @@ button{
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .modal {
@@ -879,25 +1304,37 @@ button{
   max-width: 1000px;
 }
 
+.ingredients-edit-modal {
+  max-width: 1100px;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 1.5rem 1.5rem 0;
 }
 
 .modal-header h2 {
   margin: 0;
   color: #2c3e50;
+  font-size: 1.5rem;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 2rem;
   cursor: pointer;
   color: #7f8c8d;
-  width: 20px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
 }
 
 .close-btn:hover {
@@ -905,6 +1342,10 @@ button{
 }
 
 /* Form stílusok */
+form {
+  padding: 0 1.5rem;
+}
+
 .form-group {
   margin-bottom: 1rem;
 }
@@ -924,10 +1365,32 @@ button{
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
 }
 
 .form-group textarea {
   resize: vertical;
+  min-height: 100px;
+}
+
+/* Form sorok */
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-row .form-group {
+  flex: 1;
+  min-width: 150px;
 }
 
 .modal-actions {
@@ -935,6 +1398,8 @@ button{
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
+  padding: 1.5rem;
+  border-top: 1px solid #eee;
 }
 
 .btn-cancel {
@@ -945,6 +1410,7 @@ button{
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
+  transition: background 0.3s ease;
 }
 
 .btn-cancel:hover {
@@ -959,15 +1425,21 @@ button{
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
+  transition: background 0.3s ease;
 }
 
 .btn-save:hover {
   background: #219653;
 }
 
-/* Összetevők táblázat */
+.btn-save:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Összetevők tartalom */
 .ingredients-content {
-  margin: 1.5rem 0;
+  margin: 0 1.5rem;
 }
 
 .no-ingredients {
@@ -980,6 +1452,7 @@ button{
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #eee;
+  color: #2c3e50;
 }
 
 .ingredients-table-container {
@@ -990,6 +1463,7 @@ button{
 .ingredients-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.9rem;
 }
 
 .ingredients-table th,
@@ -1003,6 +1477,7 @@ button{
   background: #f8f9fa;
   font-weight: 600;
   color: #2c3e50;
+  white-space: nowrap;
 }
 
 .ingredients-table tbody tr:hover {
@@ -1014,11 +1489,14 @@ button{
   font-weight: 600;
 }
 
+/* Hozzávaló típusok */
 .ingredient-type {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .type-meat {
@@ -1052,6 +1530,7 @@ button{
 .nutrition-summary h4 {
   margin: 0 0 1rem 0;
   color: #2c3e50;
+  font-size: 1.1rem;
 }
 
 .nutrition-bars {
@@ -1105,18 +1584,260 @@ button{
   color: #2c3e50;
 }
 
+/* Hozzávaló keresés és hozzáadás */
+.add-ingredient-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.add-ingredient-section h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.add-ingredient-form {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-result-item:hover {
+  background: #f8f9fa;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.result-type {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.result-info {
+  font-size: 0.8rem;
+  color: #3498db;
+}
+
+.selected-ingredient-info {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #e8f5e9;
+  border-radius: 4px;
+  border-left: 4px solid #2ecc71;
+}
+
+.ingredient-details {
+  display: block;
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 0.25rem;
+}
+
+.btn-add-ingredient {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+  margin-top: 1.75rem;
+  transition: background 0.3s ease;
+}
+
+.btn-add-ingredient:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.btn-add-ingredient:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Jelenlegi hozzávalók */
+.current-ingredients-section {
+  padding: 1.5rem;
+}
+
+.current-ingredients-section h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.no-current-ingredients {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.current-ingredients-table-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.current-ingredients-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.current-ingredients-table th,
+.current-ingredients-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.current-ingredients-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.current-ingredients-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.ingredient-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.ingredient-nutrition small {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+}
+
+.amount-input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.unit-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  min-width: 80px;
+}
+
+.calories-display {
+  font-weight: 500;
+  color: #e74c3c;
+}
+
+.btn-remove-ingredient {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: background 0.3s ease;
+}
+
+.btn-remove-ingredient:hover {
+  background: #c0392b;
+}
+
+/* Szerkesztés összegzés */
+.edit-summary {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.summary-item {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.summary-item strong {
+  display: block;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+
 /* Általános stílusok */
 .loading, .error, .no-meals {
   text-align: center;
   padding: 3rem;
 }
 
+.loading {
+  color: #3498db;
+}
+
 .error {
   color: #e74c3c;
+  background: #ffebee;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
 }
 
 .no-meals {
   color: #7f8c8d;
+  text-align: center;
+  padding: 3rem;
 }
 
 .btn-add-first {
@@ -1127,9 +1848,542 @@ button{
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background 0.3s ease;
 }
 
 .btn-add-first:hover {
   background: #2980b9;
+}
+
+/* Reszponzív design */
+@media (max-width: 768px) {
+  .meals-management {
+    padding: 1rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .meals-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters {
+    flex-direction: column;
+  }
+  
+  .filters select {
+    min-width: 100%;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row .form-group {
+    min-width: 100%;
+  }
+  
+  .edit-summary {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .ingredients-table,
+  .current-ingredients-table {
+    font-size: 0.8rem;
+  }
+  
+  .ingredients-table th,
+  .ingredients-table td,
+  .current-ingredients-table th,
+  .current-ingredients-table td {
+    padding: 0.5rem;
+  }
+  
+  .nutrition-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .bar-label,
+  .bar-value {
+    width: auto;
+  }
+  
+  .bar-container {
+    width: 100%;
+  }
+}
+
+/* Animációk */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Görgetésbarát stílusok */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #bdc3c7 #f8f9fa;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #bdc3c7;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #95a5a6;
+}
+
+/* Váltó állapotok */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateY(-20px);
+}
+
+/* Tooltip stílusok */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 0.5rem;
+}
+
+.edit-meal-modal {
+  max-width: 1000px;
+}
+
+/* Alapadatok szekció */
+.basic-info-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.basic-info-section h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+/* Összetevők szekció */
+.ingredients-section {
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+.section-subtitle {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* Hozzávaló hozzáadása */
+.add-ingredient-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.add-ingredient-section h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.add-ingredient-form {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-result-item:hover {
+  background: #f8f9fa;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-name {
+  font-weight: 500;
+  color: #2c3e50;
+  flex: 1;
+}
+
+.result-type {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin: 0 0.5rem;
+}
+
+.result-info {
+  font-size: 0.8rem;
+  color: #3498db;
+  font-weight: 500;
+}
+
+.amount-input, .unit-select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.amount-input.small, .unit-select.small {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.btn-add-ingredient {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+  margin-top: 1.75rem;
+  transition: background 0.3s ease;
+}
+
+.btn-add-ingredient:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.btn-add-ingredient:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.selected-ingredient-info {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #e8f5e9;
+  border-radius: 4px;
+  border-left: 4px solid #2ecc71;
+  font-size: 0.9rem;
+}
+
+.ingredient-details {
+  display: block;
+  color: #555;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+}
+
+/* Jelenlegi hozzávalók */
+.current-ingredients-section {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.current-ingredients-section h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.no-current-ingredients {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.current-ingredients-table-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.current-ingredients-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.current-ingredients-table th,
+.current-ingredients-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.current-ingredients-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  border-bottom: 2px solid #ddd;
+}
+
+.current-ingredients-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.ingredient-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.ingredient-nutrition {
+  margin-top: 0.25rem;
+}
+
+.ingredient-nutrition .ingredient-type {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.7rem;
+}
+
+.calories-display {
+  font-weight: 500;
+  color: #e74c3c;
+  font-size: 0.9rem;
+}
+
+.btn-remove-ingredient {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: background 0.3s ease;
+}
+
+.btn-remove-ingredient:hover {
+  background: #c0392b;
+}
+
+/* Összegzés */
+.edit-summary {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.summary-item {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.summary-label {
+  display: block;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.summary-value {
+  display: block;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Reszponzív design kiegészítések */
+@media (max-width: 768px) {
+  .edit-meal-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .edit-summary {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .current-ingredients-table {
+    font-size: 0.8rem;
+  }
+  
+  .current-ingredients-table th,
+  .current-ingredients-table td {
+    padding: 0.5rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+/* Görgetésbarát nagy modal */
+.edit-meal-modal {
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-meal-modal form {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 0;
+}
+
+/* Animáció a keresési eredményekhez */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-results {
+  animation: slideDown 0.2s ease;
+}
+
+/* Input focus stílusok */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.amount-input:focus,
+.unit-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 </style>

@@ -69,13 +69,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/meals/{id}', [KitchenController::class, 'showMeal']);
         Route::put('/meals/{id}', [KitchenController::class, 'updateMeal']);
         Route::delete('/meals/{id}', [KitchenController::class, 'deleteMeal']);
-        
-    
-    // Kategóriák
-    Route::get('/categories', [KitchenController::class, 'getCategories']);
+        Route::get('/meals/{id}/ingredients', [KitchenController::class, 'getMealIngredients']);
+        Route::get('/categories', [KitchenController::class, 'getCategories']);
+
+        Route::get('/ingredients', [KitchenController::class, 'getAllIngredients']);
+        Route::put('/meals/{id}/ingredients', [KitchenController::class, 'updateMealIngredients']);
+        Route::get('/ingredients/search', [KitchenController::class, 'searchIngredients']);
 
 
-        Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
+     Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });
 });
 Route::post('/reset-password', [App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLinkEmail']);
