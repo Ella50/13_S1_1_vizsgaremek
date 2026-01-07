@@ -8,6 +8,7 @@ import WeeklyMenu from '../components/views/menu/WeeklyMenu.vue'
 import Meals from '../components/views/kitchen/Meals.vue'
 import ResetPassword from '../components/auth/ResetPassword.vue'
 import PasswordResetForm from '../components/auth/PasswordResetForm.vue'
+import MenuMaker from '../components/views/kitchen/MenuMaker.vue'
 
 
 
@@ -71,6 +72,12 @@ const routes = [
         component: Meals,
         meta: { requiresAuth: true }
     },
+    {
+        path: '/kitchen/menu-maker',
+        name: 'MenuMaker',
+        component: MenuMaker,
+        meta: { requiresAuth: true }
+    }
     
 ]
 
