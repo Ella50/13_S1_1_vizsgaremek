@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Meal;
+use Log;
 use App\Enums\MealType;
 
 class KitchenController extends Controller
