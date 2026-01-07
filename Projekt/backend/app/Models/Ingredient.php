@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Ingredient extends Model
 {
     use HasFactory;
-    protected $table = 'ingredient';
+    protected $table = 'ingredients';
 
     protected $fillable = [
         'name',
-        'type',
+        'ingredientType',
         'energy',
         'protein',
         'carbohydrate',
@@ -23,15 +23,11 @@ class Ingredient extends Model
         'isAvailable'
     ];
 
-
-    public function ingredientAllergen()
-    {
-        return $this->belongsTo(IngredientAllergen::class, 'ingredient_id');
-    }
-
-    public function mealIngredient()
-    {
-        return $this->belongsTo(IngredientAllergen::class, 'ingredient_id');
-    }
-
+    public function meals()
+        {
+            return $this->belongsToMany(Meal::class, 'meal_ingredients')
+                        ->using(MealIngredientPivot::class)
+                        ->withPivot('amount', 'unit')
+                        ->withTimestamps();
+        }
 }

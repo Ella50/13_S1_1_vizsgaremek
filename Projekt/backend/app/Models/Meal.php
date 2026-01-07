@@ -18,9 +18,19 @@ class Meal extends Model
         'picture'
     ];
 
-    /* Kapcsolat modellel
-    public function user()
+    /**
+     * Kapcsolat az összetevőkkel
+     * FONTOS: A 'meal_ingredients' a kapcsolótábla neve
+     */
+    public function ingredients()
     {
-        return $this->hasOne(User::class, 'rfidCard_id');
-    }*/
+        return $this->belongsToMany(
+            Ingredient::class,      // Kapcsolódó modell
+            'meal_ingredients',     // Kapcsolótábla neve
+            'meal_id',              // Foreign key a meal_ingredients táblában
+            'ingredient_id',        // Related key a meal_ingredients táblában
+            'id',                   // Local key a meals táblában
+            'id'                    // Local key az ingredients táblában
+        )->withPivot('amount', 'unit');
+    }
 }

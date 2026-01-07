@@ -12,59 +12,94 @@ class KitchenController extends Controller
 {
     //Összes étel lekérdezése
     public function getMeals(Request $request)
-    {
-        try {
-            $perPage = $request->get('per_page', 15);
-            $search = $request->get('search', '');
-            $query = Meal::query();
-            
-            // Keresés
-            if ($request->has('search') && !empty($request->search)) {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('mealName', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+        {
+            try {
+                $query = Meal::query();
+                
+                // Keresés
+                if ($request->has('search') && !empty($request->search)) {
+                    $search = $request->search;
+                    $query->where(function($q) use ($search) {
+                        $q->where('mealName', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                    });
+                }
+                
+                // Kategória szűrés
+                if ($request->has('category') && !empty($request->category)) {
+                    $query->where('mealType', $request->category);
+                }
+                
+                // Összetevők betöltése EGYÜTT
+                $query->with(['ingredients' => function($q) {
+                    $q->select([
+                        'ingredients.id',
+                        'ingredients.name',
+                        'ingredients.ingredientType',
+                        'ingredients.energy',
+                        'ingredients.protein',
+                        'ingredients.carbohydrate',
+                        'ingredients.fat'
+                    ]);
+                    $q->withPivot('amount', 'unit');
+                }]);
+                
+                // Rendezés
+                $query->orderBy('mealName');
+                
+                $meals = $query->get();
+                
+                // Átalakítás a Vue komponens elvárásainak megfelelően
+                $formattedMeals = $meals->map(function ($meal) {
+                    // Alap adatok
+                    $formattedMeal = [
+                        'id' => $meal->id,
+                        'name' => $meal->mealName,
+                        'category' => $meal->mealType,
+                        'description' => $meal->description,
+                        'picture' => $meal->picture,
+                        'created_at' => $meal->created_at,
+                        'updated_at' => $meal->updated_at
+                    ];
+                    
+                    // Összetevők hozzáadása
+                    if ($meal->relationLoaded('ingredients')) {
+                        $formattedMeal['ingredients'] = $meal->ingredients->map(function ($ingredient) {
+                            return [
+                                'id' => $ingredient->id,
+                                'name' => $ingredient->name,
+                                'ingredientType' => $ingredient->ingredientType,
+                                'energy' => (int) $ingredient->energy,
+                                'protein' => (int) $ingredient->protein,
+                                'carbohydrate' => (int) $ingredient->carbohydrate,
+                                'fat' => (int) $ingredient->fat,
+                                'pivot' => [
+                                    'amount' => (float) ($ingredient->pivot->amount ?? 0),
+                                    'unit' => $ingredient->pivot->unit ?? 'g'
+                                ]
+                            ];
+                        });
+                    }
+                    
+                    return $formattedMeal;
                 });
+                
+                return response()->json([
+                    'success' => true,
+                    'meals' => $formattedMeals,
+                    'count' => $formattedMeals->count(),
+                    'message' => 'Ételek sikeresen betöltve.'
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error('Kitchen getMeals error: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hiba történt az ételek betöltésekor.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
             }
-            
-            // Kategória szűrés
-            if ($request->has('category') && !empty($request->category)) {
-                $query->where('mealType', $request->category);
-            }
-            
-            // Rendezés
-            $query->orderBy('mealName');
-            
-            $meals = $query->get();
-            
-            // Átalakítás a Vue komponens elvárásainak megfelelően
-            $formattedMeals = $meals->map(function ($meal) {
-                return [
-                    'id' => $meal->id,
-                    'name' => $meal->mealName,
-                    'category' => $meal->mealType,
-                    'description' => $meal->description,
-                    'picture' => $meal->picture,
-                    'created_at' => $meal->created_at,
-                    'updated_at' => $meal->updated_at
-                ];
-            });
-            
-            return response()->json([
-                'success' => true,
-                'meals' => $formattedMeals,
-                'count' => $formattedMeals->count(),
-                'message' => 'Ételek sikeresen betöltve.'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hiba történt az ételek betöltésekor.',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
         }
-    }
 
     /**
      * Új étel létrehozása
@@ -301,6 +336,123 @@ class KitchenController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Hiba történt a kategóriák betöltése során.'
+            ], 500);
+        }
+    }
+
+
+    public function getMealIngredients($id)
+    {
+        try {
+            \Log::info('=== START getMealIngredients for ID: ' . $id . ' ===');
+            
+            // 1. Ellenőrizzük az ételt
+            $meal = Meal::find($id);
+            
+            if (!$meal) {
+                \Log::warning('Meal not found with ID: ' . $id);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az étel nem található.'
+                ], 404);
+            }
+            
+            \Log::info('Meal found: ' . $meal->id . ' - ' . $meal->mealName);
+            
+            // 2. Ellenőrizzük a relációt
+            $ingredientsCount = $meal->ingredients()->count();
+            \Log::info('Ingredients count via relationship: ' . $ingredientsCount);
+            
+            // 3. Kétféle módon próbáljuk meg
+            if ($ingredientsCount > 0) {
+                // 3a. Metódus 1: withPivot használatával
+                $ingredients = $meal->ingredients()->withPivot('amount', 'unit')->get();
+                
+                \Log::info('Ingredients loaded with pivot: ' . $ingredients->count());
+                
+                $formattedIngredients = $ingredients->map(function($ingredient) {
+                    \Log::info('Processing ingredient: ' . $ingredient->id . ' - ' . $ingredient->name);
+                    
+                    return [
+                        'id' => $ingredient->id,
+                        'name' => $ingredient->name,
+                        'ingredientType' => $ingredient->ingredientType,
+                        'energy' => $ingredient->energy,
+                        'protein' => $ingredient->protein,
+                        'carbohydrate' => $ingredient->carbohydrate,
+                        'fat' => $ingredient->fat,
+                        'pivot' => [
+                            'amount' => $ingredient->pivot ? $ingredient->pivot->amount : 0,
+                            'unit' => $ingredient->pivot ? $ingredient->pivot->unit : 'g'
+                        ]
+                    ];
+                });
+            } else {
+                // 3b. Metódus 2: Keresztül a pivot táblán
+                \Log::info('No ingredients via relationship, trying direct query...');
+                
+                $pivotData = \DB::table('meal_ingredients')
+                            ->where('meal_id', $id)
+                            ->join('ingredients', 'meal_ingredients.ingredient_id', '=', 'ingredients.id')
+                            ->select(
+                                'ingredients.*',
+                                'meal_ingredients.amount',
+                                'meal_ingredients.unit'
+                            )
+                            ->get();
+                
+                \Log::info('Direct query result count: ' . $pivotData->count());
+                
+                $formattedIngredients = $pivotData->map(function($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'ingredientType' => $item->ingredientType,
+                        'energy' => $item->energy,
+                        'protein' => $item->protein,
+                        'carbohydrate' => $item->carbohydrate,
+                        'fat' => $item->fat,
+                        'pivot' => [
+                            'amount' => $item->amount,
+                            'unit' => $item->unit
+                        ]
+                    ];
+                });
+            }
+            
+            \Log::info('=== END getMealIngredients ===');
+            
+            return response()->json([
+                'success' => true,
+                'meal' => [
+                    'id' => $meal->id,
+                    'name' => $meal->mealName,
+                    'category' => $meal->mealType,
+                    'description' => $meal->description
+                ],
+                'ingredients' => $formattedIngredients,
+                'count' => $formattedIngredients->count(),
+                'debug' => [
+                    'meal_id' => $id,
+                    'ingredients_count' => $formattedIngredients->count()
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('CRITICAL ERROR in getMealIngredients: ' . $e->getMessage());
+            \Log::error('File: ' . $e->getFile());
+            \Log::error('Line: ' . $e->getLine());
+            \Log::error('Trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Szerverhiba történt.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+                'debug_info' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTrace()
+                ] : null
             ], 500);
         }
     }

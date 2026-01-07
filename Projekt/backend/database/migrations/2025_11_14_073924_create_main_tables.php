@@ -43,7 +43,7 @@ return new class extends Migration
         $table->id();
         $table->string('name')->unique();
         //$table->enum('type', array_column(IngredientType::cases(), 'value'))->default('Egyéb');
-        $table->enum('type', ['Egyéb', 'Hús', 'Tejtermék', 'Zöldség'])->default('Egyéb');
+        $table->enum('ingredientType', ['Egyéb', 'Hús', 'Tejtermék', 'Zöldség', 'Gyümölcs', 'Fűszer'])->default('Egyéb');
         $table->integer('energy')->nullable();
         $table->integer('protein')->nullable();
         $table->integer('carbohydrate')->nullable();

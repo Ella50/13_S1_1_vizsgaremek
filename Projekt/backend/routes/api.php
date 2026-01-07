@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/meals/{id}', [KitchenController::class, 'showMeal']);
         Route::put('/meals/{id}', [KitchenController::class, 'updateMeal']);
         Route::delete('/meals/{id}', [KitchenController::class, 'deleteMeal']);
+        Route::get('/meals/{id}/ingredients', [KitchenController::class, 'getMealIngredients']);
     
     // Kategóriák
     Route::get('/categories', [KitchenController::class, 'getCategories']);
