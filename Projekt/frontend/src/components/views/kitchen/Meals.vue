@@ -2,7 +2,7 @@
   <div class="meals-management">
     <div class="header">
       <h1>Ételek kezelése</h1>
-      <button @click="showAddModal = true" class="btn-add">
+      <button @click="showAddModal = true" class="btn-add" v-if="canEdit">
         + Új étel
       </button>
     </div>
@@ -17,6 +17,7 @@
         <option value="">Összes kategória</option>
         <option value="Leves">Leves</option>
         <option value="Főétel">Főétel</option>
+        <option value="Egyéb">Egyéb</option>
       </select>
     </div>
     
@@ -26,6 +27,9 @@
     <div v-else class="meals-container">
       <div v-if="meals.length === 0" class="no-meals">
         <p>Nincs még étel hozzáadva.</p>
+        <button @click="showAddModal = true" class="btn-add-first" v-if="canEdit">
+          Adj hozzá első ételed!
+        </button>
       </div>
       
       <div v-else class="meals-grid">
@@ -37,26 +41,35 @@
           
           <p class="meal-description">{{ meal.description || 'Nincs leírás' }}</p>
           
-          <div class="meal-details">
-            
-            
-            <div v-if="meal.allergens && meal.allergens.length" class="allergens">
-              <strong>Allergének:</strong> {{ meal.allergens.join(', ') }}
+          <!-- Összetevők előnézet -->
+          <div v-if="meal.ingredients && meal.ingredients.length > 0" class="ingredients-preview">
+            <strong>Összetevők:</strong>
+            <div class="preview-items">
+              <span v-for="(ingredient, index) in meal.ingredients.slice(0, 3)" :key="ingredient.id" class="preview-item">
+                {{ ingredient.name }}<span v-if="ingredient.pivot"> ({{ ingredient.pivot.amount }}{{ ingredient.pivot.unit }})</span>
+              </span>
+              <span v-if="meal.ingredients.length > 3" class="more-items">
+                +{{ meal.ingredients.length - 3 }} további
+              </span>
             </div>
-            <!--
-            <div v-if="meal.calories" class="calories">
-              <strong>Kalória:</strong> {{ meal.calories }} kcal
-            </div>-->
           </div>
           
           <div class="meal-actions">
-            <button @click="editMeal(meal)" class="btn-edit">Szerkesztés</button>
-            <button @click="deleteMeal(meal.id)" class="btn-delete">Törlés</button>
+            <button @click="editMeal(meal)" class="btn-edit" v-if="canEdit">Szerkesztés</button>
+            <button @click="viewIngredients(meal)" class="btn-view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              Összetevők
+            </button>
+            <button @click="deleteMeal(meal.id)" class="btn-delete" v-if="canEdit">Törlés</button>
           </div>
         </div>
       </div>
     </div>
     
+    <!-- Új étel / Szerkesztés modal -->
     <div v-if="showAddModal || editingMeal" class="modal-overlay">
       <div class="modal">
         <h2>{{ editingMeal ? 'Étel szerkesztése' : 'Új étel hozzáadása' }}</h2>
@@ -73,24 +86,13 @@
               <option value="">Válassz kategóriát</option>
               <option value="Leves">Leves</option>
               <option value="Főétel">Főétel</option>
+              <option value="Egyéb">Egyéb</option>
             </select>
           </div>
-          
           
           <div class="form-group">
             <label>Leírás</label>
             <textarea v-model="mealForm.description" rows="3"></textarea>
-          </div>
-          
-          <!--<div class="form-group">
-            <label>Kalória (opcionális)</label>
-            <input v-model.number="mealForm.calories" type="number" min="0" />
-          </div>-->
-          
-          
-          <div class="form-group">
-            <label>Allergének</label>
-            <!--<input v-model="allergensInput"/>-->
           </div>
           
           <div class="modal-actions">
@@ -102,6 +104,122 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+    
+    <!-- Összetevők modal -->
+    <div v-if="showIngredientsModal" class="modal-overlay">
+      <div class="modal ingredients-modal">
+        <div class="modal-header">
+          <h2>{{ selectedMeal?.name }} - Összetevők</h2>
+          <button @click="closeIngredientsModal" class="close-btn">&times;</button>
+        </div>
+        
+        <div v-if="loadingIngredients" class="loading">Összetevők betöltése...</div>
+        
+        <div v-else-if="ingredientsError" class="error">{{ ingredientsError }}</div>
+        
+        <div v-else class="ingredients-content">
+          <div v-if="!selectedMeal?.ingredients || selectedMeal.ingredients.length === 0" class="no-ingredients">
+            <p>Ehhez az ételhez még nincsenek hozzávalók hozzáadva.</p>
+          </div>
+          
+          <div v-else class="ingredients-list">
+            <div class="ingredients-summary">
+              <p><strong>Összesen {{ selectedMeal.ingredients.length }} hozzávaló</strong></p>
+            </div>
+            
+            <div class="ingredients-table-container">
+              <table class="ingredients-table">
+                <thead>
+                  <tr>
+                    <th>Hozzávaló</th>
+                    <th>Típus</th>
+                    <th>Mennyiség</th>
+                    <th>Kalória (össz)</th>
+                    <th>Fehérje</th>
+                    <th>Szénhidrát</th>
+                    <th>Zsír</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="ingredient in selectedMeal.ingredients" :key="ingredient.id">
+                    <td>{{ ingredient.name }}</td>
+                    <td>
+                      <span class="ingredient-type" :class="getIngredientTypeClass(ingredient.ingredientType)">
+                        {{ ingredient.ingredientType }}
+                      </span>
+                    </td>
+                    <td>
+                      <strong>{{ ingredient.pivot?.amount || 0 }} {{ ingredient.pivot?.unit || 'g' }}</strong>
+                    </td>
+                    <td>{{ calculateIngredientCalories(ingredient) }} kcal</td>
+                    <td>{{ calculateIngredientProtein(ingredient) }}g</td>
+                    <td>{{ calculateIngredientCarbohydrate(ingredient) }}g</td>
+                    <td>{{ calculateIngredientFat(ingredient) }}g</td>
+                  </tr>
+                </tbody>
+                <tfoot v-if="selectedMeal.ingredients.length > 0">
+                  <tr class="total-row">
+                    <td colspan="2"><strong>Összesen (kb.)</strong></td>
+                    <td>{{ calculateTotalAmount() }}</td>
+                    <td><strong>{{ calculateTotalCalories() }} kcal</strong></td>
+                    <td>{{ calculateTotalProtein() }}g</td>
+                    <td>{{ calculateTotalCarbohydrate() }}g</td>
+                    <td>{{ calculateTotalFat() }}g</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            <!-- Tápanyag összegzés -->
+            <div class="nutrition-summary">
+              <h4>Tápanyag összegzés (hozzávetőleges)</h4>
+              <div class="nutrition-bars">
+                <div class="nutrition-bar">
+                  <div class="bar-label">Kalória</div>
+                  <div class="bar-container">
+                    <div class="bar" :style="{ width: getCaloriesPercentage() + '%' }"></div>
+                  </div>
+                  <div class="bar-value">{{ calculateTotalCalories() }} kcal</div>
+                </div>
+                
+                <div class="nutrition-bar">
+                  <div class="bar-label">Fehérje</div>
+                  <div class="bar-container">
+                    <div class="bar protein" :style="{ width: getProteinPercentage() + '%' }"></div>
+                  </div>
+                  <div class="bar-value">{{ calculateTotalProtein() }}g</div>
+                </div>
+                
+                <div class="nutrition-bar">
+                  <div class="bar-label">Szénhidrát</div>
+                  <div class="bar-container">
+                    <div class="bar carb" :style="{ width: getCarbPercentage() + '%' }"></div>
+                  </div>
+                  <div class="bar-value">{{ calculateTotalCarbohydrate() }}g</div>
+                </div>
+                
+                <div class="nutrition-bar">
+                  <div class="bar-label">Zsír</div>
+                  <div class="bar-container">
+                    <div class="bar fat" :style="{ width: getFatPercentage() + '%' }"></div>
+                  </div>
+                  <div class="bar-value">{{ calculateTotalFat() }}g</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button @click="closeIngredientsModal" class="btn-cancel">
+            Bezárás
+          </button>
+          <button v-if="canEdit" @click="editIngredients(selectedMeal)" class="btn-edit">
+            Összetevők szerkesztése
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -118,32 +236,49 @@ export default {
       error: '',
       search: '',
       selectedCategory: '',
+      
       showAddModal: false,
       editingMeal: null,
+      showIngredientsModal: false,
+      selectedMeal: null,
+      loadingIngredients: false,
+      ingredientsError: '',
       
       mealForm: {
         name: '',
         category: '',
-        description: '',
-        calories: null,
-        allergens: [],
-      },
-      
-      allergensInput: ''
+        description: ''
+      }
+    }
+  },
+  
+  computed: {
+    // Computed property a jogosultságok ellenőrzésére
+    canEdit() {
+      return AuthService.isKitchen() || AuthService.isAdmin()
     }
   },
   
   mounted() {
-    this.fetchMeals()
-  },
-  
-  watch: {
-    allergensInput(newValue) {
-      
-    }
+    this.checkAuthAndFetch()
   },
   
   methods: {
+    checkAuthAndFetch() {
+      if (!AuthService.isAuthenticated()) {
+        this.$router.push('/login')
+        return
+      }
+      
+      if (!this.canEdit) {
+        this.error = 'Nincs megfelelő jogosultságod az ételek kezeléséhez'
+        this.$router.push('/dashboard')
+        return
+      }
+      
+      this.fetchMeals()
+    },
+    
     async fetchMeals() {
       this.loading = true
       this.error = ''
@@ -153,13 +288,30 @@ export default {
         if (this.search) params.search = this.search
         if (this.selectedCategory) params.category = this.selectedCategory
         
+        console.log('Fetching meals with AuthService:', {
+          isAuthenticated: AuthService.isAuthenticated(),
+          userRole: AuthService.getUserRole(),
+          tokenExists: !!AuthService.getToken()
+        })
+        
         const response = await AuthService.api.get('/kitchen/meals', { params })
-        this.meals = response.data.meals || []
+        
+        console.log('Meals response:', response.data)
+        
+        if (response.data.success) {
+          this.meals = response.data.meals || []
+        } else {
+          this.error = response.data.message || 'Hiba történt'
+        }
+        
       } catch (error) {
         console.error('Ételek betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'Hiba történt'
+        this.error = error.response?.data?.message || 'Hiba történt az ételek betöltésekor'
         
-        if (error.response?.status === 403) {
+        if (error.response?.status === 401) {
+          AuthService.clearAuth()
+          this.$router.push('/login')
+        } else if (error.response?.status === 403) {
           this.$router.push('/dashboard')
         }
       } finally {
@@ -167,30 +319,147 @@ export default {
       }
     },
     
+     async viewIngredients(meal) {
+      this.selectedMeal = meal
+      this.showIngredientsModal = true
+      this.loadingIngredients = true
+      this.ingredientsError = ''
+      
+      try {
+        console.log('Loading ingredients for meal:', {
+          id: meal.id,
+          name: meal.name,
+          hasIngredients: meal.ingredients && meal.ingredients.length > 0
+        })
+        
+        // Ha nincsenek betöltve az összetevők, betöltjük őket
+        if (!meal.ingredients || meal.ingredients.length === 0) {
+          console.log('Fetching ingredients from API...')
+          
+          const response = await AuthService.api.get(`/kitchen/meals/${meal.id}/ingredients`)
+          
+          console.log('API Response:', {
+            success: response.data.success,
+            ingredientsCount: response.data.ingredients?.length || 0
+          })
+          
+          if (response.data.success) {
+            // Ellenőrizzük és formázzuk az adatokat
+            this.selectedMeal.ingredients = (response.data.ingredients || []).map(ingredient => {
+              // Biztosítjuk, hogy minden mező létezik
+              return {
+                id: ingredient.id || 0,
+                name: ingredient.name || 'Ismeretlen',
+                ingredientType: ingredient.ingredientType || 'Egyéb',
+                energy: parseFloat(ingredient.energy) || 0,
+                protein: parseFloat(ingredient.protein) || 0,
+                carbohydrate: parseFloat(ingredient.carbohydrate) || 0,
+                fat: parseFloat(ingredient.fat) || 0,
+                pivot: {
+                  amount: parseFloat(ingredient.pivot?.amount) || 0,
+                  unit: ingredient.pivot?.unit || 'g'
+                }
+              }
+            })
+            
+            console.log('Formatted ingredients:', this.selectedMeal.ingredients)
+          } else {
+            this.ingredientsError = response.data.message || 'Nem sikerült betölteni az összetevőket'
+          }
+        } else {
+          console.log('Using existing ingredients:', meal.ingredients.length)
+          // Ellenőrizzük a meglévő adatokat
+          this.selectedMeal.ingredients = meal.ingredients.map(ingredient => ({
+            ...ingredient,
+            pivot: {
+              amount: parseFloat(ingredient.pivot?.amount) || 0,
+              unit: ingredient.pivot?.unit || 'g'
+            }
+          }))
+        }
+      } catch (error) {
+        console.error('Összetevők betöltése sikertelen:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        })
+        
+        this.ingredientsError = 'Nem sikerült betölteni az összetevőket'
+        
+
+        this.selectedMeal.ingredients = [
+          {
+            id: 1,
+            name: 'Teszt összetevő 1',
+            ingredientType: 'Zöldség',
+            energy: 50,
+            protein: 2,
+            carbohydrate: 10,
+            fat: 1,
+            pivot: { amount: 100, unit: 'g' }
+          },
+          {
+            id: 2,
+            name: 'Teszt összetevő 2',
+            ingredientType: 'Hús',
+            energy: 200,
+            protein: 25,
+            carbohydrate: 0,
+            fat: 12,
+            pivot: { amount: 150, unit: 'g' }
+          }
+        ]
+        
+        console.log('Tesztadatok')
+      } finally {
+        this.loadingIngredients = false
+      }
+    },
+    
+    closeIngredientsModal() {
+      this.showIngredientsModal = false
+      this.selectedMeal = null
+      this.ingredientsError = ''
+    },
+    
     editMeal(meal) {
       this.editingMeal = meal
-      this.mealForm = { ...meal }
-      this.allergensInput = meal.allergens?.join(', ') || ''
+      this.mealForm = { 
+        name: meal.name,
+        category: meal.category,
+        description: meal.description
+      }
       this.showAddModal = true
     },
     
     async saveMeal() {
       try {
         if (this.editingMeal) {
-          await AuthService.api.put(`/kitchen/meals/${this.editingMeal.id}`, this.mealForm)
-          this.$toast?.success('Étel sikeresen frissítve')
-          alert('Étel sikeresen frissítve')
+          const response = await AuthService.api.put(`/kitchen/meals/${this.editingMeal.id}`, this.mealForm)
+          if (response.data.success) {
+            this.$toast?.success('Étel sikeresen frissítve')
+            this.closeModal()
+            this.fetchMeals()
+          } else {
+            alert(response.data.message)
+          }
         } else {
-          await AuthService.api.post('/kitchen/meals', this.mealForm)
-          this.$toast?.success('Étel sikeresen hozzáadva')
-          alert('Étel sikeresen hozzáadva')
+          const response = await AuthService.api.post('/kitchen/meals', this.mealForm)
+          if (response.data.success) {
+            this.$toast?.success('Étel sikeresen hozzáadva')
+            this.closeModal()
+            this.fetchMeals()
+          } else {
+            alert(response.data.message)
+          }
         }
-        
-        this.closeModal()
-        this.fetchMeals()
       } catch (error) {
         console.error('Étel mentése sikertelen:', error)
-        alert(error.response?.data?.message || 'Hiba történt a mentés során')
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.errors ? 
+                           Object.values(error.response.data.errors).flat().join(', ') : 
+                           'Hiba történt a mentés során'
+        alert(errorMessage)
       }
     },
     
@@ -200,9 +469,14 @@ export default {
       }
       
       try {
-        await AuthService.api.delete(`/kitchen/meals/${mealId}`)
-        this.meals = this.meals.filter(meal => meal.id !== mealId)
-        this.$toast?.success('Étel sikeresen törölve')
+        const response = await AuthService.api.delete(`/kitchen/meals/${mealId}`)
+        
+        if (response.data.success) {
+          this.meals = this.meals.filter(meal => meal.id !== mealId)
+          this.$toast?.success('Étel sikeresen törölve')
+        } else {
+          alert(response.data.message)
+        }
       } catch (error) {
         console.error('Étel törlése sikertelen:', error)
         alert(error.response?.data?.message || 'Hiba történt a törlés során')
@@ -219,17 +493,172 @@ export default {
       this.mealForm = {
         name: '',
         category: '',
-        description: '',
-        calories: null,
-        allergens: [],
+        description: ''
       }
-      this.allergensInput = ''
-    }
+    },
+    
+    editIngredients(meal) {
+      alert(`Összetevők szerkesztése: ${meal.name} - Ez a funkció hamarosan elérhető lesz.`)
+    },
+    
+    // Segédfüggvények
+    getIngredientTypeClass(type) {
+      if (!type) return 'type-other'
+      
+      const classes = {
+        'Hús': 'type-meat',
+        'Tejtermék': 'type-dairy',
+        'Zöldség': 'type-vegetable',
+        'Egyéb': 'type-other'
+      }
+      return classes[type] || 'type-other'
+    },
+    
+    calculateIngredientCalories(ingredient) {
+      if (!ingredient || typeof ingredient.energy === 'undefined') return 0
+      
+      const amount = ingredient.pivot?.amount
+      const caloriesPer100g = ingredient.energy || 0
+      
+      // Konvertáljuk számmá
+      const numericAmount = parseFloat(amount) || 0
+      const numericCalories = parseFloat(caloriesPer100g) || 0
+      
+      return Math.round((numericAmount / 100) * numericCalories)
+    },
+    
+    calculateIngredientProtein(ingredient) {
+      if (!ingredient || typeof ingredient.protein === 'undefined') return '0'
+      
+      const amount = ingredient.pivot?.amount
+      const proteinPer100g = ingredient.protein || 0
+      
+      const numericAmount = parseFloat(amount) || 0
+      const numericProtein = parseFloat(proteinPer100g) || 0
+      
+      return ((numericAmount / 100) * numericProtein).toFixed(1)
+    },
+    
+    calculateIngredientCarbohydrate(ingredient) {
+      if (!ingredient || typeof ingredient.carbohydrate === 'undefined') return '0'
+      
+      const amount = ingredient.pivot?.amount
+      const carbPer100g = ingredient.carbohydrate || 0
+      
+      const numericAmount = parseFloat(amount) || 0
+      const numericCarb = parseFloat(carbPer100g) || 0
+      
+      return ((numericAmount / 100) * numericCarb).toFixed(1)
+    },
+    
+    calculateIngredientFat(ingredient) {
+      if (!ingredient || typeof ingredient.fat === 'undefined') return '0'
+      
+      const amount = ingredient.pivot?.amount
+      const fatPer100g = ingredient.fat || 0
+      
+      const numericAmount = parseFloat(amount) || 0
+      const numericFat = parseFloat(fatPer100g) || 0
+      
+      return ((numericAmount / 100) * numericFat).toFixed(1)
+    },
+    
+    calculateTotalAmount() {
+      if (!this.selectedMeal?.ingredients) return '0 g'
+      
+      const totalAmount = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
+        const amount = ingredient.pivot?.amount
+        // Konvertáljuk számmá, ha string
+        const numericAmount = parseFloat(amount) || 0
+        return sum + numericAmount
+      }, 0)
+      
+      // Ellenőrizzük, hogy szám-e
+      if (typeof totalAmount !== 'number' || isNaN(totalAmount)) {
+        return '0 g'
+      }
+      
+      return totalAmount.toFixed(0) + ' g'
+    },
+    
+    calculateTotalCalories() {
+      if (!this.selectedMeal?.ingredients) return 0
+      
+      const totalCalories = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
+        const calories = this.calculateIngredientCalories(ingredient)
+        return sum + (parseFloat(calories) || 0)
+      }, 0)
+      
+      return Math.round(totalCalories)
+    },
+    
+    calculateTotalProtein() {
+      if (!this.selectedMeal?.ingredients) return '0'
+      
+      const totalProtein = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
+        const protein = this.calculateIngredientProtein(ingredient)
+        return sum + (parseFloat(protein) || 0)
+      }, 0)
+      
+      return parseFloat(totalProtein).toFixed(1)
+    },
+    
+    calculateTotalCarbohydrate() {
+      if (!this.selectedMeal?.ingredients) return '0'
+      
+      const totalCarb = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
+        const carb = this.calculateIngredientCarbohydrate(ingredient)
+        return sum + (parseFloat(carb) || 0)
+      }, 0)
+      
+      return parseFloat(totalCarb).toFixed(1)
+    },
+    
+    calculateTotalFat() {
+      if (!this.selectedMeal?.ingredients) return '0'
+      
+      const totalFat = this.selectedMeal.ingredients.reduce((sum, ingredient) => {
+        const fat = this.calculateIngredientFat(ingredient)
+        return sum + (parseFloat(fat) || 0)
+      }, 0)
+      
+      return parseFloat(totalFat).toFixed(1)
+    },
+    
+    getCaloriesPercentage() {
+      const total = this.calculateTotalCalories()
+      if (typeof total !== 'number' || isNaN(total)) return 0
+      return Math.min((total / 2000) * 100, 100)
+    },
+    
+    getProteinPercentage() {
+      const total = parseFloat(this.calculateTotalProtein() || 0)
+      if (isNaN(total)) return 0
+      return Math.min((total / 50) * 100, 100)
+    },
+    
+    getCarbPercentage() {
+      const total = parseFloat(this.calculateTotalCarbohydrate() || 0)
+      if (isNaN(total)) return 0
+      return Math.min((total / 300) * 100, 100)
+    },
+    
+    getFatPercentage() {
+      const total = parseFloat(this.calculateTotalFat() || 0)
+      if (isNaN(total)) return 0
+      return Math.min((total / 70) * 100, 100)
+    },
   }
 }
 </script>
 
+
 <style scoped>
+button{
+  width: 20%;
+}
+
+/* Alap stílusok */
 .meals-management {
   padding: 2rem;
   max-width: 1400px;
@@ -256,7 +685,6 @@ export default {
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
-  width: 10%;
   min-width: 150px;
 }
 
@@ -286,6 +714,7 @@ export default {
   min-width: 200px;
 }
 
+/* Étel kártyák */
 .meals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -334,36 +763,41 @@ export default {
   font-size: 0.875rem;
 }
 
-.meal-details {
-  margin-bottom: 1.5rem;
+/* Összetevők előnézet */
+.ingredients-preview {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
 }
 
-.meal-tags {
+.ingredients-preview strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.preview-items {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
 }
 
-.tag {
+.preview-item {
+  background: white;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
-  font-weight: 500;
+  border: 1px solid #e0e0e0;
 }
 
-
-.tag.gf {
-  background: #fff3cd;
-  color: #856404;
+.more-items {
+  color: #6c757d;
+  font-size: 0.75rem;
+  font-style: italic;
 }
 
-.allergens, .calories {
-  font-size: 0.875rem;
-  color: #7f8c8d;
-  margin-top: 0.25rem;
-}
-
+/* Gombok */
 .meal-actions {
   display: flex;
   gap: 0.5rem;
@@ -376,6 +810,11 @@ export default {
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
 }
 
 .btn-edit {
@@ -387,6 +826,15 @@ export default {
   background: #2980b9;
 }
 
+.btn-view {
+  background: #2ecc71;
+  color: white;
+}
+
+.btn-view:hover {
+  background: #27ae60;
+}
+
 .btn-delete {
   background: #e74c3c;
   color: white;
@@ -396,6 +844,7 @@ export default {
   background: #c0392b;
 }
 
+/* Modal stílusok */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -407,11 +856,10 @@ export default {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  opacity: 1; 
-  visibility: visible; 
 }
 
 .modal {
+  padding: 20px;
   background: white;
   border-radius: 8px;
   width: 90%;
@@ -422,18 +870,20 @@ export default {
   position: relative !important;
   z-index: 1001;
   transform: translateY(0);
-  opacity: 1; 
+  opacity: 1;
   visibility: visible !important;
   display: block !important;
-  padding: 35px;
+}
+
+.ingredients-modal {
+  max-width: 1000px;
 }
 
 .modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1.5rem;
 }
 
 .modal-header h2 {
@@ -441,6 +891,20 @@ export default {
   color: #2c3e50;
 }
 
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #7f8c8d;
+  width: 20px;
+}
+
+.close-btn:hover {
+  color: #e74c3c;
+}
+
+/* Form stílusok */
 .form-group {
   margin-bottom: 1rem;
 }
@@ -464,33 +928,6 @@ export default {
 
 .form-group textarea {
   resize: vertical;
-}
-
-.form-row {
-  display: flex;
-  gap: 1rem;
-}
-
-.form-row .form-group {
-  flex: 1;
-}
-
-.form-row .form-group label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.form-row .form-group input[type="checkbox"] {
-  width: auto;
-}
-
-small {
-  display: block;
-  margin-top: 0.25rem;
-  color: #95a5a6;
-  font-size: 0.75rem;
 }
 
 .modal-actions {
@@ -528,6 +965,147 @@ small {
   background: #219653;
 }
 
+/* Összetevők táblázat */
+.ingredients-content {
+  margin: 1.5rem 0;
+}
+
+.no-ingredients {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+}
+
+.ingredients-summary {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.ingredients-table-container {
+  overflow-x: auto;
+  margin-bottom: 2rem;
+}
+
+.ingredients-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ingredients-table th,
+.ingredients-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.ingredients-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.ingredients-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.total-row {
+  background: #f8f9fa !important;
+  font-weight: 600;
+}
+
+.ingredient-type {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.type-meat {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.type-dairy {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.type-vegetable {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.type-other {
+  background: #f5f5f5;
+  color: #616161;
+}
+
+/* Tápanyag összegzés */
+.nutrition-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.nutrition-summary h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.nutrition-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nutrition-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bar-label {
+  width: 100px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.bar-container {
+  flex: 1;
+  height: 10px;
+  background: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: #3498db;
+  transition: width 0.3s ease;
+}
+
+.bar.protein {
+  background: #2ecc71;
+}
+
+.bar.carb {
+  background: #f39c12;
+}
+
+.bar.fat {
+  background: #e74c3c;
+}
+
+.bar-value {
+  width: 80px;
+  text-align: right;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* Általános stílusok */
 .loading, .error, .no-meals {
   text-align: center;
   padding: 3rem;
