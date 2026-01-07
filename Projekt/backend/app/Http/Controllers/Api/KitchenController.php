@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Meal;
-use Log;
+use App\Models\Ingredient;
 use App\Enums\MealType;
 
 class KitchenController extends Controller
@@ -93,7 +95,7 @@ class KitchenController extends Controller
                 ]);
                 
             } catch (\Exception $e) {
-                \Log::error('Kitchen getMeals error: ' . $e->getMessage());
+                Log::error('Kitchen getMeals error: ' . $e->getMessage());
                 return response()->json([
                     'success' => false,
                     'message' => 'Hiba történt az ételek betöltésekor.',
@@ -345,34 +347,34 @@ class KitchenController extends Controller
     public function getMealIngredients($id)
     {
         try {
-            \Log::info('=== START getMealIngredients for ID: ' . $id . ' ===');
+            Log::info('=== START getMealIngredients for ID: ' . $id . ' ===');
             
             // 1. Ellenőrizzük az ételt
             $meal = Meal::find($id);
             
             if (!$meal) {
-                \Log::warning('Meal not found with ID: ' . $id);
+                Log::warning('Meal not found with ID: ' . $id);
                 return response()->json([
                     'success' => false,
                     'message' => 'Az étel nem található.'
                 ], 404);
             }
             
-            \Log::info('Meal found: ' . $meal->id . ' - ' . $meal->mealName);
+            Log::info('Meal found: ' . $meal->id . ' - ' . $meal->mealName);
             
             // 2. Ellenőrizzük a relációt
             $ingredientsCount = $meal->ingredients()->count();
-            \Log::info('Ingredients count via relationship: ' . $ingredientsCount);
+            Log::info('Ingredients count via relationship: ' . $ingredientsCount);
             
             // 3. Kétféle módon próbáljuk meg
             if ($ingredientsCount > 0) {
                 // 3a. Metódus 1: withPivot használatával
                 $ingredients = $meal->ingredients()->withPivot('amount', 'unit')->get();
                 
-                \Log::info('Ingredients loaded with pivot: ' . $ingredients->count());
+                Log::info('Ingredients loaded with pivot: ' . $ingredients->count());
                 
                 $formattedIngredients = $ingredients->map(function($ingredient) {
-                    \Log::info('Processing ingredient: ' . $ingredient->id . ' - ' . $ingredient->name);
+                    Log::info('Processing ingredient: ' . $ingredient->id . ' - ' . $ingredient->name);
                     
                     return [
                         'id' => $ingredient->id,
@@ -390,9 +392,9 @@ class KitchenController extends Controller
                 });
             } else {
                 // 3b. Metódus 2: Keresztül a pivot táblán
-                \Log::info('No ingredients via relationship, trying direct query...');
+                Log::info('No ingredients via relationship, trying direct query...');
                 
-                $pivotData = \DB::table('meal_ingredients')
+                $pivotData = DB::table('meal_ingredients')
                             ->where('meal_id', $id)
                             ->join('ingredients', 'meal_ingredients.ingredient_id', '=', 'ingredients.id')
                             ->select(
@@ -402,7 +404,7 @@ class KitchenController extends Controller
                             )
                             ->get();
                 
-                \Log::info('Direct query result count: ' . $pivotData->count());
+                Log::info('Direct query result count: ' . $pivotData->count());
                 
                 $formattedIngredients = $pivotData->map(function($item) {
                     return [
@@ -421,7 +423,7 @@ class KitchenController extends Controller
                 });
             }
             
-            \Log::info('=== END getMealIngredients ===');
+            Log::info('=== END getMealIngredients ===');
             
             return response()->json([
                 'success' => true,
@@ -440,10 +442,10 @@ class KitchenController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('CRITICAL ERROR in getMealIngredients: ' . $e->getMessage());
-            \Log::error('File: ' . $e->getFile());
-            \Log::error('Line: ' . $e->getLine());
-            \Log::error('Trace: ' . $e->getTraceAsString());
+            Log::error('CRITICAL ERROR in getMealIngredients: ' . $e->getMessage());
+            Log::error('File: ' . $e->getFile());
+            Log::error('Line: ' . $e->getLine());
+            Log::error('Trace: ' . $e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
@@ -454,6 +456,161 @@ class KitchenController extends Controller
                     'line' => $e->getLine(),
                     'trace' => $e->getTrace()
                 ] : null
+            ], 500);
+        }
+    }
+
+    public function getAllIngredients()
+    {
+        try {
+            $ingredients = Ingredient::orderBy('name')->get();
+            
+            return response()->json([
+                'success' => true,
+                'ingredients' => $ingredients,
+                'count' => $ingredients->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Get all ingredients error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a hozzávalók betöltésekor.'
+            ], 500);
+        }
+    }
+    
+    // ÚJ METÓDUS: Ételi összetevők mentése/frissítése
+    public function updateMealIngredients(Request $request, $id)
+    {
+        try {
+            Log::info('=== START updateMealIngredients for meal ID: ' . $id . ' ===');
+            Log::info('Request data: ', $request->all());
+            
+            // Étel ellenőrzése
+            $meal = Meal::find($id);
+            
+            if (!$meal) {
+                Log::warning('Meal not found with ID: ' . $id);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az étel nem található.'
+                ], 404);
+            }
+            
+            // Validáció
+            $validator = Validator::make($request->all(), [
+                'ingredients' => 'required|array',
+                'ingredients.*.ingredient_id' => 'required|integer|exists:ingredients,id',
+                'ingredients.*.amount' => 'required|numeric|min:0',
+                'ingredients.*.unit' => 'required|string|max:10'
+            ], [
+                'ingredients.required' => 'Az összetevők megadása kötelező.',
+                'ingredients.*.ingredient_id.required' => 'A hozzávaló ID megadása kötelező.',
+                'ingredients.*.ingredient_id.exists' => 'A megadott hozzávaló nem létezik.',
+                'ingredients.*.amount.required' => 'A mennyiség megadása kötelező.',
+                'ingredients.*.amount.min' => 'A mennyiség nem lehet negatív.',
+                'ingredients.*.unit.required' => 'A mértékegység megadása kötelező.'
+            ]);
+            
+            if ($validator->fails()) {
+                Log::warning('Validation failed: ', $validator->errors()->toArray());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validációs hiba',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            // Töröljük a régi összetevőket
+            Log::info('Deleting old ingredients for meal ID: ' . $id);
+            $deletedCount = DB::table('meal_ingredients')->where('meal_id', $id)->delete();
+            Log::info('Deleted ' . $deletedCount . ' old ingredients');
+            
+            // Új összetevők hozzáadása
+            $ingredientsData = [];
+            foreach ($request->ingredients as $ingredient) {
+                $ingredientsData[] = [
+                    'meal_id' => $id,
+                    'ingredient_id' => $ingredient['ingredient_id'],
+                    'amount' => $ingredient['amount'],
+                    'unit' => $ingredient['unit'],
+                    // NE adjuk hozzá a created_at és updated_at mezőket, ha nincsenek a táblában
+                    // 'created_at' => now(),
+                    // 'updated_at' => now()
+                ];
+            }
+            
+            Log::info('Ingredients to insert: ', $ingredientsData);
+            
+            if (!empty($ingredientsData)) {
+                try {
+                    DB::table('meal_ingredients')->insert($ingredientsData);
+                    Log::info('Successfully inserted ' . count($ingredientsData) . ' ingredients');
+                } catch (\Exception $insertError) {
+                    Log::error('Insert failed: ' . $insertError->getMessage());
+                    Log::error('Insert error details: ', [
+                        'error' => $insertError->getMessage(),
+                        'trace' => $insertError->getTraceAsString()
+                    ]);
+                    throw $insertError;
+                }
+            }
+            
+            Log::info('=== END updateMealIngredients ===');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Összetevők sikeresen frissítve.',
+                'ingredients_count' => count($ingredientsData)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('CRITICAL ERROR in updateMealIngredients: ' . $e->getMessage());
+            Log::error('File: ' . $e->getFile());
+            Log::error('Line: ' . $e->getLine());
+            Log::error('Trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az összetevők frissítése során.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+                'debug_info' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'error_type' => get_class($e)
+                ] : null
+            ], 500);
+        }
+    }
+    
+    // ÚJ METÓDUS: Hozzávaló keresése
+    public function searchIngredients(Request $request)
+    {
+        try {
+            $query = Ingredient::query();
+            
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('ingredientType', 'like', "%{$search}%");
+                });
+            }
+            
+            $ingredients = $query->orderBy('name')->limit(20)->get();
+            
+            return response()->json([
+                'success' => true,
+                'ingredients' => $ingredients,
+                'count' => $ingredients->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Search ingredients error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a keresés során.'
             ], 500);
         }
     }
