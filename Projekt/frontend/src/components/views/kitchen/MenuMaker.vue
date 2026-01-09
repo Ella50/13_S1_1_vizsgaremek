@@ -21,6 +21,7 @@
             </option>
           </select>
           <button :disabled="!selectedDate" @click="step = 2">Tovább</button>
+          <button class="secondary" @click="closeModal">Mégse</button>
         </div>
 
         <!-- STEP 2: Ételek -->
@@ -30,35 +31,37 @@
           <div class="meal-types">
             <button
               v-for="type in mealTypes"
-              :key="type"
-              :class="{ active: activeMealType === type }"
-              @click="activeMealType = type"
+              :key="type.slot"
+              :class="{ active: activeSlot === type.slot }"
+              @click="
+                activeSlot = type.slot;
+                activeCategory = type.category
+              "
             >
-              {{ type }}
+              {{ type.label }}
             </button>
           </div>
 
           <div class="meals">
-            <div v-for="meal in filteredMeals" :key="meal.id" class="meal-item">
+            <div
+              v-for="meal in filteredMeals"
+              :key="meal.id"
+              class="meal-item"
+            >
               <span>{{ meal.name }}</span>
               <button @click="addMeal(meal)">✔</button>
             </div>
           </div>
 
-          <h3>Kiválasztott ételek (húzd a sorrendhez)</h3>
-          <ul class="sortable">
-            <li
-              v-for="(m, index) in selectedMeals"
-              :key="m.id"
-              draggable="true"
-              @dragstart="onDragStart(index)"
-              @dragover.prevent
-              @drop="onDrop(index)"
-            >
-              ☰ {{ m.name }} ({{ m.mealType }})
-              <button @click="removeMeal(m)">❌</button>
-            </li>
+          <h3>Kiválasztott ételek</h3>
+          <ul>
+            <li>Leves: {{ selectedMeals.soup?.name || '—' }}</li>
+            <li>A opció: {{ selectedMeals.optionA?.name || '—' }}</li>
+            <li>B opció: {{ selectedMeals.optionB?.name || '—' }}</li>
+            <li>Egyéb: {{ selectedMeals.other?.name || '—' }}</li>
           </ul>
+
+          
 
           <button @click="saveMenu" :disabled="!canSave">Mentés</button>
           <button class="secondary" @click="closeModal">Mégse</button>
@@ -74,40 +77,60 @@ import AuthService from '../../../services/authService'
 import api from '@/services/api'
 
 
+
 export default {
   data() {
-    return {
-      dragIndex: null,
-      showModal: false,
-      step: 1,
-      isEdit: false,
-      availableDates: [],
-      selectedDate: '',
-      meals: [],
-      mealTypes: ['Leves', 'Főétel', 'Egyéb'],
-      activeMealType: 'Leves',
-      selectedMeals: {
-        soup: null,
-        optionA: null,
-        optionB: null
-      },
-      activeCategory: 'Leves', 
-      meals: [],
-      selectedDate: null,
-      
+  return {
+    dragIndex: null,
+    showModal: false,
+    step: 1,
+    isEdit: false,
+
+    availableDates: [],
+    selectedDate: '',
+
+    meals: [],
+
+    mealTypes: [
+      { slot: 'soup', category: 'Leves', label: 'Leves' },
+      { slot: 'optionA', category: 'Főétel', label: 'A opció' },
+      { slot: 'optionB', category: 'Főétel', label: 'B opció' },
+      { slot: 'other', category: 'Egyéb', label: 'Egyéb' }
+    ],
+
+    activeSlot: 'soup',
+    activeCategory: 'Leves',
+
+
+    editinMenuId: null,
+    selectedMeals: {
+      soup: null,
+      optionA: null,
+      optionB: null,
+      other: null
     }
-  },
+  }
+},
 
   computed: {
     filteredMeals() {
-    return this.meals.filter(
-      meal => meal.meal_type === this.activeCategory
-    )
-  }
-
-
+    return this.meals
+      .filter(meal => meal.category === this.activeCategory)
+      .sort((a, b) => a.name.localeCompare(b.name))
   },
 
+    canSave() {
+      return (
+        this.selectedDate &&
+        this.selectedMeals.soup &&
+        this.selectedMeals.optionA &&
+        this.selectedMeals.optionB
+      )
+    }
+  },
+
+
+  
   methods: {
     onDragStart(index) {
       this.dragIndex = index
@@ -126,6 +149,25 @@ export default {
       this.showModal = true
     },
 
+    openEditModal(menu) {
+    this.editingMenuId = menu.id
+
+    this.selectedMeals.soup = this.meals.find(
+      m => m.id === menu.soup.id
+    )
+
+    this.selectedMeals.optionA = this.meals.find(
+      m => m.id === menu.optionA.id
+    )
+
+    this.selectedMeals.optionB = this.meals.find(
+      m => m.id === menu.optionB.id
+    )
+
+    this.showModal = true
+  },
+
+
     async openEditModal() {
       this.isEdit = true
       await this.fetchExistingDates()
@@ -135,11 +177,16 @@ export default {
     },
 
     resetState() {
-      this.step = 1
-      this.selectedDate = ''
-      this.selectedMeals = []
-      this.activeMealType = 'Leves'
-    },
+  this.editingMenuId = null
+  this.selectedMeals = {
+    soup: null,
+    optionA: null,
+    optionB: null
+  }
+  this.showModal = false
+},
+
+
 
     closeModal() {
       this.showModal = false
@@ -172,11 +219,11 @@ export default {
       }
     },
 
-    addMeal(meal) {
-      if (!this.selectedMeals.find(m => m.id === meal.id)) {
-        this.selectedMeals.push(meal)
-      }
+   addMeal(meal) {
+      this.selectedMeals[this.activeSlot] = meal
     },
+
+
 
     removeMeal(meal) {
       if (confirm(`Biztosan eltávolítod: ${meal.name}?`)) {
@@ -184,33 +231,38 @@ export default {
       }
     },
 
-    canSave() {
-      return (
-    this.selectedDate &&
-    this.selectedSoup &&
-    this.selectedOptionA &&
-    this.selectedOptionB
-  )
-},
+   
 
 
-    async saveMenu() {
-      if (!this.canSave) return
+   async saveMenu() {
+    if (!this.canSave) return
 
-      try {
-        await api.post('/menu', {
-          day: this.selectedDate,
-          soup: this.selectedSoup.id,
-          optionA: this.selectedOptionA.id,
-          optionB: this.selectedOptionB.id
-        })
-
-        this.closeModal()
-        await this.fetchMenus()
-      } catch (e) {
-        console.error('Mentés sikertelen', e)
-      }
+    try {
+    const payload = {
+      day: this.selectedDate,
+      soup: this.selectedMeals.soup.id,
+      optionA: this.selectedMeals.optionA.id,
+      optionB: this.selectedMeals.optionB.id
     }
+
+    if (this.editingMenuId) {
+      // 🔁 SZERKESZTÉS
+      await AuthService.api.put(
+        `/menu/${this.editingMenuId}`,
+        payload
+      )
+    } else {
+      // ➕ ÚJ
+      await AuthService.api.post('/menu', payload)
+    }
+
+    this.resetState()
+  } catch (e) {
+    console.error('Mentés sikertelen', e)
+  }
+}
+
+
 
   }
 }
