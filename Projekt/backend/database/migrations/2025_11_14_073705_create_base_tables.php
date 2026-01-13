@@ -49,7 +49,7 @@ return new class extends Migration
 
         Schema::create('allergens', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('allergenName')->unique();
             $table->string('icon')->nullable();
         });
     }
