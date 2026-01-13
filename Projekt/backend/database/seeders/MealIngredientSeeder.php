@@ -9,14 +9,11 @@ class MealIngredientSeeder extends Seeder
 {
     public function run()
     {
-        // Ürítjük a táblát, ha van adat
         DB::table('meal_ingredients')->truncate();
         
-        // Ételek lekérése
         $meals = DB::table('meals')->get()->keyBy('mealName');
         $ingredients = DB::table('ingredients')->get()->keyBy('name');
         
-        // Kapcsolatok definiálása
         $mealIngredients = [];
         
         // ============ GOMBALEVES ============
@@ -283,14 +280,12 @@ class MealIngredientSeeder extends Seeder
             ];
         }
         
-        // Adatok beszúrása
         if (!empty($mealIngredients)) {
             DB::table('meal_ingredients')->insert($mealIngredients);
             
-            $this->command->info('Meal ingredients seeded successfully!');
-            $this->command->info('Total connections: ' . count($mealIngredients));
+            $this->command->info('Meal-ingredient kapcsolatok: ' . count($mealIngredients));
         } else {
-            $this->command->warn('No meal ingredients were seeded. Check if meals and ingredients exist.');
+            $this->command->warn('Sikertelen seed: meal-ingredient');
         }
     }
 }

@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Meals;
+use App\Models\Meal;
+use App\Models\Ingredient;
 use App\Enums\MealType;
 
 class KitchenController extends Controller
@@ -16,7 +17,7 @@ class KitchenController extends Controller
     public function getMeals(Request $request)
         {
             try {
-                $query = Meals::query();
+                $query = Meal::query();
                 
                 // Keresés
                 if ($request->has('search') && !empty($request->search)) {
@@ -134,7 +135,7 @@ class KitchenController extends Controller
             }
             
             // Étel létrehozása
-            $meal = Meals::create([
+            $meal = Meal::create([
                 'mealName' => $request->name,
                 'mealType' => $request->category,
                 'description' => $request->description,
@@ -174,7 +175,7 @@ class KitchenController extends Controller
     {
         try {
             // Étel megkeresése
-            $meal = Meals::find($id);
+            $meal = Meal::find($id);
             
             if (!$meal) {
                 return response()->json([
@@ -247,7 +248,7 @@ class KitchenController extends Controller
     {
         try {
             // Étel megkeresése
-            $meal = Meals::find($id);
+            $meal = Meal::find($id);
             
             if (!$meal) {
                 return response()->json([
@@ -290,7 +291,7 @@ class KitchenController extends Controller
     public function showMeal($id)
     {
         try {
-            $meal = Meals::find($id);
+            $meal = Meal::find($id);
             
             if (!$meal) {
                 return response()->json([
@@ -349,7 +350,7 @@ class KitchenController extends Controller
             Log::info('=== START getMealIngredients for ID: ' . $id . ' ===');
             
             // 1. Ellenőrizzük az ételt
-            $meal = Meals::find($id);
+            $meal = Meal::find($id);
             
             if (!$meal) {
                 Log::warning('Meal not found with ID: ' . $id);
@@ -522,11 +523,10 @@ class KitchenController extends Controller
             }
             
             // Töröljük a régi összetevőket
-            Log::info('Deleting old ingredients for meal ID: ' . $id);
             $deletedCount = DB::table('meal_ingredients')->where('meal_id', $id)->delete();
-            Log::info('Deleted ' . $deletedCount . ' old ingredients');
+
             
-            // Új összetevők hozzáadása
+            // Új összetevő hozzáadása
             $ingredientsData = [];
             foreach ($request->ingredients as $ingredient) {
                 $ingredientsData[] = [
@@ -534,18 +534,14 @@ class KitchenController extends Controller
                     'ingredient_id' => $ingredient['ingredient_id'],
                     'amount' => $ingredient['amount'],
                     'unit' => $ingredient['unit'],
-                    // NE adjuk hozzá a created_at és updated_at mezőket, ha nincsenek a táblában
-                    // 'created_at' => now(),
-                    // 'updated_at' => now()
+
                 ];
             }
             
-            Log::info('Ingredients to insert: ', $ingredientsData);
             
             if (!empty($ingredientsData)) {
                 try {
                     DB::table('meal_ingredients')->insert($ingredientsData);
-                    Log::info('Successfully inserted ' . count($ingredientsData) . ' ingredients');
                 } catch (\Exception $insertError) {
                     Log::error('Insert failed: ' . $insertError->getMessage());
                     Log::error('Insert error details: ', [
