@@ -65,7 +65,7 @@
           <div v-if="meal?.allergens && meal.allergens.length > 0" class="allergens-section">
             <div class="allergens-header">
               <strong>Allergének:</strong>
-              <small>{{ meal.allergens.length }} allergén</small>
+              
             </div>
             
             <div class="allergens-list">
@@ -391,10 +391,9 @@
           <!-- ALLERGÉN FIGYELMEZTETÉS - ÚJ -->
           <div v-if="mealAllergens.length > 0" class="allergen-warning">
             <div class="warning-header">
-              <span class="warning-icon">⚠️</span>
-              <h4>ALLERGÉN FIGYELMEZTETÉS</h4>
+              <h4>Allergének</h4>
             </div>
-            <p>Ez az étel a következő allergéneket tartalmazza:</p>
+           
             <div class="allergens-detail-list">
               <div v-for="allergen in mealAllergens" :key="allergen.id" class="allergen-detail">
                 <img 
@@ -418,9 +417,7 @@
           <div v-else class="ingredients-list">
             <div class="ingredients-summary">
               <p><strong>Összesen {{ selectedMeal.ingredients.length }} hozzávaló</strong></p>
-              <p v-if="mealAllergens.length > 0" class="allergen-summary">
-                {{ mealAllergens.length }} allergén
-              </p>
+
             </div>
             
             <div class="ingredients-table-container">
@@ -2683,8 +2680,8 @@ form {
 .allergen-warning {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  background: #f1e9cd;
+  border: 1px solid #ddd2b1;
   border-radius: 6px;
 }
 
