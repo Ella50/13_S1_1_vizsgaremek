@@ -6,13 +6,15 @@ use Illuminate\Http\Request;
 use App\Models\MenuItem;
 use Carbon\Carbon;
 
+
 class MenuController extends Controller
 {
     // 🔹 Már létező menüs napok
     public function existingDates()
     {
         return response()->json(
-            MenuItem::pluck('day')
+            MenuItem::distinct()->pluck('day')
+
         );
     }
 
@@ -91,5 +93,49 @@ class MenuController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function update(Request $request, MenuItem $menu)
+    {
+        $validated = $request->validate([
+            'day' => 'required|date',
+            'soup' => 'required|exists:meals,id',
+            'optionA' => 'required|exists:meals,id',
+            'optionB' => 'required|exists:meals,id',
+        ]);
+
+        $menu->update([
+            'day' => $validated['day'],
+            'soup' => $validated['soup'],
+            'optionA' => $validated['optionA'],
+            'optionB' => $validated['optionB'],
+        ]);
+
+        return response()->json($menu);
+    }
+
+    public function getTodayMenu()
+    {
+        $today = Carbon::today()->toDateString();
+
+        $menu = MenuItem::where('day', $today)
+            ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
+            ->first();
+
+        if (!$menu) {
+            return response()->json([], 200);
+        }
+
+        return response()->json([
+            'id' => $menu->id,
+            'day' => $menu->day,
+            'soup' => $menu->soup,
+            'optionA' => $menu->optionA,
+            'optionB' => $menu->optionB,
+            'other' => $menu->other,
+        ]);
+    }
+
+   
+
 
 }

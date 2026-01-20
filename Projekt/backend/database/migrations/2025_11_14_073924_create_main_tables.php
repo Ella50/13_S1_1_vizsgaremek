@@ -34,7 +34,7 @@ return new class extends Migration
         $table->foreignId('soup')->constrained('meals');
         $table->foreignId('optionA')->constrained('meals');
         $table->foreignId('optionB')->constrained('meals');
-        $table->date('day');
+        $table->date('day')->unique();
         $table->timestamps();
     });
 
