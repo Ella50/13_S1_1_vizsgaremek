@@ -25,6 +25,8 @@ Route::get('/menu/existing-dates', [MenuController::class, 'existingDates']);
 Route::get('/menu/{date}', [MenuController::class, 'getMenuByDate']);
 Route::post('/menu', [MenuController::class, 'saveMenu']);
 Route::post('/menu', [MenuController::class, 'store']);
+Route::put('/menu/{menu}', [MenuController::class, 'update']);
+
 
 
 
