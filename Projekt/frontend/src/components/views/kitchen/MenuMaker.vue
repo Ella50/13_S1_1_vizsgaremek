@@ -8,7 +8,7 @@
     </div>
 
     <!-- MODAL -->
-     <pre>{{ meals }}</pre>
+    <!--<pre>{{ meals }}</pre>-->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
         <!-- STEP 1: Dátum -->
@@ -20,52 +20,61 @@
               {{ date }}
             </option>
           </select>
-          <button :disabled="!selectedDate" @click="step = 2">Tovább</button>
-          <button class="secondary" @click="closeModal">Mégse</button>
+          <button :disabled="!selectedDate" @click="step = 2" style="background-color: green;">Tovább</button>
+          <button class="secondary" @click="closeModal" style="background-color: lightcoral;">Mégse</button>
         </div>
 
         <!-- STEP 2: Ételek -->
-        <div v-else>
-          <h2>Ételek kiválasztása</h2>
+        <div v-else class="step-2">
 
-          <div class="meal-types">
-            <button
-              v-for="type in mealTypes"
-              :key="type.slot"
-              :class="{ active: activeSlot === type.slot }"
-              @click="
-                activeSlot = type.slot;
-                activeCategory = type.category
-              "
-            >
-              {{ type.label }}
-            </button>
-          </div>
-
-          <div class="meals">
-            <div
-              v-for="meal in filteredMeals"
-              :key="meal.id"
-              class="meal-item"
-            >
-              <span>{{ meal.name }}</span>
-              <button @click="addMeal(meal)">✔</button>
-            </div>
-          </div>
-
-          <h3>Kiválasztott ételek</h3>
-          <ul>
-            <li>Leves: {{ selectedMeals.soup?.name || '—' }}</li>
-            <li>A opció: {{ selectedMeals.optionA?.name || '—' }}</li>
-            <li>B opció: {{ selectedMeals.optionB?.name || '—' }}</li>
-            <li>Egyéb: {{ selectedMeals.other?.name || '—' }}</li>
-          </ul>
-
-          
-
-          <button @click="saveMenu" :disabled="!canSave">Mentés</button>
-          <button class="secondary" @click="closeModal">Mégse</button>
+        <h2 style="text-align: center; margin-top: 5px;">Ételek kiválasztása - {{ selectedDate }}</h2>
+        <div class="meal-types">
+          <button
+            v-for="type in mealTypes"
+            :key="type.slot"
+            :class="{ active: activeSlot === type.slot }"
+            @click="
+              activeSlot = type.slot;
+              activeCategory = type.category
+            "
+          >
+            {{ type.label }}
+          </button>
         </div>
+
+        <input
+          v-model="mealSearch"
+          class="meal-search"
+          placeholder="Keresés étel név szerint..."
+        />
+
+        <div class="meals-scroll">
+          <div
+            v-for="meal in filteredMeals"
+            :key="meal.id"
+            class="meal-item"
+          >
+            <span class="meal-name">{{ meal.name }}</span>
+            <button class="meal-btn" @click="addMeal(meal)">Hozzáad</button>
+          </div>
+        </div>
+
+
+
+        <div class="modal-footer">
+          <div class="selected-meals-fixed">
+            <strong>Kiválasztott ételek</strong>
+            <ul>
+              <li>Leves: {{ selectedMeals.soup?.name || '—' }}</li>
+              <li>A opció: {{ selectedMeals.optionA?.name || '—' }}</li>
+              <li>B opció: {{ selectedMeals.optionB?.name || '—' }}</li>
+              <li>Egyéb: {{ selectedMeals.other?.name || '—' }}</li>
+            </ul>
+          </div>
+          <button @click="saveMenu" :disabled="!canSave" style="background-color: green;">Mentés</button>
+          <button class="secondary" @click="closeModal" style="background-color: lightcoral;">Mégse</button>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -81,10 +90,11 @@ import api from '@/services/api'
 export default {
   data() {
   return {
-    dragIndex: null,
     showModal: false,
     step: 1,
     isEdit: false,
+    mealSearch: '',
+
 
     availableDates: [],
     selectedDate: '',
@@ -101,8 +111,7 @@ export default {
     activeSlot: 'soup',
     activeCategory: 'Leves',
 
-
-    editinMenuId: null,
+    editingMenuId: null, // ⬅️ HELYES NÉV
     selectedMeals: {
       soup: null,
       optionA: null,
@@ -112,12 +121,16 @@ export default {
   }
 },
 
+
   computed: {
     filteredMeals() {
-    return this.meals
-      .filter(meal => meal.category === this.activeCategory)
-      .sort((a, b) => a.name.localeCompare(b.name))
-  },
+      return this.meals
+        .filter(meal =>
+          meal.category === this.activeCategory &&
+          meal.name.toLowerCase().includes(this.mealSearch.toLowerCase())
+        )
+        .sort((a, b) => a.name.localeCompare(b.name))
+    },
 
     canSave() {
       return (
@@ -149,24 +162,6 @@ export default {
       this.showModal = true
     },
 
-    openEditModal(menu) {
-    this.editingMenuId = menu.id
-
-    this.selectedMeals.soup = this.meals.find(
-      m => m.id === menu.soup.id
-    )
-
-    this.selectedMeals.optionA = this.meals.find(
-      m => m.id === menu.optionA.id
-    )
-
-    this.selectedMeals.optionB = this.meals.find(
-      m => m.id === menu.optionB.id
-    )
-
-    this.showModal = true
-  },
-
 
     async openEditModal() {
       this.isEdit = true
@@ -177,14 +172,12 @@ export default {
     },
 
     resetState() {
-  this.editingMenuId = null
-  this.selectedMeals = {
-    soup: null,
-    optionA: null,
-    optionB: null
-  }
-  this.showModal = false
-},
+      this.step = 1
+      this.selectedDate = ''
+      this.isEdit = false
+      this.editingMenuId = null
+      this.resetMealsOnly()
+    },
 
 
 
@@ -212,12 +205,35 @@ export default {
       }
     },
 
-    async onDateSelected() {
-      if (this.isEdit && this.selectedDate) {
+   async onDateSelected() {
+      this.resetMealsOnly()
+
+      try {
         const res = await AuthService.api.get(`/menu/${this.selectedDate}`)
-        this.selectedMeals = res.data.menu_items.map(i => i.meal)
+
+        if (res.data) {
+          this.isEdit = true
+          this.editingMenuId = res.data.id
+
+          this.selectedMeals.soup = this.meals.find(m => m.id === res.data.soup)
+          this.selectedMeals.optionA = this.meals.find(m => m.id === res.data.optionA)
+          this.selectedMeals.optionB = this.meals.find(m => m.id === res.data.optionB)
+        }
+      } catch (e) {
+        this.isEdit = false
+        this.editingMenuId = null
       }
     },
+
+
+resetMealsOnly() {
+  this.selectedMeals = {
+    soup: null,
+    optionA: null,
+    optionB: null,
+    other: null
+  }
+},
 
    addMeal(meal) {
       this.selectedMeals[this.activeSlot] = meal
@@ -237,7 +253,6 @@ export default {
    async saveMenu() {
     if (!this.canSave) return
 
-    try {
     const payload = {
       day: this.selectedDate,
       soup: this.selectedMeals.soup.id,
@@ -245,23 +260,23 @@ export default {
       optionB: this.selectedMeals.optionB.id
     }
 
-    if (this.editingMenuId) {
-      // 🔁 SZERKESZTÉS
-      await AuthService.api.put(
-        `/menu/${this.editingMenuId}`,
-        payload
-      )
-    } else {
-      // ➕ ÚJ
-      await AuthService.api.post('/menu', payload)
+    try {
+      if (this.isEdit && this.editingMenuId) {
+        // 🟢 SZERKESZTÉS
+        await AuthService.api.put(
+          `/menu/${this.editingMenuId}`,
+          payload
+        )
+      } else {
+        // 🔵 ÚJ MENÜ
+        await AuthService.api.post('/menu', payload)
+      }
+
+      this.closeModal()
+    } catch (e) {
+      console.error('Mentés sikertelen', e)
     }
-
-    this.resetState()
-  } catch (e) {
-    console.error('Mentés sikertelen', e)
-  }
-}
-
+  },
 
 
   }
@@ -311,9 +326,88 @@ button.active { background: #3498db; color: white; }
   transform: translateY(0);
   opacity: 1;
   visibility: visible !important;
-  display: block !important;
+  /*display: block !important;*/
+
+  display: flex;
+  flex-direction: column;
 }
 
-.meal-types { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-.meal-item { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+.step-2{
+  padding: 0 1.5rem;
+}
+
+.modal-footer {
+  
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #ddd;
+  display: block;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+
+.meal-types {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 1.5rem 1rem;
+}
+
+.meal-types button {
+  flex: 1;
+  padding: 1.5rem 1rem;
+}
+
+.meals {
+  margin: 0 1.5rem;
+}
+
+.meal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.4rem;
+  background: #f6f6f6;
+  border-radius: 6px;
+}
+
+.meal-name {
+  padding-left: 0.5rem;
+  font-weight: 500;
+}
+
+.meal-btn {
+  width: 10rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background: #2ecc71;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.meals-scroll {
+  max-height: calc(90vh - 300px);
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.meal-search {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 1rem 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.selected-meals-fixed {
+  position: sticky;
+  bottom: 70px;
+  background: #fafafa;
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid #ddd;
+}
+
 </style>

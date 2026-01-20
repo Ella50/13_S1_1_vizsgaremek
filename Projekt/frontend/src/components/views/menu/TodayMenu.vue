@@ -3,43 +3,61 @@
   <div class="today-menu">
     <h1>Mai menü</h1>
     <p>{{ todayDate }}</p>
+    <pre style="background:#111;color:#0f0;padding:10px;border-radius:8px;overflow:auto;">
+      loading={{ loading }}
+      error={{ error }}
+      menu={{ menu }}
+    </pre>
+
     
     <div v-if="loading" class="loading">Betöltés...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     
-    <div v-else class="menu-sections">
-      <div v-for="(items, type) in groupedMenu" :key="type" class="menu-section">
-        <h2>{{ getMealTypeName(type) }}</h2>
-        
-        <div v-if="items.length === 0" class="no-items">
-          Nincs elérhető étel
-        </div>
-        
-        <div v-else class="meal-list">
-          <div v-for="item in items" :key="item.id" class="meal-card">
-            <h3>{{ item.meal?.name || 'Étel' }}</h3>
-            <p>{{ item.meal?.description || '' }}</p>
-            <div class="meal-info">
-            </div>
-          </div>
-        </div>
+    <div v-else-if="hasMenu" class="menu-sections">
+      <div class="menu-section">
+        <h2>🥣 Leves</h2>
+        <MealCard :meal="menu.soup" />
+      </div>
+      <div class="menu-section">
+        <h2>🍽️ A opció</h2>
+        <MealCard v-if="menu.optionA" :meal="menu.optionA" />
+        <div v-else class="no-items">Nincs A opció</div>
+      </div>
+      <div class="menu-section">
+        <h2>🍽️ B opció</h2>
+        <MealCard v-if="menu.optionB" :meal="menu.optionB" />
+        <div v-else class="no-items">Nincs B opció</div>
+      </div>
+      <div class="menu-section">
+        <h2>🧁 Egyéb</h2>
+        <MealCard v-if="menu.other" :meal="menu.other" />
+        <div v-else class="no-items">Nincs egyéb</div>
       </div>
     </div>
+    <div v-else class="no-items">
+      Nincs menü a mai napra.
+    </div>
+
   </div>
 </template>
 
 <script>
 import AuthService from '../../../services/authService'
+import MealCard from '../menu/MealCard.vue'
 
 export default {
+  components: {
+    MealCard
+  },
+
   data() {
     return {
-      menuItems: [],
-      loading: false,
+      menu: null,
+      loading: true,
       error: ''
     }
   },
-  
+
   computed: {
     todayDate() {
       return new Date().toLocaleDateString('hu-HU', {
@@ -49,51 +67,36 @@ export default {
         day: 'numeric'
       })
     },
-    
-    groupedMenu() {
-      const grouped = {
-        ebéd: [],
-      }
-      
-      this.menuItems.forEach(item => {
-        if (grouped[item.meal_type]) {
-          grouped[item.meal_type].push(item)
-        }
-      })
-      
-      return grouped
-    }
+     hasMenu() {
+      return !!(this.menu && (this.menu.soup || this.menu.optionA || this.menu.optionB || this.menu.other))
+    },
   },
-  
-  mounted() {
-    this.fetchTodayMenu()
-  },
-  
+
   methods: {
     async fetchTodayMenu() {
       this.loading = true
       this.error = ''
-      
+      this.menu = null
+
       try {
-        const response = await AuthService.api.get('/menu/today')
-        this.menuItems = response.data.menu_items || []
-      } catch (error) {
-        console.error('Mai menü betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'Hiba'
+        const res = await AuthService.api.get('/menu/today')
+        console.log('TODAY MENU RES:', res)
+        this.menu = res.data
+      } catch (e) {
+        console.error('TODAY MENU ERR:', e?.response?.status, e?.response?.data || e)
+        this.error = e?.response?.data?.message || `Hiba: ${e?.response?.status || ''}`
       } finally {
         this.loading = false
       }
-    },
-    
-    getMealTypeName(type) {
-      const names = {
-        'ebéd': '🍽️ Ebéd',
-      }
-      return names[type] || type
     }
+  },
+
+  mounted() {
+    this.fetchTodayMenu()
   }
 }
 </script>
+
 
 <style scoped>
 .today-menu {
