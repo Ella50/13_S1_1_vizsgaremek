@@ -12,7 +12,7 @@ class IngredientSeeder extends Seeder
         DB::table('ingredients')->insert([
             // ============ GOMBALEVES ============
             [
-                'name' => 'Friss gomba',
+                'ingredientName' => 'Friss gomba',
                 'ingredientType' => 'Zöldség',
                 'energy' => 22,
                 'protein' => 3,
@@ -24,7 +24,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Hagyma',
+                'ingredientName' => 'Hagyma',
                 'ingredientType' => 'Zöldség',
                 'energy' => 40,
                 'protein' => 1,
@@ -36,7 +36,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Tejföl',
+                'ingredientName' => 'Tejföl',
                 'ingredientType' => 'Tejtermék',
                 'energy' => 135,
                 'protein' => 3,
@@ -50,7 +50,7 @@ class IngredientSeeder extends Seeder
             
             // ============ MARHAPÖRKÖLT ============
             [
-                'name' => 'Marhahús (comb)',
+                'ingredientName' => 'Marhahús (comb)',
                 'ingredientType' => 'Hús',
                 'energy' => 250,
                 'protein' => 26,
@@ -62,7 +62,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Vöröshagyma',
+                'ingredientName' => 'Vöröshagyma',
                 'ingredientType' => 'Zöldség',
                 'energy' => 40,
                 'protein' => 1,
@@ -74,7 +74,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Piros paprika',
+                'ingredientName' => 'Piros paprika',
                 'ingredientType' => 'Zöldség',
                 'energy' => 31,
                 'protein' => 1,
@@ -88,7 +88,7 @@ class IngredientSeeder extends Seeder
             
             // ============ SAJTOS TÉSZT ============
             [
-                'name' => 'Tészta (spaghetti)',
+                'ingredientName' => 'Tészta (spaghetti)',
                 'ingredientType' => 'Egyéb',
                 'energy' => 131,
                 'protein' => 5,
@@ -100,7 +100,19 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Trappista sajt',
+                'ingredientName' => 'Trappista sajt',
+                'ingredientType' => 'Tejtermék',
+                'energy' => 350,
+                'protein' => 25,
+                'carbohydrate' => 2,
+                'fat' => 28,
+                'sodium' => 620,
+                'sugar' => 1,
+                'fiber' => 0,
+                'isAvailable' => true
+            ],
+                        [
+                'ingredientName' => 'Tej',
                 'ingredientType' => 'Tejtermék',
                 'energy' => 350,
                 'protein' => 25,
@@ -112,7 +124,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Tejszín',
+                'ingredientName' => 'Tejszín',
                 'ingredientType' => 'Tejtermék',
                 'energy' => 345,
                 'protein' => 2,
@@ -126,7 +138,7 @@ class IngredientSeeder extends Seeder
             
             // ============ LASAGNE ============
             [
-                'name' => 'Lasagne lap',
+                'ingredientName' => 'Lasagne lap',
                 'ingredientType' => 'Egyéb',
                 'energy' => 370,
                 'protein' => 12,
@@ -138,7 +150,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Darált marhahús',
+                'ingredientName' => 'Darált marhahús',
                 'ingredientType' => 'Hús',
                 'energy' => 250,
                 'protein' => 26,
@@ -150,7 +162,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Paradicsom szósz',
+                'ingredientName' => 'Paradicsom szósz',
                 'ingredientType' => 'Egyéb',
                 'energy' => 80,
                 'protein' => 2,
@@ -162,7 +174,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Mozzarella sajt',
+                'ingredientName' => 'Mozzarella sajt',
                 'ingredientType' => 'Tejtermék',
                 'energy' => 280,
                 'protein' => 22,
@@ -176,7 +188,7 @@ class IngredientSeeder extends Seeder
             
             // ============ HÚSLEVES ============
             [
-                'name' => 'Csirkemell',
+                'ingredientName' => 'Csirkemell',
                 'ingredientType' => 'Hús',
                 'energy' => 165,
                 'protein' => 31,
@@ -188,7 +200,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Répa',
+                'ingredientName' => 'Répa',
                 'ingredientType' => 'Zöldség',
                 'energy' => 41,
                 'protein' => 1,
@@ -200,7 +212,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Petrezselyem gyökér',
+                'ingredientName' => 'Petrezselyem gyökér',
                 'ingredientType' => 'Zöldség',
                 'energy' => 55,
                 'protein' => 2,
@@ -212,7 +224,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Zeller',
+                'ingredientName' => 'Zeller',
                 'ingredientType' => 'Zöldség',
                 'energy' => 42,
                 'protein' => 2,
@@ -226,7 +238,7 @@ class IngredientSeeder extends Seeder
             
             // ============ GRILLCSIRKE ============
             [
-                'name' => 'Csirkecomb',
+                'ingredientName' => 'Csirkecomb',
                 'ingredientType' => 'Hús',
                 'energy' => 240,
                 'protein' => 27,
@@ -238,7 +250,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Olívaolaj',
+                'ingredientName' => 'Olívaolaj',
                 'ingredientType' => 'Egyéb',
                 'energy' => 884,
                 'protein' => 0,
@@ -250,7 +262,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Fokhagyma',
+                'ingredientName' => 'Fokhagyma',
                 'ingredientType' => 'Zöldség',
                 'energy' => 149,
                 'protein' => 6,
@@ -262,7 +274,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Citromlé',
+                'ingredientName' => 'Citromlé',
                 'ingredientType' => 'Egyéb',
                 'energy' => 29,
                 'protein' => 1,
@@ -276,7 +288,7 @@ class IngredientSeeder extends Seeder
             
             // ============ GYÜMÖLCSALÁTA ============
             [
-                'name' => 'Alma',
+                'ingredientName' => 'Alma',
                 'ingredientType' => 'Gyümölcs',
                 'energy' => 52,
                 'protein' => 0,
@@ -288,7 +300,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Banán',
+                'ingredientName' => 'Banán',
                 'ingredientType' => 'Gyümölcs',
                 'energy' => 89,
                 'protein' => 1,
@@ -300,7 +312,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Narancs',
+                'ingredientName' => 'Narancs',
                 'ingredientType' => 'Gyümölcs',
                 'energy' => 47,
                 'protein' => 1,
@@ -312,7 +324,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Szőlő',
+                'ingredientName' => 'Szőlő',
                 'ingredientType' => 'Gyümölcs',
                 'energy' => 69,
                 'protein' => 1,
@@ -326,7 +338,7 @@ class IngredientSeeder extends Seeder
             
             // ============ ÁLTALÁNOS ALAPANYAGOK ============
             [
-                'name' => 'Só',
+                'ingredientName' => 'Só',
                 'ingredientType' => 'Fűszer',
                 'energy' => 0,
                 'protein' => 0,
@@ -338,7 +350,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Bors',
+                'ingredientName' => 'Bors',
                 'ingredientType' => 'Fűszer',
                 'energy' => 251,
                 'protein' => 10,
@@ -351,7 +363,7 @@ class IngredientSeeder extends Seeder
             ],
 
             [
-                'name' => 'Liszt',
+                'ingredientName' => 'Liszt',
                 'ingredientType' => 'Egyéb',
                 'energy' => 364,
                 'protein' => 10,
@@ -363,19 +375,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Tojás',
-                'ingredientType' => 'Egyéb',
-                'energy' => 155,
-                'protein' => 13,
-                'carbohydrate' => 1,
-                'fat' => 11,
-                'sodium' => 124,
-                'sugar' => 1,
-                'fiber' => 0,
-                'isAvailable' => true
-            ],
-            [
-                'name' => 'Vaj',
+                'ingredientName' => 'Vaj',
                 'ingredientType' => 'Tejtermék',
                 'energy' => 717,
                 'protein' => 1,
@@ -387,7 +387,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Élesztő',
+                'ingredientName' => 'Élesztő',
                 'ingredientType' => 'Egyéb',
                 'energy' => 105,
                 'protein' => 8,
@@ -399,7 +399,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Cukor',
+                'ingredientName' => 'Cukor',
                 'ingredientType' => 'Egyéb',
                 'energy' => 387,
                 'protein' => 0,
@@ -411,7 +411,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Burgonya',
+                'ingredientName' => 'Burgonya',
                 'ingredientType' => 'Zöldség',
                 'energy' => 77,
                 'protein' => 2,
@@ -423,7 +423,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
-                'name' => 'Rizs',
+                'ingredientName' => 'Rizs',
                 'ingredientType' => 'Egyéb',
                 'energy' => 130,
                 'protein' => 3,
@@ -433,7 +433,142 @@ class IngredientSeeder extends Seeder
                 'sugar' => 0,
                 'fiber' => 0,
                 'isAvailable' => true
-            ]
+            ],
+            [
+                'ingredientName' => 'Búzaliszt',
+                'ingredientType' => 'Egyéb',
+                'energy' => 364,
+                'protein' => 10,
+                'carbohydrate' => 76,
+                'fat' => 1,
+                'sodium' => 2,
+                'sugar' => 0,
+                'fiber' => 3,
+                'isAvailable' => true,
+            ],
+            [
+                'ingredientName' => 'Tojás',
+                'ingredientType' => 'Egyéb',
+                'energy' => 155,
+                'protein' => 13,
+                'carbohydrate' => 1,
+                'fat' => 11,
+                'sodium' => 124,
+                'sugar' => 0,
+                'fiber' => 0,
+                'isAvailable' => true,
+            ],
+            
+            [
+                'ingredientName' => 'Paradicsom',
+                'ingredientType' => 'Zöldség',
+                'energy' => 18,
+                'protein' => 1,
+                'carbohydrate' => 4,
+                'fat' => 0,
+                'sodium' => 5,
+                'sugar' => 3,
+                'fiber' => 1,
+                'isAvailable' => true,
+            ],
+            [
+                'ingredientName' => 'Uborka',
+                'ingredientType' => 'Zöldség',
+                'energy' => 15,
+                'protein' => 1,
+                'carbohydrate' => 4,
+                'fat' => 0,
+                'sodium' => 2,
+                'sugar' => 2,
+                'fiber' => 1,
+                'isAvailable' => true,
+            ],
+           
+            [
+                'ingredientName' => 'Hal',
+                'ingredientType' => 'Hal',
+                'energy' => 206,
+                'protein' => 22,
+                'carbohydrate' => 0,
+                'fat' => 13,
+                'sodium' => 61,
+                'sugar' => 0,
+                'fiber' => 0,
+                'isAvailable' => true,
+            ],
+            [
+                'ingredientName' => 'Rák',
+                'ingredientType' => 'Hal',
+                'energy' => 85,
+                'protein' => 18,
+                'carbohydrate' => 0,
+                'fat' => 1,
+                'sodium' => 119,
+                'sugar' => 0,
+                'fiber' => 0,
+                'isAvailable' => true,
+            ],
+  
+            [
+                'ingredientName' => 'Mustár',
+                'ingredientType' => 'Egyéb',
+                'energy' => 66,
+                'protein' => 4,
+                'carbohydrate' => 6,
+                'fat' => 4,
+                'sodium' => 1135,
+                'sugar' => 1,
+                'fiber' => 3,
+                'isAvailable' => true,
+            ],
+            [
+                'ingredientName' => 'Mogyoró',
+                'ingredientType' => 'Egyéb',
+                'energy' => 628,
+                'protein' => 15,
+                'carbohydrate' => 17,
+                'fat' => 61,
+                'sodium' => 0,
+                'sugar' => 4,
+                'fiber' => 10,
+                'isAvailable' => true,
+            ],
+            [
+                'ingredientName' => 'Dió',
+                'ingredientType' => 'Egyéb',
+                'energy' => 654,
+                'protein' => 15,
+                'carbohydrate' => 14,
+                'fat' => 65,
+                'sodium' => 2,
+                'sugar' => 2,
+                'fiber' => 7,
+                'isAvailable' => true,
+            ],
+            [
+                'ingredientName' => 'Mandula',
+                'ingredientType' => 'Egyéb',
+                'energy' => 579,
+                'protein' => 21,
+                'carbohydrate' => 22,
+                'fat' => 50,
+                'sodium' => 1,
+                'sugar' => 4,
+                'fiber' => 13,
+                'isAvailable' => true,
+            ],
+            [
+                'ingredientName' => 'Földimogyoró',
+                'ingredientType' => 'Egyéb',
+                'energy' => 567,
+                'protein' => 26,
+                'carbohydrate' => 16,
+                'fat' => 49,
+                'sodium' => 18,
+                'sugar' => 4,
+                'fiber' => 9,
+                'isAvailable' => true,
+            ],
         ]);
     }
 }

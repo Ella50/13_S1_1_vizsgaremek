@@ -4,65 +4,65 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Allergen;
+
 
 class AllergenSeeder extends Seeder
 {
     public function run()
     {
 
-        $allergens = [
+         DB::table('allergens')->insert([
             [
-                'name' => 'Glutén',
+                'allergenName' => 'Glutén',
                 'icon' => 'allergens/gluten.png', //útvonal a storage/app/public/allergens/ mappa
             ],
             [
-                'name' => 'Rákfélék',
+                'allergenName' => 'Rákfélék',
                 'icon' => 'allergens/rakfelek.png',
             ],
             [
-                'name' => 'Tojás',
+                'allergenName' => 'Tojás',
                 'icon' => 'allergens/tojas.png',
             ],
             [
-                'name' => 'Hal',
+                'allergenName' => 'Hal',
                 'icon' => 'allergens/hal.png',
             ],
             [
-                'name' => 'Földimogyoró',
+                'allergenName' => 'Földimogyoró',
                 'icon' => 'allergens/foldiMogyoro.png',
             ],
             [
-                'name' => 'Szójabab',
+                'allergenName' => 'Szójabab',
                 'icon' => 'allergens/szoja.png',
             ],
             [
-                'name' => 'Tej',
+                'allergenName' => 'Tej',
                 'icon' => 'allergens/tej.png',
             ],
             [
-                'name' => 'Diófélék',
+                'allergenName' => 'Diófélék',
                 'icon' => 'allergens/diofelek.png',
             ],
             [
-                'name' => 'Zeller',
+                'allergenName' => 'Zeller',
                 'icon' => 'allergens/celery.png',
             ],
             [
-                'name' => 'Mustár',
+                'allergenName' => 'Mustár',
                 'icon' => 'allergens/mustar.png',
             ],
 
             [
-                'name' => 'Kukorica',
+                'allergenName' => 'Kukorica',
                 'icon' => 'allergens/kukorica.png',
             ],
-        ];
+        ]);
 
-        foreach ($allergens as $allergen) {
+        /*foreach ($allergens as $allergen) {
             Allergen::create($allergen);
-        }
+        }*/
 
-        $this->command->info('Allergének sikeresen létrehozva!');
+        $this->command->info('Allergének sikeresen létrehozva');
     }
 }

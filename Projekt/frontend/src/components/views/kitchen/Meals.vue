@@ -28,30 +28,66 @@
       <div v-if="meals.length === 0" class="no-meals">
         <p>Nincs még étel hozzáadva.</p>
         <button @click="showAddModal = true" class="btn-add-first" v-if="canEdit">
-          Adj hozzá első ételed!
+          Adja hozzá az első ételt!
         </button>
       </div>
       
       <div v-else class="meals-grid">
-        <div v-for="meal in meals" :key="meal.id" class="meal-card">
+        <!-- FONTOS: használj mindenhol safe navigation operátort (?.) -->
+        <div v-for="meal in meals" :key="meal?.id || 'unknown'" class="meal-card">
           <div class="meal-header">
-            <h3>{{ meal.name }}</h3>
-            <span class="meal-category">{{ meal.category }}</span>
+            <h3>{{ meal?.mealName || 'Névtelen étel' }}</h3>
+            <span class="meal-category">{{ meal?.category || 'Egyéb' }}</span>
+            
+            
           </div>
           
-          <p class="meal-description">{{ meal.description || 'Nincs leírás' }}</p>
+          <p class="meal-description">{{ meal?.description || 'Nincs leírás' }}</p>
           
           <!-- Összetevők előnézet -->
-          <div v-if="meal.ingredients && meal.ingredients.length > 0" class="ingredients-preview">
+          <div v-if="meal?.ingredients && meal.ingredients.length > 0" class="ingredients-preview">
             <strong>Összetevők:</strong>
             <div class="preview-items">
-              <span v-for="(ingredient, index) in meal.ingredients.slice(0, 3)" :key="ingredient.id" class="preview-item">
-                {{ ingredient.name }}<span v-if="ingredient.pivot"> ({{ ingredient.pivot.amount }}{{ ingredient.pivot.unit }})</span>
+              <span 
+                v-for="(ingredient, index) in meal.ingredients.slice(0, 3)" 
+                :key="ingredient?.id || index" 
+                class="preview-item"
+              >
+                {{ ingredient?.ingredientName || 'Ismeretlen' }}<span v-if="ingredient?.pivot"> ({{ ingredient.pivot.amount }}{{ ingredient.pivot.unit }})</span>
               </span>
               <span v-if="meal.ingredients.length > 3" class="more-items">
                 +{{ meal.ingredients.length - 3 }} további
               </span>
             </div>
+          </div>
+          
+          <!-- ALLERGÉNEK MEGJELENÍTÉSE -->
+          <div v-if="meal?.allergens && meal.allergens.length > 0" class="allergens-section">
+            <div class="allergens-header">
+              <strong>Allergének:</strong>
+              <small>{{ meal.allergens.length }} allergén</small>
+            </div>
+            
+            <div class="allergens-list">
+              <template v-for="allergen in getUniqueAllergens(meal.allergens)" :key="allergen?.id || 'unknown'">
+                <span class="allergen-tag" :title="allergen?.allergenName || 'Ismeretlen allergén'">
+                  <img 
+                    v-if="allergen?.icon" 
+                    :src="getAllergenIconUrl(allergen.icon)" 
+                    :alt="allergen?.allergenName || 'Allergén'"
+                    class="allergen-icon-img"
+                    @error="handleImageError"
+                  />
+                  <span v-else class="allergen-icon-fallback">{{ getAllergenInitial(allergen?.allergenName) }}</span>
+                  <span class="allergen-name">{{ getAllergenShortName(allergen?.allergenName) }}</span>
+                </span>
+              </template>
+            </div>
+          </div>
+          
+          <div v-else class="allergens-section safe">
+            <span class="safe-badge"></span>
+            <span class="safe-text">Allergénmentes</span>
           </div>
           
           <div class="meal-actions">
@@ -63,7 +99,7 @@
               </svg>
               Összetevők
             </button>
-            <button @click="deleteMeal(meal.id)" class="btn-delete" v-if="canEdit">Törlés</button>
+            <button @click="deleteMeal(meal?.id)" class="btn-delete" v-if="canEdit">Törlés</button>
           </div>
         </div>
       </div>
@@ -80,7 +116,7 @@
         <form @submit.prevent="saveMeal">
           <div class="form-group">
             <label>Étel neve *</label>
-            <input v-model="mealForm.name" required maxlength="255" />
+            <input v-model="mealForm.mealName" required maxlength="255" />
           </div>
           
           <div class="form-group">
@@ -110,11 +146,11 @@
       </div>
     </div>
     
-    <!-- Ételszerkesztés modal - INNEN KEZDŐDIK AZ ÚJ RÉSZ -->
+    <!-- Ételszerkesztés modal -->
     <div v-if="showAddModal && editingMeal" class="modal-overlay">
       <div class="modal edit-meal-modal">
         <div class="modal-header">
-          <h2>{{ editingMeal?.name }} szerkesztése</h2>
+          <h2>{{ editingMeal?.mealName || 'Étel' }} szerkesztése</h2>
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
         
@@ -125,7 +161,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Étel neve *</label>
-                <input v-model="mealForm.name" required maxlength="255" />
+                <input v-model="mealForm.mealName" required maxlength="255" />
               </div>
               
               <div class="form-group">
@@ -174,7 +210,7 @@
                           class="search-result-item"
                           @click="selectIngredient(result)"
                         >
-                          <span class="result-name">{{ result.name }}</span>
+                          <span class="result-name">{{ result.ingredientName }}</span>
                           <span class="result-type">{{ result.ingredientType }}</span>
                           <span class="result-info">{{ result.energy }} kcal</span>
                         </div>
@@ -221,7 +257,7 @@
                 </div>
                 
                 <div v-if="selectedIngredientForAdd" class="selected-ingredient-info">
-                  <strong>Kiválasztott hozzávaló:</strong> {{ selectedIngredientForAdd.name }}
+                  <strong>Kiválasztott hozzávaló:</strong> {{ selectedIngredientForAdd.ingredientName }}
                   <span class="ingredient-details">
                     {{ selectedIngredientForAdd.energy }} kcal/100g | 
                     {{ selectedIngredientForAdd.protein }}g fehérje | 
@@ -255,7 +291,7 @@
                       <tr v-for="(ingredient, index) in editIngredientsList" :key="ingredient.id || ingredient.tempId">
                         <td>
                           <div class="ingredient-name">
-                            {{ ingredient.name }}
+                            {{ ingredient.ingredientName }}
                             <div class="ingredient-nutrition">
                               <small class="ingredient-type" :class="getIngredientTypeClass(ingredient.ingredientType)">
                                 {{ ingredient.ingredientType }}
@@ -339,11 +375,11 @@
       </div>
     </div>
     
-    <!-- Összetevők megtekintése modal (CSAK megtekintés) -->
-    <div v-if="showIngredientsModal" class="modal-overlay">
+        <!-- Összetevők megtekintése modal -->
+    <div v-if="showIngredientsModal && selectedMeal" class="modal-overlay">
       <div class="modal ingredients-modal">
         <div class="modal-header">
-          <h2>{{ selectedMeal?.name }} - Összetevők</h2>
+          <h2>{{ selectedMeal?.mealName || 'Étel' }} - Összetevők</h2>
           <button @click="closeIngredientsModal" class="close-btn">&times;</button>
         </div>
         
@@ -352,6 +388,29 @@
         <div v-else-if="ingredientsError" class="error">{{ ingredientsError }}</div>
         
         <div v-else class="ingredients-content">
+          <!-- ALLERGÉN FIGYELMEZTETÉS - ÚJ -->
+          <div v-if="mealAllergens.length > 0" class="allergen-warning">
+            <div class="warning-header">
+              <span class="warning-icon">⚠️</span>
+              <h4>ALLERGÉN FIGYELMEZTETÉS</h4>
+            </div>
+            <p>Ez az étel a következő allergéneket tartalmazza:</p>
+            <div class="allergens-detail-list">
+              <div v-for="allergen in mealAllergens" :key="allergen.id" class="allergen-detail">
+                <img 
+                  v-if="allergen.icon" 
+                  :src="getAllergenIconUrl(allergen.icon)" 
+                  :alt="allergen.allergenName"
+                  class="allergen-detail-icon"
+                />
+                <span class="allergen-detail-name">{{ allergen.allergenName }}</span>
+                <span class="allergen-detail-ingredients">
+                  ({{ getIngredientNamesForAllergen(allergen.id).join(', ') }})
+                </span>
+              </div>
+            </div>
+          </div>
+          
           <div v-if="!selectedMeal?.ingredients || selectedMeal.ingredients.length === 0" class="no-ingredients">
             <p>Ehhez az ételhez még nincsenek hozzávalók hozzáadva.</p>
           </div>
@@ -359,6 +418,9 @@
           <div v-else class="ingredients-list">
             <div class="ingredients-summary">
               <p><strong>Összesen {{ selectedMeal.ingredients.length }} hozzávaló</strong></p>
+              <p v-if="mealAllergens.length > 0" class="allergen-summary">
+                {{ mealAllergens.length }} allergén
+              </p>
             </div>
             
             <div class="ingredients-table-container">
@@ -367,6 +429,7 @@
                   <tr>
                     <th>Hozzávaló</th>
                     <th>Típus</th>
+                    <th>Allergének</th>
                     <th>Mennyiség</th>
                     <th>Kalória (össz)</th>
                     <th>Fehérje</th>
@@ -376,11 +439,30 @@
                 </thead>
                 <tbody>
                   <tr v-for="ingredient in selectedMeal.ingredients" :key="ingredient.id">
-                    <td>{{ ingredient.name }}</td>
+                    <td>{{ ingredient.ingredientName }}</td>
                     <td>
                       <span class="ingredient-type" :class="getIngredientTypeClass(ingredient.ingredientType)">
                         {{ ingredient.ingredientType }}
                       </span>
+                    </td>
+                    <td>
+                      <div v-if="ingredient.allergens && ingredient.allergens.length > 0" class="ingredient-allergens">
+                        <span 
+                          v-for="allergen in ingredient.allergens" 
+                          :key="allergen.id"
+                          class="allergen-chip"
+                          :title="allergen.allergenName"
+                        >
+                          <img 
+                            v-if="allergen.icon" 
+                            :src="getAllergenIconUrl(allergen.icon)" 
+                            :alt="allergen.allergenName"
+                            class="allergen-chip-icon"
+                          />
+                          {{ getAllergenShortName(allergen.allergenName) }}
+                        </span>
+                      </div>
+                      <span v-else class="no-allergens">-</span>
                     </td>
                     <td>
                       <strong>{{ ingredient.pivot?.amount || 0 }} {{ ingredient.pivot?.unit || 'g' }}</strong>
@@ -393,7 +475,7 @@
                 </tbody>
                 <tfoot v-if="selectedMeal.ingredients.length > 0">
                   <tr class="total-row">
-                    <td colspan="2"><strong>Összesen (kb.)</strong></td>
+                    <td colspan="3"><strong>Összesen (kb.)</strong></td>
                     <td>{{ calculateTotalAmount() }}</td>
                     <td><strong>{{ calculateTotalCalories() }} kcal</strong></td>
                     <td>{{ calculateTotalProtein() }}g</td>
@@ -451,7 +533,7 @@
         </div>
       </div>
     </div>
-  </div>
+</div>
 </template>
 
 <script>
@@ -486,9 +568,11 @@ export default {
       searchResults: [],
       selectedIngredientForAdd: null,
       allIngredients: [],
+
+      mealAllergens: [],
       
       mealForm: {
-        name: '',
+        mealName: '',
         category: '',
         description: ''
       }
@@ -537,10 +621,20 @@ export default {
         if (this.search) params.search = this.search
         if (this.selectedCategory) params.category = this.selectedCategory
         
+        params.withAllergens = true
+        
         const response = await AuthService.api.get('/kitchen/meals', { params })
         
         if (response.data.success) {
           this.meals = response.data.meals || []
+          
+          // Debug info
+          console.log('Meals with allergens loaded:', 
+            this.meals.map(m => ({
+              name: m.mealName,
+              allergens: m.allergens?.map(a => a.allergenName) || []
+            }))
+          )
         } else {
           this.error = response.data.message || 'Hiba történt'
         }
@@ -560,43 +654,49 @@ export default {
       }
     },
     
-    // ÖSSZETEVŐK BETÖLTÉSE (csak megtekintés)
+    // Összetevők betöltése allergénekkel
     async viewIngredients(meal) {
+      if (!meal || !meal.id) {
+        console.error('Invalid meal passed to viewIngredients:', meal)
+        return
+      }
+      
       this.selectedMeal = meal
       this.showIngredientsModal = true
       this.loadingIngredients = true
       this.ingredientsError = ''
+      this.mealAllergens = []
       
       try {
-        if (!meal.ingredients || meal.ingredients.length === 0) {
-          const response = await AuthService.api.get(`/kitchen/meals/${meal.id}/ingredients`)
+        // Betöltjük az összetevőket allergénekkel
+        const response = await AuthService.api.get(`/kitchen/meals/${meal.id}/ingredients?withAllergens=true`)
+        
+        if (response.data.success) {
+          console.log('Ingredients response:', response.data)
           
-          if (response.data.success) {
-            this.selectedMeal.ingredients = (response.data.ingredients || []).map(ingredient => ({
-              id: ingredient.id || 0,
-              name: ingredient.name || 'Ismeretlen',
-              ingredientType: ingredient.ingredientType || 'Egyéb',
-              energy: parseFloat(ingredient.energy) || 0,
-              protein: parseFloat(ingredient.protein) || 0,
-              carbohydrate: parseFloat(ingredient.carbohydrate) || 0,
-              fat: parseFloat(ingredient.fat) || 0,
-              pivot: {
-                amount: parseFloat(ingredient.pivot?.amount) || 0,
-                unit: ingredient.pivot?.unit || 'g'
-              }
-            }))
-          } else {
-            this.ingredientsError = response.data.message || 'Nem sikerült betölteni az összetevőket'
-          }
-        } else {
-          this.selectedMeal.ingredients = meal.ingredients.map(ingredient => ({
-            ...ingredient,
+          // Összetevők allergénekkel
+          this.selectedMeal.ingredients = (response.data.ingredients || []).map(ingredient => ({
+            id: ingredient.id || 0,
+            ingredientName: ingredient.ingredientName || 'Ismeretlen',
+            ingredientType: ingredient.ingredientType || 'Egyéb',
+            energy: parseFloat(ingredient.energy) || 0,
+            protein: parseFloat(ingredient.protein) || 0,
+            carbohydrate: parseFloat(ingredient.carbohydrate) || 0,
+            fat: parseFloat(ingredient.fat) || 0,
+            allergens: ingredient.allergens || [],
             pivot: {
               amount: parseFloat(ingredient.pivot?.amount) || 0,
               unit: ingredient.pivot?.unit || 'g'
             }
           }))
+          
+          // Összegyűjtjük az étel összes allergénjét
+          this.collectAllergens()
+          
+        } else {
+          this.ingredientsError = response.data.message || 'Nem sikerült betölteni az összetevőket'
         }
+        
       } catch (error) {
         console.error('Összetevők betöltése sikertelen:', error)
         this.ingredientsError = 'Nem sikerült betölteni az összetevőket'
@@ -609,18 +709,105 @@ export default {
       this.showIngredientsModal = false
       this.selectedMeal = null
       this.ingredientsError = ''
+      this.mealAllergens = []
+    },
+
+    // Allergén ikon URL
+    getAllergenIconUrl(iconPath) {
+      if (!iconPath) return ''
+      // Ha már teljes URL, akkor azt adjuk vissza
+      if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
+        return iconPath
+      }
+      // Egyébként relatív útvonalként kezeljük
+      return `/storage/${iconPath}`
     },
     
-    // ÉTEL SZERKESZTÉSE - A FŐ FUNKCIÓ
+    handleImageError(event) {
+      event.target.style.display = 'none'
+      const parent = event.target.parentElement
+      if (parent) {
+        const fallback = parent.querySelector('.allergen-icon-fallback')
+        if (fallback) {
+          fallback.style.display = 'flex'
+        }
+      }
+    },
+
+    // Egyedi allergének szűrése
+    getUniqueAllergens(allergens) {
+      if (!allergens || !Array.isArray(allergens)) return []
+      
+      const seen = new Set()
+      return allergens.filter(allergen => {
+        if (!allergen || !allergen.id) return false
+        if (seen.has(allergen.id)) {
+          return false
+        }
+        seen.add(allergen.id)
+        return true
+      })
+    },
+    
+    // Allergén rövid neve
+    getAllergenShortName(name) {
+      if (!name) return ''
+      if (name.length <= 3) return name
+      return name.substring(0, 3)
+    },
+    
+    // Allergén kezdőbetűje
+    getAllergenInitial(name) {
+      if (!name) return '?'
+      return name.charAt(0).toUpperCase()
+    },
+    
+    // Allergének összegyűjtése az ételből
+    collectAllergens() {
+      if (!this.selectedMeal?.ingredients) return
+      
+      const allergenMap = new Map()
+      
+      this.selectedMeal.ingredients.forEach(ingredient => {
+        if (ingredient.allergens && Array.isArray(ingredient.allergens)) {
+          ingredient.allergens.forEach(allergen => {
+            if (!allergenMap.has(allergen.id)) {
+              allergenMap.set(allergen.id, allergen)
+            }
+          })
+        }
+      })
+      
+      this.mealAllergens = Array.from(allergenMap.values())
+    },
+    
+    // Allergénhez tartozó összetevők nevei
+    getIngredientNamesForAllergen(allergenId) {
+      if (!this.selectedMeal?.ingredients) return []
+      
+      return this.selectedMeal.ingredients
+        .filter(ingredient => 
+          ingredient.allergens?.some(a => a.id === allergenId)
+        )
+        .map(ingredient => ingredient.ingredientName)
+        .slice(0, 3) // Max 3 nevet jelenítünk meg
+    },
+    
+    // ÉTEL SZERKESZTÉSE
     async editMeal(meal) {
+      if (!meal || !meal.id) {
+        console.error('Invalid meal passed to editMeal:', meal)
+        return
+      }
+      
       this.editingMeal = meal
       this.showAddModal = true
       
       // Alapadatok betöltése
       this.mealForm = { 
-        name: meal.name,
-        category: meal.category,
-        description: meal.description
+        mealName: meal.mealName || '',
+        category: meal.category || '',
+        description: meal.description || ''
       }
       
       // Összetevők betöltése szerkesztéshez
@@ -631,7 +818,7 @@ export default {
         if (response.data.success && response.data.ingredients) {
           this.editIngredientsList = response.data.ingredients.map(ingredient => ({
             id: ingredient.id,
-            name: ingredient.name,
+            ingredientName: ingredient.ingredientName,
             ingredientType: ingredient.ingredientType,
             energy: parseFloat(ingredient.energy) || 0,
             protein: parseFloat(ingredient.protein) || 0,
@@ -645,7 +832,6 @@ export default {
         }
       } catch (error) {
         console.error('Hozzávalók betöltése szerkesztéshez sikertelen:', error)
-        // Ha van helyi adat, azt használjuk
         if (meal.ingredients && meal.ingredients.length > 0) {
           this.editIngredientsList = meal.ingredients.map(ingredient => ({
             ...ingredient,
@@ -661,7 +847,7 @@ export default {
     // ÉTEL MENTÉSE ÖSSZETEVŐKKEL EGYÜTT
     async saveMeal() {
       if (!this.editingMeal) {
-        // Új étel létrehozása (nincsenek összetevők)
+        // Új étel létrehozása
         try {
           this.savingMeal = true
           const response = await AuthService.api.post('/kitchen/meals', this.mealForm)
@@ -690,138 +876,126 @@ export default {
     },
     
     async saveMealWithIngredients() {
-  try {
-    this.savingMeal = true
-    
-    console.log('=== START saveMealWithIngredients ===');
-    console.log('Meal ID:', this.editingMeal.id);
-    console.log('Meal form:', this.mealForm);
-    console.log('Ingredients to save:', this.editIngredientsList);
-    
-    // 1. Alapadatok mentése
-    console.log('1. Saving meal basic data...');
-    const mealResponse = await AuthService.api.put(
-      `/kitchen/meals/${this.editingMeal.id}`, 
-      this.mealForm
-    )
-    
-    if (!mealResponse.data.success) {
-      console.error('Meal save failed:', mealResponse.data);
-      alert(mealResponse.data.message || 'Hiba történt az étel mentése során')
-      return
-    }
-    
-    console.log('Meal saved successfully');
-    
-    // 2. Összetevők mentése
-    console.log('2. Preparing ingredients data...');
-    const ingredientsData = this.editIngredientsList.map(ingredient => {
-      const amount = parseFloat(ingredient.pivot?.amount) || 0;
-      const unit = ingredient.pivot?.unit || 'g';
-      
-      console.log(`Ingredient ${ingredient.id}: amount=${amount}, unit=${unit}`);
-      
-      return {
-        ingredient_id: ingredient.id,
-        amount: amount,
-        unit: unit
+      if (!this.editingMeal || !this.editingMeal.id) {
+        console.error('No editing meal or missing ID')
+        return
       }
-    })
-    
-    console.log('Ingredients data to send:', {
-      ingredients: ingredientsData,
-      count: ingredientsData.length
-    });
-    
-    // Küldés előtti ellenőrzés
-    if (ingredientsData.length === 0) {
-      console.log('No ingredients to save, skipping...');
-      this.$toast?.success('Étel sikeresen mentve (nincsenek összetevők)');
-      this.closeModal();
-      await this.fetchMeals();
-      return;
-    }
-    
-    console.log('3. Sending ingredients to API...');
-    const ingredientsResponse = await AuthService.api.put(
-      `/kitchen/meals/${this.editingMeal.id}/ingredients`,
-      { ingredients: ingredientsData }
-    )
-    
-    console.log('Ingredients API response:', ingredientsResponse.data);
-    
-    if (ingredientsResponse.data.success) {
-      console.log('Ingredients saved successfully');
-      this.$toast?.success('Étel és összetevők sikeresen mentve')
-      this.closeModal()
-      await this.fetchMeals()
-    } else {
-      console.error('Ingredients save failed:', ingredientsResponse.data);
-      alert('Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message)
-    }
-    
-  } catch (error) {
-    console.error('=== ERROR in saveMealWithIngredients ===');
-    console.error('Error object:', error);
-    console.error('Error message:', error.message);
-    console.error('Error response:', error.response?.data);
-    console.error('Error status:', error.response?.status);
-    console.error('Error config:', error.config);
-    
-    // Részletes hibajelzés
-    if (error.response) {
-      // A kérés elküldésre került és a szerver válaszolt, de nem 2xx státusz kódot adott
-      console.error('Server responded with error:', error.response.status);
       
-      if (error.response.data) {
-        console.error('Error data:', error.response.data);
+      try {
+        this.savingMeal = true
         
-        // Validációs hibák esetén
-        if (error.response.data.errors) {
-          const validationErrors = Object.values(error.response.data.errors).flat().join('\n');
-          alert(`Validációs hibák:\n${validationErrors}`);
-        } else if (error.response.data.message) {
-          alert(`Szerver hiba: ${error.response.data.message}`);
-        } else if (typeof error.response.data === 'string') {
-          // Ha a válasz string formátumban van
-          try {
-            const parsedError = JSON.parse(error.response.data);
-            alert(`Hiba: ${parsedError.message || 'Ismeretlen hiba'}`);
-          } catch (e) {
-            alert(`Szerver hiba: ${error.response.data.substring(0, 100)}...`);
-          }
+        console.log('=== START saveMealWithIngredients ===')
+        console.log('Meal ID:', this.editingMeal.id)
+        console.log('Meal form:', this.mealForm)
+        console.log('Ingredients to save:', this.editIngredientsList)
+        
+        // 1. Alapadatok mentése
+        console.log('1. Saving meal basic data...')
+        const mealResponse = await AuthService.api.put(
+          `/kitchen/meals/${this.editingMeal.id}`, 
+          this.mealForm
+        )
+        
+        if (!mealResponse.data.success) {
+          console.error('Meal save failed:', mealResponse.data)
+          alert(mealResponse.data.message || 'Hiba történt az étel mentése során')
+          return
         }
+        
+        console.log('Meal saved successfully')
+        
+        // 2. Összetevők mentése
+        console.log('2. Preparing ingredients data...')
+        const ingredientsData = this.editIngredientsList.map(ingredient => {
+          const amount = parseFloat(ingredient.pivot?.amount) || 0
+          const unit = ingredient.pivot?.unit || 'g'
+          
+          console.log(`Ingredient ${ingredient.id}: amount=${amount}, unit=${unit}`)
+          
+          return {
+            ingredient_id: ingredient.id,
+            amount: amount,
+            unit: unit
+          }
+        })
+        
+        console.log('Ingredients data to send:', {
+          ingredients: ingredientsData,
+          count: ingredientsData.length
+        })
+        
+        // Küldés előtti ellenőrzés
+        if (ingredientsData.length === 0) {
+          console.log('No ingredients to save, skipping...')
+          this.$toast?.success('Étel sikeresen mentve (nincsenek összetevők)')
+          this.closeModal()
+          await this.fetchMeals()
+          return
+        }
+        
+        console.log('3. Sending ingredients to API...')
+        const ingredientsResponse = await AuthService.api.put(
+          `/kitchen/meals/${this.editingMeal.id}/ingredients`,
+          { ingredients: ingredientsData }
+        )
+        
+        console.log('Ingredients API response:', ingredientsResponse.data)
+        
+        if (ingredientsResponse.data.success) {
+          console.log('Ingredients saved successfully')
+          this.$toast?.success('Étel és összetevők sikeresen mentve')
+          this.closeModal()
+          await this.fetchMeals()
+        } else {
+          console.error('Ingredients save failed:', ingredientsResponse.data)
+          alert('Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message)
+        }
+        
+      } catch (error) {
+        console.error('=== ERROR in saveMealWithIngredients ===')
+        console.error('Error:', error)
+        
+        // Hibakezelés
+        if (error.response) {
+          if (error.response.data?.errors) {
+            const validationErrors = Object.values(error.response.data.errors).flat().join('\n')
+            alert(`Validációs hibák:\n${validationErrors}`)
+          } else if (error.response.data?.message) {
+            alert(`Szerver hiba: ${error.response.data.message}`)
+          }
+        } else if (error.request) {
+          alert('Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!')
+        } else {
+          alert(error.message || 'Ismeretlen hiba történt a mentés során')
+        }
+        
+      } finally {
+        console.log('=== END saveMealWithIngredients ===')
+        this.savingMeal = false
       }
-    } else if (error.request) {
-      // A kérés elküldésre került, de nem érkezett válasz
-      console.error('No response received:', error.request);
-      alert('Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!');
-    } else {
-      // Valami más hiba történt
-      console.error('Request setup error:', error.message);
-      const errorMessage = error.message || 'Ismeretlen hiba történt a mentés során';
-      alert(errorMessage);
-    }
-    
-  } finally {
-    console.log('=== END saveMealWithIngredients ===');
-    this.savingMeal = false
-  }
-},
+    },
     
     // HOZZÁVALÓK KERESÉSE ÉS KEZELÉSE
-    async loadAllIngredients() {
+  async loadAllIngredients() {
       try {
-        // Használd a helyes végpontot a config alapján
-        const response = await AuthService.api.get('/kitchen/ingredients');
+        // Betöltjük az allergéneket is
+        const response = await AuthService.api.get('/kitchen/ingredients', {
+          params: { withAllergens: true }
+        })
+        
         if (response.data.success) {
           this.allIngredients = response.data.ingredients || []
+          
+          console.log('Ingredients loaded with allergens:', 
+            this.allIngredients.filter(i => i.allergens?.length > 0)
+              .map(i => `${i.ingredientName}: ${i.allergens.map(a => a.allergenName).join(', ')}`)
+          )
         }
       } catch (error) {
         console.error('Hozzávalók betöltése sikertelen:', error)
         // Ha a /kitchen/ingredients nem működik, próbáld meg a /ingredients-t
         try {
-          const response2 = await AuthService.api.get('/ingredients');
+          const response2 = await AuthService.api.get('/ingredients')
           if (response2.data.success) {
             this.allIngredients = response2.data.ingredients || []
           }
@@ -840,7 +1014,7 @@ export default {
       const searchTerm = this.newIngredient.search.toLowerCase()
       this.searchResults = this.allIngredients
         .filter(ingredient => 
-          ingredient.name.toLowerCase().includes(searchTerm) ||
+          ingredient.ingredientName.toLowerCase().includes(searchTerm) ||
           (ingredient.ingredientType && ingredient.ingredientType.toLowerCase().includes(searchTerm))
         )
         .slice(0, 8)
@@ -848,7 +1022,7 @@ export default {
     
     selectIngredient(ingredient) {
       this.selectedIngredientForAdd = ingredient
-      this.newIngredient.search = ingredient.name
+      this.newIngredient.search = ingredient.ingredientName
       this.searchResults = []
     },
     
@@ -861,7 +1035,7 @@ export default {
       )
       
       if (alreadyExists) {
-        alert('Ez a hozzávaló már hozzá van adva! Módosítsd a mennyiséget.')
+        alert('Ez a hozzávaló már hozzá van adva')
         return
       }
       
@@ -882,7 +1056,7 @@ export default {
       this.selectedIngredientForAdd = null
       this.searchResults = []
     },
-    
+
     removeIngredientFromList(index) {
       if (confirm('Biztosan eltávolítod ezt a hozzávalót?')) {
         this.editIngredientsList.splice(index, 1)
@@ -926,13 +1100,15 @@ export default {
     
     resetForm() {
       this.mealForm = {
-        name: '',
+        mealName: '',
         category: '',
         description: ''
       }
     },
     
     async deleteMeal(mealId) {
+      if (!mealId) return
+      
       if (!confirm('Biztosan törölni szeretné ezt az ételt?')) {
         return
       }
@@ -2386,4 +2562,279 @@ form {
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
+
+
+
+
+.allergen-icon {
+  font-size: 0.875rem;
+}
+
+.allergen-count {
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+/* Allergén szekció a kártyában */
+.allergens-section {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.allergens-section.safe {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.allergens-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.allergens-header strong {
+  color: #2c3e50;
+}
+
+.allergens-header small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.allergens-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.allergen-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: default;
+  transition: all 0.2s;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.allergen-tag:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.allergen-icon-img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.allergen-icon-fallback {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #6c757d;
+  color: white;
+  border-radius: 2px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.allergen-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.safe-badge {
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.safe-text {
+  font-weight: 500;
+  color: #155724;
+}
+
+/* Allergén figyelmeztetés modalban */
+.allergen-warning {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+}
+
+.warning-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.warning-icon {
+  font-size: 1.25rem;
+}
+
+.warning-header h4 {
+  margin: 0;
+  color: #856404;
+  font-size: 1rem;
+}
+
+.allergens-detail-list {
+  margin-top: 0.75rem;
+}
+
+.allergen-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.7);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.allergen-detail:last-child {
+  margin-bottom: 0;
+}
+
+.allergen-detail-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.allergen-detail-name {
+  font-weight: 500;
+  color: #2c3e50;
+  min-width: 120px;
+}
+
+.allergen-detail-ingredients {
+  color: #6c757d;
+  font-size: 0.85rem;
+  font-style: italic;
+  flex: 1;
+}
+
+/* Allergén chip-ek az összetevők táblázatban */
+.ingredient-allergens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-width: 100px;
+}
+
+.allergen-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  background: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.7rem;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.allergen-chip-icon {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.no-allergens {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.allergen-summary {
+  color: #dc3545;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Reszponzív design allergénekhez */
+@media (max-width: 768px) {
+  .allergen-tag {
+    max-width: 60px;
+    font-size: 0.7rem;
+    padding: 0.125rem 0.25rem;
+  }
+  
+  .allergen-detail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .allergen-detail-name {
+    min-width: auto;
+  }
+  
+  .allergen-chip {
+    max-width: 50px;
+    font-size: 0.65rem;
+  }
+}
+
+/* Allergén színek típusonként */
+.allergen-tag[title*="Glutén"] {
+  border-color: #ffc107;
+  background: #fff3cd;
+}
+
+.allergen-tag[title*="Tej"] {
+  border-color: #17a2b8;
+  background: #d1ecf1;
+}
+
+.allergen-tag[title*="Tojás"] {
+  border-color: #6f42c1;
+  background: #e9ecef;
+}
+
+.allergen-tag[title*="Hal"] {
+  border-color: #20c997;
+  background: #d4edda;
+}
+
+.allergen-tag[title*="Dió"] {
+  border-color: #fd7e14;
+  background: #ffe5d0;
+}
+
+.allergen-tag[title*="Földimogyoró"] {
+  border-color: #dc3545;
+  background: #f8d7da;
+}
+
 </style>

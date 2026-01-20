@@ -11,9 +11,11 @@ return new class extends Migration
     {
 
         Schema::create('ingredient_allergens', function (Blueprint $table) {
-            $table->foreignId('allergen_id')->constrained('allergens');
-            $table->foreignId('ingredient_id')->constrained('ingredients');
+            $table->foreignId('allergen_id')->constrained('allergens')->onDelete('cascade');
+            $table->foreignId('ingredient_id')->constrained('ingredients')->onDelete('cascade');
             $table->primary(['ingredient_id', 'allergen_id']);
+            
+            $table->unique(['ingredient_id', 'allergen_id']);
         });
 
 

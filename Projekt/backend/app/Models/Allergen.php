@@ -10,7 +10,7 @@ class Allergen extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
+        'allergenName',
         'icon',
     ];
 
@@ -30,5 +30,10 @@ class Allergen extends Model
         
         // Egyébként asset() függvénnyel generáljuk a teljes URL-t
         return asset('storage/' . $this->icon);
+    }
+
+    public function ingredient()
+    {
+        return $this->belongsTo(Ingredient::class, 'ingredient_allergens');
     }
 }

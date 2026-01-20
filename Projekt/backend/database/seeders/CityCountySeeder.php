@@ -34,10 +34,7 @@ class CityCountySeeder extends Seeder
         foreach ($lines as $line) {
             $counter++;
             
-            // Debug (minden 1000 sor)
-            if ($counter % 1000 === 0) {
-                $this->command->info("Feldolgozva: $counter sor");
-            }
+            
             
             $row = explode(';', $line);
             
