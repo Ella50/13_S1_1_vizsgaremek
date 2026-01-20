@@ -610,46 +610,55 @@ export default {
     },
     
     async fetchMeals() {
-      this.loading = true
-      this.error = ''
+  this.loading = true
+  this.error = ''
+  
+  try {
+    const params = {}
+    if (this.search) params.search = this.search
+    if (this.selectedCategory) params.category = this.selectedCategory
+    
+    params.withAllergens = true
+    
+    const response = await AuthService.api.get('/kitchen/meals', { params })
+    
+    if (response.data.success) {
+      this.meals = response.data.meals || []
       
-      try {
-        const params = {}
-        if (this.search) params.search = this.search
-        if (this.selectedCategory) params.category = this.selectedCategory
-        
-        params.withAllergens = true
-        
-        const response = await AuthService.api.get('/kitchen/meals', { params })
-        
-        if (response.data.success) {
-          this.meals = response.data.meals || []
-          
-          // Debug info
-          console.log('Meals with allergens loaded:', 
-            this.meals.map(m => ({
-              name: m.mealName,
-              allergens: m.allergens?.map(a => a.allergenName) || []
-            }))
-          )
-        } else {
-          this.error = response.data.message || 'Hiba történt'
+      // Debug: allergén ikonok ellenőrzése
+      console.log('=== ALLERGEN DEBUG INFO ===')
+      this.meals.forEach((meal, index) => {
+        if (meal.allergens && meal.allergens.length > 0) {
+          console.log(`Meal ${index + 1}: ${meal.mealName}`)
+          meal.allergens.forEach((allergen, aIndex) => {
+            console.log(`  Allergen ${aIndex + 1}:`, {
+              name: allergen.allergenName,
+              icon: allergen.icon,
+              iconUrl: this.getAllergenIconUrl(allergen.icon)
+            })
+          })
         }
-        
-      } catch (error) {
-        console.error('Ételek betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'Hiba történt az ételek betöltésekor'
-        
-        if (error.response?.status === 401) {
-          AuthService.clearAuth()
-          this.$router.push('/login')
-        } else if (error.response?.status === 403) {
-          this.$router.push('/dashboard')
-        }
-      } finally {
-        this.loading = false
-      }
-    },
+      })
+      console.log('=== END DEBUG ===')
+      
+    } else {
+      this.error = response.data.message || 'Hiba történt'
+    }
+    
+  } catch (error) {
+    console.error('Ételek betöltése sikertelen:', error)
+    this.error = error.response?.data?.message || 'Hiba történt az ételek betöltésekor'
+    
+    if (error.response?.status === 401) {
+      AuthService.clearAuth()
+      this.$router.push('/login')
+    } else if (error.response?.status === 403) {
+      this.$router.push('/dashboard')
+    }
+  } finally {
+    this.loading = false
+  }
+},
     
     // Összetevők betöltése allergénekkel
     async viewIngredients(meal) {
@@ -712,11 +721,11 @@ export default {
     // Allergén ikon URL
     getAllergenIconUrl(iconPath) {
       if (!iconPath) return ''
-      // Ha már teljes URL, akkor azt adjuk vissza
+ 
       if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
         return iconPath
       }
-      // Egyébként relatív útvonalként kezeljük
+ 
       return `/storage/${iconPath}`
     },
     
