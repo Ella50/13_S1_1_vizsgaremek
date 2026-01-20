@@ -54,7 +54,7 @@
             :key="meal.id"
             class="meal-item"
           >
-            <span class="meal-name">{{ meal.name }}</span>
+            <span class="meal-name">{{ meal.mealName }}</span>
             <button class="meal-btn" @click="addMeal(meal)">Hozzáad</button>
           </div>
         </div>
@@ -65,10 +65,10 @@
           <div class="selected-meals-fixed">
             <strong>Kiválasztott ételek</strong>
             <ul>
-              <li>Leves: {{ selectedMeals.soup?.name || '—' }}</li>
-              <li>A opció: {{ selectedMeals.optionA?.name || '—' }}</li>
-              <li>B opció: {{ selectedMeals.optionB?.name || '—' }}</li>
-              <li>Egyéb: {{ selectedMeals.other?.name || '—' }}</li>
+              <li>Leves: {{ selectedMeals.soup?.mealName || '—' }}</li>
+              <li>A opció: {{ selectedMeals.optionA?.mealName || '—' }}</li>
+              <li>B opció: {{ selectedMeals.optionB?.mealName || '—' }}</li>
+              <li>Egyéb: {{ selectedMeals.other?.mealName || '—' }}</li>
             </ul>
           </div>
           <button @click="saveMenu" :disabled="!canSave" style="background-color: green;">Mentés</button>
@@ -124,13 +124,25 @@ export default {
 
   computed: {
     filteredMeals() {
-      return this.meals
-        .filter(meal =>
-          meal.category === this.activeCategory &&
-          meal.name.toLowerCase().includes(this.mealSearch.toLowerCase())
-        )
-        .sort((a, b) => a.name.localeCompare(b.name))
-    },
+    const search = this.mealSearch.toLowerCase()
+
+    // ha A-ban van már főétel, azt B-ben ne lehessen és fordítva
+    const forbiddenIds = new Set()
+    if (this.activeSlot === 'optionA' && this.selectedMeals.optionB) {
+      forbiddenIds.add(this.selectedMeals.optionB.id)
+    }
+    if (this.activeSlot === 'optionB' && this.selectedMeals.optionA) {
+      forbiddenIds.add(this.selectedMeals.optionA.id)
+    }
+
+    return this.meals
+      .filter(meal =>
+        meal.category === this.activeCategory &&
+        meal.mealName.toLowerCase().includes(search) &&
+        !forbiddenIds.has(meal.id)
+      )
+      .sort((a, b) => a.mealName.localeCompare(b.mealName))
+  },
 
     canSave() {
       return (
@@ -242,7 +254,7 @@ resetMealsOnly() {
 
 
     removeMeal(meal) {
-      if (confirm(`Biztosan eltávolítod: ${meal.name}?`)) {
+      if (confirm(`Biztosan eltávolítod: ${meal.mealName}?`)) {
         this.selectedMeals = this.selectedMeals.filter(m => m.id !== meal.id)
       }
     },
@@ -383,7 +395,7 @@ button.active { background: #3498db; color: white; }
   width: 10rem;
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
-  background: #2ecc71;
+  background: green;
   color: white;
   font-size: 1.1rem;
 }
