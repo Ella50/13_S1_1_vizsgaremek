@@ -41,9 +41,9 @@ return new class extends Migration
 
     Schema::create('ingredients', function (Blueprint $table) {
         $table->id();
-        $table->string('name')->unique();
+        $table->string('ingredientName')->unique();
         //$table->enum('type', array_column(IngredientType::cases(), 'value'))->default('Egyéb');
-        $table->enum('ingredientType', ['Egyéb', 'Hús', 'Tejtermék', 'Zöldség', 'Gyümölcs', 'Fűszer'])->default('Egyéb');
+        $table->enum('ingredientType', ['Egyéb', 'Hús', 'Hal', 'Tejtermék', 'Zöldség', 'Gyümölcs', 'Fűszer'])->default('Egyéb');
         $table->integer('energy')->nullable();
         $table->integer('protein')->nullable();
         $table->integer('carbohydrate')->nullable();

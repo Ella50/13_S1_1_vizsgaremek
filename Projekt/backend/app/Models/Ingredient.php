@@ -10,8 +10,10 @@ class Ingredient extends Model
     use HasFactory;
     protected $table = 'ingredients';
 
+    public $timestamps = false;
+
     protected $fillable = [
-        'name',
+        'ingredientName',
         'ingredientType',
         'energy',
         'protein',
@@ -24,10 +26,14 @@ class Ingredient extends Model
     ];
 
     public function meals()
-        {
-            return $this->belongsToMany(Meal::class, 'meal_ingredients')
-                        ->using(MealIngredientPivot::class)
-                        ->withPivot('amount', 'unit')
-                        ->withTimestamps();
-        }
+    {
+        return $this->belongsToMany(Meal::class, 'meal_ingredients')
+                     ->using(MealIngredientPivot::class)
+                     ->withPivot('amount', 'unit')
+                     ->withTimestamps();
+    }
+    public function allergens()
+    {
+        return $this->belongsToMany(Allergen::class, 'ingredient_allergens');
+    }
 }

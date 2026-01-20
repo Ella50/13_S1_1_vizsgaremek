@@ -67,17 +67,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Konyha
     Route::prefix('kitchen')->group(function () {
         Route::get('/meals', [KitchenController::class, 'getMeals']);
+        Route::get('/meals/with-allergens', [KitchenController::class, 'mealsWithAllergens']);
         Route::post('/meals', [KitchenController::class, 'storeMeal']);
         Route::get('/meals/{id}', [KitchenController::class, 'showMeal']);
         Route::put('/meals/{id}', [KitchenController::class, 'updateMeal']);
         Route::delete('/meals/{id}', [KitchenController::class, 'deleteMeal']);
-        Route::get('/meals/{id}/ingredients', [KitchenController::class, 'getMealIngredients']);
-        Route::get('/categories', [KitchenController::class, 'getCategories']);
 
-        Route::get('/ingredients', [KitchenController::class, 'getAllIngredients']);
+        Route::get('/meals/{id}/ingredients', [KitchenController::class, 'getMealIngredients']);
         Route::put('/meals/{id}/ingredients', [KitchenController::class, 'updateMealIngredients']);
         Route::get('/ingredients/search', [KitchenController::class, 'searchIngredients']);
-
+        Route::get('/ingredients', [KitchenController::class, 'getAllIngredients']);
+        
+        Route::get('/categories', [KitchenController::class, 'getCategories']);
 
      Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });

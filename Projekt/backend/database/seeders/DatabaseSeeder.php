@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             MealSeeder::class,
             MealIngredientSeeder::class,
             AllergenSeeder::class,
+            IngredientAllergenSeeder::class,
             /*CountyTableSeeder::class,
             CityTableSeeder::class,
 
