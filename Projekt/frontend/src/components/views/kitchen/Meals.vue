@@ -718,27 +718,36 @@ export default {
       this.mealAllergens = []
     },
 
-    // Allergén ikon URL
+
     getAllergenIconUrl(iconPath) {
-      if (!iconPath) return ''
- 
+      if (!iconPath) {
+        return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓'
+      }
+
       if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
         return iconPath
       }
- 
-      return `/storage/${iconPath}`
+      
+
+      return `http://localhost:8000/storage/${iconPath}`
     },
-    
+        
     handleImageError(event) {
-      event.target.style.display = 'none'
-      const parent = event.target.parentElement
-      if (parent) {
-        const fallback = parent.querySelector('.allergen-icon-fallback')
-        if (fallback) {
-          fallback.style.display = 'flex'
-        }
+    console.error('Image failed to load:', {
+      src: event.target.src,
+      alt: event.target.alt,
+      element: event.target
+    })
+    
+    event.target.style.display = 'none'
+    const parent = event.target.parentElement
+    if (parent) {
+      const fallback = parent.querySelector('.allergen-icon-fallback')
+      if (fallback) {
+        fallback.style.display = 'flex'
       }
-    },
+    }
+  },
 
     // Egyedi allergének szűrése
     getUniqueAllergens(allergens) {
@@ -2624,7 +2633,7 @@ form {
   flex-wrap: wrap;
   gap: 0.375rem;
 }
-
+/*
 .allergen-tag {
   display: inline-flex;
   align-items: center;
@@ -2640,7 +2649,7 @@ form {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
+}*/
 
 .allergen-tag:hover {
   background: #f8f9fa;
@@ -2650,8 +2659,8 @@ form {
 }
 
 .allergen-icon-img {
-  width: 16px;
-  height: 16px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
   border-radius: 2px;
 }
