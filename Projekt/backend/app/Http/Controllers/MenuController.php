@@ -113,28 +113,12 @@ class MenuController extends Controller
         return response()->json($menu);
     }
 
-    public function getTodayMenu(Request $request)
+    public function getTodayMenu()
     {
-        return response()->json([
-        'HIT' => true,
-        'FILE' => __FILE__,
-        'METHOD' => __METHOD__,
-    ], 200);
         $today = Carbon::today()->toDateString();
 
-        // DEBUG csak ha kéred: /api/menu/today?debug=1
-        if ($request->query('debug') == 1) {
-            return response()->json([
-                'ping' => true,
-                'today' => $today,
-                'now' => now()->toDateTimeString(),
-                'timezone' => config('app.timezone'),
-                'rows_today' => MenuItem::where('day', $today)->count(),
-            ], 200);
-        }
-
         $menu = MenuItem::query()
-            ->where('day', $today) // elég sima where, mert day string "YYYY-MM-DD"
+            ->whereDate('day', $today)
             ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
             ->first();
 
@@ -152,9 +136,44 @@ class MenuController extends Controller
         ], 200);
     }
 
+    public function getWeeklyMenu(Request $request)
+    {
+        // from=YYYY-MM-DD (hétfő). Ha nincs, most hétfőjétől számoljuk.
+        $from = $request->query('from');
 
+        $start = $from
+            ? Carbon::parse($from)->startOfDay()
+            : Carbon::now()->startOfWeek(Carbon::MONDAY)->startOfDay();
 
-   
+        $end = $start->copy()->addDays(6)->endOfDay();
 
+        // Lekérjük az adott hét menüit
+        $menus = MenuItem::query()
+            ->whereBetween('day', [$start->toDateString(), $end->toDateString()])
+            ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
+            ->get()
+            ->keyBy('day');
+
+        // Fix 7 napos lista: ha nincs menü, menu=null
+        $out = [];
+        for ($i = 0; $i < 7; $i++) {
+            $day = $start->copy()->addDays($i)->toDateString();
+            $m = $menus->get($day);
+
+            $out[] = [
+                'day' => $day,
+                'menu' => $m ? [
+                    'id' => $m->id,
+                    'day' => $m->day,
+                    'soup' => $m->soupMeal,
+                    'optionA' => $m->optionAMeal,
+                    'optionB' => $m->optionBMeal,
+                    'other' => $m->otherMeal,
+                ] : null
+            ];
+        }
+
+        return response()->json($out, 200);
+    }
 
 }
