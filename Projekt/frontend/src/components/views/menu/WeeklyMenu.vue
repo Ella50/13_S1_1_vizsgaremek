@@ -3,52 +3,57 @@
   <div class="weekly-menu">
     <div class="header">
       <h1>Heti menü</h1>
+
       <div class="week-navigation">
         <button @click="prevWeek" class="nav-btn">Előző hét</button>
         <span class="week-range">{{ weekDisplay }}</span>
         <button @click="nextWeek" class="nav-btn">Következő hét</button>
       </div>
     </div>
-    
+
     <div v-if="loading" class="loading">
       <div class="spinner"></div>
       <p>Heti menü betöltése...</p>
     </div>
-    
+
     <div v-else-if="error" class="error">
       <p>{{ error }}</p>
       <button @click="fetchWeeklyMenu" class="btn-retry">Újra próbál</button>
     </div>
-    
+
     <div v-else class="weekly-schedule">
-      <div v-for="(dayData, date) in weeklyMenu" :key="date" class="day-card">
-        <div class="day-header">
-          <h2>{{ dayData.day }}</h2>
-          <div class="date">{{ formatDate(date) }}</div>
+      <div v-for="d in visibleDays" :key="d.day" class="day-card">
+        <div class="day-pill">
+          <div class="day-name">{{ huDayName(d.day) }}</div>
+          <div class="day-date">{{ shortDate(d.day) }}</div>
         </div>
-        
-        <div v-if="dayData.menu && dayData.menu.length" class="day-menu">
-          <div v-for="item in dayData.menu" :key="item.id" class="menu-item">
-            <div class="item-header">
-              <h3>{{ item.meal?.name || 'Étel' }}</h3>
-              <span class="meal-type">{{ getMealTypeName(item.meal_type) }}</span>
+
+        <div class="card">
+          <div v-if="d.menu" class="menu-list">
+            <div class="row">
+              <div class="icon">🥣</div>
+              <div class="txt">{{ d.menu.soup?.mealName || '—' }}</div>
             </div>
-            
-            <p class="item-description">{{ item.meal?.description || '' }}</p>
-            
-            <div class="item-details">
-              <span class="item-price">{{ item.meal?.price || 0 }} Ft</span>
-              
-              
-              <div v-if="item.meal?.allergens && item.meal.allergens.length" class="item-allergens">
-                <small>Allergének: {{ item.meal.allergens.join(', ') }}</small>
-              </div>
+
+            <div class="row">
+              <div class="icon">🍽️</div>
+              <div class="txt">{{ d.menu.optionA?.mealName || '—' }}</div>
+            </div>
+
+            <div class="row">
+              <div class="icon">🍽️</div>
+              <div class="txt">{{ d.menu.optionB?.mealName || '—' }}</div>
+            </div>
+
+            <div v-if="d.menu.other" class="row">
+              <div class="icon">🧁</div>
+              <div class="txt">{{ d.menu.other?.mealName || '—' }}</div>
             </div>
           </div>
-        </div>
-        
-        <div v-else class="no-menu">
-          <p>Nincs elérhető menü erre a napra</p>
+
+          <div v-else class="no-menu">
+            Nincs feltöltve étlap
+          </div>
         </div>
       </div>
     </div>
@@ -61,104 +66,151 @@ import AuthService from '../../../services/authService'
 export default {
   data() {
     return {
-      weeklyMenu: {},
       loading: false,
       error: '',
-      currentWeekStart: null
+      currentWeekStart: null, // YYYY-MM-DD (hétfő)
+      weekDays: [] // mindig 7 nap: [{ day, menu }]
     }
   },
-  
+
   computed: {
     weekDisplay() {
       if (!this.currentWeekStart) return ''
-      
-      const start = new Date(this.currentWeekStart)
+
+      const start = new Date(this.currentWeekStart + 'T00:00:00')
       const end = new Date(start)
-      end.setDate(end.getDate() + 6)
-      
-      const format = (date) => {
-        return date.toLocaleDateString('hu-HU', {
-          month: 'short',
-          day: 'numeric'
-        })
-      }
-      
-      return `${format(start)} - ${format(end)}`
+      end.setDate(end.getDate() + 4) // H–P tartományt mutatunk
+
+      const fmt = (d) =>
+        d.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' })
+
+      return `${fmt(start)} - ${fmt(end)}`
+    },
+
+    visibleDays() {
+      // H–P mindig, Sz–V csak ha van menü
+      return (this.weekDays || []).filter((d) => {
+        const iso = this.isoDayOfWeek(d.day) // 1..7
+        if (iso >= 1 && iso <= 5) return true
+        return !!d.menu
+      })
     }
   },
-  
-  mounted() {
 
+  mounted() {
     this.setCurrentWeekStart()
     this.fetchWeeklyMenu()
   },
-  
+
   methods: {
     setCurrentWeekStart() {
       const today = new Date()
-      const dayOfWeek = today.getDay() // 0 = vasárnap, 1 = hétfő
-      
-      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const dow = today.getDay() // 0 vasárnap, 1 hétfő...
+      const diff = dow === 0 ? -6 : 1 - dow
       const monday = new Date(today)
       monday.setDate(today.getDate() + diff)
       monday.setHours(0, 0, 0, 0)
-      
-      this.currentWeekStart = monday.toISOString().split('T')[0]
+      this.currentWeekStart = monday.toISOString().slice(0, 10)
     },
-    
+
+    buildEmptyWeek(startDay) {
+      const out = []
+      const start = new Date(startDay + 'T00:00:00')
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start)
+        d.setDate(start.getDate() + i)
+        out.push({ day: d.toISOString().slice(0, 10), menu: null })
+      }
+      return out
+    },
+
+    // támogat többféle backend választ
+    normalizeWeeklyResponse(data) {
+      // 1) tömb: [{day, menu}]
+      if (Array.isArray(data)) return data
+
+      // 2) { weekly_menu: ... }
+      if (data && data.weekly_menu) {
+        const wm = data.weekly_menu
+        if (Array.isArray(wm)) return wm
+        if (typeof wm === 'object') {
+          return Object.keys(wm).map((day) => ({
+            day,
+            menu: wm[day]?.menu ?? wm[day] ?? null
+          }))
+        }
+      }
+
+      // 3) dátum-kulcsos objektum
+      if (data && typeof data === 'object') {
+        return Object.keys(data).map((day) => ({
+          day,
+          menu: data[day]?.menu ?? data[day] ?? null
+        }))
+      }
+
+      return []
+    },
+
     async fetchWeeklyMenu() {
       this.loading = true
       this.error = ''
-      
+      this.weekDays = this.buildEmptyWeek(this.currentWeekStart)
+
       try {
-        const params = {}
-        if (this.currentWeekStart) {
-          params.week_start = this.currentWeekStart
-        }
-        
-        const response = await AuthService.api.get('/menu/week', { params })
-        this.weeklyMenu = response.data.weekly_menu || {}
-      } catch (error) {
-        console.error('Heti menü betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'Hiba történt a heti menü betöltésekor'
+        // nálad a backend most: /menu/week?from=YYYY-MM-DD
+        const res = await AuthService.api.get('/menu/week', {
+          params: { from: this.currentWeekStart }
+        })
+
+        const normalized = this.normalizeWeeklyResponse(res.data)
+
+        // beillesztjük a fix 7 napba
+        const map = new Map(normalized.map((x) => [x.day, x.menu ?? null]))
+        this.weekDays = this.weekDays.map((d) => ({
+          day: d.day,
+          menu: map.has(d.day) ? map.get(d.day) : null
+        }))
+      } catch (e) {
+        console.error('Heti menü betöltése sikertelen:', e)
+        this.error =
+          e?.response?.data?.message || 'Hiba történt a heti menü betöltésekor'
       } finally {
         this.loading = false
       }
     },
-    
+
     prevWeek() {
-      if (!this.currentWeekStart) return
-      
-      const date = new Date(this.currentWeekStart)
-      date.setDate(date.getDate() - 7)
-      this.currentWeekStart = date.toISOString().split('T')[0]
+      const d = new Date(this.currentWeekStart + 'T00:00:00')
+      d.setDate(d.getDate() - 7)
+      this.currentWeekStart = d.toISOString().slice(0, 10)
       this.fetchWeeklyMenu()
     },
-    
+
     nextWeek() {
-      if (!this.currentWeekStart) return
-      
-      const date = new Date(this.currentWeekStart)
-      date.setDate(date.getDate() + 7)
-      this.currentWeekStart = date.toISOString().split('T')[0]
+      const d = new Date(this.currentWeekStart + 'T00:00:00')
+      d.setDate(d.getDate() + 7)
+      this.currentWeekStart = d.toISOString().slice(0, 10)
       this.fetchWeeklyMenu()
     },
-    
-    formatDate(dateString) {
-      if (!dateString) return ''
-      const date = new Date(dateString)
-      return date.toLocaleDateString('hu-HU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
+
+    isoDayOfWeek(dateString) {
+      // ISO day: Mon=1..Sun=7
+      const d = new Date(dateString + 'T00:00:00')
+      const day = d.getDay() // Sun=0..Sat=6
+      return day === 0 ? 7 : day
     },
-    
-    getMealTypeName(type) {
-      const names = {
-        'ebéd': 'Ebéd',
-      }
-      return names[type] || type
+
+    huDayName(dateString) {
+      const d = new Date(dateString + 'T00:00:00')
+      // nagybetűs kezdő
+      const s = d.toLocaleDateString('hu-HU', { weekday: 'long' })
+      return s.charAt(0).toUpperCase() + s.slice(1)
+    },
+
+    shortDate(dateString) {
+      const d = new Date(dateString + 'T00:00:00')
+      return d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' })
     }
   }
 }
@@ -173,168 +225,141 @@ export default {
 
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .header h1 {
   margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 2rem;
+  color: #7b2c2c;
+  font-size: 3rem;
+  font-weight: 800;
 }
 
 .week-navigation {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .week-range {
   font-size: 1.125rem;
-  font-weight: 500;
-  color: #2c3e50;
-  min-width: 200px;
+  font-weight: 600;
+  color: #7b2c2c;
+  min-width: 220px;
 }
 
 .nav-btn {
-  padding: 0.5rem 1rem;
-  background: #3498db;
-  color: white;
+  padding: 0.6rem 1rem;
+  background: #f0a24a;
+  color: #7b2c2c;
   border: none;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 700;
 }
+.nav-btn:hover { filter: brightness(0.95); }
 
-.nav-btn:hover {
-  background: #2980b9;
-}
-
+/* ✅ EGY SOR, HORIZONTAL SCROLL */
+/* ✅ NINCS CSÚSZKA: GRID, TÖRDELÉS */
 .weekly-schedule {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
+  grid-template-columns: repeat(5, 1fr); /* alap: 5 oszlop */
 }
 
+/* kártya: ne legyen fix szélesség */
 .day-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  width: 100%;
 }
 
-.day-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+/* ====== TÖRDELÉSI LÉPCSŐK ====== */
+
+/* 3-2 (összesen 3 oszlop, így 5 elem: 3 az első sorban, 2 a másodikban) */
+@media (max-width: 1200px) {
+  .weekly-schedule {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.day-header {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #f1f2f6;
+/* 2-2-1 (2 oszlop, 5 elem: 2+2+1) */
+@media (max-width: 900px) {
+  .weekly-schedule {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.day-header h2 {
-  margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-  font-size: 1.5rem;
+/* 1-1-1-1-1 (mobil: 1 oszlop) */
+@media (max-width: 600px) {
+  .weekly-schedule {
+    grid-template-columns: 1fr;
+  }
 }
 
-.date {
-  color: #7f8c8d;
-  font-size: 0.875rem;
+
+
+/* felül a "nap" pill */
+.day-pill {
+  background: #f7c77a;
+  color: #7b2c2c;
+  border-radius: 16px;
+  text-align: center;
+  padding: 0.6rem 0.8rem;
+  font-weight: 800;
+  margin: 0 auto 0.7rem;
 }
 
-/* Menü elemek */
-.day-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.day-name {
+  font-size: 1.2rem;
+  line-height: 1.1;
 }
 
-.menu-item {
+.day-date {
+  font-size: 1rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+/* belső "füzet" card */
+.card {
+  background: #fff;
+  border-radius: 16px;
   padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border-left: 4px solid #3498db;
+  border: 2px dashed #d07a7a;
+  box-shadow: 0 8px 0 rgba(255, 170, 0, 0.25);
+  min-height: 280px;
 }
 
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.5rem;
-}
-
-.item-header h3 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.125rem;
-}
-
-.meal-type {
-  background: #e3f2fd;
-  color: #1565c0;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.item-description {
-  color: #7f8c8d;
-  margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-.item-details {
+.menu-list {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.9rem;
 }
 
-.item-price {
-  font-weight: bold;
-  color: #27ae60;
-  font-size: 1.125rem;
+.row {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px dashed rgba(208, 122, 122, 0.35);
 }
+.row:last-child { border-bottom: none; padding-bottom: 0; }
 
-.item-tags {
-  display: flex;
-  gap: 0.5rem;
-  margin: 0.25rem 0;
-}
-
-.tag {
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.tag.veg {
-  background: #d4edda;
-  color: #155724;
-}
-
-.tag.vegan {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.item-allergens small {
-  color: #95a5a6;
+.icon { font-size: 1.25rem; }
+.txt {
+  color: #7b2c2c;
+  font-weight: 700;
 }
 
 .no-menu {
-  padding: 2rem;
+  height: 100%;
+  display: grid;
+  place-items: center;
   text-align: center;
-  color: #95a5a6;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 2px dashed #dee2e6;
+  color: #a26b6b;
+  font-weight: 700;
+  padding: 1rem;
 }
 
 .loading {
@@ -346,7 +371,7 @@ export default {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border-top: 4px solid #f0a24a;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem auto;
@@ -365,31 +390,19 @@ export default {
 
 .btn-retry {
   margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background: #3498db;
-  color: white;
+  padding: 0.6rem 1rem;
+  background: #f0a24a;
+  color: #7b2c2c;
   border: none;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
+  font-weight: 800;
 }
+.btn-retry:hover { filter: brightness(0.95); }
 
-.btn-retry:hover {
-  background: #2980b9;
-}
-
-
+/* mobilon is scroll marad, csak kisebb kártyák */
 @media (max-width: 768px) {
-  .weekly-schedule {
-    grid-template-columns: 1fr;
-  }
-  
-  .week-navigation {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .nav-btn {
-    width: 100%;
-  }
+  .header h1 { font-size: 2.2rem; }
+  .day-card { flex: 0 0 240px; }
 }
 </style>

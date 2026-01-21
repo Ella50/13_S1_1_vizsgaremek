@@ -22,14 +22,18 @@ Route::post('/reset-password/check-token', [PasswordResetController::class, 'che
 
 Route::get('/menu/available-dates', [MenuController::class, 'availableDates']);
 Route::get('/menu/existing-dates', [MenuController::class, 'existingDates']);
-Route::get('/menu/{date}', [MenuController::class, 'getMenuByDate']);
+Route::get('/menu/{date}', [MenuController::class, 'getMenuByDate']) ->where('date', '^\d{4}-\d{2}-\d{2}$');
 Route::post('/menu', [MenuController::class, 'saveMenu']);
 Route::post('/menu', [MenuController::class, 'store']);
-Route::put('/menu/{menu}', [MenuController::class, 'update']);
+//Route::put('/menu/{menu}', [MenuController::class, 'update']);
 
 
 
-
+Route::prefix('menu')->group(function () {
+        Route::get('/today', [MenuController::class, 'getTodayMenu']);
+        Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
+        
+    });
 
 // védett utvonalak
 Route::middleware('auth:sanctum')->group(function () {
@@ -45,13 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Menu (minden bejelentkezettnek)
-    Route::prefix('menu')->group(function () {
-        Route::get('/today', [MenuController::class, 'getTodayMenu']);
-        //Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
-        
-    });
-
-
+    
     
     // Admin
     Route::prefix('admin')->group(function () {
