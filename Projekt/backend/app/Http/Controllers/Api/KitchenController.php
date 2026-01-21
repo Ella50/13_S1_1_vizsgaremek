@@ -148,20 +148,21 @@ class KitchenController extends Controller
     }
     
     // Allergén ikon URL generálása
-    private function getAllergenIconUrl($iconPath)
-    {
-        if (!$iconPath) {
-            return null;
-        }
-        
-        // Ha már teljes URL, akkor azt adjuk vissza
-        if (filter_var($iconPath, FILTER_VALIDATE_URL)) {
-            return $iconPath;
-        }
-        
-        // Egyébként relatív útvonalként kezeljük
-        return asset('storage/' . $iconPath);
+private function getAllergenIconUrl($iconPath)
+{
+    if (!$iconPath) {
+        return null;
     }
+    
+    // Ha már teljes URL, akkor azt adjuk vissza
+    if (filter_var($iconPath, FILTER_VALIDATE_URL)) {
+        return $iconPath;
+    }
+    
+    // Egyébként relatív útvonalként kezeljük
+    // FONTOS: Ellenőrizd, hogy a storage link megfelelően van-e beállítva!
+    return asset('storage/' . ltrim($iconPath, '/'));
+}
     
     /**
      * Egy étel összetevőinek lekérdezése ALLERGÉNEKKEL
@@ -354,7 +355,404 @@ class KitchenController extends Controller
         }
     }
     
-    // ... a többi metódus változatlan marad (storeMeal, updateMeal, deleteMeal, stb.)
+
+    
+    /**
+     * Új étel létrehozása
+     */
+    public function storeMeal(Request $request)
+    {
+        try {
+            Log::info('=== START storeMeal ===');
+            Log::info('Request data:', $request->all());
+            
+            // Validáció alapadatokhoz
+            $validator = Validator::make($request->all(), [
+                'mealName' => 'required|string|max:255',
+                'category' => 'required|string|in:Leves,Főétel,Egyéb',
+                'description' => 'nullable|string',
+                // Összetevők validálása, ha küldik
+                'ingredients' => 'nullable|array',
+                'ingredients.*.ingredient_id' => 'exists:ingredients,id',
+                'ingredients.*.amount' => 'numeric|min:0.1',
+                'ingredients.*.unit' => 'string|max:10'
+            ], [
+                'mealName.required' => 'Az étel neve kötelező.',
+                'mealName.max' => 'Az étel neve maximum 255 karakter lehet.',
+                'category.required' => 'A kategória megadása kötelező.',
+                'category.in' => 'Érvénytelen kategória. Érvényes értékek: Leves, Főétel, Egyéb'
+            ]);
+            
+            if ($validator->fails()) {
+                Log::warning('Validation failed:', $validator->errors()->toArray());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validációs hibák',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            // Étel létrehozása
+            $meal = Meal::create([
+                'mealName' => $request->mealName,
+                'mealType' => $request->category,
+                'description' => $request->description ?? '',
+                'picture' => null,
+                'isAvailable' => true
+            ]);
+            
+            Log::info('Meal created successfully:', ['id' => $meal->id, 'name' => $meal->mealName]);
+            
+            // Ha vannak összetevők, hozzáadjuk őket
+            $ingredientsCount = 0;
+            if ($request->has('ingredients') && is_array($request->ingredients) && count($request->ingredients) > 0) {
+                $ingredientsData = [];
+                foreach ($request->ingredients as $ingredient) {
+                    if (isset($ingredient['ingredient_id']) && isset($ingredient['amount'])) {
+                        $ingredientsData[$ingredient['ingredient_id']] = [
+                            'amount' => $ingredient['amount'],
+                            'unit' => $ingredient['unit'] ?? 'g'
+                        ];
+                    }
+                }
+                
+                if (!empty($ingredientsData)) {
+                    $meal->ingredients()->attach($ingredientsData);
+                    $ingredientsCount = count($ingredientsData);
+                    Log::info('Ingredients attached to meal:', [
+                        'meal_id' => $meal->id,
+                        'ingredients_count' => $ingredientsCount
+                    ]);
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Étel sikeresen hozzáadva.' . ($ingredientsCount > 0 ? " ($ingredientsCount összetevő hozzáadva)" : ''),
+                'meal' => [
+                    'id' => $meal->id,
+                    'mealName' => $meal->mealName,
+                    'category' => $meal->mealType,
+                    'description' => $meal->description,
+                    'ingredients_count' => $ingredientsCount,
+                    'created_at' => $meal->created_at,
+                    'updated_at' => $meal->updated_at
+                ]
+            ], 201);
+            
+        } catch (\Exception $e) {
+            Log::error('CRITICAL ERROR in storeMeal: ' . $e->getMessage());
+            Log::error('File: ' . $e->getFile());
+            Log::error('Line: ' . $e->getLine());
+            Log::error('Trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az étel hozzáadása során.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Ételfrissítés
+     */
+    public function updateMeal(Request $request, $id)
+    {
+        try {
+            // Étel megkeresése
+            $meal = Meal::find($id);
+            
+            if (!$meal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az étel nem található.'
+                ], 404);
+            }
+            
+            // Validáció
+            $validator = Validator::make($request->all(), [
+                'mealName' => 'required|string|max:255',
+                'category' => 'required|string|in:Leves,Főétel,Egyéb' ,//. implode(',', MealType::values()),
+                'description' => 'nullable|string',
+                'calories' => 'nullable|integer|min:0',
+                'allergens' => 'nullable|array',
+                'allergens.*' => 'string'
+            ], [
+                'mealName.required' => 'Az étel neve kötelező.',
+                'mealName.max' => 'Az étel neve maximum 255 karakter lehet.',
+                'category.required' => 'A kategória megadása kötelező.',
+                'category.in' => 'Érvénytelen kategória.',
+                'calories.min' => 'A kalóriaérték nem lehet negatív.'
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validációs hiba',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            // Frissítés
+            $meal->update([
+                'mealName' => $request->mealName,
+                'mealType' => $request->category,
+                'description' => $request->description,
+                'picture' => $request->picture ?? $meal->picture,
+                // Ha van extra meződ, itt add hozzá
+                // 'calories' => $request->calories ?? $meal->calories,
+                // 'allergens' => $request->has('allergens') ? json_encode($request->allergens) : $meal->allergens
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Étel sikeresen frissítve.',
+                'meal' => [
+                    'id' => $meal->id,
+                    'mealName' => $meal->mealName,
+                    'category' => $meal->mealType,
+                    'description' => $meal->description,
+                    'picture' => $meal->picture,
+                    'updated_at' => $meal->updated_at
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az étel frissítése során.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Ételtörlés
+     */
+    public function deleteMeal($id)
+{
+    try {
+        Log::info('=== START deleteMeal ===');
+        Log::info('Attempting to delete meal with ID: ' . $id);
+        
+        // Étel megkeresése
+        $meal = Meal::find($id);
+        
+        if (!$meal) {
+            Log::warning('Meal not found with ID: ' . $id);
+            return response()->json([
+                'success' => false,
+                'message' => 'Az étel nem található.'
+            ], 404);
+        }
+        
+        // Ellenőrizzük, hogy nincs-e menüben használva
+        // Ehhez szükséged lesz a menuItems modellre
+        /*
+        if ($meal->menuItems()->count() > 0) {
+            Log::warning('Cannot delete meal: it is used in menu items', [
+                'meal_id' => $meal->id,
+                'menu_items_count' => $meal->menuItems()->count()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Az étel nem törölhető, mert már szerepel a menükben.'
+            ], 400);
+        }
+        */
+        
+        // Először töröljük az összetevőket (ha van kapcsolat)
+        if ($meal->ingredients()->count() > 0) {
+            $ingredientsCount = $meal->ingredients()->count();
+            $meal->ingredients()->detach();
+            Log::info('Detached ingredients from meal', [
+                'meal_id' => $meal->id,
+                'ingredients_count' => $ingredientsCount
+            ]);
+        }
+        
+        // Az étel adatainak mentése logoláshoz
+        $mealData = [
+            'id' => $meal->id,
+            'name' => $meal->mealName,
+            'category' => $meal->mealType,
+            'created_at' => $meal->created_at
+        ];
+        
+        // Törlés
+        $meal->delete();
+        
+        Log::info('Meal deleted successfully', $mealData);
+        Log::info('=== END deleteMeal ===');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Étel sikeresen törölve.',
+            'deleted_meal' => $mealData
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('CRITICAL ERROR in deleteMeal: ' . $e->getMessage());
+        Log::error('File: ' . $e->getFile());
+        Log::error('Line: ' . $e->getLine());
+        Log::error('Trace: ' . $e->getTraceAsString());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt az étel törlése során.',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
+
+    /**
+     * Egy étel lekérdezése
+     */
+    public function showMeal($id)
+    {
+        try {
+            $meal = Meal::find($id);
+            
+            if (!$meal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az étel nem található.'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'meal' => [
+                    'id' => $meal->id,
+                    'mealName' => $meal->mealName,
+                    'category' => $meal->mealType,
+                    'description' => $meal->description,
+                    'picture' => $meal->picture,
+                    'created_at' => $meal->created_at,
+                    'updated_at' => $meal->updated_at
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az étel betöltése során.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    public function updateMealIngredients($id, Request $request)
+{
+    try {
+        Log::info('=== START updateMealIngredients ===');
+        Log::info('Meal ID: ' . $id);
+        Log::info('Request data:', $request->all());
+        
+        // Étellellenőrzés
+        $meal = Meal::find($id);
+        
+        if (!$meal) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Az étel nem található.'
+            ], 404);
+        }
+        
+        // Validáció
+        $validator = Validator::make($request->all(), [
+            'ingredients' => 'required|array',
+            'ingredients.*.ingredient_id' => 'required|exists:ingredients,id',
+            'ingredients.*.amount' => 'required|numeric|min:0.1',
+            'ingredients.*.unit' => 'required|string|max:10'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validációs hibák',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Meglévő összetevők törlése
+        $meal->ingredients()->detach();
+        
+        // Új összetevők hozzáadása
+        $ingredientsData = [];
+        foreach ($request->ingredients as $ingredient) {
+            $ingredientsData[$ingredient['ingredient_id']] = [
+                'amount' => $ingredient['amount'],
+                'unit' => $ingredient['unit']
+            ];
+        }
+        
+        $meal->ingredients()->attach($ingredientsData);
+        
+        Log::info('Meal ingredients updated successfully:', [
+            'meal_id' => $meal->id,
+            'ingredients_count' => count($ingredientsData)
+        ]);
+        
+        // Betöltjük a frissített adatokat allergénekkel
+        $updatedMeal = Meal::with(['ingredients.allergens' => function($query) {
+            $query->select('id', 'allergenName', 'icon');
+        }])->find($id);
+        
+        // Összegyűjtjük az allergéneket
+        $allAllergens = collect();
+        foreach ($updatedMeal->ingredients as $ingredient) {
+            if ($ingredient->allergens && $ingredient->allergens->isNotEmpty()) {
+                $allAllergens = $allAllergens->merge($ingredient->allergens);
+            }
+        }
+        
+        $uniqueAllergens = $allAllergens->unique('id')->map(function($allergen) {
+            return [
+                'id' => $allergen->id,
+                'allergenName' => $allergen->allergenName,
+                'icon' => $allergen->icon,
+                'icon_url' => $this->getAllergenIconUrl($allergen->icon)
+            ];
+        })->values()->toArray();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Összetevők sikeresen frissítve.',
+            'ingredients_count' => count($ingredientsData),
+            'allergens' => $uniqueAllergens  // Visszaadjuk az allergéneket is
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('CRITICAL ERROR in updateMealIngredients: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt az összetevők frissítése során.',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
+    /**
+     * Kategóriák listája
+     */
+    public function getCategories()
+    {
+        try {
+            $categories = MealType::values();
+            
+            return response()->json([
+                'success' => true,
+                'categories' => $categories
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a kategóriák betöltése során.'
+            ], 500);
+        }
+    }
     
     /**
      * Ételek listázása allergénekkel (speciális végpont)
