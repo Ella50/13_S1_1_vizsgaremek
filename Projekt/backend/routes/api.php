@@ -50,6 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
         //Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
         
     });
+
+
     
     // Admin
     Route::prefix('admin')->group(function () {
