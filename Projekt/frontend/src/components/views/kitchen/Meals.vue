@@ -586,9 +586,7 @@
                   class="allergen-detail-icon"
                 />
                 <span class="allergen-detail-name">{{ allergen.allergenName }}</span>
-                <span class="allergen-detail-ingredients">
-                  ({{ getIngredientNamesForAllergen(allergen.id).join(', ') }})
-                </span>
+ 
               </div>
             </div>
           </div>
@@ -625,7 +623,7 @@
                         {{ ingredient.ingredientType }}
                       </span>
                     </td>
-                    <td>
+                    <td >
                       <div v-if="ingredient.allergens && ingredient.allergens.length > 0" class="ingredient-allergens">
                         <span 
                           v-for="allergen in ingredient.allergens" 
@@ -639,7 +637,7 @@
                             :alt="allergen.allergenName"
                             class="allergen-chip-icon"
                           />
-                          {{ getAllergenShortName(allergen.allergenName) }}
+                          <!--{{ getAllergenShortName(allergen.allergenName) }}-->
                         </span>
                       </div>
                       <span v-else class="no-allergens">-</span>
@@ -2223,6 +2221,12 @@ form {
   background: #f8f9fa;
 }
 
+.ingredients-table-allergen-div{
+  text-align: center;
+  align-items: center;
+  margin: auto;
+}
+
 .ingredient-name {
   font-weight: 500;
   color: #2c3e50;
@@ -3051,9 +3055,16 @@ form {
   flex-wrap: wrap;
   gap: 0.25rem;
   min-width: 100px;
+  text-align: center;
+  align-items: center;
+  margin: auto;
+
 }
 
+
+
 .allergen-chip {
+
   display: inline-flex;
   align-items: center;
   gap: 0.125rem;
@@ -3069,8 +3080,8 @@ form {
 }
 
 .allergen-chip-icon {
-  width: 12px;
-  height: 12px;
+  width: 25px;
+  height: 25px;
   object-fit: contain;
 }
 
