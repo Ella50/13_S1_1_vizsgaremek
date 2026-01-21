@@ -14,7 +14,8 @@ class MenuItem extends Model
         'day',
         'soup',
         'optionA',
-        'optionB'
+        'optionB',
+        'other'
     ];
 
     public function soupMeal() { return $this->belongsTo(Meal::class, 'soup'); }

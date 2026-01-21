@@ -30,6 +30,7 @@ Route::put('/menu/{menu}', [MenuController::class, 'update']);
 
 
 
+
 // védett utvonalak
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
@@ -47,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('menu')->group(function () {
         Route::get('/today', [MenuController::class, 'getTodayMenu']);
         //Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
+        
     });
     
     // Admin
