@@ -33,7 +33,7 @@
       </div>
       
       <div v-else class="meals-grid">
-        <!-- FONTOS: használj mindenhol safe navigation operátort (?.) -->
+
         <div v-for="meal in meals" :key="meal?.id || 'unknown'" class="meal-card">
           <div class="meal-header">
             <h3>{{ meal?.mealName || 'Névtelen étel' }}</h3>
@@ -79,7 +79,7 @@
                     @error="handleImageError"
                   />
                   <span v-else class="allergen-icon-fallback">{{ getAllergenInitial(allergen?.allergenName) }}</span>
-                  <span class="allergen-name">{{ getAllergenShortName(allergen?.allergenName) }}</span>
+                  <!--<span class="allergen-name">{{ getAllergenShortName(allergen?.allergenName) }}</span>-->
                 </span>
               </template>
             </div>
@@ -134,15 +134,198 @@
             <textarea v-model="mealForm.description" rows="3"></textarea>
           </div>
           
+          <!-- Összetevők szerkesztése -->
+          <div class="ingredients-section">
+            <div class="section-header">
+              <h3>Összetevők</h3>
+              <span class="section-subtitle">Összesen: {{ editIngredientsList.length }} hozzávaló</span>
+            </div>
+            
+            <!-- Új hozzávaló hozzáadása -->
+            <div class="add-ingredient-section">
+              <h4>Új hozzávaló hozzáadása</h4>
+              <div class="add-ingredient-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Hozzávaló *</label>
+                    <div class="search-container">
+                      <input 
+                        v-model="newIngredient.search" 
+                        @input="searchIngredients"
+                        placeholder="Keresés hozzávaló között..."
+                        type="search"
+                        class="search-input"
+                      />
+                      <div v-if="searchResults.length > 0" class="search-results">
+                        <div 
+                          v-for="result in searchResults" 
+                          :key="result.id"
+                          class="search-result-item"
+                          @click="selectIngredient(result)"
+                        >
+                          <span class="result-name">{{ result.ingredientName }}</span>
+                          <span class="result-type">{{ result.ingredientType }}</span>
+                          <span class="result-info">{{ result.energy }} kcal</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Mennyiség *</label>
+                    <input 
+                      v-model="newIngredient.amount" 
+                      type="number" 
+                      step="0.1" 
+                      min="0"
+                      placeholder="100"
+                      class="amount-input"
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Mértékegység *</label>
+                    <select v-model="newIngredient.unit" class="unit-select">
+                      <option value="g">g</option>
+                      <option value="kg">kg</option>
+                      <option value="ml">ml</option>
+                      <option value="l">l</option>
+                      <option value="db">db</option>
+                      <option value="tk">tk</option>
+                      <option value="ek">ek</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button 
+                      type="button" 
+                      @click="addIngredient" 
+                      class="btn-add-ingredient"
+                      :disabled="!canAddIngredient"
+                    >
+                      Hozzáadás
+                    </button>
+                  </div>
+                </div>
+                
+                <div v-if="selectedIngredientForAdd" class="selected-ingredient-info">
+                  <strong>Kiválasztott hozzávaló:</strong> {{ selectedIngredientForAdd.ingredientName }}
+                  <span class="ingredient-details">
+                    {{ selectedIngredientForAdd.energy }} kcal/100g | 
+                    {{ selectedIngredientForAdd.protein }}g fehérje | 
+                    {{ selectedIngredientForAdd.carbohydrate }}g szénhidrát
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Meglévő hozzávalók listája -->
+            <div class="current-ingredients-section">
+              <h4>Jelenlegi hozzávalók</h4>
+              
+              <div v-if="editIngredientsList.length === 0" class="no-current-ingredients">
+                <p>Még nincsenek hozzávalók hozzáadva.</p>
+              </div>
+              
+              <div v-else class="current-ingredients-list">
+                <div class="current-ingredients-table-container">
+                  <table class="current-ingredients-table">
+                    <thead>
+                      <tr>
+                        <th>Hozzávaló</th>
+                        <th>Mennyiség</th>
+                        <th>Egység</th>
+                        <th>Kalória</th>
+                        <th>Törlés</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(ingredient, index) in editIngredientsList" :key="ingredient.id || ingredient.tempId">
+                        <td>
+                          <div class="ingredient-name">
+                            {{ ingredient.ingredientName }}
+                            <div class="ingredient-nutrition">
+                              <small class="ingredient-type" :class="getIngredientTypeClass(ingredient.ingredientType)">
+                                {{ ingredient.ingredientType }}
+                              </small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <input 
+                            v-model="ingredient.pivot.amount" 
+                            type="number" 
+                            step="0.1" 
+                            min="0"
+                            @change="updateIngredientAmount(ingredient)"
+                            class="amount-input small"
+                          />
+                        </td>
+                        <td>
+                          <select 
+                            v-model="ingredient.pivot.unit"
+                            @change="updateIngredientUnit(ingredient)"
+                            class="unit-select small"
+                          >
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="l">l</option>
+                            <option value="db">db</option>
+                            <option value="tk">tk</option>
+                            <option value="ek">ek</option>
+                          </select>
+                        </td>
+                        <td>
+                          <span class="calories-display">
+                            {{ calculateIngredientCalories(ingredient) }} kcal
+                          </span>
+                        </td>
+                        <td>
+                          <button 
+                            @click="removeIngredientFromList(index)" 
+                            class="btn-remove-ingredient"
+                            title="Eltávolítás"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <!-- Összegzés -->
+                <div class="edit-summary">
+                  <div class="summary-item">
+                    <div class="summary-label">Összes hozzávaló:</div>
+                    <div class="summary-value">{{ editIngredientsList.length }} db</div>
+                  </div>
+                  <div class="summary-item">
+                    <div class="summary-label">Teljes mennyiség:</div>
+                    <div class="summary-value">{{ calculateEditTotalAmount() }}</div>
+                  </div>
+                  <div class="summary-item">
+                    <div class="summary-label">Teljes kalória:</div>
+                    <div class="summary-value">{{ calculateEditTotalCalories() }} kcal</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Modal gombok -->
           <div class="modal-actions">
             <button type="button" @click="closeModal" class="btn-cancel">
               Mégse
             </button>
-            <button type="submit" class="btn-save">
-              Hozzáadás
+            <button type="submit" class="btn-save" :disabled="savingMeal">
+              {{ savingMeal ? 'Mentés...' : 'Mentés' }}
             </button>
           </div>
         </form>
+
       </div>
     </div>
     
@@ -403,9 +586,7 @@
                   class="allergen-detail-icon"
                 />
                 <span class="allergen-detail-name">{{ allergen.allergenName }}</span>
-                <span class="allergen-detail-ingredients">
-                  ({{ getIngredientNamesForAllergen(allergen.id).join(', ') }})
-                </span>
+ 
               </div>
             </div>
           </div>
@@ -442,7 +623,7 @@
                         {{ ingredient.ingredientType }}
                       </span>
                     </td>
-                    <td>
+                    <td >
                       <div v-if="ingredient.allergens && ingredient.allergens.length > 0" class="ingredient-allergens">
                         <span 
                           v-for="allergen in ingredient.allergens" 
@@ -456,7 +637,7 @@
                             :alt="allergen.allergenName"
                             class="allergen-chip-icon"
                           />
-                          {{ getAllergenShortName(allergen.allergenName) }}
+                          <!--{{ getAllergenShortName(allergen.allergenName) }}-->
                         </span>
                       </div>
                       <span v-else class="no-allergens">-</span>
@@ -620,6 +801,8 @@ export default {
     
     params.withAllergens = true
     
+    params._t = Date.now();
+    
     const response = await AuthService.api.get('/kitchen/meals', { params })
     
     if (response.data.success) {
@@ -720,17 +903,36 @@ export default {
 
 
     getAllergenIconUrl(iconPath) {
-      if (!iconPath) {
-        return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓'
-      }
+  if (!iconPath) {
+    return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
+  }
 
-      if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
-        return iconPath
-      }
-      
+  // Tisztítsd az útvonalat
+  const cleanPath = iconPath.replace(/^\//, '');
+  
+  // Különböző lehetséges útvonalak
+  const baseUrl = 'http://localhost:8000';
+  const pathsToTry = [
+    // 1. Próbáld a storage útvonalat
+    `${baseUrl}/storage/${cleanPath}`,
+    
+    // 2. Ha a storage link nem működik, próbáld a public/images útvonalat
+    `${baseUrl}/images/allergens/${cleanPath.split('/').pop()}`,
+    
+    // 3. Vagy csak a fájlnevét
+    `${baseUrl}/${cleanPath.split('/').pop()}`
+  ];
 
-      return `http://localhost:8000/storage/${iconPath}`
-    },
+  // Debug információk
+  console.log('Allergen icon debug:', {
+    originalPath: iconPath,
+    cleanPath: cleanPath,
+    tryingPaths: pathsToTry
+  });
+
+  // Visszaadjuk az elsőt, vagy lehetővé tesszük a váltást
+  return pathsToTry[1]; // Próbáld a public/images útvonalat
+},
         
     handleImageError(event) {
     console.error('Image failed to load:', {
@@ -763,14 +965,15 @@ export default {
         return true
       })
     },
-    
+    /*
     // Allergén rövid neve
     getAllergenShortName(name) {
       if (!name) return ''
       if (name.length <= 3) return name
       return name.substring(0, 3)
     },
-    
+    */
+
     // Allergén kezdőbetűje
     getAllergenInitial(name) {
       if (!name) return '?'
@@ -861,34 +1064,117 @@ export default {
     
     // ÉTEL MENTÉSE ÖSSZETEVŐKKEL EGYÜTT
     async saveMeal() {
-      if (!this.editingMeal) {
-        // Új étel létrehozása
-        try {
-          this.savingMeal = true
-          const response = await AuthService.api.post('/kitchen/meals', this.mealForm)
-          
-          if (response.data.success) {
-            this.$toast?.success('Étel sikeresen hozzáadva')
-            this.closeModal()
-            this.fetchMeals()
-          } else {
-            alert(response.data.message)
-          }
-        } catch (error) {
-          console.error('Étel mentése sikertelen:', error)
-          const errorMessage = error.response?.data?.message || 
-                             error.response?.data?.errors ? 
-                             Object.values(error.response.data.errors).flat().join(', ') : 
-                             'Hiba történt a mentés során'
-          alert(errorMessage)
-        } finally {
-          this.savingMeal = false
-        }
-      } else {
-        // Meglévő étel frissítése összetevőkkel
-        await this.saveMealWithIngredients()
+  if (!this.editingMeal) {
+    // Új étel létrehozása
+    try {
+      this.savingMeal = true;
+      
+      console.log('=== START saving new meal ===');
+      console.log('Meal form:', this.mealForm);
+      console.log('Ingredients to save:', this.editIngredientsList);
+      
+      // 1. Először létrehozzuk az ételt
+      const mealResponse = await AuthService.api.post('/kitchen/meals', {
+        mealName: this.mealForm.mealName,
+        category: this.mealForm.category,
+        description: this.mealForm.description
+      });
+      
+      if (!mealResponse.data.success) {
+        alert(mealResponse.data.message);
+        this.savingMeal = false;
+        return;
       }
-    },
+      
+      const newMealId = mealResponse.data.meal.id;
+      console.log('New meal created with ID:', newMealId);
+      
+      // 2. Ha vannak összetevők, hozzáadjuk külön
+      if (this.editIngredientsList.length > 0) {
+        const ingredientsData = this.editIngredientsList.map(ingredient => {
+          return {
+            ingredient_id: ingredient.id,
+            amount: parseFloat(ingredient.pivot?.amount) || 0,
+            unit: ingredient.pivot?.unit || 'g'
+          };
+        });
+        
+        console.log('Sending ingredients data:', ingredientsData);
+        
+        await AuthService.api.put(`/kitchen/meals/${newMealId}/ingredients`, {
+          ingredients: ingredientsData
+        });
+        
+        console.log('Ingredients saved successfully');
+      }
+      
+      // 3. Azonnal frissítjük az ételek listáját allergénekkel
+      console.log('Refreshing meals list with allergens...');
+      await this.fetchMeals();
+      
+      // 4. Keressük meg az új ételt a frissített listában és mutassuk meg az allergéneit
+      setTimeout(() => {
+        const newMeal = this.meals.find(m => m.id === newMealId);
+        if (newMeal) {
+          console.log('Found new meal in updated list:', newMeal);
+          
+          // Ha a newMeal nem tartalmaz allergéneket, akkor manuálisan betöltjük
+          if (!newMeal.allergens || newMeal.allergens.length === 0) {
+            this.loadAllergensForNewMeal(newMealId);
+          }
+        }
+      }, 500);
+      
+      this.$toast?.success('Étel sikeresen hozzáadva' + 
+        (this.editIngredientsList.length > 0 ? ` (${this.editIngredientsList.length} összetevővel)` : ''));
+      
+      this.closeModal();
+      
+    } catch (error) {
+      console.error('Étel mentése sikertelen:', error);
+      alert(error.response?.data?.message || 'Hiba történt a mentés során');
+    } finally {
+      this.savingMeal = false;
+    }
+  } else {
+    // Meglévő étel frissítése
+    await this.saveMealWithIngredients();
+  }
+},
+
+async loadAllergensForNewMeal(mealId) {
+  try {
+    console.log('Loading allergens for new meal:', mealId);
+    
+    const response = await AuthService.api.get(`/kitchen/meals/${mealId}/ingredients?withAllergens=true`);
+    
+    if (response.data.success) {
+      // Összegyűjtjük az allergéneket
+      const allergens = new Map();
+      
+      response.data.ingredients.forEach(ingredient => {
+        if (ingredient.allergens && Array.isArray(ingredient.allergens)) {
+          ingredient.allergens.forEach(allergen => {
+            if (!allergens.has(allergen.id)) {
+              allergens.set(allergen.id, allergen);
+            }
+          });
+        }
+      });
+      
+      const uniqueAllergens = Array.from(allergens.values());
+      
+      // Frissítjük a meals listában az étel allergéneit
+      const mealIndex = this.meals.findIndex(m => m.id === mealId);
+      if (mealIndex !== -1) {
+        this.meals[mealIndex].allergens = uniqueAllergens;
+        console.log('Updated meal allergens in list:', uniqueAllergens);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading allergens for new meal:', error);
+  }
+},
     
     async saveMealWithIngredients() {
       if (!this.editingMeal || !this.editingMeal.id) {
@@ -1935,6 +2221,12 @@ form {
   background: #f8f9fa;
 }
 
+.ingredients-table-allergen-div{
+  text-align: center;
+  align-items: center;
+  margin: auto;
+}
+
 .ingredient-name {
   font-weight: 500;
   color: #2c3e50;
@@ -2633,7 +2925,7 @@ form {
   flex-wrap: wrap;
   gap: 0.375rem;
 }
-/*
+
 .allergen-tag {
   display: inline-flex;
   align-items: center;
@@ -2641,7 +2933,6 @@ form {
   background: white;
   border: 1px solid #dee2e6;
   border-radius: 4px;
-  padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
   cursor: default;
   transition: all 0.2s;
@@ -2649,7 +2940,7 @@ form {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}*/
+}
 
 .allergen-tag:hover {
   background: #f8f9fa;
@@ -2659,8 +2950,9 @@ form {
 }
 
 .allergen-icon-img {
-  width: 50px;
-  height: 50px;
+  width: 38px;
+  height: 38px;
+  padding: 5px;
   object-fit: contain;
   border-radius: 2px;
 }
@@ -2763,9 +3055,16 @@ form {
   flex-wrap: wrap;
   gap: 0.25rem;
   min-width: 100px;
+  text-align: center;
+  align-items: center;
+  margin: auto;
+
 }
 
+
+
 .allergen-chip {
+
   display: inline-flex;
   align-items: center;
   gap: 0.125rem;
@@ -2781,8 +3080,8 @@ form {
 }
 
 .allergen-chip-icon {
-  width: 12px;
-  height: 12px;
+  width: 25px;
+  height: 25px;
   object-fit: contain;
 }
 
@@ -2823,33 +3122,48 @@ form {
 
 /* Allergén színek típusonként */
 .allergen-tag[title*="Glutén"] {
-  border-color: #ffc107;
-  background: #fff3cd;
+  border-color: #6a8b0e50;
+  background: #e7e3a4;
+  
 }
 
 .allergen-tag[title*="Tej"] {
-  border-color: #17a2b8;
-  background: #d1ecf1;
+  border-color: #3d5e6359;
+  background: #60747775;
 }
 
 .allergen-tag[title*="Tojás"] {
-  border-color: #6f42c1;
-  background: #e9ecef;
+  border-color: #6e42c160;
+  background: #3a0e4e4f;
 }
 
 .allergen-tag[title*="Hal"] {
-  border-color: #20c997;
-  background: #d4edda;
+  border-color: #dfc01350;
+  background: #ffdb79c5;
 }
 
 .allergen-tag[title*="Dió"] {
-  border-color: #fd7e14;
-  background: #ffe5d0;
+  border-color: #f87f1c6c;
+  background: #ca8d5c7e;
 }
 
 .allergen-tag[title*="Földimogyoró"] {
-  border-color: #dc3545;
-  background: #f8d7da;
+  border-color: #df77227e;
+  background: #f7c584b9;
 }
 
+.allergen-tag[title*="Zeller"] {
+  border-color: #7849b644;
+  background: #967ebec4;
+}
+
+.allergen-tag[title*="Rákfélék"] {
+  border-color: #2dc5be44;
+  background: #6bafbbc2;
+}
+
+.allergen-tag[title*="Mustár"] {
+  border-color: #17157262;
+  background: #84889eb9;
+}
 </style>
