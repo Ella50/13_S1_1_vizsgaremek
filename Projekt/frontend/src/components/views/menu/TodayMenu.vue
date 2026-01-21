@@ -16,8 +16,10 @@
     <div v-else-if="hasMenu" class="menu-sections">
       <div class="menu-section">
         <h2>🥣 Leves</h2>
-        <MealCard :meal="menu.soup" />
+        <MealCard v-if="menu?.soup" :meal="menu.soup" />
+        <div v-else class="no-items">Nincs leves</div>
       </div>
+
       <div class="menu-section">
         <h2>🍽️ A opció</h2>
         <MealCard v-if="menu.optionA" :meal="menu.optionA" />
@@ -80,11 +82,11 @@ export default {
 
       try {
         const res = await AuthService.api.get('/menu/today')
-        console.log('TODAY MENU RES:', res)
-        this.menu = res.data
+
+        // backend: null vagy { ... }
+        this.menu = res.data ?? null
       } catch (e) {
-        console.error('TODAY MENU ERR:', e?.response?.status, e?.response?.data || e)
-        this.error = e?.response?.data?.message || `Hiba: ${e?.response?.status || ''}`
+        this.error = e?.response?.data?.message || 'Hiba a menü betöltésekor'
       } finally {
         this.loading = false
       }

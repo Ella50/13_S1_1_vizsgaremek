@@ -263,32 +263,57 @@ resetMealsOnly() {
 
 
    async saveMenu() {
-    if (!this.canSave) return
+      if (!this.canSave) return
 
-    const payload = {
-      day: this.selectedDate,
-      soup: this.selectedMeals.soup.id,
-      optionA: this.selectedMeals.optionA.id,
-      optionB: this.selectedMeals.optionB.id
-    }
-
-    try {
-      if (this.isEdit && this.editingMenuId) {
-        // 🟢 SZERKESZTÉS
-        await AuthService.api.put(
-          `/menu/${this.editingMenuId}`,
-          payload
-        )
-      } else {
-        // 🔵 ÚJ MENÜ
-        await AuthService.api.post('/menu', payload)
+      const payload = {
+        day: this.selectedDate,
+        soup: this.selectedMeals.soup.id,
+        optionA: this.selectedMeals.optionA.id,
+        optionB: this.selectedMeals.optionB.id
       }
 
-      this.closeModal()
-    } catch (e) {
-      console.error('Mentés sikertelen', e)
+      try {
+        if (this.isEdit && this.editingMenuId) {
+          await AuthService.api.put(`/menu/${this.editingMenuId}`, payload)
+          alertbox.render({
+            alertIcon: 'success',
+            title: 'Sikeres szerkesztés',
+            message: 'A menü módosítása sikeresen el lett mentve.',
+            btnTitle: 'Rendben',
+            themeColor: '#000000',
+            btnColor: '#4CAF50',
+            border: true
+          })
+
+        } else {
+          await AuthService.api.post('/menu', payload)
+          alertbox.render({
+            alertIcon: 'success',
+            title: 'Sikeres mentés',
+            message: 'Az új menü sikeresen létre lett hozva.',
+            btnTitle: 'Rendben',
+            themeColor: '#000000',
+            btnColor: '#7CFC00',
+            border: true
+          })
+        }
+
+        this.closeModal()
+
+      } catch (e) {
+        console.error('Mentés sikertelen', e)
+
+        alertbox.render({
+          alertIcon: 'error',
+          title: 'Hiba',
+          message: 'A mentés/szerkesztés sikertelen volt. Próbálja újra!',
+          btnTitle: 'Ok',
+          themeColor: '#000000',
+          btnColor: '#ff4d4f',
+          border: true
+        })
+      }
     }
-  },
 
 
   }
@@ -421,5 +446,7 @@ button.active { background: #3498db; color: white; }
   padding: 0.75rem 1.5rem;
   border-top: 1px solid #ddd;
 }
+
+
 
 </style>

@@ -32,6 +32,8 @@ export default {
 }
 </script>
 
+<script src="https://cdn.jsdelivr.net/gh/noumanqamar450/alertbox@main/version/1.0.2/alertbox.min.js"></script>
+
 <style scoped>
 .footer {
   background-color: #ffd18f;
