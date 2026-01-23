@@ -9,7 +9,6 @@
       </router-link>
       
 
-
       <router-link v-if="AuthService.canViewMenu()" to="/menu/today">
         Menü
       </router-link>
@@ -18,6 +17,16 @@
       <!-- Konyha -->
       <router-link v-if="AuthService.isKitchen()" to="/kitchen/meals">
         Ételek
+      </router-link>
+      <router-link v-if="AuthService.isKitchen()" to="/kitchen/ingredients">
+        Összetevők
+      </router-link>
+      <router-link v-if="AuthService.isKitchen()" to="/kitchen/menu-maker">
+        Menük
+      </router-link>
+
+      <router-link v-if="AuthService.isKitchen()" to="/kitchen/orders">
+        Rendelések
       </router-link>
       
       <button 

@@ -79,10 +79,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/meals/{id}/ingredients', [KitchenController::class, 'updateMealIngredients']);
         Route::get('/ingredients/search', [KitchenController::class, 'searchIngredients']);
         Route::get('/ingredients', [KitchenController::class, 'getAllIngredients']);
-        
+
         Route::get('/categories', [KitchenController::class, 'getCategories']);
 
-     Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
+        //Hozzávalók kezelése (ingredient.vue)
+        Route::prefix('ingredients')->group(function () {
+            Route::get('/', [KitchenController::class, 'getIngredientsList']);
+            Route::post('/', [KitchenController::class, 'createIngredient']); 
+            Route::get('/{id}', [KitchenController::class, 'showIngredientDetail']); 
+            Route::put('/{id}', [KitchenController::class, 'updateIngredientItem']); 
+            Route::delete('/{id}', [KitchenController::class, 'deleteIngredientItem']); 
+            Route::post('/bulk-availability', [KitchenController::class, 'bulkUpdateIngredientAvailability']); 
+        });
+
+
+        Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });
 });
 Route::post('/reset-password', [App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLinkEmail']);

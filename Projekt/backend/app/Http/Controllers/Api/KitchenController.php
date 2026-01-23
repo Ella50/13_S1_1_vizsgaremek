@@ -1,5 +1,5 @@
 <?php
-
+//Kitchen: ételek kezelése (hozzáadás, allergének, összetevők szerkesztése)
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Facades\Log;
@@ -11,6 +11,9 @@ use App\Models\Meal;
 use App\Models\Ingredient;
 use App\Models\Allergen;
 use App\Enums\MealType;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+
 
 class KitchenController extends Controller
 {
@@ -799,4 +802,238 @@ private function getAllergenIconUrl($iconPath)
             ], 500);
         }
     }
+    
+
+    //Hozzávalók kezelése (ingredient.vue)
+
+     public function getIngredientsList(Request $request)
+    {
+        // Csak konyha és admin jogosultság
+        $user = Auth::user();
+        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $query = Ingredient::query();
+
+        // Szűrés típus szerint
+        if ($request->has('type') && $request->type !== 'all') {
+            $query->where('ingredientType', $request->type);
+        }
+
+        // Szűrés elérhetőség szerint
+        if ($request->has('availability')) {
+            $query->where('isAvailable', $request->availability === 'available');
+        }
+
+        // Keresés név szerint
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('ingredientName', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Rendezés
+        $sortBy = $request->get('sort_by', 'ingredientName');
+        $sortOrder = $request->get('sort_order', 'asc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $perPage = $request->get('per_page', 20);
+        $ingredients = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $ingredients->items(),
+            'meta' => [
+                'current_page' => $ingredients->currentPage(),
+                'last_page' => $ingredients->lastPage(),
+                'per_page' => $ingredients->perPage(),
+                'total' => $ingredients->total(),
+            ]
+        ]);
+    }
+
+    /**
+     * Új hozzávaló létrehozása
+     */
+    public function createIngredient(Request $request)
+    {
+        // Csak konyha és admin jogosultság
+        $user = Auth::user();
+        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $validated = $request->validate([
+            'ingredientName' => 'required|string|max:255|unique:ingredients',
+            'ingredientType' => 'required|in:Egyéb,Hús,Hal,Tejtermék,Zöldség,Gyümölcs,Fűszer',
+            'energy' => 'nullable|integer|min:0',
+            'protein' => 'nullable|integer|min:0',
+            'carbohydrate' => 'nullable|integer|min:0',
+            'fat' => 'nullable|integer|min:0',
+            'sodium' => 'nullable|integer|min:0',
+            'sugar' => 'nullable|integer|min:0',
+            'fiber' => 'nullable|integer|min:0',
+            'isAvailable' => 'boolean'
+        ]);
+
+        try {
+            $ingredient = Ingredient::create($validated);
+
+            return response()->json([
+                'message' => 'Hozzávaló sikeresen létrehozva',
+                'data' => $ingredient
+            ], Response::HTTP_CREATED);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Hiba történt a hozzávaló létrehozása során',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Egy hozzávaló megjelenítése (új név)
+     */
+    public function showIngredientDetail($id)
+    {
+        // Csak konyha és admin jogosultság
+        $user = Auth::user();
+        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $ingredient = Ingredient::findOrFail($id);
+
+        return response()->json([
+            'data' => $ingredient
+        ]);
+    }
+
+    /**
+     * Hozzávaló frissítése
+     */
+    public function updateIngredientItem(Request $request, $id)
+    {
+        // Csak konyha és admin jogosultság
+        $user = Auth::user();
+        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $ingredient = Ingredient::findOrFail($id);
+
+        $validated = $request->validate([
+            'ingredientName' => 'sometimes|required|string|max:255|unique:ingredients,ingredientName,' . $id,
+            'ingredientType' => 'sometimes|required|in:Egyéb,Hús,Hal,Tejtermék,Zöldség,Gyümölcs,Fűszer',
+            'energy' => 'nullable|integer|min:0',
+            'protein' => 'nullable|integer|min:0',
+            'carbohydrate' => 'nullable|integer|min:0',
+            'fat' => 'nullable|integer|min:0',
+            'sodium' => 'nullable|integer|min:0',
+            'sugar' => 'nullable|integer|min:0',
+            'fiber' => 'nullable|integer|min:0',
+            'isAvailable' => 'boolean'
+        ]);
+
+        try {
+            $ingredient->update($validated);
+
+            return response()->json([
+                'message' => 'Hozzávaló sikeresen frissítve',
+                'data' => $ingredient
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Hiba történt a hozzávaló frissítése során',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Hozzávaló törlése (új név)
+     */
+    public function deleteIngredientItem($id)
+    {
+        // Csak konyha és admin jogosultság
+        $user = Auth::user();
+        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $ingredient = Ingredient::findOrFail($id);
+
+        // Ellenőrizzük, hogy használatban van-e
+        if ($ingredient->meals()->count() > 0) {
+            return response()->json([
+                'message' => 'Nem törölhető, mert használatban van étel(ek)ben',
+                'count' => $ingredient->meals()->count()
+            ], Response::HTTP_CONFLICT);
+        }
+
+        try {
+            $ingredient->delete();
+
+            return response()->json([
+                'message' => 'Hozzávaló sikeresen törölve'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Hiba történt a hozzávaló törlése során',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Tömeges elérhetőség frissítés
+     */
+    public function bulkUpdateIngredientAvailability(Request $request)
+    {
+        // Csak konyha és admin jogosultság
+        $user = Auth::user();
+        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $validated = $request->validate([
+            'ingredient_ids' => 'required|array',
+            'ingredient_ids.*' => 'exists:ingredients,id',
+            'isAvailable' => 'required|boolean'
+        ]);
+
+        try {
+            $updatedCount = Ingredient::whereIn('id', $validated['ingredient_ids'])
+                ->update(['isAvailable' => $validated['isAvailable']]);
+
+            return response()->json([
+                'message' => "{$updatedCount} hozzávaló elérhetősége frissítve",
+                'updated_count' => $updatedCount
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Hiba történt a tömeges frissítés során',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 }

@@ -9,6 +9,7 @@ import Meals from '../components/views/kitchen/Meals.vue'
 import ResetPassword from '../components/auth/ResetPassword.vue'
 import PasswordResetForm from '../components/auth/PasswordResetForm.vue'
 import MenuMaker from '../components/views/kitchen/MenuMaker.vue'
+import Ingredients from '../components/views/kitchen/Ingredients.vue'
 
 
 
@@ -77,7 +78,13 @@ const routes = [
         name: 'MenuMaker',
         component: MenuMaker,
         meta: { requiresAuth: true }
-    }
+    },
+    {
+        path: '/kitchen/ingredients',
+        name: 'Ingredients',
+        component: Ingredients,
+        meta: { requiresAuth: true }
+    },
     
 ]
 
