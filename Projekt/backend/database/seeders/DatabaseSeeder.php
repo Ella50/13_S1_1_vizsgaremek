@@ -25,19 +25,7 @@ class DatabaseSeeder extends Seeder
             MealIngredientSeeder::class,
             AllergenSeeder::class,
             IngredientAllergenSeeder::class,
-            /*CountyTableSeeder::class,
-            CityTableSeeder::class,
-
-            GroupTableSeeder::class,
-            RfidCardTableSeeder::class,
-            MealTableSeeder::class,
-            MenuItemTableSeeder::class,
-            AllergenTableSeeder::class,
-            UserHealthRestrictionTableSeeder::class,
-            IngredientTableSeeder::class,
-            IngredientAllergenTableSeeder::class,
-            InvoiceTableSeeder::class,
-            MealIngredientTableSeeder::class,*/
+            MenuItemSeeder::class,
             
         ]);
 

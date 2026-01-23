@@ -35,6 +35,9 @@
         <router-link to="/kitchen/menu-maker" class="link-card">
           <h3>Menü készítő</h3>
         </router-link>
+        <router-link to="/kitchen/ingredients" class="link-card">
+          <h3>Összetevők kezelése</h3>
+        </router-link>
       </div>      
 
 
