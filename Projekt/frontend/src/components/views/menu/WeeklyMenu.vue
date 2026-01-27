@@ -1,4 +1,3 @@
-<!-- src/views/menu/WeeklyMenu.vue -->
 <template>
   <div class="weekly-menu">
     <div class="header">
@@ -217,6 +216,11 @@ export default {
 </script>
 
 <style scoped>
+
+button{
+  width: 20%;
+}
+
 .weekly-menu {
   padding: 2rem;
   max-width: 1400px;
@@ -260,8 +264,7 @@ export default {
 }
 .nav-btn:hover { filter: brightness(0.95); }
 
-/* ✅ EGY SOR, HORIZONTAL SCROLL */
-/* ✅ NINCS CSÚSZKA: GRID, TÖRDELÉS */
+
 .weekly-schedule {
   display: grid;
   gap: 1.5rem;

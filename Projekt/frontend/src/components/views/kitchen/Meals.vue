@@ -21,7 +21,7 @@
       </select>
     </div>
     
-    <div v-if="loading" class="loading">Betöltés...</div>
+    <div v-if="loading" class="loading">Ételek betöltése...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <div v-else class="meals-container">
@@ -152,7 +152,7 @@
                       <input 
                         v-model="newIngredient.search" 
                         @input="searchIngredients"
-                        placeholder="Keresés hozzávaló között..."
+                        placeholder="Keresés"
                         type="search"
                         class="search-input"
                       />
@@ -191,8 +191,6 @@
                       <option value="ml">ml</option>
                       <option value="l">l</option>
                       <option value="db">db</option>
-                      <option value="tk">tk</option>
-                      <option value="ek">ek</option>
                     </select>
                   </div>
                   
@@ -382,7 +380,7 @@
                       <input 
                         v-model="newIngredient.search" 
                         @input="searchIngredients"
-                        placeholder="Keresés hozzávaló között..."
+                        placeholder="Keresés"
                         type="search"
                         class="search-input"
                       />
@@ -2305,9 +2303,7 @@ form {
   padding: 3rem;
 }
 
-.loading {
-  color: #3498db;
-}
+
 
 .error {
   color: #e74c3c;
