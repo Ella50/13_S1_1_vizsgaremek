@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Meal;
+use App\Models\Price;
 use Illuminate\Database\Seeder;
 use Illuminate\Validation\Rules\In;
 use PHPUnit\Framework\Constraint\Count;
@@ -26,6 +27,8 @@ class DatabaseSeeder extends Seeder
             AllergenSeeder::class,
             IngredientAllergenSeeder::class,
             MenuItemSeeder::class,
+            PriceSeeder::class,
+            OrderSeeder::class,
             
         ]);
 

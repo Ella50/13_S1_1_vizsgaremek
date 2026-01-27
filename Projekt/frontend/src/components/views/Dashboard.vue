@@ -20,7 +20,7 @@
         <router-link to="/menu/week" class="link-card">
           <h4>Heti menü</h4>
         </router-link>
-        <router-link to="/menu/order" class="link-card">
+        <router-link to="/personal-orders" class="link-card">
           <h4>Rendelések</h4>
         </router-link>
       </div>

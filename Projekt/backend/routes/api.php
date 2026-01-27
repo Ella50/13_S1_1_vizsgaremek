@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\KitchenController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\Api\PersonalOrderController;
+use App\Http\Controllers\Api\OrdersController;
 
 
 // Publikus Ăştvonalak
@@ -46,6 +48,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [UserController::class, 'profile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);
+        
+        // Személyes rendelések
+        Route::prefix('personal-orders')->group(function () {
+            Route::get('/', [PersonalOrderController::class, 'index']);
+            Route::get('/date/{date}', [PersonalOrderController::class, 'getByDate']);
+            Route::post('/', [PersonalOrderController::class, 'store']);
+            Route::delete('/{id}', [PersonalOrderController::class, 'cancel']);
+            Route::get('/stats/{year}/{month}', [PersonalOrderController::class, 'getMonthlyStats']);
+            Route::get('/available-dates', [PersonalOrderController::class, 'getAvailableDates']);
+        });
     });
     
     // Menu (minden bejelentkezettnek)
@@ -68,6 +80,17 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Konyha
     Route::prefix('kitchen')->group(function () {
+
+        // Konyhai rendelések összesítése
+        Route::prefix('orders')->group(function () {
+            Route::get('/', [OrdersController::class, 'index']);
+            Route::get('/today', [OrdersController::class, 'getTodaySummary']);
+            Route::get('/date/{date}', [OrdersController::class, 'getByDate']);
+            Route::get('/weekly', [OrdersController::class, 'getWeeklySummary']);
+            Route::get('/preparation/{date}', [OrdersController::class, 'getPreparationList']);
+            Route::get('/export', [OrdersController::class, 'exportOrders']);
+        });
+
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::get('/meals/with-allergens', [KitchenController::class, 'mealsWithAllergens']);
         Route::post('/meals', [KitchenController::class, 'storeMeal']);

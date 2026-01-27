@@ -11,6 +11,7 @@ import PasswordResetForm from '../components/auth/PasswordResetForm.vue'
 import MenuMaker from '../components/views/kitchen/MenuMaker.vue'
 import Ingredients from '../components/views/kitchen/Ingredients.vue'
 
+import PersonalOrders from '../components/views/users/PersonalOrders.vue'
 
 
 const routes = [
@@ -83,6 +84,12 @@ const routes = [
         path: '/kitchen/ingredients',
         name: 'Ingredients',
         component: Ingredients,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/personal-orders',
+        name: 'PersonalOrders',
+        component: PersonalOrders,
         meta: { requiresAuth: true }
     },
     
