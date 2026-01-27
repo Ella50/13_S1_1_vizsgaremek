@@ -6,12 +6,9 @@
       <button @click="openCreateModal">+ Új menü hozzáadása</button>
       <button @click="openEditModal">✏️ Menü szerkesztése</button>
     </div>
-
-    <!-- MODAL -->
     <!--<pre>{{ meals }}</pre>-->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
-        <!-- STEP 1: Dátum -->
         <div v-if="step === 1">
           <h2>Dátum kiválasztása</h2>
           <select v-model="selectedDate" @change="onDateSelected">
@@ -24,7 +21,6 @@
           <button class="secondary" @click="closeModal" style="background-color: lightcoral;">Mégse</button>
         </div>
 
-        <!-- STEP 2: Ételek -->
         <div v-else class="step-2">
 
         <h2 style="text-align: center; margin-top: 5px;">Ételek kiválasztása - {{ selectedDate }}</h2>
@@ -111,7 +107,7 @@ export default {
     activeSlot: 'soup',
     activeCategory: 'Leves',
 
-    editingMenuId: null, // ⬅️ HELYES NÉV
+    editingMenuId: null, 
     selectedMeals: {
       soup: null,
       optionA: null,

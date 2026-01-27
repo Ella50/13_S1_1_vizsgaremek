@@ -7,10 +7,18 @@
       <router-link v-if="AuthService.isAdmin()" to="/admin/users">
         Felhasználók
       </router-link>
-      
-
       <router-link v-if="AuthService.canViewMenu()" to="/menu/today">
         Menü
+      </router-link>
+      <router-link v-if="AuthService.isAdmin()" to="/kitchen/ingredients">
+        Összetevők
+      </router-link>
+      <router-link v-if="AuthService.isAdmin()" to="/kitchen/menu-maker">
+        Menük
+      </router-link>
+
+      <router-link v-if="AuthService.isAdmin()" to="/kitchen/orders">
+        Rendelések
       </router-link>
       
 

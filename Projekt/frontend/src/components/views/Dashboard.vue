@@ -11,6 +11,15 @@
         <router-link to="/kitchen/meals" class="link-card">
           <h3>Ételek kezelése</h3>
         </router-link>
+        <router-link to="/kitchen/orders" class="link-card">
+          <h3>Rendelések</h3>
+        </router-link>
+        <router-link to="/kitchen/menu-maker" class="link-card">
+          <h3>Menü készítő</h3>
+        </router-link>
+        <router-link to="/kitchen/ingredients" class="link-card">
+          <h3>Összetevők kezelése</h3>
+        </router-link>
       </div>
       
       <div v-if="canViewMenu" class="menu-links">
