@@ -55,8 +55,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/date/{date}', [PersonalOrderController::class, 'getByDate']);
             Route::post('/', [PersonalOrderController::class, 'store']);
             Route::delete('/{id}', [PersonalOrderController::class, 'cancel']);
-            Route::get('/stats/{year}/{month}', [PersonalOrderController::class, 'getMonthlyStats']);
             Route::get('/available-dates', [PersonalOrderController::class, 'getAvailableDates']);
+                
+            Route::get('/available-months', [PersonalOrderController::class, 'getAvailableMonths']);
+            Route::get('/month/{year}/{month}', [PersonalOrderController::class, 'getAvailableDatesByMonth']);
+            Route::get('/date/{date}', [PersonalOrderController::class, 'getByDate']);
+            Route::post('/', [PersonalOrderController::class, 'store']);
         });
     });
     

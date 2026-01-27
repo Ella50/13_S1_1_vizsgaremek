@@ -90,9 +90,7 @@ class Price extends Model
             'Tanuló' => 'Tanuló',
             'Tanár' => 'Tanár',
             'Dolgozó' => 'Dolgozó',
-            'Külsős' => 'Külsős vendég',
-            'Konyha' => 'Konyha személyzet',
-            'Admin' => 'Adminisztrátor',
+            'Külsős' => 'Külsős',
             default => $this->userType
         };
     }

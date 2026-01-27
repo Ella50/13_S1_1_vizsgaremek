@@ -219,7 +219,7 @@ class MealIngredientSeeder extends Seeder
             
             $this->command->info('Meal-ingredient kapcsolatok sikeresen létrehozva: ' . count($mealIngredients));
         } else {
-            $this->command->warn('Nem sikerült meal-ingredient kapcsolatokat létrehozni!');
+            $this->command->warn('Nem sikerült meal-ingredient kapcsolatokat létrehozni');
         }
     }
 }

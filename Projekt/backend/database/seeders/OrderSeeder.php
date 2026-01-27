@@ -22,10 +22,7 @@ class OrderSeeder extends Seeder
         // Ellenőrizzük, hogy van-e Price
         $pricesCount = DB::table('prices')->count();
         
-        if ($pricesCount === 0) {
-            $this->command->info('Árak létrehozása...');
-            $this->createPrices();
-        }
+
         
         $this->command->info('Rendelések létrehozása user id=2 számára...');
         
@@ -43,7 +40,7 @@ class OrderSeeder extends Seeder
         ];
         
         // MenuItem ID-k lekérdezése
-        $menuItems = DB::table('menu_items')->take(3)->get();
+        $menuItems = DB::table('menuitems')->take(3)->get();
         
         if ($menuItems->isEmpty()) {
             $this->command->error('Nincsenek MenuItem-ek!');
@@ -72,7 +69,6 @@ class OrderSeeder extends Seeder
                 'orderStatus' => $this->getStatusForDate($date, $now),
                 'invoice_id' => null,
                 'price_id' => $price->id,
-                'price' => $price->amount,
                 'cancelledAt' => $date < $now->format('Y-m-d') ? $now->copy()->subHours(2) : null,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -109,29 +105,5 @@ class OrderSeeder extends Seeder
     
     
     
-    
-    /**
-     * Árak létrehozása, ha nincsenek
-     */
-    private function createPrices()
-    {
-        $now = Carbon::now();
-        $nextYear = $now->copy()->addYear();
-        
-        $prices = [
-            // Tanuló árak
-            ['userType' => 'Tanuló', 'priceCategory' => 'Normál', 'amount' => 450, 'validFrom' => $now, 'validTo' => $nextYear, 'created_at' => $now, 'updated_at' => $now],
-            ['userType' => 'Tanuló', 'priceCategory' => 'Kedvezményes', 'amount' => 300, 'validFrom' => $now, 'validTo' => $nextYear, 'created_at' => $now, 'updated_at' => $now],
-            
-            // Tanár árak
-            ['userType' => 'Tanár', 'priceCategory' => 'Normál', 'amount' => 650, 'validFrom' => $now, 'validTo' => $nextYear, 'created_at' => $now, 'updated_at' => $now],
-            ['userType' => 'Tanár', 'priceCategory' => 'Kedvezményes', 'amount' => 400, 'validFrom' => $now, 'validTo' => $nextYear, 'created_at' => $now, 'updated_at' => $now],
-            
-            // Dolgozó árak
-            ['userType' => 'Dolgozó', 'priceCategory' => 'Normál', 'amount' => 600, 'validFrom' => $now, 'validTo' => $nextYear, 'created_at' => $now, 'updated_at' => $now],
-        ];
-        
-        DB::table('prices')->insert($prices);
-        $this->command->info(count($prices) . ' ár létrehozva!');
-    }
+
 }
