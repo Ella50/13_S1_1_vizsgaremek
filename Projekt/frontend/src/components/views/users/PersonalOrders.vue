@@ -620,176 +620,184 @@ export default {
 
 <style scoped>
 .personal-orders-container {
-  padding: 24px;
+  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  background: #f8fafc;
-  min-height: 100vh;
+  background: transparent;
 }
 
-/* Fejléc */
+/* ===== FEJLÉC ===== */
 .page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f1f2f6;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e2e8f0;
+  gap: 1rem;
 }
 
 .page-header h1 {
   margin: 0;
-  color: #2d3748;
-  font-size: 28px;
+  color: #2c3e50;
+  font-size: 2rem;
   font-weight: 700;
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.btn-month-picker, .btn-refresh {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  transition: all 0.2s;
-}
-
-.btn-month-picker {
-  background: #4f46e5;
+/* gombok: heti menüs hangulat */
+.btn-month-picker,
+.btn-refresh,
+.btn-retry {
+  padding: 0.55rem 1rem;
+  background: #3498db;
   color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.btn-month-picker:hover {
-  background: #4338ca;
+.btn-month-picker:hover,
+.btn-refresh:hover,
+.btn-retry:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .btn-refresh {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background: #2ecc71;
 }
-
 .btn-refresh:hover {
-  background: #e2e8f0;
+  background: #27ae60;
 }
 
-/* Hónap kiválasztó */
+/* ===== HÓNAPVÁLASZTÓ (kártya) ===== */
 .month-picker {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .month-picker-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
 }
 
 .month-picker-header h3 {
   margin: 0;
-  color: #2d3748;
-  font-size: 18px;
+  color: #2c3e50;
+  font-size: 1.125rem;
 }
 
 .btn-close {
-  background: none;
-  border: none;
-  color: #64748b;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  color: #2c3e50;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
 }
-
 .btn-close:hover {
-  background: #f1f5f9;
+  background: #eef2f6;
 }
 
 .month-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .month-option {
-  padding: 16px 12px;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
+  padding: 0.9rem 0.75rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   text-align: center;
   cursor: pointer;
-  font-weight: 500;
-  color: #475569;
-  transition: all 0.2s;
+  font-weight: 600;
+  color: #2c3e50;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border 0.12s ease;
 }
 
 .month-option:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
+  background: #eef2f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
 
 .month-option.active {
-  background: #4f46e5;
+  background: #3498db;
+  border-color: #3498db;
   color: white;
-  border-color: #4f46e5;
 }
 
 .year-selector {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 1rem;
 }
 
 .current-year {
-  font-size: 20px;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2c3e50;
   min-width: 80px;
   text-align: center;
 }
 
 .btn-year-nav {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
   border-radius: 6px;
-  padding: 10px 16px;
+  padding: 0.45rem 0.8rem;
   cursor: pointer;
-  color: #475569;
-  transition: all 0.2s;
+  color: #2c3e50;
+  transition: background 0.15s ease;
 }
-
 .btn-year-nav:hover {
-  background: #e2e8f0;
+  background: #eef2f6;
 }
 
-/* Táblázat */
+/* ===== TÁBLÁZAT KÁRTYA ===== */
 .orders-table-container {
   background: white;
-  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  margin-bottom: 1.5rem;
 }
 
+/* stat sáv: egyszerű, nem gradient */
 .stats-bar {
   display: flex;
   justify-content: space-around;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  flex-wrap: wrap;
 }
 
 .stat-item {
@@ -798,17 +806,20 @@ export default {
 
 .stat-label {
   display: block;
-  font-size: 14px;
-  opacity: 0.9;
-  margin-bottom: 4px;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
 }
 
 .stat-value {
   display: block;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #2c3e50;
 }
 
+/* table */
 .table-responsive {
   overflow-x: auto;
 }
@@ -820,126 +831,101 @@ export default {
 }
 
 .orders-table th {
-  background: #f8fafc;
-  padding: 16px 12px;
+  background: #f8f9fa;
+  padding: 0.9rem 0.75rem;
   text-align: left;
-  font-weight: 600;
-  color: #475569;
-  border-bottom: 2px solid #e2e8f0;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 800;
+  color: #2c3e50;
+  border-bottom: 2px solid #f1f2f6;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
 }
 
 .orders-table td {
-  padding: 16px 12px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 0.9rem 0.75rem;
+  border-bottom: 1px solid #f1f2f6;
   vertical-align: top;
+  color: #2c3e50;
 }
 
 .orders-table tbody tr:hover {
-  background: #f8fafc;
+  background: #f8f9fa;
 }
 
+/* sor állapot */
 .orders-table tbody tr.today {
   background: #f0f9ff;
 }
-
 .orders-table tbody tr.today td {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #3498db;
 }
-
 .orders-table tbody tr.past-date {
-  opacity: 0.7;
+  opacity: 0.75;
 }
-
 .orders-table tbody tr.has-order {
   background: #f0fdf4;
 }
 
-/* Oszlopok */
-.col-date {
-  width: 100px;
-}
+/* oszlopok */
+.col-date { width: 100px; }
+.col-day { width: 120px; }
+.col-soup, .col-option, .col-other { width: 220px; }
+.col-choice { width: 120px; }
+.col-status { width: 150px; }
+.col-actions { width: 170px; }
 
-.col-day {
-  width: 120px;
-}
-
-.col-soup, .col-option, .col-other {
-  width: 200px;
-}
-
-.col-choice {
-  width: 120px;
-}
-
-.col-status {
-  width: 140px;
-}
-
-.col-actions {
-  width: 150px;
-}
-
-/* Dátum megjelenítés */
+/* dátum */
 .date-display {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
 .date-number {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2d3748;
+  font-size: 1.6rem;
+  font-weight: 900;
   line-height: 1;
 }
-
 .date-month {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: #7f8c8d;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
-
 .day-name {
-  font-weight: 500;
-  color: #475569;
+  font-weight: 700;
+  color: #2c3e50;
 }
 
-/* Étel információk */
+/* étel info */
 .meal-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
-
 .meal-name {
-  font-weight: 500;
-  color: #2d3748;
-  line-height: 1.4;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.35;
 }
-
 .meal-allergens {
-  font-size: 11px;
-  color: #ef4444;
-  background: #fef2f2;
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-block;
+  font-size: 0.75rem;
+  color: #e74c3c;
+  background: #fdecea;
+  border: 1px solid #fadbd8;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  width: fit-content;
 }
-
 .meal-price {
-  font-size: 12px;
-  color: #10b981;
-  font-weight: 600;
+  font-size: 0.85rem;
+  color: #27ae60;
+  font-weight: 800;
 }
 
-/* Opció választás */
+/* választás */
 .choice-options {
   display: flex;
-  gap: 12px;
+  gap: 0.5rem;
   justify-content: center;
 }
 
@@ -957,18 +943,23 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 2px solid #cbd5e1;
-  border-radius: 50%;
-  font-weight: 600;
-  color: #64748b;
-  transition: all 0.2s;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #e0e0e0;
+  border-radius: 999px;
+  font-weight: 900;
+  color: #2c3e50;
+  background: #fff;
+  transition: background 0.12s ease, border 0.12s ease, transform 0.12s ease;
+}
+
+.radio-option:hover .radio-label {
+  transform: translateY(-1px);
 }
 
 .radio-option input[type="radio"]:checked + .radio-label {
-  border-color: #4f46e5;
-  background: #4f46e5;
+  border-color: #3498db;
+  background: #3498db;
   color: white;
 }
 
@@ -979,230 +970,182 @@ export default {
 
 .choice-disabled {
   text-align: center;
-  font-size: 13px;
-  color: #94a3b8;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  font-weight: 700;
 }
+.already-ordered { color: #27ae60; }
+.past-deadline { color: #e74c3c; }
 
-.already-ordered {
-  color: #10b981;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.past-deadline {
-  color: #ef4444;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-/* Státusz badge */
+/* státusz badge */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border: 1px solid transparent;
 }
-
 .status-badge.ordered {
-  background: #d1fae5;
-  color: #065f46;
+  background: #eafaf1;
+  color: #27ae60;
+  border-color: #c9f2dc;
 }
-
 .status-badge.deadline {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #fdecea;
+  color: #e74c3c;
+  border-color: #fadbd8;
 }
-
 .status-badge.available {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #eaf2fb;
+  color: #3498db;
+  border-color: #d6eaf8;
 }
 
-/* Műveletek gombok */
+/* action gombok */
 .action-buttons {
   display: flex;
   justify-content: center;
 }
 
 .btn-action {
-  padding: 8px 16px;
+  padding: 0.45rem 0.8rem;
   border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 800;
   cursor: pointer;
   border: none;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
+  gap: 0.4rem;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.btn-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .btn-order {
-  background: #10b981;
+  background: #27ae60;
   color: white;
 }
-
 .btn-order:hover:not(:disabled) {
-  background: #0da271;
+  background: #219150;
 }
-
 .btn-order:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .btn-cancel {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fbbf24;
+  background: #f8f9fa;
+  color: #e67e22;
+  border: 1px solid #f1c40f;
 }
-
 .btn-cancel:hover {
-  background: #fde68a;
+  background: #fff7e6;
 }
 
 .no-action {
-  color: #94a3b8;
+  color: #95a5a6;
   font-style: italic;
+  font-weight: 700;
 }
 
-/* Tájékoztató */
 .table-info {
   display: flex;
   justify-content: center;
-  gap: 32px;
-  padding: 20px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  gap: 2rem;
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  flex-wrap: wrap;
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #64748b;
-  font-size: 14px;
+  gap: 0.5rem;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .info-icon {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
 }
+.today-marker { background: #3498db; }
+.deadline-marker { background: #e74c3c; }
+.edit-marker { background: #f1c40f; }
 
-.today-marker {
-  background: #3b82f6;
-}
-
-.deadline-marker {
-  background: #ef4444;
-}
-
-.edit-marker {
-  background: #f59e0b;
-}
-
-/* Kiszállítás információk */
 .delivery-info {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .delivery-info h3 {
   margin-top: 0;
-  margin-bottom: 16px;
-  color: #2d3748;
+  margin-bottom: 0.9rem;
+  color: #2c3e50;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .delivery-info ul {
   margin: 0;
-  padding-left: 20px;
-  color: #475569;
+  padding-left: 1.25rem;
+  color: #7f8c8d;
   line-height: 1.6;
+  font-weight: 600;
 }
+.delivery-info li { margin-bottom: 0.5rem; }
+.delivery-info strong { color: #2c3e50; }
 
-.delivery-info li {
-  margin-bottom: 8px;
-}
-
-.delivery-info strong {
-  color: #2d3748;
-}
-
-/* Betöltés, hiba, üres állapotok */
-.loading-container {
+.loading-container,
+.error-container,
+.no-orders {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px;
+  padding: 3rem;
   background: white;
-  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #4f46e5;
+  border: 4px solid #f1f2f6;
+  border-top-color: #3498db;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.error-container, .no-orders {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px;
-  background: white;
-  border-radius: 12px;
-  text-align: center;
-}
+.error-container { color: #e74c3c; }
+.error-icon, .no-orders-icon { font-size: 42px; margin-bottom: 0.75rem; }
+.no-orders { color: #95a5a6; }
 
-.error-icon, .no-orders-icon {
-  font-size: 48px;
-  color: #ef4444;
-  margin-bottom: 16px;
-}
 
-.no-orders-icon {
-  color: #94a3b8;
-}
-
-.btn-retry {
-  margin-top: 16px;
-  padding: 10px 24px;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-retry:hover {
-  background: #4338ca;
-}
-
-/* Ikonok (helyettesítés) */
 .icon-calendar:before { content: "📅"; }
 .icon-refresh:before { content: "🔄"; }
 .icon-close:before { content: "✕"; }
@@ -1219,41 +1162,18 @@ export default {
 .icon-error:before { content: "❌"; }
 .icon-empty:before { content: "📭"; }
 
-/* Reszponzív */
+/* ===== RESZPONZÍV ===== */
 @media (max-width: 1200px) {
-  .personal-orders-container {
-    padding: 16px;
-  }
-  
-  .month-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .table-info {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
+  .personal-orders-container { padding: 1rem; }
+  .month-grid { grid-template-columns: repeat(2, 1fr); }
+  .page-header { flex-direction: column; align-items: stretch; }
+  .header-actions { justify-content: center; }
 }
 
 @media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
-  
-  .header-actions {
-    justify-content: space-between;
-  }
-  
-  .stats-bar {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .month-grid {
-    grid-template-columns: 1fr;
-  }
+  .month-grid { grid-template-columns: 1fr; }
+  .stats-bar { flex-direction: column; align-items: center; }
+  .table-info { justify-content: flex-start; }
 }
+
 </style>
