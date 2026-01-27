@@ -3,7 +3,7 @@
     <h1>Menük kezelése</h1>
 
     <div class="actions">
-      <button @click="openCreateModal">➕ Új menü hozzáadása</button>
+      <button @click="openCreateModal">+ Új menü hozzáadása</button>
       <button @click="openEditModal">✏️ Menü szerkesztése</button>
     </div>
 
@@ -321,6 +321,11 @@ resetMealsOnly() {
 </script>
 
 <style scoped>
+
+button{
+  width: 20%;
+}
+
 .sortable { list-style: none; padding: 0; }
 .sortable li {
   display: flex;

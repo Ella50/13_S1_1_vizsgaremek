@@ -151,7 +151,6 @@
       <table class="users-table">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Név</th>
             <th>Email</th>
             <th>Szerepkör</th>
@@ -163,7 +162,7 @@
         </thead>
         <tbody>
           <tr v-for="user in users.data" :key="user.id">
-            <td>{{ user.id }}</td>
+           
             <td>{{ user.firstName }} {{ user.lastName }} {{ user.thirdName }}</td>
             <td>{{ user.email }}</td>
             <td>

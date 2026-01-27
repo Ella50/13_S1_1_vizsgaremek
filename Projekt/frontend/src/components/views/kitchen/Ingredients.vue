@@ -1,52 +1,28 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <!-- Fejléc -->
-    <div class="mb-8">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">Hozzávalók Kezelése</h1>
-          <p class="text-gray-600">Új hozzávalók felvétele és meglévők szerkesztése</p>
-        </div>
-        <button
-          @click="openCreateModal"
-          class="add-ingredient-btn inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-        >
-          <span class="mr-2">+</span>Új hozzávaló
-        </button>
-      </div>
+  <div class="ingredients">
+    <div class="header">
+      <h1>Hozzávalók kezelése</h1>
+
+      <button @click="openCreateModal" class="btn-add">
+          + Új hozzávaló
+      </button>
     </div>
 
-    <!-- Szűrők és keresés -->
-    <div class="mb-6 bg-white rounded-lg shadow p-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    
+      <div class="header-actions">
         <!-- Keresés -->
-        <div>
-          <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
-            Keresés
-          </label>
-          <div class="relative">
-            <input
-              type="text"
-              id="search"
-              v-model="filters.search"
-              @input="debouncedLoadIngredients"
-              placeholder="Hozzávaló neve..."
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+        <div class="search-container">
+          <input 
+            type="text"
+            v-model="filters.search"
+            @input="debouncedLoadIngredients"
+            placeholder="Keresés"
+          />
         </div>
 
         <!-- Típus szűrő -->
-        <div>
-          <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
-            Típus
-          </label>
-          <select
-            id="type"
-            v-model="filters.type"
-            @change="loadIngredients"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
+        <div class="filter-container">
+          <select v-model="filters.type" @change="loadIngredients">
             <option value="all">Összes típus</option>
             <option value="Egyéb">Egyéb</option>
             <option value="Hús">Hús</option>
@@ -59,314 +35,236 @@
         </div>
 
         <!-- Elérhetőség szűrő -->
-        <div>
-          <label for="availability" class="block text-sm font-medium text-gray-700 mb-2">
-            Elérhetőség
-          </label>
-          <select
-            id="availability"
-            v-model="filters.availability"
-            @change="loadIngredients"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">Összes</option>
+        <div class="filter-container">
+          <select v-model="filters.availability" @change="loadIngredients">
+            <option value="all">Összes állapot</option>
             <option value="available">Elérhető</option>
             <option value="unavailable">Nem elérhető</option>
           </select>
         </div>
 
-        <!-- Rendezés -->
-        <div>
-          <label for="sort_by" class="block text-sm font-medium text-gray-700 mb-2">
-            Rendezés
-          </label>
-          <div class="flex gap-2">
-            <select
-              id="sort_by"
-              v-model="filters.sort_by"
-              @change="loadIngredients"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="ingredientName">Név</option>
-              <option value="ingredientType">Típus</option>
-              <option value="energy">Energia</option>
-              <option value="created_at">Létrehozás dátuma</option>
-            </select>
-            <button
-              @click="toggleSortOrder"
-              class="sort-btn px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              :title="filters.sort_order === 'asc' ? 'Növekvő' : 'Csökkenő'"
-            >
-              {{ filters.sort_order === 'asc' ? '↑' : '↓' }}
-            </button>
-          </div>
-        </div>
+        <!-- Rendezés 
+        <div class="sort-container">
+          <select v-model="filters.sort_by" @change="loadIngredients">
+            <option value="ingredientName">Név</option>
+            <option value="ingredientType">Típus</option>
+            <option value="energy">Energia</option>
+            <option value="created_at">Létrehozás dátuma</option>
+          </select>
+          <button 
+            @click="toggleSortOrder"
+            class="sort-btn"
+            :title="filters.sort_order === 'asc' ? 'Növekvő' : 'Csökkenő'"
+          >
+            {{ filters.sort_order === 'asc' ? '↑' : '↓' }}
+          </button>
+        </div>-->
+
+
       </div>
 
       <!-- Tömeges műveletek -->
-      <div v-if="selectedIngredients.length > 0" class="mt-6 pt-6 border-t">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <span class="font-medium">{{ selectedIngredients.length }} hozzávaló kiválasztva</span>
-          </div>
-          <div class="flex space-x-2">
+      <div v-if="selectedIngredients.length > 0" class="bulk-actions">
+        <div class="bulk-header">
+          <span class="selected-count">{{ selectedIngredients.length }} hozzávaló kiválasztva</span>
+          <div class="bulk-buttons">
             <button
               @click="bulkUpdateAvailability(true)"
-              class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-200"
+              class="btn-bulk btn-bulk-available"
             >
               Elérhetővé tesz
             </button>
             <button
               @click="bulkUpdateAvailability(false)"
-              class="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200"
+              class="btn-bulk btn-bulk-unavailable"
             >
               Nem elérhetővé tesz
             </button>
             <button
               @click="clearSelection"
-              class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+              class="btn-bulk btn-bulk-clear"
             >
               Kijelölés törlése
             </button>
           </div>
         </div>
       </div>
-    </div>
+
 
     <!-- Betöltés állapota -->
-    <div v-if="loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      <p class="mt-4 text-gray-600">Hozzávalók betöltése...</p>
+    <div v-if="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Hozzávalók betöltése...</p>
     </div>
 
     <!-- Üres állapot -->
-    <div v-else-if="!loading && ingredients.length === 0" class="text-center py-12 bg-gray-50 rounded-lg">
-      <span class="text-4xl">📦</span>
-      <h3 class="mt-4 text-lg font-medium text-gray-900">Nincsenek hozzávalók</h3>
-      <p class="mt-2 text-sm text-gray-500">
+    <div v-else-if="!loading && ingredients.length === 0" class="empty-state">
+      <span class="empty-icon">📦</span>
+      <h3>Nincsenek hozzávalók</h3>
+      <p>
         Még nem lettek felvéve hozzávalók, vagy a szűrőknek nem felel meg egyetlen hozzávaló sem.
       </p>
       <button
         @click="openCreateModal"
-        class="mt-6 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+        class="btn-add-empty"
       >
-        <span class="mr-2">+</span>Új hozzávaló létrehozása
+        <span>+</span>Új hozzávaló létrehozása
       </button>
     </div>
 
     <!-- Hozzávalók táblázata -->
-    <div v-else class="bg-white rounded-lg shadow overflow-hidden mb-8">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+    <div v-else>
+      <table class="ingredients-table">
+        <thead>
+          <tr>
+            <th class="checkbox-col">
+              <input
+                type="checkbox"
+                :checked="allSelected"
+                @change="toggleSelectAll"
+                class="select-all"
+              />
+            </th>
+            <th>Név</th>
+            <th>Típus</th>
+            <th>Tápértékek (100g)</th>
+            <th>Állapot</th>
+            <th class="actions-col">Műveletek</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="ingredient in ingredients" :key="ingredient.id">
+            <!-- Fő sor -->
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <!-- Kijelölés -->
+              <td class="checkbox-col">
                 <input
                   type="checkbox"
-                  :checked="allSelected"
-                  @change="toggleSelectAll"
-                  class="h-4 w-4 text-blue-600 rounded"
+                  :value="ingredient.id"
+                  v-model="selectedIngredients"
+                  class="select-item"
                 />
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Név
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Típus
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tápértékek (100g)
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Állapot
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Műveletek
-              </th>
+              </td>
+
+              <!-- Név -->
+              <td>
+                <div class="ingredient-name">
+                  <div class="name">{{ ingredient.ingredientName }}</div>
+                </div>
+              </td>
+
+              <!-- Típus -->
+              <td>
+                <span class="type-badge" :class="getTypeClass(ingredient.ingredientType)">
+                  {{ ingredient.ingredientType }}
+                </span>
+              </td>
+
+              <!-- Tápértékek -->
+              <td>
+                <div class="nutrition-info">
+                  <div v-if="ingredient.energy" class="nutrition-item">
+                    <span class="label">Energia:</span>
+                    <span class="value">{{ ingredient.energy }} kcal</span>
+                  </div>
+                  <div v-if="ingredient.protein" class="nutrition-item">
+                    <span class="label">Fehérje:</span>
+                    <span class="value">{{ ingredient.protein }}g</span>
+                  </div>
+                  <div v-if="ingredient.carbohydrate" class="nutrition-item">
+                    <span class="label">Szénhidrát:</span>
+                    <span class="value">{{ ingredient.carbohydrate }}g</span>
+                  </div>
+                  <div v-if="ingredient.fat" class="nutrition-item">
+                    <span class="label">Zsír:</span>
+                    <span class="value">{{ ingredient.fat }}g</span>
+                  </div>
+                  <div v-if="!ingredient.energy && !ingredient.protein && !ingredient.carbohydrate && !ingredient.fat" 
+                       class="no-nutrition">
+                    Nincs megadva
+                  </div>
+                </div>
+              </td>
+
+              <!-- Állapot -->
+              <td>
+                <span class="status-badge" :class="ingredient.isAvailable ? 'available' : 'unavailable'">
+                  <span class="status-dot" :class="ingredient.isAvailable ? 'available' : 'unavailable'"></span>
+                  {{ ingredient.isAvailable ? 'Elérhető' : 'Nem elérhető' }}
+                </span>
+              </td>
+
+              <!-- Műveletek -->
+              <td class="actions">
+                <div class="actions-inner">
+                  <!-- Szerkesztés gomb -->
+                  <button
+                    @click="toggleEdit(ingredient.id)"
+                    class="btn-edit"
+                    :title="expandedIngredient === ingredient.id ? 'Bezárás' : 'Szerkesztés'"
+                  >
+                    <span v-if="expandedIngredient === ingredient.id">↑</span>
+                    <span v-else>✏️</span>
+                  </button>
+
+                  <!-- Elérhetőség váltó gomb -->
+                  <button
+                    @click="toggleAvailability(ingredient)"
+                    :class="ingredient.isAvailable ? 'btn-deactivate' : 'btn-activate'"
+                    :title="ingredient.isAvailable ? 'Nem elérhetővé tesz' : 'Elérhetővé tesz'"
+                  >
+                    <span v-if="ingredient.isAvailable">⏸️</span>
+                    <span v-else>✅</span>
+                  </button>
+
+                  <!-- Törlés gomb -->
+                  <button
+                    @click="confirmDelete(ingredient)"
+                    class="btn-delete"
+                    title="Törlés"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <template v-for="ingredient in ingredients" :key="ingredient.id">
-              <!-- Fő sor -->
-              <tr class="hover:bg-gray-50 transition-colors">
-                <!-- Kijelölés -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    :value="ingredient.id"
-                    v-model="selectedIngredients"
-                    class="h-4 w-4 text-blue-600 rounded"
-                  />
-                </td>
 
-                <!-- Név -->
-                <td class="px-6 py-4">
-                  <div class="flex items-center">
-                    <div>
-                      <div class="font-medium text-gray-900">{{ ingredient.ingredientName }}</div>
-
-                    </div>
+            <!-- Lenyíló szerkesztő rész -->
+            <tr v-if="expandedIngredient === ingredient.id" class="edit-row">
+              <td colspan="6">
+                <div class="edit-container">
+                  <div class="edit-header">
+                    <h3>
+                      {{ editingIngredient ? 'Hozzávaló szerkesztése' : 'Új hozzávaló' }}
+                    </h3>
+                    <p>
+                      Módosítsd a(z) {{ ingredient.ingredientName }} hozzávaló adatait
+                    </p>
                   </div>
-                </td>
-
-                <!-- Típus -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                        :class="getTypeClass(ingredient.ingredientType)">
-                    {{ ingredient.ingredientType }}
-                  </span>
-                </td>
-
-                <!-- Tápértékek -->
-                <td class="px-6 py-4">
-                  <div class="space-y-1">
-                    <div v-if="ingredient.energy" class="text-sm">
-                      <span class="font-medium">Energia:</span>
-                      <span class="ml-2">{{ ingredient.energy }} kcal</span>
-                    </div>
-                    <div v-if="ingredient.protein" class="text-sm">
-                      <span class="font-medium">Fehérje:</span>
-                      <span class="ml-2">{{ ingredient.protein }}g</span>
-                    </div>
-                    <div v-if="ingredient.carbohydrate" class="text-sm">
-                      <span class="font-medium">Szénhidrát:</span>
-                      <span class="ml-2">{{ ingredient.carbohydrate }}g</span>
-                    </div>
-                    <div v-if="ingredient.fat" class="text-sm">
-                      <span class="font-medium">Zsír:</span>
-                      <span class="ml-2">{{ ingredient.fat }}g</span>
-                    </div>
-                    <div v-if="!ingredient.energy && !ingredient.protein && !ingredient.carbohydrate && !ingredient.fat" 
-                         class="text-sm text-gray-400 italic">
-                      Nincs megadva
-                    </div>
-                  </div>
-                </td>
-
-                <!-- Állapot -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                        :class="ingredient.isAvailable 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'">
-                    <span class="h-2 w-2 rounded-full mr-2"
-                          :class="ingredient.isAvailable ? 'bg-green-500' : 'bg-red-500'">
-                    </span>
-                    {{ ingredient.isAvailable ? 'Elérhető' : 'Nem elérhető' }}
-                  </span>
-                </td>
-
-                <!-- Műveletek -->
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex space-x-2">
-                        <!-- Szerkesztés gomb -->
-                        <button
-                        @click="toggleEdit(ingredient.id)"
-                        class="action-button edit-button"
-                        :title="expandedIngredient === ingredient.id ? 'Bezárás' : 'Szerkesztés'"
-                        >
-                        <svg v-if="expandedIngredient === ingredient.id" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                        </svg>
-                        <svg v-else fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        <span>{{ expandedIngredient === ingredient.id ? 'Bezár' : 'Szerkeszt' }}</span>
-                        </button>
-
-                        <!-- Elérhetőség váltó gomb -->
-                        <button
-                        @click="toggleAvailability(ingredient)"
-                        :class="ingredient.isAvailable 
-                            ? 'action-button availability-button-available' 
-                            : 'action-button availability-button-unavailable'"
-                        :title="ingredient.isAvailable ? 'Nem elérhetővé tesz' : 'Elérhetővé tesz'"
-                        >
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span>{{ ingredient.isAvailable ? 'Nem elérhető' : 'Elérhetővé tesz' }}</span>
-                        </button>
-
-                        <!-- Törlés gomb -->
-                        <button
-                        @click="confirmDelete(ingredient)"
-                        class="action-button delete-button"
-                        title="Törlés"
-                        >
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        <span>Törlés</span>
-                        </button>
-                    </div>
-                    </td>
-              </tr>
-
-              <!-- Lenyíló szerkesztő rész -->
-              <tr v-if="expandedIngredient === ingredient.id" class="bg-blue-50">
-                <td colspan="6" class="px-6 py-6">
-                  <div class="bg-white rounded-lg border border-blue-200 p-6">
-                    <div class="flex justify-between items-start mb-6">
-                      <div>
-                        <h3 class="text-xl font-bold text-gray-900">
-                          {{ editingIngredient ? 'Hozzávaló szerkesztése' : 'Új hozzávaló' }}
-                        </h3>
-                        <p class="text-gray-600 mt-1">
-                          Módosítsd a(z) {{ ingredient.ingredientName }} hozzávaló adatait
-                        </p>
-                      </div>
-                      <div class="flex gap-2">
-                        <button
-                          @click="cancelEdit"
-                          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                        >
-                          Mégse
-                        </button>
-                        <button
-                          @click="saveIngredient(ingredient)"
-                          :disabled="saving"
-                          class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <span v-if="saving" class="flex items-center">
-                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Mentés...
-                          </span>
-                          <span v-else>Mentés</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <form @submit.prevent="saveIngredient(ingredient)">
-                      <div class="space-y-6">
-                        <!-- Alap információk -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  <form @submit.prevent="saveIngredient(ingredient)">
+                    <div class="form-grid">
+                      <!-- Alap információk -->
+                      <div class="form-section">
+                        <h4>Alap információk</h4>
+                        <div class="form-row">
                           <!-- Név -->
-                          <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                              Hozzávaló neve *
-                            </label>
+                          <div class="form-group">
+                            <label>Hozzávaló neve *</label>
                             <input
                               type="text"
                               v-model="editForm.ingredientName"
                               required
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                               placeholder="Pl.: Paradicsom"
                             />
                           </div>
 
                           <!-- Típus -->
-                          <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                              Típus *
-                            </label>
+                          <div class="form-group">
+                            <label>Típus *</label>
                             <select
                               v-model="editForm.ingredientType"
                               required
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                             >
                               <option value="Egyéb">Egyéb</option>
                               <option value="Hús">Hús</option>
@@ -378,404 +276,352 @@
                             </select>
                           </div>
                         </div>
+                      </div>
 
-                        <!-- Tápértékek -->
-                        <div class="border-t border-gray-200 pt-6">
-                          <h4 class="text-lg font-medium text-gray-900 mb-4">Tápértékek (100g-ra)</h4>
-                          <p class="text-sm text-gray-600 mb-4">
-                            Opcionális adatok, de ajánlott kitölteni az étel tervezéshez
-                          </p>
-                          
-                          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <!-- Energia -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Energia (kcal)
-                              </label>
-                              <input
-                                type="number"
-                                v-model.number="editForm.energy"
-                                min="0"
-                                step="1"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                            </div>
+                      <!-- Tápértékek -->
+                      <div class="form-section">
+                        <h4>Tápértékek (100g-ra)</h4>
+                        <p class="section-subtitle">
+                          Opcionális adatok, de ajánlott kitölteni az étel tervezéshez
+                        </p>
+                        
+                        <div class="form-row nutrition-grid">
+                          <!-- Energia -->
+                          <div class="form-group">
+                            <label>Energia (kcal)</label>
+                            <input
+                              type="number"
+                              v-model.number="editForm.energy"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
 
-                            <!-- Fehérje -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Fehérje (g)
-                              </label>
-                              <input
-                                type="number"
-                                v-model.number="editForm.protein"
-                                min="0"
-                                step="1"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                            </div>
+                          <!-- Fehérje -->
+                          <div class="form-group">
+                            <label>Fehérje (g)</label>
+                            <input
+                              type="number"
+                              v-model.number="editForm.protein"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
 
-                            <!-- Szénhidrát -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Szénhidrát (g)
-                              </label>
-                              <input
-                                type="number"
-                                v-model.number="editForm.carbohydrate"
-                                min="0"
-                                step="1"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                            </div>
+                          <!-- Szénhidrát -->
+                          <div class="form-group">
+                            <label>Szénhidrát (g)</label>
+                            <input
+                              type="number"
+                              v-model.number="editForm.carbohydrate"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
 
-                            <!-- Zsír -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Zsír (g)
-                              </label>
-                              <input
-                                type="number"
-                                v-model.number="editForm.fat"
-                                min="0"
-                                step="1"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                            </div>
+                          <!-- Zsír -->
+                          <div class="form-group">
+                            <label>Zsír (g)</label>
+                            <input
+                              type="number"
+                              v-model.number="editForm.fat"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
 
-                            <!-- Cukor -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Cukor (g)
-                              </label>
-                              <input
-                                type="number"
-                                v-model.number="editForm.sugar"
-                                min="0"
-                                step="1"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                            </div>
+                          <!-- Cukor -->
+                          <div class="form-group">
+                            <label>Cukor (g)</label>
+                            <input
+                              type="number"
+                              v-model.number="editForm.sugar"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
 
-                            <!-- Rost -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Rost (g)
-                              </label>
-                              <input
-                                type="number"
-                                v-model.number="editForm.fiber"
-                                min="0"
-                                step="1"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                            </div>
+                          <!-- Rost -->
+                          <div class="form-group">
+                            <label>Rost (g)</label>
+                            <input
+                              type="number"
+                              v-model.number="editForm.fiber"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
 
-                            <!-- Nátrium -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Nátrium (mg)
-                              </label>
-                              <input
-                                type="number"
-                                v-model.number="editForm.sodium"
-                                min="0"
-                                step="1"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                            </div>
+                          <!-- Nátrium -->
+                          <div class="form-group">
+                            <label>Nátrium (mg)</label>
+                            <input
+                              type="number"
+                              v-model.number="editForm.sodium"
+                              min="0"
+                              step="1"
+                            />
                           </div>
                         </div>
+                      </div>
 
-                        <!-- Elérhetőség -->
-                        <div class="border-t border-gray-200 pt-6">
-                          <div class="flex items-center">
-                            <input
-                              type="checkbox"
-                              id="isAvailable"
-                              v-model="editForm.isAvailable"
-                              class="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                            />
-                            <label for="isAvailable" class="ml-3 text-sm font-medium text-gray-700">
-                              Hozzávaló elérhető a felhasználásra
-                            </label>
-                          </div>
-                          <p class="text-sm text-gray-500 mt-2 ml-8">
+                      <!-- Elérhetőség -->
+                      <div class="form-section">
+                        <div class="checkbox-group">
+                          <input
+                            type="checkbox"
+                            id="isAvailable"
+                            v-model="editForm.isAvailable"
+                            class="checkbox-input"
+                          />
+                          <label for="isAvailable" class="checkbox-label">
+                            Hozzávaló elérhető a felhasználásra
+                          </label>
+                          <p class="checkbox-help">
                             Ha nincs bejelölve, a hozzávaló nem lesz elérhető az új ételekhez
                           </p>
                         </div>
                       </div>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
+                    </div>
+
+                    <!-- Művelet gombok -->
+                    <div class="form-actions">
+                      <button
+                        type="button"
+                        @click="cancelEdit"
+                        class="btn-cancel"
+                      >
+                        Mégse
+                      </button>
+                      <button
+                        type="submit"
+                        :disabled="saving"
+                        class="btn-save"
+                      >
+                        <span v-if="saving">Mentés...</span>
+                        <span v-else>Mentés</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
     </div>
 
-    <!-- Hozzávaló létrehozás modal (csak új létrehozáshoz) -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-start mb-6">
-          <div>
-            <h3 class="text-2xl font-bold text-gray-900">
-              Új hozzávaló
-            </h3>
-            <p class="text-gray-600 mt-1">
-              Töltsd ki az új hozzávaló adatait
-            </p>
-          </div>
-          <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600 text-2xl">
-            ✕
-          </button>
+    <!-- Hozzávaló létrehozás modal -->
+    <div v-if="showCreateModal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Új hozzávaló</h2>
+          <button @click="showCreateModal = false" class="btn-close">×</button>
         </div>
+        
+        <div class="modal-body">
+          <form @submit.prevent="saveNewIngredient">
+            <div class="form-grid">
+              <!-- Alap információk -->
+              <div class="form-section">
+                <h4>Alap információk</h4>
+                <div class="form-row">
+                  <!-- Név -->
+                  <div class="form-group">
+                    <label>Hozzávaló neve *</label>
+                    <input
+                      type="text"
+                      v-model="newForm.ingredientName"
+                      required
+                      placeholder="Pl.: Paradicsom"
+                    />
+                  </div>
 
-        <form @submit.prevent="saveNewIngredient">
-          <div class="space-y-6">
-            <!-- Alap információk -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Név -->
-              <div>
-                <label for="newIngredientName" class="block text-sm font-medium text-gray-700 mb-2">
-                  Hozzávaló neve *
-                </label>
-                <input
-                  type="text"
-                  id="newIngredientName"
-                  v-model="newForm.ingredientName"
-                  required
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Pl.: Paradicsom"
-                />
+                  <!-- Típus -->
+                  <div class="form-group">
+                    <label>Típus *</label>
+                    <select
+                      v-model="newForm.ingredientType"
+                      required
+                    >
+                      <option value="">Válassz típust...</option>
+                      <option value="Egyéb">Egyéb</option>
+                      <option value="Hús">Hús</option>
+                      <option value="Hal">Hal</option>
+                      <option value="Tejtermék">Tejtermék</option>
+                      <option value="Zöldség">Zöldség</option>
+                      <option value="Gyümölcs">Gyümölcs</option>
+                      <option value="Fűszer">Fűszer</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <!-- Típus -->
-              <div>
-                <label for="newIngredientType" class="block text-sm font-medium text-gray-700 mb-2">
-                  Típus *
-                </label>
-                <select
-                  id="newIngredientType"
-                  v-model="newForm.ingredientType"
-                  required
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                >
-                  <option value="">Válassz típust...</option>
-                  <option value="Egyéb">Egyéb</option>
-                  <option value="Hús">Hús</option>
-                  <option value="Hal">Hal</option>
-                  <option value="Tejtermék">Tejtermék</option>
-                  <option value="Zöldség">Zöldség</option>
-                  <option value="Gyümölcs">Gyümölcs</option>
-                  <option value="Fűszer">Fűszer</option>
-                </select>
+              <!-- Tápértékek -->
+              <div class="form-section">
+                <h4>Tápértékek (100g-ra)</h4>
+                <p class="section-subtitle">
+                  Opcionális adatok, de ajánlott kitölteni az étel tervezéshez
+                </p>
+                
+                <div class="form-row nutrition-grid">
+                  <!-- Energia -->
+                  <div class="form-group">
+                    <label>Energia (kcal)</label>
+                    <input
+                      type="number"
+                      v-model.number="newForm.energy"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <!-- Fehérje -->
+                  <div class="form-group">
+                    <label>Fehérje (g)</label>
+                    <input
+                      type="number"
+                      v-model.number="newForm.protein"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <!-- Szénhidrát -->
+                  <div class="form-group">
+                    <label>Szénhidrát (g)</label>
+                    <input
+                      type="number"
+                      v-model.number="newForm.carbohydrate"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <!-- Zsír -->
+                  <div class="form-group">
+                    <label>Zsír (g)</label>
+                    <input
+                      type="number"
+                      v-model.number="newForm.fat"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <!-- Cukor -->
+                  <div class="form-group">
+                    <label>Cukor (g)</label>
+                    <input
+                      type="number"
+                      v-model.number="newForm.sugar"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <!-- Rost -->
+                  <div class="form-group">
+                    <label>Rost (g)</label>
+                    <input
+                      type="number"
+                      v-model.number="newForm.fiber"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <!-- Nátrium -->
+                  <div class="form-group">
+                    <label>Nátrium (mg)</label>
+                    <input
+                      type="number"
+                      v-model.number="newForm.sodium"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <!-- Tápértékek -->
-            <div class="border-t border-gray-200 pt-6">
-              <h4 class="text-lg font-medium text-gray-900 mb-4">Tápértékek (100g-ra)</h4>
-              <p class="text-sm text-gray-600 mb-4">
-                Opcionális adatok, de ajánlott kitölteni az étel tervezéshez
-              </p>
-              
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <!-- Energia -->
-                <div>
-                  <label for="newEnergy" class="block text-sm font-medium text-gray-700 mb-2">
-                    Energia (kcal)
-                  </label>
+              <!-- Elérhetőség -->
+              <div class="form-section">
+                <div class="checkbox-group">
                   <input
-                    type="number"
-                    id="newEnergy"
-                    v-model.number="newForm.energy"
-                    min="0"
-                    step="1"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    type="checkbox"
+                    id="newIsAvailable"
+                    v-model="newForm.isAvailable"
+                    class="checkbox-input"
                   />
-                </div>
-
-                <!-- Fehérje -->
-                <div>
-                  <label for="newProtein" class="block text-sm font-medium text-gray-700 mb-2">
-                    Fehérje (g)
+                  <label for="newIsAvailable" class="checkbox-label">
+                    Hozzávaló elérhető a felhasználásra
                   </label>
-                  <input
-                    type="number"
-                    id="newProtein"
-                    v-model.number="newForm.protein"
-                    min="0"
-                    step="1"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <!-- Szénhidrát -->
-                <div>
-                  <label for="newCarbohydrate" class="block text-sm font-medium text-gray-700 mb-2">
-                    Szénhidrát (g)
-                  </label>
-                  <input
-                    type="number"
-                    id="newCarbohydrate"
-                    v-model.number="newForm.carbohydrate"
-                    min="0"
-                    step="1"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <!-- Zsír -->
-                <div>
-                  <label for="newFat" class="block text-sm font-medium text-gray-700 mb-2">
-                    Zsír (g)
-                  </label>
-                  <input
-                    type="number"
-                    id="newFat"
-                    v-model.number="newForm.fat"
-                    min="0"
-                    step="1"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <!-- Cukor -->
-                <div>
-                  <label for="newSugar" class="block text-sm font-medium text-gray-700 mb-2">
-                    Cukor (g)
-                  </label>
-                  <input
-                    type="number"
-                    id="newSugar"
-                    v-model.number="newForm.sugar"
-                    min="0"
-                    step="1"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <!-- Rost -->
-                <div>
-                  <label for="newFiber" class="block text-sm font-medium text-gray-700 mb-2">
-                    Rost (g)
-                  </label>
-                  <input
-                    type="number"
-                    id="newFiber"
-                    v-model.number="newForm.fiber"
-                    min="0"
-                    step="1"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <!-- Nátrium -->
-                <div>
-                  <label for="newSodium" class="block text-sm font-medium text-gray-700 mb-2">
-                    Nátrium (mg)
-                  </label>
-                  <input
-                    type="number"
-                    id="newSodium"
-                    v-model.number="newForm.sodium"
-                    min="0"
-                    step="1"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
+                  <p class="checkbox-help">
+                    Ha nincs bejelölve, a hozzávaló nem lesz elérhető az új ételekhez
+                  </p>
                 </div>
               </div>
             </div>
 
-            <!-- Elérhetőség -->
-            <div class="border-t border-gray-200 pt-6">
-              <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  id="newIsAvailable"
-                  v-model="newForm.isAvailable"
-                  class="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <label for="newIsAvailable" class="ml-3 text-sm font-medium text-gray-700">
-                  Hozzávaló elérhető a felhasználásra
-                </label>
-              </div>
-              <p class="text-sm text-gray-500 mt-2 ml-8">
-                Ha nincs bejelölve, a hozzávaló nem lesz elérhető az új ételekhez
-              </p>
+            <!-- Művelet gombok -->
+            <div class="modal-footer">
+              <button
+                type="button"
+                @click="showCreateModal = false"
+                class="btn-cancel"
+              >
+                Mégse
+              </button>
+              <button
+                type="submit"
+                :disabled="saving"
+                class="btn-save"
+              >
+                <span v-if="saving">Mentés...</span>
+                <span v-else>Létrehozás</span>
+              </button>
             </div>
-          </div>
-
-          <!-- Művelet gombok -->
-          <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end gap-3">
-            <button
-              type="button"
-              @click="showCreateModal = false"
-              class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-            >
-              Mégse
-            </button>
-            <button
-              type="submit"
-              :disabled="saving"
-              class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <span v-if="saving" class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Mentés...
-              </span>
-              <span v-else>Létrehozás</span>
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
 
     <!-- Törlés megerősítés modal -->
-    <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg p-8 max-w-md w-full">
-        <div class="text-center">
-          <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.768 0L4.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
+    <div v-if="showDeleteModal" class="modal-overlay delete-modal">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2>Hozzávaló törlése</h2>
+          <button @click="showDeleteModal = false" class="btn-close">×</button>
+        </div>
+        
+        <div class="modal-body text-center">
+          <div class="delete-icon">
+            <span>⚠️</span>
           </div>
           
-          <h3 class="text-xl font-bold text-gray-900 mb-2">Hozzávaló törlése</h3>
-          <p class="text-gray-600 mb-6">
-            Biztosan törölni szeretnéd a 
-            <span class="font-semibold text-gray-900">{{ ingredientToDelete?.ingredientName }}</span> 
-            hozzávalót?
+          <h3 class="delete-title">Biztosan törölni szeretnéd?</h3>
+          <p class="delete-message">
+            A(z) <strong>{{ ingredientToDelete?.ingredientName }}</strong> 
+            hozzávalót nem lehet visszaállítani.
           </p>
           
-          <p v-if="deleteError" class="text-sm text-red-600 bg-red-50 p-3 rounded-lg mb-4">
+          <p v-if="deleteError" class="error-message">
             {{ deleteError }}
           </p>
 
-          <div class="flex gap-3 justify-center">
+          <div class="modal-footer">
             <button
               @click="showDeleteModal = false"
-              class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              class="btn-cancel"
             >
               Mégse
             </button>
             <button
               @click="deleteIngredient"
               :disabled="deleting"
-              class="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="btn-delete-confirm"
             >
-              <span v-if="deleting" class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Törlés...
-              </span>
+              <span v-if="deleting">Törlés...</span>
               <span v-else>Törlés</span>
             </button>
           </div>
@@ -906,16 +752,16 @@ async function loadIngredients() {
 
 function getTypeClass(type) {
   const classes = {
-    'Hús': 'bg-red-100 text-red-800',
-    'Hal': 'bg-blue-100 text-blue-800',
-    'Tejtermék': 'bg-yellow-100 text-yellow-800',
-    'Zöldség': 'bg-green-100 text-green-800',
-    'Gyümölcs': 'bg-orange-100 text-orange-800',
-    'Fűszer': 'bg-purple-100 text-purple-800',
-    'Egyéb': 'bg-gray-100 text-gray-800'
+    'Hús': 'type-meat',
+    'Hal': 'type-fish',
+    'Tejtermék': 'type-dairy',
+    'Zöldség': 'type-vegetable',
+    'Gyümölcs': 'type-fruit',
+    'Fűszer': 'type-spice',
+    'Egyéb': 'type-other'
   }
   
-  return classes[type] || 'bg-gray-100 text-gray-800'
+  return classes[type] || 'type-other'
 }
 
 function toggleEdit(ingredientId) {
@@ -1135,177 +981,806 @@ function toggleSortOrder() {
 </script>
 
 <style scoped>
-/* Táblázat alapstílusok */
-table {
-    margin: auto;
-    padding: auto;
-    border: 4px solid black;
-    border-collapse: separate;
-    border-spacing: 0;
-    width: 100%;
+/* Fő konténer */
+.ingredients {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-th, td {
-    margin: auto;
-    padding: 16px 12px;
-    border: 1px solid #e5e7eb;
-    vertical-align: middle;
-}
-
-/* Művelet gombok konténere */
-td:last-child {
-  min-width: 200px;
-}
-
-td:last-child > div {
+/* Fejléc */
+.header {
   display: flex;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  gap: 8px;
-}
-
-/* Egyedi művelet gomb stílusok */
-.action-button {
-  display: inline-flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
+  margin-bottom: 2rem;
 }
 
-.action-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.header h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.8rem;
 }
 
-/* Szerkesztés gomb */
-.edit-button {
-  background-color: #eff6ff;
-  color: #1d4ed8;
+
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
-.edit-button:hover {
-  background-color: #dbeafe;
+.header-actions input,
+.header-actions select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
 }
 
-/* Elérhetőség gomb - elérhető állapotban */
-.availability-button-available {
-  background-color: #ffedd5;
-  color: #ea580c;
+.search-container {
+  flex: 1;
+  min-width: 300px;
 }
 
-.availability-button-available:hover {
-  background-color: #fed7aa;
+.search-container input {
+  width: 100%;
 }
 
-/* Elérhetőség gomb - nem elérhető állapotban */
-.availability-button-unavailable {
-  background-color: #dcfce7;
-  color: #16a34a;
-}
-
-.availability-button-unavailable:hover {
-  background-color: #bbf7d0;
-}
-
-/* Törlés gomb */
-.delete-button {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
-
-.delete-button:hover {
-  background-color: #fecaca;
-}
-
-/* Gomb ikonok */
-.action-button svg {
-  width: 16px;
-  height: 16px;
-  margin-right: 4px;
-}
-
-/* Reszponszív design */
-@media (max-width: 1024px) {
-  td:last-child > div {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  
-  .action-button {
-    padding: 4px 8px;
-    font-size: 0.75rem;
-  }
-  
-  .action-button span:not(.sr-only) {
-    display: none;
-  }
-  
-  .action-button svg {
-    margin-right: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    border-width: 2px;
-  }
-  
-  th, td {
-    padding: 12px 8px;
-  }
-  
-  .grid-cols-2 {
-    grid-template-columns: 1fr;
-  }
-  
-  .grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  /* Művelet gombok még kisebb képernyőn */
-  .action-button {
-    padding: 3px 6px;
-  }
-}
-
-/* Animációk a lenyíló részhez */
-tr[class*="bg-blue-50"] {
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Egyéb gombok */
-.add-ingredient-btn {
-  width: 15%;
+.filter-container,
+.sort-container {
   min-width: 150px;
 }
 
+.filter-container select {
+  width: 100%;
+}
+
+.sort-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .sort-btn {
-  width: 5%;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
   min-width: 40px;
 }
 
+.sort-btn:hover {
+  background: #e9ecef;
+}
+
+button{
+  width: 20%;
+
+}
+
+.btn-add {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  min-width: 150px;
+  transition: background 0.3s ease;
+}
+.btn-add:hover {
+  background: #219653;
+}
+
+/* Tömeges műveletek */
+.bulk-actions {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.bulk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.selected-count {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-bulk {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.btn-bulk-available {
+  background: #d4edda;
+  color: #155724;
+}
+
+.btn-bulk-available:hover {
+  background: #c3e6cb;
+}
+
+.btn-bulk-unavailable {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-bulk-unavailable:hover {
+  background: #ffeaa7;
+}
+
+.btn-bulk-clear {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.btn-bulk-clear:hover {
+  background: #e9ecef;
+}
+
+/* Betöltés állapota */
+.loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Üres állapot */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  margin: 0 0 1.5rem 0;
+  color: #7f8c8d;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn-add-empty {
+  padding: 0.75rem 1.5rem;
+  background: #069642;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-add-empty:hover {
+  background: #058d3e;
+}
+
+/* Táblázat */
+.ingredients-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.ingredients-table th {
+  background: #ffd294;
+  color: black;
+  text-align: center;
+  padding: 1rem;
+  font-weight: 500;
+  border-bottom: 2px solid #ffc875;
+}
+
+.checkbox-col {
+  width: 40px;
+}
+
+.actions-col {
+  width: 180px;
+}
+
+.ingredients-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ingredients-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.checkbox-col {
+  text-align: center;
+}
+
+.select-all,
+.select-item {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Hozzávaló név */
+.ingredient-name {
+  display: flex;
+  align-items: center;
+}
+
+.ingredient-name .name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* Típus badge */
+.type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.type-meat {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.type-fish {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.type-dairy {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.type-vegetable {
+  background: #d4edda;
+  color: #155724;
+}
+
+.type-fruit {
+  background: #e2d9f3;
+  color: #4a3f69;
+}
+
+.type-spice {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.type-other {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+/* Tápértékek */
+.nutrition-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nutrition-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.nutrition-item .label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.nutrition-item .value {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.no-nutrition {
+  font-size: 0.875rem;
+  color: #adb5bd;
+  font-style: italic;
+}
+
+/* Státusz badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.available {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.unavailable {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.available {
+  background: #28a745;
+}
+
+.status-dot.unavailable {
+  background: #dc3545;
+}
+
+/* Műveletek */
+.actions {
+  text-align: center;
+}
+
+.actions-inner {
+  display: inline-flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.actions button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.actions button:hover {
+  opacity: 0.8;
+}
+
+.btn-edit {
+  background: #a1bacc;
+  color: white;
+}
+
+.btn-activate {
+  background: #d4edda;
+  color: #155724;
+}
+
+.btn-deactivate {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-delete {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Lenyíló szerkesztő sor */
+.edit-row {
+  background: #f8f9fa !important;
+}
+
+.edit-row td {
+  padding: 0;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.edit-container {
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin: 0.5rem;
+}
+
+.edit-header {
+  margin-bottom: 1.5rem;
+}
+
+.edit-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+}
+
+.edit-header p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.875rem;
+}
+
+/* Form stílusok */
+.form-section {
+  margin-bottom: 1.5rem;
+}
+
+.form-section h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.section-subtitle {
+  margin: 0 0 1rem 0;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.nutrition-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #476079;
+  font-size: 0.875rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: #476079;
+  cursor: pointer;
+}
+
+.checkbox-help {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-left: 1.75rem;
+}
+
+/* Form művelet gombok */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+  margin-top: 1rem;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background: #95a5a6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.btn-cancel:hover {
+  background: #7f8c8d;
+}
+
+.btn-save {
+  padding: 0.75rem 1.5rem;
+  background: #069642;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #6fce97;
+}
+
+/* Modal stílusok */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative !important;
+  z-index: 1001;
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible !important;
+  display: block !important;
+}
+
+.modal-sm {
+  max-width: 500px;
+  height: 50%;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #7f8c8d;
+  padding: 0.5rem;
+}
+
+.btn-close:hover {
+  color: #e74c3c;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+  margin-top: 1rem;
+}
+
+/* Törlés modal specifikus */
+.delete-modal .modal-body {
+  text-align: center;
+}
+
+.delete-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.delete-title {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.delete-message {
+  margin: 0 0 1.5rem 0;
+  color: #7f8c8d;
+  line-height: 1.5;
+}
+
+.delete-message strong {
+  color: #2c3e50;
+}
+
+.error-message {
+  margin: 0 0 1.5rem 0;
+  color: #dc3545;
+  background: #f8d7da;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.btn-delete-confirm {
+  padding: 0.75rem 1.5rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-delete-confirm:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-delete-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Reszponzív design */
+@media (max-width: 768px) {
+  .ingredients {
+    padding: 1rem;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-container,
+  .filter-container,
+  .sort-container {
+    min-width: unset;
+    width: 100%;
+  }
+  
+  .bulk-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .bulk-buttons {
+    justify-content: stretch;
+  }
+  
+  .btn-bulk {
+    flex: 1;
+    min-width: unset;
+  }
+  
+  .ingredients-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .form-row,
+  .nutrition-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal {
+    width: 95%;
+    margin: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .bulk-buttons {
+    flex-direction: column;
+  }
+  
+  .actions-inner {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .actions button {
+    width: 100%;
+    min-width: 32px;
+  }
+}
 </style>
