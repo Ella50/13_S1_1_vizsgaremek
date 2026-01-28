@@ -19,6 +19,62 @@ class Meal extends Model
     ];
 
 
+
+    public function soupMenuItems()
+    {
+        return $this->hasMany(MenuItem::class, 'soup');
+    }
+
+    /**
+     * Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel A opcióként)
+     */
+    public function optionAMenuItems()
+    {
+        return $this->hasMany(MenuItem::class, 'optionA');
+    }
+
+    /**
+     * Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel B opcióként)
+     */
+    public function optionBMenuItems()
+    {
+        return $this->hasMany(MenuItem::class, 'optionB');
+    }
+
+    /**
+     * Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel "egyéb"-ként)
+     */
+    public function otherMenuItems()
+    {
+        return $this->hasMany(MenuItem::class, 'other');
+    }
+
+    /**
+     * Összes MenuItem, ahol ez az étel szerepel (bármely pozícióban)
+     */
+    public function menuItems()
+    {
+        // Összegyűjti az összes menüt, ahol az étel szerepel
+        $soupItems = $this->soupMenuItems;
+        $optionAItems = $this->optionAMenuItems;
+        $optionBItems = $this->optionBMenuItems;
+        $otherItems = $this->otherMenuItems;
+        
+        return $soupItems->merge($optionAItems)->merge($optionBItems)->merge($otherItems)->unique('id');
+    }
+
+    /**
+     * Ellenőrzi, hogy az étel szerepel-e bármelyik menüben
+     */
+    public function hasMenuItems()
+    {
+        return MenuItem::where('soup', $this->id)
+            ->orWhere('optionA', $this->id)
+            ->orWhere('optionB', $this->id)
+            ->orWhere('other', $this->id)
+            ->exists();
+    }
+
     public function ingredients()
     {
         return $this->belongsToMany(

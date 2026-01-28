@@ -695,6 +695,110 @@ public function reorder(Request $request, $orderId)
         ], 500);
     }
 }
+/**
+ * Rendelés opciójának módosítása
+ */
+public function updateOption(Request $request, $orderId)
+{
+    $user = Auth::user();
+    
+    $validator = Validator::make($request->all(), [
+        'selectedOption' => 'required|in:A,B'
+    ]);
+    
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Érvénytelen adatok',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+    
+    try {
+        $order = Order::where('id', $orderId)
+            ->where('user_id', $user->id)
+            ->first();
+            
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A rendelés nem található.'
+            ], 404);
+        }
+        
+        // Ellenőrizzük, hogy módosítható-e
+        if ($order->orderStatus !== 'Rendelve') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Csak aktív rendelés módosítható.'
+            ], 400);
+        }
+        
+        // Ellenőrizzük a módosítási határidőt
+        $menuItem = MenuItem::find($order->menuItems_id);
+        if (!$this->canModifyOrder($order)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A módosítási határidő lejárt.',
+                'deadline' => $this->getModifyDeadline($menuItem->day)
+            ], 400);
+        }
+        
+        // Opció frissítése
+        $order->selectedOption = $request->selectedOption;
+        $order->save();
+        
+        Log::info('Rendelés opciója módosítva', [
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'old_option' => $order->getOriginal('selectedOption'),
+            'new_option' => $order->selectedOption
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Opció sikeresen módosítva!',
+            'data' => $order->load(['menuItem', 'price'])
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Opció módosítási hiba', [
+            'error' => $e->getMessage(),
+            'user_id' => $user->id,
+            'order_id' => $orderId
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt az opció módosítása során.',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
+
+/**
+ * Ellenőrzi, hogy módosítható-e a rendelés
+ */
+private function canModifyOrder($order)
+{
+    try {
+        $orderDate = \Carbon\Carbon::parse($order->orderDate);
+        $deadline = $orderDate->copy()->subDay()->setTime(10, 0, 0); // előző nap 10:00-ig
+        return now() <= $deadline;
+    } catch (\Exception $e) {
+        Log::error('Módosíthatóság ellenőrzése hiba', [
+            'error' => $e->getMessage(),
+            'order_id' => $order->id
+        ]);
+        return false;
+    }
+}
+
+private function getModifyDeadline($date)
+{
+    $orderDate = \Carbon\Carbon::parse($date);
+    return $orderDate->copy()->subDay()->setTime(10, 0, 0)->format('Y-m-d H:i:s');
+}
 
 
 }
