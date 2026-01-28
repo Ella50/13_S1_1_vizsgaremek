@@ -202,7 +202,6 @@
                   </div>
                   
                   <div class="form-group">
-                    <label>&nbsp;</label>
                     <button 
                       type="button" 
                       @click="addIngredient" 
@@ -1557,1615 +1556,1032 @@ async loadAllergensForNewMeal(mealId) {
 
 
 <style scoped>
-button{
-  width: 20%;
-}
-/* Alap stílusok */
-.meals-management {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
+.meals-management{
+  padding:2rem;
+  max-width:1400px;
+  margin:0 auto;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:2rem;
 }
 
-.header h1 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.8rem;
+.header h1{
+  margin:0;
+  color:#2c3e50;
+  font-size:1.8rem;
 }
 
-.btn-add {
-  background: #27ae60;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  min-width: 150px;
-  transition: background 0.3s ease;
+.btn-add{
+  background:#27ae60;
+  color:#fff;
+  border:0;
+  padding:.75rem 1.5rem;
+  border-radius:4px;
+  cursor:pointer;
+  font-weight:500;
+  min-width:150px;
+  transition:background .3s ease;
 }
 
-.btn-add:hover {
-  background: #219653;
-}
+.btn-add:hover{background:#219653;}
 
-.filters {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+.filters{
+  display:flex;
+  gap:1rem;
+  margin-bottom:2rem;
 }
 
 .filters input,
-.filters select {
-  padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+.filters select{
+  padding:.75rem 1rem;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:1rem;
 }
 
-.filters input {
-  flex: 1;
+.filters input{flex:1;}
+.filters select{min-width:200px;}
+
+.meals-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(350px,1fr));
+  gap:1.5rem;
+  align-items:stretch;
 }
 
-.filters select {
-  min-width: 200px;
+.meal-card{
+  background:#fff;
+  border:1px solid #e0e0e0;
+  border-radius:8px;
+  padding:1.5rem;
+  transition:transform .2s,box-shadow .2s;
+  display:flex;
+  flex-direction:column;
+  height:100%;
 }
 
-/* Étel kártyák */
-.meals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+.meal-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
-.meal-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+.meal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:1rem;
 }
 
-.meal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.meal-header h3{
+  margin:0;
+  color:#2c3e50;
+  font-size:1.25rem;
 }
 
-.meal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
+.meal-category{
+  background:#3498db;
+  color:#fff;
+  padding:.25rem .75rem;
+  border-radius:20px;
+  font-size:.75rem;
+  font-weight:500;
 }
 
-.meal-header h3 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.25rem;
+.meal-description{
+  color:#7f8c8d;
+  margin:0 0 1rem 0;
+  line-height:1.5;
+  font-size:.875rem;
 }
 
-.meal-category {
-  background: #3498db;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
+.ingredients-preview{
+  margin-bottom:1rem;
+  padding:.75rem;
+  background:#f8f9fa;
+  border-radius:4px;
+  min-height:120px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
 }
 
-.meal-description {
-  color: #7f8c8d;
-  margin: 0 0 1rem 0;
-  line-height: 1.5;
-  font-size: 0.875rem;
+.ingredients-preview strong{
+  display:block;
+  margin-bottom:.5rem;
+  color:#2c3e50;
 }
 
-/* Összetevők előnézet */
-.ingredients-preview {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: #f8f9fa;
-  border-radius: 4px;
+.preview-items{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.5rem;
 }
 
-.ingredients-preview strong {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
+.preview-item{
+  background:#fff;
+  padding:.25rem .5rem;
+  border-radius:4px;
+  font-size:.75rem;
+  border:1px solid #e0e0e0;
 }
 
-.preview-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.more-items{
+  color:#6c757d;
+  font-size:.75rem;
+  font-style:italic;
 }
 
-.preview-item {
-  background: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  border: 1px solid #e0e0e0;
+.meal-actions{
+  margin-top:auto;
+  display:flex;
+  gap:.5rem;
 }
 
-.more-items {
-  color: #6c757d;
-  font-size: 0.75rem;
-  font-style: italic;
+.meal-actions button{
+  flex:1;
+  padding:.5rem;
+  border:0;
+  border-radius:4px;
+  cursor:pointer;
+  font-weight:500;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.25rem;
+  font-size:.875rem;
+  transition:background .3s ease;
+  white-space:nowrap;
+  min-height:42px;
 }
 
-/* Gombok */
-.meal-actions {
-  display: flex;
-  gap: 0.5rem;
+.btn-edit{background:#3498db;color:#fff;}
+.btn-edit:hover{background:#2980b9;}
+
+.btn-view{background:#2ecc71;color:#fff;}
+.btn-view:hover{background:#27ae60;}
+
+.btn-delete{background:#e74c3c;color:#fff;}
+.btn-delete:hover{background:#c0392b;}
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:1rem;
 }
 
-.meal-actions button {
-  flex: 1;
-  padding: 0.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  transition: background 0.3s ease;
+.modal{
+  padding:20px;
+  background:#fff;
+  border-radius:8px;
+  width:90%;
+  max-width:800px;
+  max-height:90vh;
+  overflow-y:auto;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+  position:relative!important;
+  z-index:1001;
+  transform:translateY(0);
+  opacity:1;
+  visibility:visible!important;
+  display:block!important;
+  animation:fadeIn .3s ease;
 }
 
-.btn-edit {
-  background: #3498db;
-  color: white;
+.ingredients-modal{max-width:1000px;}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1.5rem;
+  padding:1.5rem 1.5rem 0;
 }
 
-.btn-edit:hover {
-  background: #2980b9;
+.modal-header h2{
+  margin:0;
+  color:#2c3e50;
+  font-size:1.5rem;
 }
 
-.btn-view {
-  background: #2ecc71;
-  color: white;
+.close-btn{
+  background:none;
+  border:0;
+  font-size:2rem;
+  cursor:pointer;
+  color:#7f8c8d;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  padding:0;
 }
 
-.btn-view:hover {
-  background: #27ae60;
-}
+.close-btn:hover{color:#e74c3c;}
 
-.btn-delete {
-  background: #e74c3c;
-  color: white;
-}
+form{padding:0 1.5rem;}
 
-.btn-delete:hover {
-  background: #c0392b;
-}
+.form-group{margin: auto;}
 
-/* Modal stílusok */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.modal {
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  position: relative !important;
-  z-index: 1001;
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible !important;
-  display: block !important;
-}
-
-.ingredients-modal {
-  max-width: 1000px;
-}
-
-.ingredients-edit-modal {
-  max-width: 1100px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding: 1.5rem 1.5rem 0;
-}
-
-.modal-header h2 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.5rem;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  color: #7f8c8d;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  padding: 0;
-}
-
-.close-btn:hover {
-  color: #e74c3c;
-}
-
-/* Form stílusok */
-form {
-  padding: 0 1.5rem;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #2c3e50;
+.form-group label{
+  display:block;
+  margin-bottom:.5rem;
+  font-weight:500;
+  color:#2c3e50;
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
+.form-group textarea{
+  width:100%;
+  padding:.75rem;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:1rem;
+  transition:border-color .3s ease, box-shadow .3s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #3498db;
+.form-group textarea{
+  resize:vertical;
+  min-height:100px;
 }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
+.form-row{
+  display:flex;
+  gap:1rem;
+  margin-bottom:1rem;
+  flex-wrap:wrap;
 }
 
-/* Form sorok */
-.form-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
+.form-row .form-group{
+  flex:1;
+  min-width:150px;
 }
 
-.form-row .form-group {
-  flex: 1;
-  min-width: 150px;
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:1rem;
+  margin-top:2rem;
+  padding:1.5rem;
+  border-top:1px solid #eee;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding: 1.5rem;
-  border-top: 1px solid #eee;
+.btn-cancel{
+  padding:.75rem 1.5rem;
+  background:#95a5a6;
+  color:#fff;
+  border:0;
+  border-radius:4px;
+  cursor:pointer;
+  font-weight:500;
+  transition:background .3s ease;
 }
 
-.btn-cancel {
-  padding: 0.75rem 1.5rem;
-  background: #95a5a6;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.3s ease;
+.btn-cancel:hover{background:#7f8c8d;}
+
+.btn-save{
+  padding:.75rem 1.5rem;
+  background:#27ae60;
+  color:#fff;
+  border:0;
+  border-radius:4px;
+  cursor:pointer;
+  font-weight:500;
+  transition:background .3s ease;
 }
 
-.btn-cancel:hover {
-  background: #7f8c8d;
+.btn-save:hover{background:#219653;}
+.btn-save:disabled{background:#bdc3c7;cursor:not-allowed;}
+
+.loading,
+.error,
+.no-meals{
+  text-align:center;
+  padding:3rem;
 }
 
-.btn-save {
-  padding: 0.75rem 1.5rem;
-  background: #27ae60;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.3s ease;
+.error{
+  color:#e74c3c;
+  background:#ffebee;
+  padding:1rem;
+  border-radius:4px;
+  margin:1rem 0;
 }
 
-.btn-save:hover {
-  background: #219653;
+.no-meals{
+  color:#7f8c8d;
 }
 
-.btn-save:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
+.btn-add-first{
+  margin-top:1rem;
+  padding:.75rem 1.5rem;
+  background:#3498db;
+  color:#fff;
+  border:0;
+  border-radius:4px;
+  cursor:pointer;
+  transition:background .3s ease;
 }
 
-/* Összetevők tartalom */
-.ingredients-content {
-  margin: 0 1.5rem;
+.btn-add-first:hover{background:#2980b9;}
+
+.ingredients-content{margin:0 1.5rem;}
+
+.no-ingredients{
+  text-align:center;
+  padding:2rem;
+  color:#7f8c8d;
 }
 
-.no-ingredients {
-  text-align: center;
-  padding: 2rem;
-  color: #7f8c8d;
+.ingredients-summary{
+  margin-bottom:1rem;
+  padding-bottom:1rem;
+  border-bottom:1px solid #eee;
+  color:#2c3e50;
 }
 
-.ingredients-summary {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-  color: #2c3e50;
+.ingredients-table-container{
+  overflow-x:auto;
+  margin-bottom:2rem;
 }
 
-.ingredients-table-container {
-  overflow-x: auto;
-  margin-bottom: 2rem;
-}
-
-.ingredients-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+.ingredients-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.9rem;
 }
 
 .ingredients-table th,
-.ingredients-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
+.ingredients-table td{
+  padding:.75rem;
+  text-align:left;
+  border-bottom:1px solid #eee;
 }
 
-.ingredients-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #2c3e50;
-  white-space: nowrap;
+.ingredients-table th{
+  background:#f8f9fa;
+  font-weight:600;
+  color:#2c3e50;
+  white-space:nowrap;
 }
 
-.ingredients-table tbody tr:hover {
-  background: #f8f9fa;
+.ingredients-table tbody tr:hover{background:#f8f9fa;}
+
+.total-row{
+  background:#f8f9fa!important;
+  font-weight:600;
 }
 
-.total-row {
-  background: #f8f9fa !important;
-  font-weight: 600;
+.ingredient-type{
+  padding:.25rem .5rem;
+  border-radius:4px;
+  font-size:.75rem;
+  font-weight:500;
+  display:inline-block;
+  white-space:nowrap;
 }
 
-/* Hozzávaló típusok */
-.ingredient-type {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  display: inline-block;
-  white-space: nowrap;
+.type-meat{background:#ffebee;color:#c62828;}
+.type-dairy{background:#e3f2fd;color:#1565c0;}
+.type-vegetable{background:#e8f5e9;color:#2e7d32;}
+.type-other{background:#f5f5f5;color:#616161;}
+
+.nutrition-summary{
+  margin-top:2rem;
+  padding:1.5rem;
+  background:#f8f9fa;
+  border-radius:8px;
 }
 
-.type-meat {
-  background: #ffebee;
-  color: #c62828;
+.nutrition-summary h4{
+  margin:0 0 1rem 0;
+  color:#2c3e50;
+  font-size:1.1rem;
 }
 
-.type-dairy {
-  background: #e3f2fd;
-  color: #1565c0;
+.nutrition-bars{
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
 }
 
-.type-vegetable {
-  background: #e8f5e9;
-  color: #2e7d32;
+.nutrition-bar{
+  display:flex;
+  align-items:center;
+  gap:1rem;
 }
 
-.type-other {
-  background: #f5f5f5;
-  color: #616161;
+.bar-label{
+  width:100px;
+  font-weight:500;
+  color:#2c3e50;
 }
 
-/* Tápanyag összegzés */
-.nutrition-summary {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
+.bar-container{
+  flex:1;
+  height:10px;
+  background:#e0e0e0;
+  border-radius:5px;
+  overflow:hidden;
 }
 
-.nutrition-summary h4 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
+.bar{
+  height:100%;
+  background:#3498db;
+  transition:width .3s ease;
 }
 
-.nutrition-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.bar.protein{background:#2ecc71;}
+.bar.carb{background:#f39c12;}
+.bar.fat{background:#e74c3c;}
+
+.bar-value{
+  width:80px;
+  text-align:right;
+  font-weight:500;
+  color:#2c3e50;
 }
 
-.nutrition-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.add-ingredient-section{
+  margin-bottom:2rem;
+  padding:1.5rem;
+  background:#f8f9fa;
+  border-radius:8px;
 }
 
-.bar-label {
-  width: 100px;
-  font-weight: 500;
-  color: #2c3e50;
+.add-ingredient-section h4{
+  margin:0 0 1rem 0;
+  color:#2c3e50;
+  font-size:1rem;
 }
 
-.bar-container {
-  flex: 1;
-  height: 10px;
-  background: #e0e0e0;
-  border-radius: 5px;
-  overflow: hidden;
+.add-ingredient-form{
+  background:#fff;
+  padding:1.5rem;
+  border-radius:6px;
+  border:1px solid #e0e0e0;
 }
 
-.bar {
-  height: 100%;
-  background: #3498db;
-  transition: width 0.3s ease;
+.search-container{position:relative;}
+
+.search-input{
+  width:100%;
+  padding:.75rem;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:.95rem;
 }
 
-.bar.protein {
-  background: #2ecc71;
+.search-results{
+  position:absolute;
+  top:100%;
+  left:0;
+  right:0;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:4px;
+  max-height:200px;
+  overflow-y:auto;
+  z-index:10;
+  box-shadow:0 4px 8px rgba(0,0,0,.1);
+  animation:slideDown .2s ease;
 }
 
-.bar.carb {
-  background: #f39c12;
+.search-result-item{
+  padding:.75rem 1rem;
+  cursor:pointer;
+  border-bottom:1px solid #eee;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-.bar.fat {
-  background: #e74c3c;
+.search-result-item:hover{background:#f8f9fa;}
+.search-result-item:last-child{border-bottom:none;}
+
+.result-name{
+  font-weight:500;
+  color:#2c3e50;
+  flex:1;
 }
 
-.bar-value {
-  width: 80px;
-  text-align: right;
-  font-weight: 500;
-  color: #2c3e50;
+.result-type{
+  font-size:.8rem;
+  color:#7f8c8d;
+  background:#f8f9fa;
+  padding:.25rem .5rem;
+  border-radius:4px;
+  margin:0 .5rem;
 }
 
-/* Hozzávaló keresés és hozzáadás */
-.add-ingredient-section {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
+.result-info{
+  font-size:.8rem;
+  color:#3498db;
+  font-weight:500;
 }
 
-.add-ingredient-section h3 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
+.selected-ingredient-info{
+  margin-top:1rem;
+  padding:.75rem;
+  background:#e8f5e9;
+  border-radius:4px;
+  border-left:4px solid #2ecc71;
+  font-size:.9rem;
 }
 
-.add-ingredient-form {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
+.ingredient-details{
+  display:block;
+  color:#555;
+  margin-top:.25rem;
+  font-size:.85rem;
 }
 
-.search-container {
-  position: relative;
+.amount-input,
+.unit-select{
+  padding:.75rem;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:.95rem;
+  width:100%;
 }
 
-.search-results {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 10;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.amount-input.small,
+.unit-select.small{
+  padding:.5rem;
+  font-size:.9rem;
 }
 
-.search-result-item {
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.btn-add-ingredient{
+  background:#3498db;
+  color:#fff;
+  border:0;
+  padding:.75rem 1.5rem;
+  border-radius:4px;
+  cursor:pointer;
+  font-weight:500;
+  width:100%;
+  margin-top: auto;
+  transition: background .3s ease;
 }
 
-.search-result-item:hover {
-  background: #f8f9fa;
+.btn-add-ingredient:hover:not(:disabled){background:#2980b9;}
+.btn-add-ingredient:disabled{background:#bdc3c7;cursor:not-allowed;}
+
+.current-ingredients-section{
+  padding:1.5rem;
+  background:#f8f9fa;
+  border-radius:8px;
 }
 
-.search-result-item:last-child {
-  border-bottom: none;
+.current-ingredients-section h4{
+  margin:0 0 1rem 0;
+  color:#2c3e50;
+  font-size:1rem;
 }
 
-.result-name {
-  font-weight: 500;
-  color: #2c3e50;
+.no-current-ingredients{
+  text-align:center;
+  padding:2rem;
+  color:#7f8c8d;
+  background:#fff;
+  border-radius:6px;
+  border:1px solid #e0e0e0;
 }
 
-.result-type {
-  font-size: 0.8rem;
-  color: #7f8c8d;
-  background: #f8f9fa;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+.current-ingredients-table-container{
+  overflow-x:auto;
+  margin-bottom:1.5rem;
 }
 
-.result-info {
-  font-size: 0.8rem;
-  color: #3498db;
-}
-
-.selected-ingredient-info {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: #e8f5e9;
-  border-radius: 4px;
-  border-left: 4px solid #2ecc71;
-}
-
-.ingredient-details {
-  display: block;
-  font-size: 0.85rem;
-  color: #555;
-  margin-top: 0.25rem;
-}
-
-.btn-add-ingredient {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  width: 100%;
-  margin-top: 1.75rem;
-  transition: background 0.3s ease;
-}
-
-.btn-add-ingredient:hover:not(:disabled) {
-  background: #2980b9;
-}
-
-.btn-add-ingredient:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-/* Jelenlegi hozzávalók */
-.current-ingredients-section {
-  padding: 1.5rem;
-}
-
-.current-ingredients-section h3 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
-}
-
-.no-current-ingredients {
-  text-align: center;
-  padding: 2rem;
-  color: #7f8c8d;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.current-ingredients-table-container {
-  overflow-x: auto;
-  margin-bottom: 1.5rem;
-}
-
-.current-ingredients-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+.current-ingredients-table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:6px;
+  overflow:hidden;
+  font-size:.9rem;
 }
 
 .current-ingredients-table th,
-.current-ingredients-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  vertical-align: middle;
+.current-ingredients-table td{
+  padding:.75rem;
+  text-align:left;
+  border-bottom:1px solid #eee;
+  vertical-align:middle;
 }
 
-.current-ingredients-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #2c3e50;
-  white-space: nowrap;
+.current-ingredients-table th{
+  background:#f8f9fa;
+  font-weight:600;
+  color:#2c3e50;
+  white-space:nowrap;
+  border-bottom:2px solid #ddd;
 }
 
-.current-ingredients-table tbody tr:hover {
-  background: #f8f9fa;
+.current-ingredients-table tbody tr:hover{background:#f8f9fa;}
+
+.ingredient-name{
+  font-weight:500;
+  color:#2c3e50;
 }
 
-.ingredients-table-allergen-div{
-  text-align: center;
-  align-items: center;
-  margin: auto;
+.ingredient-nutrition{margin-top:.25rem;}
+
+.ingredient-nutrition .ingredient-type{
+  padding:.15rem .4rem;
+  font-size:.7rem;
 }
 
-.ingredient-name {
-  font-weight: 500;
-  color: #2c3e50;
+.calories-display{
+  font-weight:500;
+  color:#e74c3c;
+  font-size:.9rem;
 }
 
-.ingredient-nutrition small {
-  color: #7f8c8d;
-  font-size: 0.8rem;
+.btn-remove-ingredient{
+  background:#e74c3c;
+  color:#fff;
+  border:0;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.9rem;
+  transition:background .3s ease;
 }
 
-.amount-input {
-  width: 80px;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  text-align: center;
+.btn-remove-ingredient:hover{background:#c0392b;}
+
+.edit-summary{
+  display:flex;
+  gap:2rem;
+  padding:1rem;
+  background:#fff;
+  border-radius:8px;
+  border:1px solid #e0e0e0;
 }
 
-.unit-select {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  min-width: 80px;
+.summary-item{
+  flex:1;
+  text-align:center;
+  padding:.5rem;
 }
 
-.calories-display {
-  font-weight: 500;
-  color: #e74c3c;
+.summary-label{
+  display:block;
+  color:#7f8c8d;
+  font-size:.9rem;
+  margin-bottom:.25rem;
 }
 
-.btn-remove-ingredient {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  transition: background 0.3s ease;
+.summary-value{
+  display:block;
+  color:#2c3e50;
+  font-weight:600;
+  font-size:1.1rem;
 }
 
-.btn-remove-ingredient:hover {
-  background: #c0392b;
+.edit-meal-modal{
+  max-width:1000px;
+  max-height:85vh;
+  display:flex;
+  flex-direction:column;
 }
 
-/* Szerkesztés összegzés */
-.edit-summary {
-  display: flex;
-  gap: 2rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin-top: 1rem;
+.edit-meal-modal form{
+  flex:1;
+  overflow-y:auto;
+  padding-bottom:0;
 }
 
-.summary-item {
-  flex: 1;
-  text-align: center;
-  padding: 0.5rem;
+.basic-info-section{
+  margin-bottom:2rem;
+  padding:1.5rem;
+  background:#f8f9fa;
+  border-radius:8px;
 }
 
-.summary-item strong {
-  display: block;
-  color: #2c3e50;
-  margin-bottom: 0.25rem;
+.basic-info-section h3{
+  margin:0 0 1rem 0;
+  color:#2c3e50;
+  font-size:1.2rem;
 }
 
-/* Általános stílusok */
-.loading, .error, .no-meals {
-  text-align: center;
-  padding: 3rem;
+.ingredients-section{margin-bottom:2rem;}
+
+.section-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1rem;
+  padding-bottom:.75rem;
+  border-bottom:2px solid #e0e0e0;
 }
 
-
-
-.error {
-  color: #e74c3c;
-  background: #ffebee;
-  padding: 1rem;
-  border-radius: 4px;
-  margin: 1rem 0;
+.section-header h3{
+  margin:0;
+  color:#2c3e50;
+  font-size:1.2rem;
 }
 
-.no-meals {
-  color: #7f8c8d;
-  text-align: center;
-  padding: 3rem;
+.section-subtitle{
+  color:#7f8c8d;
+  font-size:.9rem;
 }
 
-.btn-add-first {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.3s ease;
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.amount-input:focus,
+.unit-select:focus{
+  outline:none;
+  border-color:#3498db;
+  box-shadow:0 0 0 2px rgba(52,152,219,.2);
 }
 
-.btn-add-first:hover {
-  background: #2980b9;
+.allergens-section{
+  margin:.75rem 0;
+  padding:.75rem;
+  border-radius:6px;
+  background:#f8f9fa;
+  min-height:70px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
-/* Reszponzív design */
-@media (max-width: 768px) {
-  .meals-management {
-    padding: 1rem;
-  }
-  
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  
-  .header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .meals-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .filters {
-    flex-direction: column;
-  }
-  
-  .filters select {
-    min-width: 100%;
-  }
-  
-  .form-row {
-    flex-direction: column;
-  }
-  
-  .form-row .form-group {
-    min-width: 100%;
-  }
-  
-  .edit-summary {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
+.allergens-section.safe{
+  background:#d4edda;
+  border:1px solid #c3e6cb;
+  color:#155724;
+  min-height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.allergens-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:.5rem;
+}
+
+.allergens-header strong{color:#2c3e50;}
+
+.allergens-list{
+  display:flex;
+  flex-wrap:nowrap;
+  overflow:hidden;
+  gap:.375rem;
+}
+
+.allergen-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:.25rem;
+  background:#fff;
+  border:1px solid #dee2e6;
+  border-radius:4px;
+  font-size:.75rem;
+  cursor:default;
+  transition:all .2s;
+  max-width:80px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.allergen-tag:hover{
+  background:#f8f9fa;
+  border-color:#adb5bd;
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(0,0,0,.1);
+}
+
+.allergen-icon-img{
+  width:38px;
+  height:38px;
+  padding:5px;
+  object-fit:contain;
+  border-radius:2px;
+}
+
+.allergen-icon-fallback{
+  width:16px;
+  height:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#6c757d;
+  color:#fff;
+  border-radius:2px;
+  font-size:.7rem;
+  font-weight:700;
+}
+
+.safe-badge{
+  font-size:1rem;
+  margin-right:.5rem;
+}
+
+.safe-text{
+  font-weight:500;
+  color:#155724;
+}
+
+.allergen-warning{
+  margin-bottom:1.5rem;
+  padding:1rem;
+  background:#f1e9cd;
+  border:1px solid #ddd2b1;
+  border-radius:6px;
+}
+
+.warning-header{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  margin-bottom:.75rem;
+}
+
+.warning-header h4{
+  margin:0;
+  color:#856404;
+  font-size:1rem;
+}
+
+.allergens-detail-list{margin-top:.75rem;}
+
+.allergen-detail{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.5rem;
+  background:rgba(255,255,255,.7);
+  border-radius:4px;
+  margin-bottom:.5rem;
+}
+
+.allergen-detail:last-child{margin-bottom:0;}
+
+.allergen-detail-icon{
+  width:20px;
+  height:20px;
+  object-fit:contain;
+}
+
+.allergen-detail-name{
+  font-weight:500;
+  color:#2c3e50;
+  min-width:120px;
+}
+
+.ingredient-allergens{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.25rem;
+  min-width:100px;
+  align-items:center;
+}
+
+.allergen-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:.125rem;
+  background:#e9ecef;
+  border:1px solid #ced4da;
+  border-radius:3px;
+  padding:.125rem .25rem;
+  font-size:.7rem;
+  max-width:60px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.allergen-chip-icon{
+  width:25px;
+  height:25px;
+  object-fit:contain;
+}
+
+.no-allergens{
+  color:#6c757d;
+  font-style:italic;
+}
+
+.allergen-summary{
+  color:#dc3545;
+  font-weight:500;
+  font-size:.9rem;
+}
+
+.allergen-tag[title*="Glutén"]{border-color:#6a8b0e50;background:#e7e3a4;}
+.allergen-tag[title*="Tej"]{border-color:#3d5e6359;background:#60747775;}
+.allergen-tag[title*="Tojás"]{border-color:#6e42c160;background:#3a0e4e4f;}
+.allergen-tag[title*="Hal"]{border-color:#dfc01350;background:#ffdb79c5;}
+.allergen-tag[title*="Dió"]{border-color:#f87f1c6c;background:#ca8d5c7e;}
+.allergen-tag[title*="Földimogyoró"]{border-color:#df77227e;background:#f7c584b9;}
+.allergen-tag[title*="Zeller"]{border-color:#7849b644;background:#967ebec4;}
+.allergen-tag[title*="Rákfélék"]{border-color:#2dc5be44;background:#6bafbbc2;}
+.allergen-tag[title*="Mustár"]{border-color:#17157262;background:#84889eb9;}
+
+*{
+  scrollbar-width:thin;
+  scrollbar-color:#bdc3c7 #f8f9fa;
+}
+
+*::-webkit-scrollbar{
+  width:8px;
+  height:8px;
+}
+
+*::-webkit-scrollbar-track{
+  background:#f8f9fa;
+  border-radius:4px;
+}
+
+*::-webkit-scrollbar-thumb{
+  background-color:#bdc3c7;
+  border-radius:4px;
+}
+
+*::-webkit-scrollbar-thumb:hover{
+  background-color:#95a5a6;
+}
+
+[title]{position:relative;}
+
+[title]:hover::after{
+  content:attr(title);
+  position:absolute;
+  bottom:100%;
+  left:50%;
+  transform:translateX(-50%);
+  padding:.5rem;
+  background:rgba(0,0,0,.8);
+  color:#fff;
+  border-radius:4px;
+  font-size:.75rem;
+  white-space:nowrap;
+  z-index:1000;
+  margin-bottom:.5rem;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(-10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@keyframes slideDown{
+  from{opacity:0;transform:translateY(-10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@media (max-width:768px){
+  .meals-management{padding:1rem;}
+  .header{flex-direction:column;gap:1rem;align-items:flex-start;}
+  .header h1{font-size:1.5rem;}
+  .meals-grid{grid-template-columns:1fr;}
+  .filters{flex-direction:column;}
+  .filters select{min-width:100%;}
+  .form-row{flex-direction:column;}
+  .form-row .form-group{min-width:100%;}
+  .edit-summary{flex-direction:column;gap:1rem;}
   .ingredients-table,
-  .current-ingredients-table {
-    font-size: 0.8rem;
-  }
-  
+  .current-ingredients-table{font-size:.8rem;}
   .ingredients-table th,
   .ingredients-table td,
   .current-ingredients-table th,
-  .current-ingredients-table td {
-    padding: 0.5rem;
-  }
-  
-  .nutrition-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
+  .current-ingredients-table td{padding:.5rem;}
+  .nutrition-bar{flex-direction:column;align-items:flex-start;gap:.5rem;}
   .bar-label,
-  .bar-value {
-    width: auto;
-  }
-  
-  .bar-container {
-    width: 100%;
-  }
-}
-
-/* Animációk */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal {
-  animation: fadeIn 0.3s ease;
-}
-
-/* Görgetésbarát stílusok */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #bdc3c7 #f8f9fa;
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #f8f9fa;
-  border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #bdc3c7;
-  border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background-color: #95a5a6;
-}
-
-/* Váltó állapotok */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateY(-20px);
-}
-
-/* Tooltip stílusok */
-[title] {
-  position: relative;
-}
-
-[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  z-index: 1000;
-  margin-bottom: 0.5rem;
-}
-
-.edit-meal-modal {
-  max-width: 1000px;
-}
-
-/* Alapadatok szekció */
-.basic-info-section {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.basic-info-section h3 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1.2rem;
-}
-
-/* Összetevők szekció */
-.ingredients-section {
-  margin-bottom: 2rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.section-header h3 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.2rem;
-}
-
-.section-subtitle {
-  color: #7f8c8d;
-  font-size: 0.9rem;
-}
-
-/* Hozzávaló hozzáadása */
-.add-ingredient-section {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.add-ingredient-section h4 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1rem;
-}
-
-.add-ingredient-form {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
-}
-
-.search-container {
-  position: relative;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95rem;
-}
-
-.search-results {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 10;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.search-result-item {
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.search-result-item:hover {
-  background: #f8f9fa;
-}
-
-.search-result-item:last-child {
-  border-bottom: none;
-}
-
-.result-name {
-  font-weight: 500;
-  color: #2c3e50;
-  flex: 1;
-}
-
-.result-type {
-  font-size: 0.8rem;
-  color: #7f8c8d;
-  background: #f8f9fa;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  margin: 0 0.5rem;
-}
-
-.result-info {
-  font-size: 0.8rem;
-  color: #3498db;
-  font-weight: 500;
-}
-
-.amount-input, .unit-select {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  width: 100%;
-}
-
-.amount-input.small, .unit-select.small {
-  padding: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.btn-add-ingredient {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  width: 100%;
-  margin-top: 1.75rem;
-  transition: background 0.3s ease;
-}
-
-.btn-add-ingredient:hover:not(:disabled) {
-  background: #2980b9;
-}
-
-.btn-add-ingredient:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.selected-ingredient-info {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: #e8f5e9;
-  border-radius: 4px;
-  border-left: 4px solid #2ecc71;
-  font-size: 0.9rem;
-}
-
-.ingredient-details {
-  display: block;
-  color: #555;
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
-}
-
-/* Jelenlegi hozzávalók */
-.current-ingredients-section {
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.current-ingredients-section h4 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1rem;
-}
-
-.no-current-ingredients {
-  text-align: center;
-  padding: 2rem;
-  color: #7f8c8d;
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
-}
-
-.current-ingredients-table-container {
-  overflow-x: auto;
-  margin-bottom: 1.5rem;
-}
-
-.current-ingredients-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.current-ingredients-table th,
-.current-ingredients-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  vertical-align: middle;
-}
-
-.current-ingredients-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #2c3e50;
-  white-space: nowrap;
-  border-bottom: 2px solid #ddd;
-}
-
-.current-ingredients-table tbody tr:hover {
-  background: #f8f9fa;
-}
-
-.ingredient-name {
-  font-weight: 500;
-  color: #2c3e50;
-}
-
-.ingredient-nutrition {
-  margin-top: 0.25rem;
-}
-
-.ingredient-nutrition .ingredient-type {
-  padding: 0.15rem 0.4rem;
-  font-size: 0.7rem;
-}
-
-.calories-display {
-  font-weight: 500;
-  color: #e74c3c;
-  font-size: 0.9rem;
-}
-
-.btn-remove-ingredient {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  transition: background 0.3s ease;
-}
-
-.btn-remove-ingredient:hover {
-  background: #c0392b;
-}
-
-/* Összegzés */
-.edit-summary {
-  display: flex;
-  gap: 2rem;
-  padding: 1rem;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-.summary-item {
-  flex: 1;
-  text-align: center;
-  padding: 0.5rem;
-}
-
-.summary-label {
-  display: block;
-  color: #7f8c8d;
-  font-size: 0.9rem;
-  margin-bottom: 0.25rem;
-}
-
-.summary-value {
-  display: block;
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-/* Reszponzív design kiegészítések */
-@media (max-width: 768px) {
-  .edit-meal-modal {
-    width: 95%;
-    max-height: 95vh;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .edit-summary {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .current-ingredients-table {
-    font-size: 0.8rem;
-  }
-  
-  .current-ingredients-table th,
-  .current-ingredients-table td {
-    padding: 0.5rem;
-  }
-  
-  .form-row {
-    flex-direction: column;
-  }
-}
-
-/* Görgetésbarát nagy modal */
-.edit-meal-modal {
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.edit-meal-modal form {
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 0;
-}
-
-/* Animáció a keresési eredményekhez */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.search-results {
-  animation: slideDown 0.2s ease;
-}
-
-/* Input focus stílusok */
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.amount-input:focus,
-.unit-select:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-
-
-
-.allergen-icon {
-  font-size: 0.875rem;
-}
-
-.allergen-count {
-  background: #dc3545;
-  color: white;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: bold;
-}
-
-/* Allergén szekció a kártyában */
-.allergens-section {
-  margin: 0.75rem 0;
-  padding: 0.75rem;
-  border-radius: 6px;
-  background: #f8f9fa;
-}
-
-.allergens-section.safe {
-  background: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
-}
-
-.allergens-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.allergens-header strong {
-  color: #2c3e50;
-}
-
-.allergens-header small {
-  color: #6c757d;
-  font-size: 0.8rem;
-}
-
-.allergens-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-
-.allergen-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  cursor: default;
-  transition: all 0.2s;
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.allergen-tag:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.allergen-icon-img {
-  width: 38px;
-  height: 38px;
-  padding: 5px;
-  object-fit: contain;
-  border-radius: 2px;
-}
-
-.allergen-icon-fallback {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #6c757d;
-  color: white;
-  border-radius: 2px;
-  font-size: 0.7rem;
-  font-weight: bold;
-}
-
-.allergen-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.safe-badge {
-  font-size: 1rem;
-  margin-right: 0.5rem;
-}
-
-.safe-text {
-  font-weight: 500;
-  color: #155724;
-}
-
-/* Allergén figyelmeztetés modalban */
-.allergen-warning {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: #f1e9cd;
-  border: 1px solid #ddd2b1;
-  border-radius: 6px;
-}
-
-.warning-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.warning-icon {
-  font-size: 1.25rem;
-}
-
-.warning-header h4 {
-  margin: 0;
-  color: #856404;
-  font-size: 1rem;
-}
-
-.allergens-detail-list {
-  margin-top: 0.75rem;
-}
-
-.allergen-detail {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: rgba(255,255,255,0.7);
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-}
-
-.allergen-detail:last-child {
-  margin-bottom: 0;
-}
-
-.allergen-detail-icon {
+  .bar-value{width:auto;}
+  .bar-container{width:100%;}
+  .edit-meal-modal{width:95%;max-height:95vh;}
+  .section-header{flex-direction:column;align-items:flex-start;gap:.5rem;}
+  .allergen-tag{max-width:60px;font-size:.7rem;padding:.125rem .25rem;}
+  .allergen-detail{flex-direction:column;align-items:flex-start;gap:.25rem;}
+  .allergen-detail-name{min-width:auto;}
+  .allergen-chip{max-width:50px;font-size:.65rem;}
+}
+
+.btn-add{
   width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-.allergen-detail-name {
-  font-weight: 500;
-  color: #2c3e50;
-  min-width: 120px;
-}
-
-.allergen-detail-ingredients {
-  color: #6c757d;
-  font-size: 0.85rem;
-  font-style: italic;
-  flex: 1;
-}
-
-/* Allergén chip-ek az összetevők táblázatban */
-.ingredient-allergens {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  min-width: 100px;
-  text-align: center;
-  align-items: center;
-  margin: auto;
-
-}
-
-
-
-.allergen-chip {
-
-  display: inline-flex;
-  align-items: center;
-  gap: 0.125rem;
-  background: #e9ecef;
-  border: 1px solid #ced4da;
-  border-radius: 3px;
-  padding: 0.125rem 0.25rem;
-  font-size: 0.7rem;
-  max-width: 60px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.allergen-chip-icon {
-  width: 25px;
-  height: 25px;
-  object-fit: contain;
-}
-
-.no-allergens {
-  color: #6c757d;
-  font-style: italic;
-}
-
-.allergen-summary {
-  color: #dc3545;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-/* Reszponzív design allergénekhez */
-@media (max-width: 768px) {
-  .allergen-tag {
-    max-width: 60px;
-    font-size: 0.7rem;
-    padding: 0.125rem 0.25rem;
-  }
-  
-  .allergen-detail {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-  
-  .allergen-detail-name {
-    min-width: auto;
-  }
-  
-  .allergen-chip {
-    max-width: 50px;
-    font-size: 0.65rem;
-  }
-}
-
-/* Allergén színek típusonként */
-.allergen-tag[title*="Glutén"] {
-  border-color: #6a8b0e50;
-  background: #e7e3a4;
-  
-}
-
-.allergen-tag[title*="Tej"] {
-  border-color: #3d5e6359;
-  background: #60747775;
-}
-
-.allergen-tag[title*="Tojás"] {
-  border-color: #6e42c160;
-  background: #3a0e4e4f;
-}
-
-.allergen-tag[title*="Hal"] {
-  border-color: #dfc01350;
-  background: #ffdb79c5;
-}
-
-.allergen-tag[title*="Dió"] {
-  border-color: #f87f1c6c;
-  background: #ca8d5c7e;
-}
-
-.allergen-tag[title*="Földimogyoró"] {
-  border-color: #df77227e;
-  background: #f7c584b9;
-}
-
-.allergen-tag[title*="Zeller"] {
-  border-color: #7849b644;
-  background: #967ebec4;
-}
-
-.allergen-tag[title*="Rákfélék"] {
-  border-color: #2dc5be44;
-  background: #6bafbbc2;
-}
-
-.allergen-tag[title*="Mustár"] {
-  border-color: #17157262;
-  background: #84889eb9;
 }
 </style>
