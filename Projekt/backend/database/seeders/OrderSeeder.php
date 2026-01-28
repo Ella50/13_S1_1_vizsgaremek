@@ -13,12 +13,6 @@ class OrderSeeder extends Seeder
         // Ellenőrizzük, hogy létezik-e a user id=2
         $userExists = DB::table('users')->where('id', 2)->exists();
         
-        if (!$userExists) {
-            $this->command->error('User id=2 nem létezik');
-            return;
-        }
-        
-
         $pricesCount = DB::table('prices')->count();
         
 

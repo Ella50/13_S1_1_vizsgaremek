@@ -52,14 +52,15 @@ class PersonalOrderController extends Controller
             ]);
         }
         
-        // **JAVÍTVA: soupMeal, optionAMeal, optionBMeal, otherMeal**
         $query = Order::where('user_id', $user->id)
-            ->with(['menuItem' => function($q) {
-                $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
-            }])
-            ->orderBy('orderDate', 'desc');
+            ->with([
+                        'menuItem' => function($q) {
+                            $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
+                        },
+                        'price'
+                    ])
+                    ->orderBy('orderDate', 'desc');
         
-        // ... (szűrések változatlanok) ...
         
         $orders = $query->paginate(20);
         
@@ -134,19 +135,39 @@ class PersonalOrderController extends Controller
         $user = Auth::user();
         
         try {
+            Log::info('getAvailableDates - kezdés', ['user_id' => $user->id]);
+            
+            // Először ellenőrizzük a MenuItem-eket
+            $menuItemsCount = MenuItem::count();
+            Log::info('MenuItem-ek száma', ['count' => $menuItemsCount]);
+            
             $availableDates = MenuItem::where('day', '>', now()->format('Y-m-d'))
+                ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
                 ->orderBy('day')
                 ->get()
                 ->map(function($menuItem) use ($user) {
+                    Log::debug('MenuItem feldolgozása', [
+                        'id' => $menuItem->id,
+                        'day' => $menuItem->day,
+                        'soup_id' => $menuItem->soup,
+                        'optionA_id' => $menuItem->optionA,
+                        'optionB_id' => $menuItem->optionB,
+                        'has_soupMeal' => $menuItem->relationLoaded('soupMeal'),
+                        'soup_meal' => $menuItem->soupMeal ? $menuItem->soupMeal->mealName : null
+                    ]);
+                    
                     // Ellenőrizzük, hogy van-e már rendelés
-                    $hasOrder = false;
-                    try {
-                        $hasOrder = Order::where('user_id', $user->id)
+                    $hasOrder = Order::where('user_id', $user->id)
+                        ->where('menuItems_id', $menuItem->id)
+                        ->where('orderStatus', 'Rendelve')
+                        ->exists();
+                    
+                    $order = null;
+                    if ($hasOrder) {
+                        $order = Order::where('user_id', $user->id)
                             ->where('menuItems_id', $menuItem->id)
                             ->where('orderStatus', 'Rendelve')
-                            ->exists();
-                    } catch (\Exception $e) {
-                        $hasOrder = false;
+                            ->first();
                     }
                         
                     return [
@@ -154,86 +175,111 @@ class PersonalOrderController extends Controller
                         'display_date' => $menuItem->day->format('Y. m. d.'),
                         'day_name' => $menuItem->day->translatedFormat('l'),
                         'has_order' => $hasOrder,
-                        'deadline' => null,
-                        'menu' => [
-                            // **JAVÍTVA: soupMeal, optionAMeal, optionBMeal, otherMeal**
-                            'soup' => $menuItem->soupMeal,
-                            'optionA' => $menuItem->optionAMeal,
-                            'optionB' => $menuItem->optionBMeal,
-                            'other' => $menuItem->otherMeal
-                        ]
+                        'menu_item_id' => $menuItem->id,
+                        'order_id' => $order ? $order->id : null,
+                        'selected_option' => $order ? $order->selectedOption : null,
+                        'menu' => $menuItem->getMenuData(),
+                        'can_order' => $this->canOrderForDate($menuItem->day),
+                        'order_deadline' => $this->getOrderDeadline($menuItem->day)
                     ];
                 });
                 
+            Log::info('getAvailableDates - sikeres', ['count' => $availableDates->count()]);
+            
             return response()->json([
                 'success' => true,
                 'data' => $availableDates,
-                'count' => $availableDates->count()
+                'count' => $availableDates->count(),
+                'debug' => [
+                    'menu_items_count' => $menuItemsCount,
+                    'user_id' => $user->id
+                ]
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Elérhető dátumok hiba', ['error' => $e->getMessage()]);
-            
-            $testDates = [];
-            for ($i = 1; $i <= 5; $i++) {
-                $date = now()->addDays($i);
-                $testDates[] = [
-                    'date' => $date->format('Y-m-d'),
-                    'display_date' => $date->format('Y. m. d.'),
-                    'day_name' => $date->translatedFormat('l'),
-                    'has_order' => false,
-                    'deadline' => null,
-                    'menu' => [
-                        'soup' => ['mealName' => 'Teszt leves'],
-                        'optionA' => ['mealName' => 'Teszt A opció'],
-                        'optionB' => ['mealName' => 'Teszt B opció'],
-                        'other' => null
-                    ]
-                ];
-            }
+            Log::error('Elérhető dátumok hiba', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             return response()->json([
-                'success' => true,
-                'data' => $testDates,
-                'count' => count($testDates),
-                'message' => 'Teszt adatok'
-            ]);
+                'success' => false,
+                'message' => 'Hiba az elérhető dátumok lekérdezésekor.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
     }
+    private function canOrderForDate($date)
+    {
+        $orderDate = \Carbon\Carbon::parse($date);
+        $deadline = $orderDate->copy()->subDay()->setTime(10, 0, 0); // előző nap 10:00-ig
+        return now() <= $deadline;
+    }
+
+    private function getOrderDeadline($date)
+    {
+        $orderDate = \Carbon\Carbon::parse($date);
+        return $orderDate->copy()->subDay()->setTime(10, 0, 0)->format('Y-m-d H:i:s');
+    }
+
     
     /**
      * Havi statisztika számítás
      */
-    private function getMonthlyStats1($userId)
-    {
-        try {
-            $currentMonth = now()->format('Y-m');
-            
-            $stats = Order::where('user_id', $userId)
-                ->where('orderStatus', 'Rendelve')
-                ->select(
-                    DB::raw('YEAR(orderDate) as year'),
-                    DB::raw('MONTH(orderDate) as month'),
-                    DB::raw('COUNT(*) as count'),
-                    DB::raw('SUM(price) as total') // FIGYELEM: nincs price mező!
-                )
-                ->groupBy('year', 'month')
-                ->orderBy('year', 'desc')
-                ->orderBy('month', 'desc')
-                ->get();
+    // PersonalOrderController.php-be
+        private function getMonthlyStats1($userId)
+        {
+            try {
+                $currentMonth = now()->format('Y-m');
                 
-            return $stats;
-            
-        } catch (\Exception $e) {
-            Log::error('Havi statisztika hiba', ['error' => $e->getMessage()]);
-            return [];
+                $stats = Order::where('user_id', $userId)
+                    ->where('orderStatus', 'Rendelve')
+                    ->with('price') // Betöltjük az árat
+                    ->select(
+                        DB::raw('YEAR(orderDate) as year'),
+                        DB::raw('MONTH(orderDate) as month'),
+                        DB::raw('COUNT(*) as count'),
+                        DB::raw('SUM(
+                            CASE 
+                                WHEN prices.id IS NOT NULL THEN prices.amount 
+                                ELSE 0 
+                            END
+                        ) as total')
+                    )
+                    ->leftJoin('prices', 'orders.price_id', '=', 'prices.id')
+                    ->groupBy('year', 'month')
+                    ->orderBy('year', 'desc')
+                    ->orderBy('month', 'desc')
+                    ->get();
+                    
+                return $stats;
+                
+            } catch (\Exception $e) {
+                Log::error('Havi statisztika hiba', ['error' => $e->getMessage()]);
+                return [];
+            }
         }
-    }
     
-    // **JAVÍTVA: store metódusban is**
+
     public function store(Request $request)
     {
-        // ... (előző kód) ...
+        $user = Auth::user();
+        
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date',
+            'menuitems_id' => 'required|exists:menuItems,id',
+            'selectedOption' => 'required|in:A,B,soup,other'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Érvénytelen adatok',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        $menuItem = MenuItem::find($request->menuitems_id);
         
         if (!$menuItem) {
             return response()->json([
@@ -242,49 +288,92 @@ class PersonalOrderController extends Controller
             ], 404);
         }
         
+        // Ellenőrizzük, hogy van-e már rendelés erre a napra
+        $existingOrder = Order::where('user_id', $user->id)
+            ->where('menuItems_id', $request->menuitems_id)
+            ->where('orderStatus', 'Rendelve')
+            ->first();
+            
+        if ($existingOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Már van aktív rendelése erre a napra.',
+                'data' => $existingOrder
+            ], 409);
+        }
+        
+        // Ellenőrizzük a rendelési határidőt
+        if (!$this->canOrderForDate($menuItem->day)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A rendelési határidő lejárt erre a napra.',
+                'deadline' => $this->getOrderDeadline($menuItem->day)
+            ], 400);
+        }
+        
         try {
-            // Ár meghatározása
+            // Ár meghatározása - userType és hasDiscount alapján
             $price = $this->calculateUserPrice($user);
             
+            // Ha nincs ár, hozzunk létre egy alapértelmezettet
             if (!$price) {
-                $defaultPrice = 450;
+                $priceCategory = $user->hasDiscount ? 'Kedvezményes' : 'Normál';
                 
-                $order = Order::create([
-                    'user_id' => $user->id,
-                    'menuItems_id' => $menuItem->id,
-                    'orderDate' => $request->date,
-                    'selectedOption' => $request->selectedOption,
-                    'orderStatus' => 'Rendelve',
-                    'invoice_id' => null,
-                    'price_id' => null,
-                    'price' => $defaultPrice, // **HOZZÁADVA: price mező**
+                // Alapértelmezett árak
+                $defaultAmounts = [
+                    'Tanuló' => ['Normál' => 450, 'Kedvezményes' => 300],
+                    'Tanár' => ['Normál' => 650, 'Kedvezményes' => 400],
+                    'Dolgozó' => ['Normál' => 600, 'Kedvezményes' => 400],
+                    'Külsős' => ['Normál' => 750, 'Kedvezményes' => 500],
+                ];
+                
+                $amount = $defaultAmounts[$user->userType][$priceCategory] ?? 450;
+                
+                $price = Price::create([
+                    'userType' => $user->userType,
+                    'priceCategory' => $priceCategory,
+                    'amount' => $amount,
+                    'validFrom' => now()->toDateString(),
+                    'validTo' => null
                 ]);
-            } else {
-                $order = Order::create([
+                
+                Log::warning('Alapértelmezett ár létrehozva', [
                     'user_id' => $user->id,
-                    'menuItems_id' => $menuItem->id,
-                    'orderDate' => $request->date,
-                    'selectedOption' => $request->selectedOption,
-                    'orderStatus' => 'Rendelve',
-                    'invoice_id' => null,
                     'price_id' => $price->id,
-                    'price' => $price->amount, // **HOZZÁADVA: price mező**
+                    'amount' => $amount
                 ]);
             }
+            
+            $order = Order::create([
+                'user_id' => $user->id,
+                'menuItems_id' => $menuItem->id,
+                'orderDate' => $request->date,
+                'selectedOption' => $request->selectedOption,
+                'orderStatus' => 'Rendelve',
+                'invoice_id' => null,
+                'price_id' => $price->id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
             
             Log::info('Rendelés létrehozva', [
                 'order_id' => $order->id,
                 'user_id' => $user->id,
-                'date' => $request->date
+                'user_type' => $user->userType,
+                'has_discount' => $user->hasDiscount,
+                'date' => $request->date,
+                'menu_item_id' => $menuItem->id,
+                'price_id' => $order->price_id,
+                'amount' => $price->amount,
+                'price_category' => $price->priceCategory
             ]);
             
             return response()->json([
                 'success' => true,
                 'message' => 'Rendelésed sikeresen rögzítettük!',
                 'data' => $order->load(['menuItem' => function($q) {
-                    // **JAVÍTVA**
                     $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
-                }])
+                }, 'price'])
             ], 201);
             
         } catch (\Exception $e) {
@@ -301,6 +390,80 @@ class PersonalOrderController extends Controller
             ], 500);
         }
     }
+
+/**
+ * Felhasználó árának kiszámítása
+ */
+/**
+ * Felhasználó árának kiszámítása
+ */
+    private function calculateUserPrice($user)
+    {
+        try {
+            // Meghatározzuk a kategóriát a hasDiscount alapján
+            $priceCategory = $user->hasDiscount ? 'Kedvezményes' : 'Normál';
+            
+            Log::debug('Árkalkuláció', [
+                'user_id' => $user->id,
+                'userType' => $user->userType,
+                'hasDiscount' => $user->hasDiscount,
+                'priceCategory' => $priceCategory
+            ]);
+            
+            // Keresés a prices táblában
+            $price = Price::where('userType', $user->userType)
+                ->where('priceCategory', $priceCategory)
+                ->where('validFrom', '<=', now()->toDateString())
+                ->where(function($query) {
+                    $query->where('validTo', '>=', now()->toDateString())
+                        ->orWhereNull('validTo');
+                })
+                ->orderBy('validFrom', 'desc') // Legújabb ár
+                ->first();
+                
+            if (!$price) {
+                Log::warning('Nem található ár a felhasználóhoz', [
+                    'userType' => $user->userType,
+                    'priceCategory' => $priceCategory,
+                    'user_id' => $user->id
+                ]);
+                
+                // Visszaesés: próbáljunk csak userType alapján
+                $price = Price::where('userType', $user->userType)
+                    ->orderBy('validFrom', 'desc')
+                    ->first();
+            }
+                
+            return $price;
+        } catch (\Exception $e) {
+            Log::error('Árképzési hiba', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
+    }
+
+
+
+    private function canCancelOrder($order)
+    {
+        try {
+            $orderDate = \Carbon\Carbon::parse($order->orderDate);
+            $deadline = $orderDate->copy()->setTime(8, 0, 0); // aznap 8:00-ig
+            return now() <= $deadline;
+        } catch (\Exception $e) {
+            Log::error('Lemondhatóság ellenőrzése hiba', [
+                'error' => $e->getMessage(),
+                'order_id' => $order->id
+            ]);
+            return false;
+        }
+    }
+
+
+
 
     public function getAvailableDatesByMonth(Request $request, $year, $month)
 {
@@ -424,4 +587,114 @@ class PersonalOrderController extends Controller
         }
         
     }
+    // Adj hozzá egy új metódust a törölt rendelések újrarendeléséhez
+public function reorder(Request $request, $orderId)
+{
+    $user = Auth::user();
+    
+    $validator = Validator::make($request->all(), [
+        'selectedOption' => 'required|in:A,B,soup,other'
+    ]);
+    
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Érvénytelen adatok',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+    
+    try {
+        // Megkeressük a régi rendelést
+        $oldOrder = Order::where('id', $orderId)
+            ->where('user_id', $user->id)
+            ->first();
+            
+        if (!$oldOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A rendelés nem található.'
+            ], 404);
+        }
+        
+        // Ellenőrizzük a rendelési határidőt
+        $menuItem = MenuItem::find($oldOrder->menuItems_id);
+        if (!$this->canOrderForDate($menuItem->day)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A rendelési határidő lejárt erre a napra.',
+                'deadline' => $this->getOrderDeadline($menuItem->day)
+            ], 400);
+        }
+        
+        // Ellenőrizzük, hogy van-e már aktív rendelés
+        $existingOrder = Order::where('user_id', $user->id)
+            ->where('menuItems_id', $oldOrder->menuItems_id)
+            ->where('orderStatus', 'Rendelve')
+            ->first();
+            
+        if ($existingOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Már van aktív rendelése erre a napra.',
+                'data' => $existingOrder
+            ], 409);
+        }
+        
+        // Új rendelés létrehozása
+        $price = $this->calculateUserPrice($user);
+        
+        if (!$price) {
+            $priceCategory = $user->hasDiscount ? 'Kedvezményes' : 'Normál';
+            $amount = 450; // Alapértelmezett ár
+            
+            $price = Price::create([
+                'userType' => $user->userType,
+                'priceCategory' => $priceCategory,
+                'amount' => $amount,
+                'validFrom' => now()->toDateString(),
+                'validTo' => null
+            ]);
+        }
+        
+        $order = Order::create([
+            'user_id' => $user->id,
+            'menuItems_id' => $oldOrder->menuItems_id,
+            'orderDate' => $oldOrder->orderDate,
+            'selectedOption' => $request->selectedOption,
+            'orderStatus' => 'Rendelve',
+            'invoice_id' => null,
+            'price_id' => $price->id,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+        
+        Log::info('Újrarendelés létrehozva', [
+            'old_order_id' => $oldOrder->id,
+            'new_order_id' => $order->id,
+            'user_id' => $user->id
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Rendelésed sikeresen újrarögzítettük!',
+            'data' => $order->load(['menuItem', 'price'])
+        ], 201);
+        
+    } catch (\Exception $e) {
+        Log::error('Újrarendelési hiba', [
+            'error' => $e->getMessage(),
+            'user_id' => $user->id,
+            'order_id' => $orderId
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt az újrarendelés során.',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
+
+
 }

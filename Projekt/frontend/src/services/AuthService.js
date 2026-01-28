@@ -210,13 +210,23 @@ class AuthService {
                    role === 'Tanár' ? 'Tanár' : role
     }
   }
+
+
+  async getUserInfo() {
+    try {
+      const response = await this.api.get('/me');
+      return response.data;
+    } catch (error) {
+      console.error('Felhasználói adatok lekérése sikertelen:', error);
+      throw error;
+    }
+  }
   
   async getCurrentUser() {
     try {
       const response = await this.api.get('/user')
       return response.data
     } catch (error) {
-      // Ne hívjunk logout()-ot itt, mert az ciklust okozhat
       if (error.response?.status === 401) {
         this.clearAuth()
       }

@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\PersonalOrderController;
 use App\Http\Controllers\Api\OrdersController;
 
 
-// Publikus Ăştvonalak
+// Publikus utvonalak
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -21,21 +21,19 @@ Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']
 // Opcionális tokenellenőrzés???
 Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 
-
-Route::get('/menu/available-dates', [MenuController::class, 'availableDates']);
-Route::get('/menu/existing-dates', [MenuController::class, 'existingDates']);
-Route::get('/menu/{date}', [MenuController::class, 'getMenuByDate']) ->where('date', '^\d{4}-\d{2}-\d{2}$');
-Route::post('/menu', [MenuController::class, 'saveMenu']);
-Route::post('/menu', [MenuController::class, 'store']);
-//Route::put('/menu/{menu}', [MenuController::class, 'update']);
-
-
-
+//Menü utvonalak (nem a sanctumba van ezért publikusak)
 Route::prefix('menu')->group(function () {
-        Route::get('/today', [MenuController::class, 'getTodayMenu']);
-        Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
-        
-    });
+    Route::get('/available-dates', [MenuController::class, 'availableDates']);
+    Route::get('/existing-dates', [MenuController::class, 'existingDates']);
+    Route::get('/{date}', [MenuController::class, 'getMenuByDate']) ->where('date', '^\d{4}-\d{2}-\d{2}$');
+    Route::post('/', [MenuController::class, 'saveMenu']);
+    Route::post('/', [MenuController::class, 'store']);
+    //Route::put('/{menu}', [MenuController::class, 'update']);
+
+    Route::get('/today', [MenuController::class, 'getTodayMenu']);
+    Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
+});
+
 
 // védett utvonalak
 Route::middleware('auth:sanctum')->group(function () {
@@ -43,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     
-    // User profile
+    // User profil
     Route::prefix('user')->group(function () {
         Route::get('/profile', [UserController::class, 'profile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
@@ -52,15 +50,16 @@ Route::middleware('auth:sanctum')->group(function () {
         // Személyes rendelések
         Route::prefix('personal-orders')->group(function () {
             Route::get('/', [PersonalOrderController::class, 'index']);
+            Route::post('/{id}/reorder', [PersonalOrderController::class, 'reorder']);
+            Route::patch('/{order}/update-option', [PersonalOrderController::class, 'updateOption']);
+
             Route::get('/date/{date}', [PersonalOrderController::class, 'getByDate']);
-            Route::post('/', [PersonalOrderController::class, 'store']);
-            Route::delete('/{id}', [PersonalOrderController::class, 'cancel']);
             Route::get('/available-dates', [PersonalOrderController::class, 'getAvailableDates']);
-                
             Route::get('/available-months', [PersonalOrderController::class, 'getAvailableMonths']);
             Route::get('/month/{year}/{month}', [PersonalOrderController::class, 'getAvailableDatesByMonth']);
-            Route::get('/date/{date}', [PersonalOrderController::class, 'getByDate']);
             Route::post('/', [PersonalOrderController::class, 'store']);
+            Route::delete('/{id}', [PersonalOrderController::class, 'cancel']);
+
         });
     });
     
@@ -71,13 +70,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
         Route::post('/users/bulk-status', [AdminController::class, 'bulkUpdateUserStatus']);
-        
         Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
 
         Route::get('/users/{user}', [AdminController::class, 'getUserDetails']);
         Route::put('/users/{user}', [AdminController::class, 'updateUser']);
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
-
         Route::get('/counties', [AdminController::class, 'getCounties']);
         Route::get('/cities/by-county/{county_id}', [AdminController::class, 'getCitiesByCounty']);
         Route::get('/cities/search', [AdminController::class, 'searchCities']);
@@ -86,15 +83,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Konyha
     Route::prefix('kitchen')->group(function () {
 
-        // Konyhai rendelések összesítése
-        Route::prefix('orders')->group(function () {
-            Route::get('/', [OrdersController::class, 'index']);
-            Route::get('/today', [OrdersController::class, 'getTodaySummary']);
-            Route::get('/date/{date}', [OrdersController::class, 'getByDate']);
-            Route::get('/weekly', [OrdersController::class, 'getWeeklySummary']);
-            Route::get('/preparation/{date}', [OrdersController::class, 'getPreparationList']);
-            Route::get('/export', [OrdersController::class, 'exportOrders']);
-        });
 
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::get('/meals/with-allergens', [KitchenController::class, 'mealsWithAllergens']);
@@ -110,6 +98,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/categories', [KitchenController::class, 'getCategories']);
 
+
+        // Konyhai rendelések összesítése
+        Route::prefix('orders')->group(function () {
+            Route::get('/', [OrdersController::class, 'index']);
+            Route::get('/today', [OrdersController::class, 'getTodaySummary']);
+            Route::get('/date/{date}', [OrdersController::class, 'getByDate']);
+            Route::get('/weekly', [OrdersController::class, 'getWeeklySummary']);
+            Route::get('/preparation/{date}', [OrdersController::class, 'getPreparationList']);
+            Route::get('/export', [OrdersController::class, 'exportOrders']);
+        });
+
         //Hozzávalók kezelése (ingredient.vue)
         Route::prefix('ingredients')->group(function () {
             Route::get('/', [KitchenController::class, 'getIngredientsList']);
@@ -120,10 +119,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/bulk-availability', [KitchenController::class, 'bulkUpdateIngredientAvailability']); 
         });
 
-
-        Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });
 });
+
+/*
 Route::post('/reset-password', [App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLinkEmail']);
 
 Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
@@ -143,4 +142,4 @@ Route::post("/test-password", function(Illuminate\Http\Request $request) {
         "received_email" => $request->input("email", "nincs"),
         "server_time" => date("Y-m-d H:i:s")
     ]);
-});
+});*/

@@ -570,7 +570,7 @@
           <button @click="closeIngredientsModal" class="close-btn">&times;</button>
         </div>
         
-        <div v-if="loadingIngredients" class="loading">Összetevők betöltése...</div>
+        <div v-if="loadingIngredients " class="loading">{{ canEdit ? 'Összetevők' : 'Tápérték információk'}} betöltése...</div>
         
         <div v-else-if="ingredientsError" class="error">{{ ingredientsError }}</div>
         
