@@ -13,16 +13,23 @@ class MenuController extends Controller
     public function existingDates()
     {
         return response()->json(
-            MenuItem::distinct()->pluck('day')
-
+            MenuItem::query()
+                ->orderBy('day')
+                ->pluck('day')
+                ->map(fn($d) => substr((string)$d, 0, 10))
+                ->values()
         );
     }
+
 
     // 🔹 Még szabad napok
     public function availableDates(Request $request)
     {
         $month = $request->query('month'); // pl: 2026-01
-        $usedDays = MenuItem::pluck('day')->toArray();
+        $usedDays = MenuItem::query()
+            ->pluck('day')
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->toDateString())
+            ->toArray();
 
         if ($month) {
             $start = Carbon::parse($month . '-01');
