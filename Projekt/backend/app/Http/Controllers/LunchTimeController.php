@@ -64,7 +64,7 @@ class LunchTimeController extends Controller
             ]);
         }
 
-        $fullName = trim($user->lastName . ' ' . $user->firstName . ' ' . ($user->thirdName ?? ''));
+        $fullName = trim($user->firstName . ' ' . $user->lastName . ' ' . ($user->thirdName ?? ''));
 
         // 3) Mai rendelés (mit eszik) + van-e rendelése
         $order = Order::where('user_id', $user->id)
