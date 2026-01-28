@@ -99,7 +99,6 @@
 
     <!-- Üres állapot -->
     <div v-else-if="!loading && ingredients.length === 0" class="empty-state">
-      <span class="empty-icon">📦</span>
       <h3>Nincsenek hozzávalók</h3>
       <p>
         Még nem lettek felvéve hozzávalók, vagy a szűrőknek nem felel meg egyetlen hozzávaló sem.
@@ -204,7 +203,7 @@
                     :title="expandedIngredient === ingredient.id ? 'Bezárás' : 'Szerkesztés'"
                   >
                     <span v-if="expandedIngredient === ingredient.id">↑</span>
-                    <span v-else>✏️</span>
+                    <span v-else>✎</span>
                   </button>
 
                   <!-- Elérhetőség váltó gomb -->
@@ -213,8 +212,8 @@
                     :class="ingredient.isAvailable ? 'btn-deactivate' : 'btn-activate'"
                     :title="ingredient.isAvailable ? 'Nem elérhetővé tesz' : 'Elérhetővé tesz'"
                   >
-                    <span v-if="ingredient.isAvailable">⏸️</span>
-                    <span v-else>✅</span>
+                    <span v-if="ingredient.isAvailable" alt="Nem elérhetővé tesz">❚❚</span>
+                    <span v-else alt="Elérhetővé tesz">✓</span>
                   </button>
 
                   <!-- Törlés gomb -->
@@ -588,47 +587,70 @@
 
     <!-- Törlés megerősítés modal -->
     <div v-if="showDeleteModal" class="modal-overlay delete-modal">
-      <div class="modal modal-sm">
-        <div class="modal-header">
-          <h2>Hozzávaló törlése</h2>
-          <button @click="showDeleteModal = false" class="btn-close">×</button>
-        </div>
-        
-        <div class="modal-body text-center">
-          <div class="delete-icon">
-            <span>⚠️</span>
+        <div class="modal modal-sm">
+          <div class="modal-header">
+            <h2>Hozzávaló törlése</h2>
+            <button @click="showDeleteModal = false" class="btn-close">×</button>
           </div>
           
-          <h3 class="delete-title">Biztosan törölni szeretnéd?</h3>
-          <p class="delete-message">
-            A(z) <strong>{{ ingredientToDelete?.ingredientName }}</strong> 
-            hozzávalót nem lehet visszaállítani.
-          </p>
-          
-          <p v-if="deleteError" class="error-message">
-            {{ deleteError }}
-          </p>
+          <div class="modal-body text-center">
+            <div class="delete-icon">
+              <span>⚠️</span>
+            </div>
+            
+            <h3 class="delete-title">Biztosan törölni szeretnéd?</h3>
+            <p class="delete-message">
+              A(z) <strong>{{ ingredientToDelete?.ingredientName }}</strong> 
+              hozzávalót nem lehet visszaállítani.
+            </p>
+            
+            <!-- Konfliktus hiba üzenet -->
+            <div v-if="deleteError" class="error-message-container">
+              <div class="error-icon">❌</div>
+              <div class="error-content">
+                <p class="error-title">Nem törölhető!</p>
+                <p class="error-message">{{ deleteError }}</p>
+                <div v-if="deleteError.includes('használatban') || deleteError.includes('ételekben')" 
+                    class="error-suggestions">
+                  <p><strong>Lehetséges megoldások:</strong></p>
+                  <ul>
+                    <li>Először távolítsd el ebből az összetevőből az összes ételt</li>
+                    <li>Vagy módosítsd az összetevő nevét és jelöld "Nem elérhető"-nek</li>
+                    <li>Vagy töröld azokat az ételeket, amelyek ezt az összetevőt tartalmazzák</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
 
-          <div class="modal-footer">
-            <button
-              @click="showDeleteModal = false"
-              class="btn-cancel"
-            >
-              Mégse
-            </button>
-            <button
-              @click="deleteIngredient"
-              :disabled="deleting"
-              class="btn-delete-confirm"
-            >
-              <span v-if="deleting">Törlés...</span>
-              <span v-else>Törlés</span>
-            </button>
+            <div class="modal-footer">
+              <button
+                @click="showDeleteModal = false"
+                class="btn-cancel"
+              >
+                Mégse
+              </button>
+              <button
+                @click="deleteIngredient"
+                :disabled="deleting"
+                class="btn-delete-confirm"
+                v-if="!deleteError || !deleteError.includes('használatban')"
+              >
+                <span v-if="deleting">Törlés...</span>
+                <span v-else>Törlés</span>
+              </button>
+              <button
+                @click="showDeleteModal = false"
+                class="btn-close-error"
+                v-if="deleteError && deleteError.includes('használatban')"
+              >
+                Bezárás
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
   </div>
+
+</div>
 </template>
 
 <script setup>
@@ -904,29 +926,45 @@ function confirmDelete(ingredient) {
   showDeleteModal.value = true
 }
 
-async function deleteIngredient() {
-  deleting.value = true
-  deleteError.value = ''
-  
-  try {
-    await axios.delete(`/kitchen/ingredients/${ingredientToDelete.value.id}`)
-    await loadIngredients()
-    
-    showDeleteModal.value = false
-    ingredientToDelete.value = null
-    
-  } catch (error) {
-    console.error('Hiba a törlés során:', error)
-    
-    if (error.response?.status === 409) {
-      deleteError.value = error.response.data.message
-    } else {
-      deleteError.value = 'Hiba történt a törlés során'
+  async function deleteIngredient() {
+      deleting.value = true
+      deleteError.value = ''
+      
+      try {
+        const response = await axios.delete(`/kitchen/ingredients/${ingredientToDelete.value.id}`)
+        
+        if (response.data.success) {
+          await loadIngredients()
+          showDeleteModal.value = false
+          ingredientToDelete.value = null
+          alert('Hozzávaló sikeresen törölve!')
+        } else {
+          deleteError.value = response.data.message || 'Ismeretlen hiba történt'
+        }
+        
+      } catch (error) {
+        console.error('Hiba a törlés során:', error)
+        
+        if (error.response?.status === 409) {
+          // Conflict - a hozzávaló használatban van
+          const errorMessage = error.response.data?.message || 
+                              'Ez a hozzávaló nem törölhető, mert már használatban van ételekben.'
+          deleteError.value = errorMessage
+          
+          // Extra információ a felhasználónak
+          if (error.response.data?.used_in_meals) {
+            const mealCount = error.response.data.used_in_meals.length
+            deleteError.value += ` ${mealCount} ételben használják.`
+          }
+        } else if (error.response?.data?.message) {
+          deleteError.value = error.response.data.message
+        } else {
+          deleteError.value = 'Hiba történt a törlés során'
+        }
+      } finally {
+        deleting.value = false
+      }
     }
-  } finally {
-    deleting.value = false
-  }
-}
 
 async function toggleAvailability(ingredient) {
   try {
@@ -1169,11 +1207,6 @@ button{
   border-radius: 8px;
 }
 
-.empty-icon {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 1rem;
-}
 
 .empty-state h3 {
   margin: 0 0 0.5rem 0;
@@ -1218,8 +1251,8 @@ button{
 }
 
 .ingredients-table th {
-  background: #ffd294;
-  color: black;
+  background: #f0a24a;
+  color: #7b2c2c;
   text-align: center;
   padding: 1rem;
   font-weight: 500;
@@ -1687,13 +1720,76 @@ button{
   color: #2c3e50;
 }
 
-.error-message {
-  margin: 0 0 1.5rem 0;
+/* Hiba üzenet stílusok */
+.error-message-container {
+  text-align: left;
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.error-icon {
+  font-size: 2rem;
   color: #dc3545;
-  background: #f8d7da;
-  padding: 0.75rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.error-content {
+  text-align: left;
+}
+
+.error-title {
+  font-weight: bold;
+  color: #721c24;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.error-message {
+  color: #856404;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.error-suggestions {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+  margin-top: 1rem;
+}
+
+.error-suggestions p {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.error-suggestions ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.error-suggestions li {
+  margin-bottom: 0.25rem;
+  color: #6c757d;
+}
+
+.btn-close-error {
+  padding: 0.75rem 1.5rem;
+  background: #6c757d;
+  color: white;
+  border: none;
   border-radius: 4px;
-  font-size: 0.875rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-close-error:hover {
+  background: #5a6268;
 }
 
 .btn-delete-confirm {

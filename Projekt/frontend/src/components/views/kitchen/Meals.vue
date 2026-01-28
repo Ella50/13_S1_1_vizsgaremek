@@ -1,7 +1,7 @@
 <template>
   <div class="meals-management">
     <div class="header">
-      <h1>Ételek kezelése</h1>
+      <h1>Ételek {{canEdit ? 'kezelése' : 'listája'}}</h1>
       <button @click="showAddModal = true" class="btn-add" v-if="canEdit">
         + Új étel
       </button>
@@ -25,12 +25,18 @@
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <div v-else class="meals-container">
-      <div v-if="meals.length === 0" class="no-meals">
-        <p>Nincs még étel hozzáadva.</p>
-        <button @click="showAddModal = true" class="btn-add-first" v-if="canEdit">
-          Adja hozzá az első ételt!
-        </button>
-      </div>
+        <div v-if="meals.length === 0" class="no-meals">
+          <p>Nincs még étel hozzáadva.</p>
+          <button 
+            v-if="canEdit" 
+            @click="showAddModal = true" 
+            class="btn-add-first"
+          >
+            Adja hozzá az első ételt
+          </button>
+          <p v-else>Kérjük várjon, amíg a konyha hozzáadja az ételeket</p>
+        </div>
+
       
       <div v-else class="meals-grid">
 
@@ -45,7 +51,7 @@
           <p class="meal-description">{{ meal?.description || 'Nincs leírás' }}</p>
           
           <!-- Összetevők előnézet -->
-          <div v-if="meal?.ingredients && meal.ingredients.length > 0" class="ingredients-preview">
+          <div v-if="meal?.ingredients && meal.ingredients.length && canEdit> 0" class="ingredients-preview">
             <strong>Összetevők:</strong>
             <div class="preview-items">
               <span 
@@ -97,7 +103,8 @@
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              Összetevők
+              {{ canEdit ? 'Összetevők' : 'Tápérték információk' }}
+
             </button>
             <button @click="deleteMeal(meal?.id)" class="btn-delete" v-if="canEdit">Törlés</button>
           </div>
@@ -559,7 +566,7 @@
     <div v-if="showIngredientsModal && selectedMeal" class="modal-overlay">
       <div class="modal ingredients-modal">
         <div class="modal-header">
-          <h2>{{ selectedMeal?.mealName || 'Étel' }} - Összetevők</h2>
+          <h2>{{ selectedMeal?.mealName || 'Étel' }} - {{ canEdit ? 'Összetevők' : 'Tápérték információk'}}</h2>
           <button @click="closeIngredientsModal" class="close-btn">&times;</button>
         </div>
         
@@ -593,12 +600,12 @@
           </div>
           
           <div v-else class="ingredients-list">
-            <div class="ingredients-summary">
+            <div v-if="canEdit" class="ingredients-summary">
               <p><strong>Összesen {{ selectedMeal.ingredients.length }} hozzávaló</strong></p>
 
             </div>
             
-            <div class="ingredients-table-container">
+            <div v-if="canEdit" class="ingredients-table-container">
               <table class="ingredients-table">
                 <thead>
                   <tr>
@@ -763,12 +770,17 @@ export default {
       return this.selectedIngredientForAdd && 
              this.newIngredient.amount && 
              parseFloat(this.newIngredient.amount) > 0
+    },
+    canView() {
+      return AuthService.isAuthenticated()
     }
   },
   
   mounted() {
     this.checkAuthAndFetch()
-    this.loadAllIngredients()
+    if (this.canEdit) {
+      this.loadAllIngredients()
+    } 
   },
   
   methods: {
@@ -777,13 +789,7 @@ export default {
         this.$router.push('/login')
         return
       }
-      
-      if (!this.canEdit) {
-        this.error = 'Nincs megfelelő jogosultságod az ételek kezeléséhez'
-        this.$router.push('/dashboard')
-        return
-      }
-      
+       
       this.fetchMeals()
     },
     

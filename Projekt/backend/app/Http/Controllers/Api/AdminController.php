@@ -206,6 +206,32 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    public function bulkUpdateUserStatus(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+            'userStatus' => 'required|in:active,inactive,suspended'
+        ]);
+        
+        try {
+            User::whereIn('id', $request->user_ids)
+                ->update(['userStatus' => $request->userStatus]);
+                
+            return response()->json([
+                'success' => true,
+                'message' => count($request->user_ids) . ' felhasználó státusza frissítve',
+                'updated_count' => count($request->user_ids)
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a tömeges frissítés során: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     
     // Felhasználó részletes adatainak lekérése
     public function getUserDetails($id)
