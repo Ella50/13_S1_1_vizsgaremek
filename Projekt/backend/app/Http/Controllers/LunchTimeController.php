@@ -82,7 +82,7 @@ class LunchTimeController extends Controller
                     'selectedOption' => null,
                     'hasDiabetes' => (bool)($user->hasDiabetes ?? false),
                     'canEat' => false,
-                    'message' => 'Nincs mai rendelés.',
+                    'message' => 'Nincs rendelés a mai napra.',
                     'lastUsedAt' => $card->lastUsedAt,
                 ]
             ]);
@@ -116,7 +116,7 @@ class LunchTimeController extends Controller
                     'selectedOption' => $order->selectedOption,
                     'hasDiabetes' => (bool)($user->hasDiabetes ?? false),
                     'canEat' => false,
-                    'message' => 'Már evett ma.',
+                    'message' => 'Már evett.',
                     'lastUsedAt' => $card->lastUsedAt,
                 ]
             ]);
