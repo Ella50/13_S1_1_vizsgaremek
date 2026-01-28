@@ -35,6 +35,11 @@
         Rendelések
       </router-link>
 
+      <router-link v-if="AuthService.isKitchen()" to="/kitchen/lunchtime">
+        Ebédeltetés
+      </router-link>
+      
+
       <!--Minden bejelentkezett-->
       <router-link v-if="AuthService.isAuthenticated()" to="/kitchen/meals">
         Ételek

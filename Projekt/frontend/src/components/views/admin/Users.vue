@@ -122,7 +122,21 @@
                 </label>
               </div>
             </div>
-            
+
+            <!--Kártyaolvasó-->
+            <div class="rfid-section">
+            <div class="rfid-row">
+              <div>
+                <strong>RFID kártya:</strong>
+                <span v-if="editUser.rfid_uid">{{ editUser.rfid_uid }}</span>
+                <span v-else class="text-muted">Nincs hozzárendelve</span>
+              </div>
+
+              <button type="button" class="btn-rfid" @click="openCardAssignModal">
+                Kártya hozzáadása
+              </button>
+            </div>
+          </div>
             
             <div class="modal-footer">
               <button type="button" @click="closeEditModal" class="btn-cancel">
@@ -137,6 +151,40 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showRfidModal" class="modal-overlay modal-overlay--rfid">
+      <div class="modal modal--rfid">
+        <div class="modal-header">
+          <h2>Kártya hozzárendelése</h2>
+          <button @click="closeRfidModal" class="btn-close">×</button>
+        </div>
+
+        <div class="modal-body">
+          <p>Érintsd a kártyát az olvasóhoz…</p>
+
+          <div v-if="rfidState === 'waiting'" class="rfid-status rfid-status--waiting">
+            Várakozás beolvasásra…
+          </div>
+
+          <div v-else-if="rfidState === 'success'" class="rfid-status rfid-status--success">
+            ✅ Sikeres hozzárendelés: <strong>{{ lastUid }}</strong>
+          </div>
+
+          <div v-else-if="rfidState === 'busy'" class="rfid-status rfid-status--busy">
+            ⚠️ A kártya foglalt.
+          </div>
+
+          <div v-else-if="rfidState === 'error'" class="rfid-status rfid-status--error">
+            ❌ Hiba: {{ rfidErrorMessage }}
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" @click="closeRfidModal">Bezárás</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     
           <!-- Tömeges műveletek -->
@@ -282,6 +330,7 @@
       </div>
     </div>
   </div>
+  
 </template>
 
 <script>
@@ -317,9 +366,18 @@ export default {
         userStatus: 'active',
         address: '',
         hasDiscount: false,
+        rfid_uid: null,
+        rfidCard: null,
       },
       editLoading: false,
-      saving: false
+      saving: false,
+
+      showRfidModal: false,
+      rfidState: 'waiting', // waiting | success | busy | error
+      rfidErrorMessage: '',
+      lastUid: '',
+      rfidPollTimer: null,
+      rfidSince: null,
     }
   },
   
@@ -474,6 +532,8 @@ export default {
             city_id: userFromList.city_id || null,
             address: '', // Ezek nincsenek a listában
             hasDiscount: userFromList.hasDiscount || false,
+           // rfidCard: userData.rfidCard || null,
+           // rfid_uid: userData.rfidCard?.cardNumber || null,
           }
         }
 
@@ -532,6 +592,8 @@ export default {
               city_id: userData.city_id || this.editUser.city_id,
               address: user.address || '',
               hasDiscount: user.hasDiscount || false,
+              rfidCard: user.rfidCard || null,
+              rfid_uid: user.rfidCard?.cardNumber || null,
 
             }
           } else {
@@ -682,10 +744,102 @@ export default {
 
     clearSelection() {
       this.selectedUsers = []
-    }
+    },
+
+    openCardAssignModal() {
+      if (!this.editUser?.id) return;
+
+      this.showRfidModal = true;
+      this.rfidState = 'waiting';
+      this.rfidErrorMessage = '';
+      this.lastUid = '';
+
+      this.rfidSince = new Date().toISOString();
+      this.startRfidPolling();
+    },
+
+    closeRfidModal() {
+      this.showRfidModal = false;
+      this.stopRfidPolling();
+    },
+
+    startRfidPolling() {
+      this.stopRfidPolling();
+      this.rfidPollTimer = setInterval(() => this.checkLatestRfid(), 1000);
+    },
+
+    stopRfidPolling() {
+      if (this.rfidPollTimer) {
+        clearInterval(this.rfidPollTimer);
+        this.rfidPollTimer = null;
+      }
+    },
+
+    async checkLatestRfid() {
+      if (!this.showRfidModal || this.rfidState !== 'waiting') return;
+
+      try {
+        const res = await AuthService.api.get('/admin/rfid/latest-scan', {
+          params: { since: this.rfidSince }
+        });
+
+        if (!res.data?.success) return;
+
+        const scan = res.data.data; // null vagy {uid, scanned_at}
+        if (!scan?.uid) return;
+
+        this.rfidSince = scan.scanned_at || new Date().toISOString();
+        await this.assignRfidToUser(scan.uid);
+
+      } catch (e) {
+        this.rfidState = 'error';
+        this.rfidErrorMessage = e.response?.data?.message || 'Nem sikerült lekérni az RFID beolvasást.';
+        this.stopRfidPolling();
+      }
+    },
+
+    async assignRfidToUser(uid) {
+      try {
+        const res = await AuthService.api.post(`/admin/users/${this.editUser.id}/rfid/assign`, { uid });
+
+        if (res.data?.success) {
+          this.lastUid = uid;
+          this.rfidState = 'success';
+
+          // UI frissítés
+          this.editUser.rfid_uid = uid;
+          this.editUser.rfidCard = { cardNumber: uid, id: res.data.data?.rfidCard_id || null };
+
+          this.stopRfidPolling();
+          return;
+        }
+
+        if (res.data?.code === 'CARD_BUSY') {
+          this.rfidState = 'busy';
+        } else {
+          this.rfidState = 'error';
+          this.rfidErrorMessage = res.data?.message || 'Ismeretlen hiba.';
+        }
+
+        this.stopRfidPolling();
+      } catch (e) {
+        if (e.response?.data?.code === 'CARD_BUSY') {
+          this.rfidState = 'busy';
+        } else {
+          this.rfidState = 'error';
+          this.rfidErrorMessage = e.response?.data?.message || 'Hiba a hozzárendelés során.';
+        }
+        this.stopRfidPolling();
+      }
+    },
+
+
+
+    closeEditModal() {
+      this.closeRfidModal(); // <- ezt add hozzá
+      this.showEditModal = false
+    },
   }
-
-
 }
 </script>
 
@@ -1175,4 +1329,28 @@ export default {
   height: 18px;
   cursor: pointer;
 }
+
+.modal-overlay--rfid { z-index: 1100; }
+.modal--rfid { z-index: 1101; max-width: 520px; }
+
+.btn-rfid {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #f0a24a;
+  color: #7b2c2c;
+  font-weight: 600;
+}
+
+.rfid-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #ddd; }
+.rfid-row { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+
+.rfid-status { margin-top:1rem; padding:0.75rem 1rem; border-radius:8px; font-weight:600; }
+.rfid-status--waiting { background:#eef3ff; }
+.rfid-status--success { background:#d4edda; }
+.rfid-status--busy { background:#fff3cd; }
+.rfid-status--error { background:#f8d7da; }
+
+
 </style>

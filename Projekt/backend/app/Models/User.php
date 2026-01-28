@@ -65,7 +65,14 @@ class User extends Authenticatable
 
     public function rfidCard()
     {
-        return $this->belongsTo(RfidCard::class);
+        return $this->belongsTo(\App\Models\RfidCard::class, 'rfidCard_id');
     }
+
+    public function user()
+    {
+        return $this->hasOne(\App\Models\User::class, 'rfidCard_id');
+    }
+
+
 }
 
