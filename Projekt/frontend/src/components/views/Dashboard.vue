@@ -6,7 +6,7 @@
     <div class="quick-links">
       <div v-if="isAdmin" class="admin-links">
         <router-link to="/admin/users" class="link-card">
-          <h4>Felhasználók kezelése</h4>
+          <h3>Felhasználók kezelése</h3>
         </router-link>
         <router-link to="/kitchen/meals" class="link-card">
           <h3>Ételek kezelése</h3>
@@ -24,13 +24,13 @@
       
       <div v-if="canViewMenu" class="menu-links">
         <router-link to="/menu/today" class="link-card">
-          <h4>Mai menü</h4>
+          <h3>Mai menü</h3>
         </router-link>
         <router-link to="/menu/week" class="link-card">
-          <h4>Heti menü</h4>
+          <h3>Heti menü</h3>
         </router-link>
         <router-link to="/personal-orders" class="link-card">
-          <h4>Rendelések</h4>
+          <h3>Rendelések</h3>
         </router-link>
       </div>
       
@@ -127,7 +127,7 @@ export default {
 
 .link-card h3 {
   margin: 0 0 0.5rem 0;
-  color: #2c3e50;
+  color: #7b2c2c;
 }
 
 .link-card p {

@@ -23,9 +23,7 @@
       
 
       <!-- Konyha -->
-      <router-link v-if="AuthService.isKitchen()" to="/kitchen/meals">
-        Ételek
-      </router-link>
+
       <router-link v-if="AuthService.isKitchen()" to="/kitchen/ingredients">
         Összetevők
       </router-link>
@@ -35,6 +33,15 @@
 
       <router-link v-if="AuthService.isKitchen()" to="/kitchen/orders">
         Rendelések
+      </router-link>
+
+      <!--Minden bejelentkezett-->
+      <router-link v-if="AuthService.isAuthenticated()" to="/kitchen/meals">
+        Ételek
+      </router-link>
+
+      <router-link v-if="AuthService.isAuthenticated()" to="/menu/week">
+        Heti menü
       </router-link>
       
       <button 

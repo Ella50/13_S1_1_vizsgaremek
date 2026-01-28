@@ -1,10 +1,7 @@
 <template>
-  <div class="meals-management">
+  <div class="meals-see">
     <div class="header">
-      <h1>Ételek {{canEdit ? 'kezelése' : 'listája'}}</h1>
-      <button @click="showAddModal = true" class="btn-add" v-if="canEdit">
-        + Új étel
-      </button>
+      <h1>Ételek</h1>
     </div>
     
     <div class="filters">
@@ -25,18 +22,9 @@
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <div v-else class="meals-container">
-        <div v-if="meals.length === 0" class="no-meals">
-          <p>Nincs még étel hozzáadva.</p>
-          <button 
-            v-if="canEdit" 
-            @click="showAddModal = true" 
-            class="btn-add-first"
-          >
-            Adja hozzá az első ételt
-          </button>
-          <p v-else>Kérjük várjon, amíg a konyha hozzáadja az ételeket</p>
-        </div>
-
+      <div v-if="meals.length === 0" class="no-meals">
+        <p>Nincs még étel</p>
+      </div>
       
       <div v-else class="meals-grid">
 
@@ -51,7 +39,7 @@
           <p class="meal-description">{{ meal?.description || 'Nincs leírás' }}</p>
           
           <!-- Összetevők előnézet -->
-          <div v-if="meal?.ingredients && meal.ingredients.length && canEdit> 0" class="ingredients-preview">
+          <div v-if="meal?.ingredients && meal.ingredients.length > 0" class="ingredients-preview">
             <strong>Összetevők:</strong>
             <div class="preview-items">
               <span 
@@ -96,478 +84,19 @@
             <span class="safe-text">Allergénmentes</span>
           </div>
           
-          <div class="meal-actions">
-            <button @click="editMeal(meal)" class="btn-edit" v-if="canEdit">Szerkesztés</button>
-            <button @click="viewIngredients(meal)" class="btn-view">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              {{ canEdit ? 'Összetevők' : 'Tápérték információk' }}
-
-            </button>
-            <button @click="deleteMeal(meal?.id)" class="btn-delete" v-if="canEdit">Törlés</button>
-          </div>
         </div>
       </div>
     </div>
     
-    <!-- Új étel modal -->
-    <div v-if="showAddModal && !editingMeal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Új étel hozzáadása</h2>
-          <button @click="closeModal" class="close-btn">&times;</button>
-        </div>
-        
-        <form @submit.prevent="saveMeal">
-          <div class="form-group">
-            <label>Étel neve *</label>
-            <input v-model="mealForm.mealName" required maxlength="255" />
-          </div>
-          
-          <div class="form-group">
-            <label>Kategória *</label>
-            <select v-model="mealForm.category" required>
-              <option value="">Válassz kategóriát</option>
-              <option value="Leves">Leves</option>
-              <option value="Főétel">Főétel</option>
-              <option value="Egyéb">Egyéb</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>Leírás</label>
-            <textarea v-model="mealForm.description" rows="3"></textarea>
-          </div>
-          
-          <!-- Összetevők szerkesztése -->
-          <div class="ingredients-section">
-            <div class="section-header">
-              <h3>Összetevők</h3>
-              <span class="section-subtitle">Összesen: {{ editIngredientsList.length }} hozzávaló</span>
-            </div>
-            
-            <!-- Új hozzávaló hozzáadása -->
-            <div class="add-ingredient-section">
-              <h4>Új hozzávaló hozzáadása</h4>
-              <div class="add-ingredient-form">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Hozzávaló *</label>
-                    <div class="search-container">
-                      <input 
-                        v-model="newIngredient.search" 
-                        @input="searchIngredients"
-                        placeholder="Keresés"
-                        type="search"
-                        class="search-input"
-                      />
-                      <div v-if="searchResults.length > 0" class="search-results">
-                        <div 
-                          v-for="result in searchResults" 
-                          :key="result.id"
-                          class="search-result-item"
-                          @click="selectIngredient(result)"
-                        >
-                          <span class="result-name">{{ result.ingredientName }}</span>
-                          <span class="result-type">{{ result.ingredientType }}</span>
-                          <span class="result-info">{{ result.energy }} kcal</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>Mennyiség *</label>
-                    <input 
-                      v-model="newIngredient.amount" 
-                      type="number" 
-                      step="0.1" 
-                      min="0"
-                      placeholder="100"
-                      class="amount-input"
-                    />
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>Mértékegység *</label>
-                    <select v-model="newIngredient.unit" class="unit-select">
-                      <option value="g">g</option>
-                      <option value="kg">kg</option>
-                      <option value="ml">ml</option>
-                      <option value="l">l</option>
-                      <option value="db">db</option>
-                    </select>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button 
-                      type="button" 
-                      @click="addIngredient" 
-                      class="btn-add-ingredient"
-                      :disabled="!canAddIngredient"
-                    >
-                      Hozzáadás
-                    </button>
-                  </div>
-                </div>
-                
-                <div v-if="selectedIngredientForAdd" class="selected-ingredient-info">
-                  <strong>Kiválasztott hozzávaló:</strong> {{ selectedIngredientForAdd.ingredientName }}
-                  <span class="ingredient-details">
-                    {{ selectedIngredientForAdd.energy }} kcal/100g | 
-                    {{ selectedIngredientForAdd.protein }}g fehérje | 
-                    {{ selectedIngredientForAdd.carbohydrate }}g szénhidrát
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Meglévő hozzávalók listája -->
-            <div class="current-ingredients-section">
-              <h4>Jelenlegi hozzávalók</h4>
-              
-              <div v-if="editIngredientsList.length === 0" class="no-current-ingredients">
-                <p>Még nincsenek hozzávalók hozzáadva.</p>
-              </div>
-              
-              <div v-else class="current-ingredients-list">
-                <div class="current-ingredients-table-container">
-                  <table class="current-ingredients-table">
-                    <thead>
-                      <tr>
-                        <th>Hozzávaló</th>
-                        <th>Mennyiség</th>
-                        <th>Egység</th>
-                        <th>Kalória</th>
-                        <th>Törlés</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(ingredient, index) in editIngredientsList" :key="ingredient.id || ingredient.tempId">
-                        <td>
-                          <div class="ingredient-name">
-                            {{ ingredient.ingredientName }}
-                            <div class="ingredient-nutrition">
-                              <small class="ingredient-type" :class="getIngredientTypeClass(ingredient.ingredientType)">
-                                {{ ingredient.ingredientType }}
-                              </small>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <input 
-                            v-model="ingredient.pivot.amount" 
-                            type="number" 
-                            step="0.1" 
-                            min="0"
-                            @change="updateIngredientAmount(ingredient)"
-                            class="amount-input small"
-                          />
-                        </td>
-                        <td>
-                          <select 
-                            v-model="ingredient.pivot.unit"
-                            @change="updateIngredientUnit(ingredient)"
-                            class="unit-select small"
-                          >
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="ml">ml</option>
-                            <option value="l">l</option>
-                            <option value="db">db</option>
-                            <option value="tk">tk</option>
-                            <option value="ek">ek</option>
-                          </select>
-                        </td>
-                        <td>
-                          <span class="calories-display">
-                            {{ calculateIngredientCalories(ingredient) }} kcal
-                          </span>
-                        </td>
-                        <td>
-                          <button 
-                            @click="removeIngredientFromList(index)" 
-                            class="btn-remove-ingredient"
-                            title="Eltávolítás"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                
-                <!-- Összegzés -->
-                <div class="edit-summary">
-                  <div class="summary-item">
-                    <div class="summary-label">Összes hozzávaló:</div>
-                    <div class="summary-value">{{ editIngredientsList.length }} db</div>
-                  </div>
-                  <div class="summary-item">
-                    <div class="summary-label">Teljes mennyiség:</div>
-                    <div class="summary-value">{{ calculateEditTotalAmount() }}</div>
-                  </div>
-                  <div class="summary-item">
-                    <div class="summary-label">Teljes kalória:</div>
-                    <div class="summary-value">{{ calculateEditTotalCalories() }} kcal</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Modal gombok -->
-          <div class="modal-actions">
-            <button type="button" @click="closeModal" class="btn-cancel">
-              Mégse
-            </button>
-            <button type="submit" class="btn-save" :disabled="savingMeal">
-              {{ savingMeal ? 'Mentés...' : 'Mentés' }}
-            </button>
-          </div>
-        </form>
-
-      </div>
-    </div>
     
-    <!-- Ételszerkesztés modal -->
-    <div v-if="showAddModal && editingMeal" class="modal-overlay">
-      <div class="modal edit-meal-modal">
-        <div class="modal-header">
-          <h2>{{ editingMeal?.mealName || 'Étel' }} szerkesztése</h2>
-          <button @click="closeModal" class="close-btn">&times;</button>
-        </div>
-        
-        <form @submit.prevent="saveMeal">
-          <!-- Alapadatok -->
-          <div class="basic-info-section">
-            <h3>Alapadatok</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Étel neve *</label>
-                <input v-model="mealForm.mealName" required maxlength="255" />
-              </div>
-              
-              <div class="form-group">
-                <label>Kategória *</label>
-                <select v-model="mealForm.category" required>
-                  <option value="">Válassz kategóriát</option>
-                  <option value="Leves">Leves</option>
-                  <option value="Főétel">Főétel</option>
-                  <option value="Egyéb">Egyéb</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label>Leírás</label>
-              <textarea v-model="mealForm.description" rows="2"></textarea>
-            </div>
-          </div>
-          
-          <!-- Összetevők szerkesztése -->
-          <div class="ingredients-section">
-            <div class="section-header">
-              <h3>Összetevők</h3>
-              <span class="section-subtitle">Összesen: {{ editIngredientsList.length }} hozzávaló</span>
-            </div>
-            
-            <!-- Új hozzávaló hozzáadása -->
-            <div class="add-ingredient-section">
-              <h4>Új hozzávaló hozzáadása</h4>
-              <div class="add-ingredient-form">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Hozzávaló *</label>
-                    <div class="search-container">
-                      <input 
-                        v-model="newIngredient.search" 
-                        @input="searchIngredients"
-                        placeholder="Keresés"
-                        type="search"
-                        class="search-input"
-                      />
-                      <div v-if="searchResults.length > 0" class="search-results">
-                        <div 
-                          v-for="result in searchResults" 
-                          :key="result.id"
-                          class="search-result-item"
-                          @click="selectIngredient(result)"
-                        >
-                          <span class="result-name">{{ result.ingredientName }}</span>
-                          <span class="result-type">{{ result.ingredientType }}</span>
-                          <span class="result-info">{{ result.energy }} kcal</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>Mennyiség *</label>
-                    <input 
-                      v-model="newIngredient.amount" 
-                      type="number" 
-                      step="0.1" 
-                      min="0"
-                      placeholder="100"
-                      class="amount-input"
-                    />
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>Mértékegység *</label>
-                    <select v-model="newIngredient.unit" class="unit-select">
-                      <option value="g">g</option>
-                      <option value="kg">kg</option>
-                      <option value="ml">ml</option>
-                      <option value="l">l</option>
-                      <option value="db">db</option>
-                      <option value="tk">tk</option>
-                      <option value="ek">ek</option>
-                    </select>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button 
-                      type="button" 
-                      @click="addIngredient" 
-                      class="btn-add-ingredient"
-                      :disabled="!canAddIngredient"
-                    >
-                      Hozzáadás
-                    </button>
-                  </div>
-                </div>
-                
-                <div v-if="selectedIngredientForAdd" class="selected-ingredient-info">
-                  <strong>Kiválasztott hozzávaló:</strong> {{ selectedIngredientForAdd.ingredientName }}
-                  <span class="ingredient-details">
-                    {{ selectedIngredientForAdd.energy }} kcal/100g | 
-                    {{ selectedIngredientForAdd.protein }}g fehérje | 
-                    {{ selectedIngredientForAdd.carbohydrate }}g szénhidrát
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Meglévő hozzávalók listája -->
-            <div class="current-ingredients-section">
-              <h4>Jelenlegi hozzávalók</h4>
-              
-              <div v-if="editIngredientsList.length === 0" class="no-current-ingredients">
-                <p>Még nincsenek hozzávalók hozzáadva.</p>
-              </div>
-              
-              <div v-else class="current-ingredients-list">
-                <div class="current-ingredients-table-container">
-                  <table class="current-ingredients-table">
-                    <thead>
-                      <tr>
-                        <th>Hozzávaló</th>
-                        <th>Mennyiség</th>
-                        <th>Egység</th>
-                        <th>Kalória</th>
-                        <th>Törlés</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(ingredient, index) in editIngredientsList" :key="ingredient.id || ingredient.tempId">
-                        <td>
-                          <div class="ingredient-name">
-                            {{ ingredient.ingredientName }}
-                            <div class="ingredient-nutrition">
-                              <small class="ingredient-type" :class="getIngredientTypeClass(ingredient.ingredientType)">
-                                {{ ingredient.ingredientType }}
-                              </small>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <input 
-                            v-model="ingredient.pivot.amount" 
-                            type="number" 
-                            step="0.1" 
-                            min="0"
-                            @change="updateIngredientAmount(ingredient)"
-                            class="amount-input small"
-                          />
-                        </td>
-                        <td>
-                          <select 
-                            v-model="ingredient.pivot.unit"
-                            @change="updateIngredientUnit(ingredient)"
-                            class="unit-select small"
-                          >
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="ml">ml</option>
-                            <option value="l">l</option>
-                            <option value="db">db</option>
-                            <option value="tk">tk</option>
-                            <option value="ek">ek</option>
-                          </select>
-                        </td>
-                        <td>
-                          <span class="calories-display">
-                            {{ calculateIngredientCalories(ingredient) }} kcal
-                          </span>
-                        </td>
-                        <td>
-                          <button 
-                            @click="removeIngredientFromList(index)" 
-                            class="btn-remove-ingredient"
-                            title="Eltávolítás"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                
-                <!-- Összegzés -->
-                <div class="edit-summary">
-                  <div class="summary-item">
-                    <div class="summary-label">Összes hozzávaló:</div>
-                    <div class="summary-value">{{ editIngredientsList.length }} db</div>
-                  </div>
-                  <div class="summary-item">
-                    <div class="summary-label">Teljes mennyiség:</div>
-                    <div class="summary-value">{{ calculateEditTotalAmount() }}</div>
-                  </div>
-                  <div class="summary-item">
-                    <div class="summary-label">Teljes kalória:</div>
-                    <div class="summary-value">{{ calculateEditTotalCalories() }} kcal</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Modal gombok -->
-          <div class="modal-actions">
-            <button type="button" @click="closeModal" class="btn-cancel">
-              Mégse
-            </button>
-            <button type="submit" class="btn-save" :disabled="savingMeal">
-              {{ savingMeal ? 'Mentés...' : 'Mentés' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    
+    
     
         <!-- Összetevők megtekintése modal -->
     <div v-if="showIngredientsModal && selectedMeal" class="modal-overlay">
       <div class="modal ingredients-modal">
         <div class="modal-header">
-          <h2>{{ selectedMeal?.mealName || 'Étel' }} - {{ canEdit ? 'Összetevők' : 'Tápérték információk'}}</h2>
+          <h2>{{ selectedMeal?.mealName || 'Étel' }} - Összetevők</h2>
           <button @click="closeIngredientsModal" class="close-btn">&times;</button>
         </div>
         
@@ -576,7 +105,7 @@
         <div v-else-if="ingredientsError" class="error">{{ ingredientsError }}</div>
         
         <div v-else class="ingredients-content">
-          <!-- ALLERGÉN FIGYELMEZTETÉS - ÚJ -->
+          <!-- ALLERGÉN FIGYELMEZTETÉS -->
           <div v-if="mealAllergens.length > 0" class="allergen-warning">
             <div class="warning-header">
               <h4>Allergének</h4>
@@ -601,12 +130,12 @@
           </div>
           
           <div v-else class="ingredients-list">
-            <div v-if="canEdit" class="ingredients-summary">
+            <div class="ingredients-summary">
               <p><strong>Összesen {{ selectedMeal.ingredients.length }} hozzávaló</strong></p>
 
             </div>
             
-            <div v-if="canEdit" class="ingredients-table-container">
+            <div class="ingredients-table-container">
               <table class="ingredients-table">
                 <thead>
                   <tr>
@@ -739,15 +268,7 @@ export default {
       ingredientsError: '',
       savingMeal: false,
       
-      // Összetevők szerkesztése
-      editIngredientsList: [],
-      
-      // Új hozzávaló hozzáadása
-      newIngredient: {
-        search: '',
-        amount: '',
-        unit: 'g'
-      },
+
       searchResults: [],
       selectedIngredientForAdd: null,
       allIngredients: [],
@@ -763,25 +284,12 @@ export default {
   },
   
   computed: {
-    canEdit() {
-      return AuthService.isKitchen() || AuthService.isAdmin()
-    },
     
-    canAddIngredient() {
-      return this.selectedIngredientForAdd && 
-             this.newIngredient.amount && 
-             parseFloat(this.newIngredient.amount) > 0
-    },
-    canView() {
-      return AuthService.isAuthenticated()
-    }
   },
   
   mounted() {
     this.checkAuthAndFetch()
-    if (this.canEdit) {
-      this.loadAllIngredients()
-    } 
+    this.loadAllIngredients()
   },
   
   methods: {
@@ -790,7 +298,13 @@ export default {
         this.$router.push('/login')
         return
       }
-       
+      
+      if (!this.canEdit) {
+        this.error = 'Nincs megfelelő jogosultságod az ételek kezeléséhez'
+        this.$router.push('/dashboard')
+        return
+      }
+      
       this.fetchMeals()
     },
     
@@ -1561,7 +1075,7 @@ button{
   width: 20%;
 }
 /* Alap stílusok */
-.meals-management {
+.meals-see{
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
@@ -2342,7 +1856,7 @@ form {
 
 /* Reszponzív design */
 @media (max-width: 768px) {
-  .meals-management {
+  .meals-see {
     padding: 1rem;
   }
   

@@ -30,22 +30,18 @@
         <div class="card">
           <div v-if="d.menu" class="menu-list">
             <div class="row">
-              <div class="icon">🥣</div>
               <div class="txt">{{ d.menu.soup?.mealName || '—' }}</div>
             </div>
 
             <div class="row">
-              <div class="icon">🍽️</div>
               <div class="txt">{{ d.menu.optionA?.mealName || '—' }}</div>
             </div>
 
             <div class="row">
-              <div class="icon">🍽️</div>
               <div class="txt">{{ d.menu.optionB?.mealName || '—' }}</div>
             </div>
 
             <div v-if="d.menu.other" class="row">
-              <div class="icon">🧁</div>
               <div class="txt">{{ d.menu.other?.mealName || '—' }}</div>
             </div>
           </div>
@@ -123,7 +119,6 @@ export default {
       return out
     },
 
-    // támogat többféle backend választ
     normalizeWeeklyResponse(data) {
       // 1) tömb: [{day, menu}]
       if (Array.isArray(data)) return data
@@ -157,7 +152,6 @@ export default {
       this.weekDays = this.buildEmptyWeek(this.currentWeekStart)
 
       try {
-        // nálad a backend most: /menu/week?from=YYYY-MM-DD
         const res = await AuthService.api.get('/menu/week', {
           params: { from: this.currentWeekStart }
         })
@@ -235,8 +229,8 @@ button{
 .header h1 {
   margin: 0 0 1rem 0;
   color: #7b2c2c;
-  font-size: 3rem;
-  font-weight: 800;
+
+
 }
 
 .week-navigation {
@@ -248,7 +242,7 @@ button{
 
 .week-range {
   font-size: 1.125rem;
-  font-weight: 600;
+
   color: #7b2c2c;
   min-width: 220px;
 }
@@ -260,7 +254,7 @@ button{
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  font-weight: 700;
+
 }
 .nav-btn:hover { filter: brightness(0.95); }
 
@@ -301,14 +295,14 @@ button{
 
 
 
-/* felül a "nap" pill */
+/* felül a "nap" */
 .day-pill {
   background: #f7c77a;
   color: #7b2c2c;
   border-radius: 16px;
   text-align: center;
   padding: 0.6rem 0.8rem;
-  font-weight: 800;
+
   margin: 0 auto 0.7rem;
 }
 
@@ -349,7 +343,6 @@ button{
 }
 .row:last-child { border-bottom: none; padding-bottom: 0; }
 
-.icon { font-size: 1.25rem; }
 .txt {
   color: #7b2c2c;
   font-weight: 700;
@@ -361,7 +354,7 @@ button{
   place-items: center;
   text-align: center;
   color: #a26b6b;
-  font-weight: 700;
+
   padding: 1rem;
 }
 
@@ -399,7 +392,6 @@ button{
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  font-weight: 800;
 }
 .btn-retry:hover { filter: brightness(0.95); }
 

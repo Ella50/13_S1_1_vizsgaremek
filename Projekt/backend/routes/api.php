@@ -18,7 +18,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/reset-password', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']);
-// Opcionális tokenellenőrzés
+// Opcionális tokenellenőrzés???
 Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 
 
@@ -64,12 +64,13 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
     
-    // Menu (minden bejelentkezettnek)
+
     
     
     // Admin
     Route::prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
+        Route::post('/users/bulk-status', [AdminController::class, 'bulkUpdateUserStatus']);
         
         Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
 

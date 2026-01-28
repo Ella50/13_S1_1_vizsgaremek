@@ -19,14 +19,9 @@ class OrderSeeder extends Seeder
         }
         
 
-        // Ellenőrizzük, hogy van-e Price
         $pricesCount = DB::table('prices')->count();
         
 
-        
-        $this->command->info('Rendelések létrehozása user id=2 számára...');
-        
-        // Aktuális dátum
         $now = Carbon::now();
         
         // Különböző dátumok a rendelésekhez
@@ -39,7 +34,7 @@ class OrderSeeder extends Seeder
             $now->copy()->addDays(3)->format('Y-m-d'), // 3 nap múlva
         ];
         
-        // MenuItem ID-k lekérdezése
+
         $menuItems = DB::table('menuitems')->take(3)->get();
         
         if ($menuItems->isEmpty()) {
@@ -47,7 +42,7 @@ class OrderSeeder extends Seeder
             return;
         }
         
-        // Price ID lekérdezése (első ár)
+
         $price = DB::table('prices')->first();
         
         if (!$price) {
@@ -55,14 +50,13 @@ class OrderSeeder extends Seeder
             return;
         }
         
-        // Rendelések adatai
         $orders = [];
         
         foreach ($dates as $index => $date) {
             $menuItem = $menuItems[$index % count($menuItems)];
             
             $orders[] = [
-                'user_id' => 2, // FIX: user id=2
+                'user_id' => 2, 
                 'menuItems_id' => $menuItem->id,
                 'orderDate' => $date,
                 'selectedOption' => $index % 2 == 0 ? 'A' : 'B', // Váltakozva A és B opció
@@ -75,16 +69,14 @@ class OrderSeeder extends Seeder
             ];
         }
         
-        // Rendelések beszúrása
+
         DB::table('orders')->insert($orders);
         
         $this->command->info(count($orders) . ' rendelés létrehozva user id=2 számára');
         $this->command->info('Dátumok: ' . implode(', ', $dates));
     }
     
-    /**
-     * Status meghatározása dátum alapján
-     */
+
     private function getStatusForDate($date, $now)
     {
         $dateObj = Carbon::parse($date);
