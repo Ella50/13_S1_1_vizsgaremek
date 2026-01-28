@@ -40,7 +40,7 @@ return new class extends Migration
 
         Schema::create('rfidCards', function (Blueprint $table) {
             $table->id();
-            $table->integer('cardNumber')->unique();
+            $table->string('cardNumber')->unique();
             $table->timestamp('lastUsedAt')->nullable();
             $table->boolean('isActive')->default(true);
             $table->timestamps();
@@ -57,6 +57,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('base_tables');
+        Schema::table('rfidCards', function (Blueprint $table) {
+            $table->dropColumn('cardNumber');
+        });
     }
 };
 

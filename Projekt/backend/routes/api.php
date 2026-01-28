@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Api\PersonalOrderController;
 use App\Http\Controllers\Api\OrdersController;
+use App\Http\Controllers\AdminRfidController;
+use App\Http\Controllers\LunchTimeController;
 
 
 // Publikus Ăştvonalak
@@ -29,8 +31,6 @@ Route::post('/menu', [MenuController::class, 'saveMenu']);
 Route::post('/menu', [MenuController::class, 'store']);
 //Route::put('/menu/{menu}', [MenuController::class, 'update']);
 
-
-
 Route::prefix('menu')->group(function () {
         Route::get('/today', [MenuController::class, 'getTodayMenu']);
         Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
@@ -43,6 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     
+    //RFID
+    Route::get('/admin/rfid/latest-scan', [AdminRfidController::class, 'latestScan']);
+    Route::post('/admin/users/{id}/rfid/assign', [AdminRfidController::class, 'assign']);
+
+    Route::get('/kitchen/rfid/latest-scan', [LunchTimeController::class, 'latestScan']);
+    Route::post('/kitchen/lunchtime/verify', [LunchTimeController::class, 'verify']);
+    Route::post('/kitchen/lunchtime/consume', [LunchTimeController::class, 'consume']);
     // User profile
     Route::prefix('user')->group(function () {
         Route::get('/profile', [UserController::class, 'profile']);
@@ -120,7 +127,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/bulk-availability', [KitchenController::class, 'bulkUpdateIngredientAvailability']); 
         });
 
-
+        Route::get('/rfid/latest-scan', [LunchTimeController::class, 'latestScan']);
+        Route::post('/lunchtime/verify', [LunchTimeController::class, 'verify']);
+        Route::post('/lunchtime/consume', [LunchTimeController::class, 'consume']);
         Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
     });
 });
