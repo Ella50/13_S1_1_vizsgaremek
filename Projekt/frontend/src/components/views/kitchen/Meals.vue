@@ -202,6 +202,7 @@
                   </div>
                   
                   <div class="form-group">
+            
                     <button 
                       type="button" 
                       @click="addIngredient" 
@@ -784,13 +785,23 @@ export default {
   },
   
   methods: {
-    checkAuthAndFetch() {
+    async checkAuthAndFetch() {
       if (!AuthService.isAuthenticated()) {
         this.$router.push('/login')
         return
       }
-       
-      this.fetchMeals()
+      
+      if (!this.canEdit) {
+        this.error = 'Nincs megfelelő jogosultságod az ételek kezeléséhez'
+        this.$router.push('/dashboard')
+        return
+      }
+      
+      // Mindkét betöltést elindítjuk
+      await Promise.all([
+        this.fetchMeals(),
+        this.loadAllIngredients()
+      ])
     },
     
     async fetchMeals() {
@@ -1213,18 +1224,20 @@ async loadAllergensForNewMeal(mealId) {
         const ingredientsData = this.editIngredientsList.map(ingredient => {
           const amount = parseFloat(ingredient.pivot?.amount) || 0
           const unit = ingredient.pivot?.unit || 'g'
+          const ingredientId = ingredient.id
           
-          console.log(`Ingredient ${ingredient.id}: amount=${amount}, unit=${unit}`)
+          console.log(`Ingredient: id=${ingredientId}, amount=${amount}, unit=${unit}`)
           
+          // **FONTOS**: ellenőrizd, hogy a kulcsok helyesek-e
           return {
-            ingredient_id: ingredient.id,
+            ingredient_id: ingredientId,  
             amount: amount,
             unit: unit
           }
         })
         
         console.log('Ingredients data to send:', {
-          ingredients: ingredientsData,
+          ingredients: ingredientsData,  // <-- a tömbnek ez a formája
           count: ingredientsData.length
         })
         
@@ -1280,34 +1293,40 @@ async loadAllergensForNewMeal(mealId) {
     },
     
     // HOZZÁVALÓK KERESÉSE ÉS KEZELÉSE
-  async loadAllIngredients() {
-      try {
-        // Betöltjük az allergéneket is
-        const response = await AuthService.api.get('/kitchen/ingredients', {
-          params: { withAllergens: true }
-        })
-        
-        if (response.data.success) {
-          this.allIngredients = response.data.ingredients || []
-          
-          console.log('Ingredients loaded with allergens:', 
-            this.allIngredients.filter(i => i.allergens?.length > 0)
-              .map(i => `${i.ingredientName}: ${i.allergens.map(a => a.allergenName).join(', ')}`)
-          )
-        }
-      } catch (error) {
-        console.error('Hozzávalók betöltése sikertelen:', error)
-        // Ha a /kitchen/ingredients nem működik, próbáld meg a /ingredients-t
-        try {
-          const response2 = await AuthService.api.get('/ingredients')
-          if (response2.data.success) {
-            this.allIngredients = response2.data.ingredients || []
-          }
-        } catch (error2) {
-          console.error('Alternatív hozzáférés is sikertelen:', error2)
-        }
+async loadAllIngredients() {
+  try {
+    console.log('Loading ingredients...');
+    
+    // Egyszerű verzió - csak a data mezőt használjuk
+    const response = await AuthService.api.get('/kitchen/ingredients', {
+      params: { 
+        withAllergens: true,
+        per_page: 1000 // Minden hozzávalót lekérünk
       }
-    },
+    });
+    
+    console.log('Response structure:', response.data);
+    console.log('Response keys:', Object.keys(response.data));
+    
+    // Mindenképpen a 'data' kulcs alatt vannak a hozzávalók
+    this.allIngredients = response.data.data || [];
+    
+    console.log(`✅ ${this.allIngredients.length} hozzávaló betöltve`);
+    
+    // Debug: nézzük meg az első néhány hozzávalót
+    if (this.allIngredients.length > 0) {
+      console.log('First 3 ingredients:', this.allIngredients.slice(0, 3));
+    }
+    
+  } catch (error) {
+    console.error('Error loading ingredients:', error);
+    
+  }
+  
+  console.log('Total ingredients available for search:', this.allIngredients.length);
+},
+
+
     
     searchIngredients() {
       if (!this.newIngredient.search || this.newIngredient.search.length < 2) {
@@ -1428,7 +1447,7 @@ async loadAllergensForNewMeal(mealId) {
         }
       } catch (error) {
         console.error('Étel törlése sikertelen:', error)
-        alert(error.response?.data?.message || 'Hiba történt a törlés során')
+        alert(error.response?.data?.message || 'Az étel a menün szerepel, hiba történt a törlés során')
       }
     },
     

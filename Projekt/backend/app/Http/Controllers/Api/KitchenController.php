@@ -13,6 +13,7 @@ use App\Models\Allergen;
 use App\Enums\MealType;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use App\Models\MenuItem;
 
 
 class KitchenController extends Controller
@@ -457,6 +458,7 @@ private function getAllergenIconUrl($iconPath)
         }
     }
 
+
     /**
      * Ételfrissítés
      */
@@ -534,80 +536,106 @@ private function getAllergenIconUrl($iconPath)
      * Ételtörlés
      */
     public function deleteMeal($id)
-{
-    try {
-        Log::info('=== START deleteMeal ===');
-        Log::info('Attempting to delete meal with ID: ' . $id);
-        
-        // Étel megkeresése
-        $meal = Meal::find($id);
-        
-        if (!$meal) {
-            Log::warning('Meal not found with ID: ' . $id);
+    {
+        try {
+            Log::info('=== START deleteMeal ===');
+            Log::info('Attempting to delete meal with ID: ' . $id);
+            
+            // Étel megkeresése
+            $meal = Meal::find($id);
+            
+            if (!$meal) {
+                Log::warning('Meal not found with ID: ' . $id);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az étel nem található.'
+                ], 404);
+            }
+            
+            // Ellenőrizzük, hogy szerepel-e menükben
+            // Itt használjuk a Meal modell új metódusát vagy direkt query-t
+            $menuItemCount = MenuItem::where('soup', $id)
+                ->orWhere('optionA', $id)
+                ->orWhere('optionB', $id)
+                ->orWhere('other', $id)
+                ->count();
+            
+            if ($menuItemCount > 0) {
+                // Megkeressük a konkrét dátumokat
+                $menuItems = MenuItem::where('soup', $id)
+                    ->orWhere('optionA', $id)
+                    ->orWhere('optionB', $id)
+                    ->orWhere('other', $id)
+                    ->get(['day']);
+                    
+                $dates = $menuItems->pluck('day')->map(function($date) {
+                    return \Carbon\Carbon::parse($date)->format('Y-m-d');
+                })->toArray();
+                
+                $datesStr = implode(', ', array_slice($dates, 0, 5)); // Max 5 dátumot mutatunk
+                
+                if (count($dates) > 5) {
+                    $datesStr .= '... (+' . (count($dates) - 5) . ' további)';
+                }
+                
+                Log::warning('Cannot delete meal: it is used in menu items', [
+                    'meal_id' => $meal->id,
+                    'meal_name' => $meal->mealName,
+                    'menu_items_count' => $menuItemCount,
+                    'menu_dates' => $dates
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az étel nem törölhető, mert szerepel ' . $menuItemCount . 
+                            ' menüben. (Dátumok: ' . $datesStr . ')'
+                ], 400);
+            }
+            
+            // Először töröljük az összetevőket
+            if ($meal->ingredients()->count() > 0) {
+                $ingredientsCount = $meal->ingredients()->count();
+                $meal->ingredients()->detach();
+                Log::info('Detached ingredients from meal', [
+                    'meal_id' => $meal->id,
+                    'ingredients_count' => $ingredientsCount
+                ]);
+            }
+            
+            // Az étel adatainak mentése logoláshoz
+            $mealData = [
+                'id' => $meal->id,
+                'name' => $meal->mealName,
+                'category' => $meal->mealType,
+                'created_at' => $meal->created_at,
+                'ingredients_count' => $ingredientsCount ?? 0
+            ];
+            
+            // Törlés
+            $meal->delete();
+            
+            Log::info('Meal deleted successfully', $mealData);
+            Log::info('=== END deleteMeal ===');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Étel sikeresen törölve.',
+                'deleted_meal' => $mealData
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('CRITICAL ERROR in deleteMeal: ' . $e->getMessage());
+            Log::error('File: ' . $e->getFile());
+            Log::error('Line: ' . $e->getLine());
+            Log::error('Trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Az étel nem található.'
-            ], 404);
+                'message' => 'Hiba történt az étel törlése során.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
-        
-        // Ellenőrizzük, hogy nincs-e menüben használva
-        // Ehhez szükséged lesz a menuItems modellre
-        /*
-        if ($meal->menuItems()->count() > 0) {
-            Log::warning('Cannot delete meal: it is used in menu items', [
-                'meal_id' => $meal->id,
-                'menu_items_count' => $meal->menuItems()->count()
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Az étel nem törölhető, mert már szerepel a menükben.'
-            ], 400);
-        }
-        */
-        
-        // Először töröljük az összetevőket (ha van kapcsolat)
-        if ($meal->ingredients()->count() > 0) {
-            $ingredientsCount = $meal->ingredients()->count();
-            $meal->ingredients()->detach();
-            Log::info('Detached ingredients from meal', [
-                'meal_id' => $meal->id,
-                'ingredients_count' => $ingredientsCount
-            ]);
-        }
-        
-        // Az étel adatainak mentése logoláshoz
-        $mealData = [
-            'id' => $meal->id,
-            'name' => $meal->mealName,
-            'category' => $meal->mealType,
-            'created_at' => $meal->created_at
-        ];
-        
-        // Törlés
-        $meal->delete();
-        
-        Log::info('Meal deleted successfully', $mealData);
-        Log::info('=== END deleteMeal ===');
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Étel sikeresen törölve.',
-            'deleted_meal' => $mealData
-        ]);
-        
-    } catch (\Exception $e) {
-        Log::error('CRITICAL ERROR in deleteMeal: ' . $e->getMessage());
-        Log::error('File: ' . $e->getFile());
-        Log::error('Line: ' . $e->getLine());
-        Log::error('Trace: ' . $e->getTraceAsString());
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Hiba történt az étel törlése során.',
-            'error' => config('app.debug') ? $e->getMessage() : null
-        ], 500);
     }
-}
 
     /**
      * Egy étel lekérdezése
