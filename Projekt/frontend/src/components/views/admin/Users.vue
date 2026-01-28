@@ -26,7 +26,8 @@
         </select>
       </div>
     </div>
-    
+
+
     <div v-if="showEditModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -136,6 +137,34 @@
         </div>
       </div>
     </div>
+
+    
+          <!-- Tömeges műveletek -->
+      <div v-if="selectedUsers.length > 0" class="bulk-actions">
+        <div class="bulk-header">
+          <span class="selected-count">{{ selectedUsers.length }} felhasználó kiválasztva</span>
+          <div class="bulk-buttons">
+            <button
+              @click="bulkUpdateAvailability(true)"
+              class="btn-bulk btn-bulk-available"
+            >
+              Aktiválás
+            </button>
+            <button
+              @click="bulkUpdateAvailability(false)"
+              class="btn-bulk btn-bulk-unavailable"
+            >
+              Deaktiválás
+            </button>
+            <button
+              @click="clearSelection"
+              class="btn-bulk btn-bulk-clear"
+            >
+              Kijelölés törlése
+            </button>
+          </div>
+        </div>
+    </div>
     
     <div v-if="loading" class="loading">
       <div class="spinner"></div>
@@ -151,6 +180,14 @@
       <table class="users-table">
         <thead>
           <tr>
+            <th class="checkbox-col">
+              <input
+                type="checkbox"
+                :checked="allSelected"
+                @change="toggleSelectAll"
+                class="select-all"
+              />
+            </th>
             <th>Név</th>
             <th>Email</th>
             <th>Szerepkör</th>
@@ -162,7 +199,15 @@
         </thead>
         <tbody>
           <tr v-for="user in users.data" :key="user.id">
-           
+           <!-- Kijelölés -->
+            <td class="checkbox-col">
+                <input
+                  type="checkbox"
+                  :value="user.id"
+                  v-model="selectedUsers"
+                  class="select-item"
+                />
+            </td>
             <td>{{ user.firstName }} {{ user.lastName }} {{ user.thirdName }}</td>
             <td>{{ user.email }}</td>
             <td>
@@ -171,7 +216,7 @@
               </span>
             </td>
             <td>
-              <span :class="`status-badge ${user.userStatus}`">
+              <span  :class="`status-badge ${user.userStatus}`">
                 {{ user.userStatus }}
               </span>
             </td>
@@ -182,7 +227,7 @@
                   @click="openEditModal(user.id)"
                   class="btn-edit"
                   title="Szerkesztés">
-                  ✏️
+                  ✎
                 </button>
 
                 <button 
@@ -190,7 +235,7 @@
                   @click="updateStatus(user.id, 'active')"
                   class="btn-activate"
                   title="Aktiválás">
-                  ✅
+                  ✓
                 </button>
                 
                 <button 
@@ -198,7 +243,7 @@
                   @click="updateStatus(user.id, 'inactive')"
                   class="btn-deactivate"
                   title="Deaktiválás">
-                  ⏸️
+                  ❚❚
                 </button>
               </div>
             </td>
@@ -240,12 +285,15 @@
 </template>
 
 <script>
+import { computed } from 'vue';
 import AuthService from '../../../services/authService'
 
 export default {
+  
   data() {
     return {
       users: { data: [] },
+      selectedUsers: [],
       search: '',
       filters: {
         userType: '',
@@ -278,8 +326,14 @@ export default {
   computed: {
     currentUser() {
       return AuthService.getUser()
+    },
+    allSelected() {
+      return this.users.data && 
+            this.users.data.length > 0 &&
+            this.users.data.every(user => this.selectedUsers.includes(user.id))
     }
   },
+  
   
   mounted() {
     this.fetchUsers()
@@ -287,6 +341,8 @@ export default {
   },
   
   methods: {
+
+
     async fetchUsers() {
       this.loading = true
       this.error = ''
@@ -502,62 +558,62 @@ export default {
         },
     
     async saveUserChanges() {
-  if (!confirm('Biztosan menti a módosításokat?')) {
-    return
-  }
-  
-  this.saving = true
-  
-  try {
-    const updateData = {
-      firstName: this.editUser.firstName,
-      lastName: this.editUser.lastName,
-      thirdName: this.editUser.thirdName,
-      email: this.editUser.email,
-      userType: this.editUser.userType,
-      userStatus: this.editUser.userStatus,
-      address: this.editUser.address,
-      hasDiscount: this.editUser.hasDiscount
-    }
-    
-    
-    console.log('DEBUG: Sending update to /admin/users/' + this.editUser.id)
-    console.log('DEBUG: Update data:', updateData)
-    
-    const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
-    
-    console.log('DEBUG: Update response:', response.data)
-    
-    if (response.data.success) {
-      const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
-      if (userIndex !== -1) {
-        Object.keys(updateData).forEach(key => {
-          if (updateData[key] !== undefined) {
-            this.users.data[userIndex][key] = updateData[key]
-          }
-        })
+      if (!confirm('Biztosan menti a módosításokat?')) {
+        return
       }
       
-      alert('Felhasználó sikeresen frissítve!')
-      this.closeEditModal()
-    } else {
-      alert(response.data.message || 'Ismeretlen hiba történt')
-    }
-  } catch (error) {
-    console.error('DEBUG: Update failed:', error)
+      this.saving = true
+      
+      try {
+        const updateData = {
+          firstName: this.editUser.firstName,
+          lastName: this.editUser.lastName,
+          thirdName: this.editUser.thirdName,
+          email: this.editUser.email,
+          userType: this.editUser.userType,
+          userStatus: this.editUser.userStatus,
+          address: this.editUser.address,
+          hasDiscount: this.editUser.hasDiscount
+        }
+        
+        
+        console.log('DEBUG: Sending update to /admin/users/' + this.editUser.id)
+        console.log('DEBUG: Update data:', updateData)
+        
+        const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
+        
+        console.log('DEBUG: Update response:', response.data)
+        
+        if (response.data.success) {
+          const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
+          if (userIndex !== -1) {
+            Object.keys(updateData).forEach(key => {
+              if (updateData[key] !== undefined) {
+                this.users.data[userIndex][key] = updateData[key]
+              }
+            })
+          }
+          
+          alert('Felhasználó sikeresen frissítve!')
+          this.closeEditModal()
+        } else {
+          alert(response.data.message || 'Ismeretlen hiba történt')
+        }
+      } catch (error) {
+        console.error('DEBUG: Update failed:', error)
 
-    if (error.response?.data?.errors) {
-      const errors = Object.values(error.response.data.errors).flat()
-      alert('Validációs hibák:\n' + errors.join('\n'))
-    } else if (error.response?.data?.message) {
-      alert('Hiba: ' + error.response.data.message)
-    } else {
-      alert('Hiba történt a mentés során')
-    }
-  } finally {
-    this.saving = false
-  }
-},
+        if (error.response?.data?.errors) {
+          const errors = Object.values(error.response.data.errors).flat()
+          alert('Validációs hibák:\n' + errors.join('\n'))
+        } else if (error.response?.data?.message) {
+          alert('Hiba: ' + error.response.data.message)
+        } else {
+          alert('Hiba történt a mentés során')
+        }
+      } finally {
+        this.saving = false
+      }
+    },
 
     async updateStatus(userId, newUserStatus) {
       if (!confirm(`Biztosan ${newUserStatus === 'active' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
@@ -592,8 +648,44 @@ export default {
       if (!dateString) return ''
       const date = new Date(dateString)
       return date.toLocaleDateString('hu-HU')
+    },
+
+    async bulkUpdateAvailability(isAvailable) {
+      if (this.selectedUsers.length === 0) return
+      
+      const action = isAvailable ? 'elérhetővé' : 'nem elérhetővé'
+      if (!confirm(`${this.selectedUsers.length} felhasználó ${action} tétele?`)) {
+        return
+      }
+      
+      try {
+        await AuthService.api.post('/admin/users/bulk-status', {
+          user_ids: this.selectedUsers,
+          userStatus: isAvailable ? 'active' : 'inactive'
+        })
+        await this.fetchUsers()
+        this.clearSelection()
+        
+      } catch (error) {
+        console.error('Hiba a tömeges frissítés során:', error)
+        alert('Hiba történt a tömeges frissítés során')
+      }
+    },
+
+    toggleSelectAll() {
+      if (this.allSelected) {
+        this.selectedUsers = []
+      } else {
+        this.selectedUsers = this.users.data.map(user => user.id)
+      }
+    },
+
+    clearSelection() {
+      this.selectedUsers = []
     }
   }
+
+
 }
 </script>
 
@@ -643,8 +735,8 @@ export default {
 }
 
 .users-table th {
-  background: #ffd294;
-  color: black;
+  background: #f0a24a;
+  color: #7b2c2c;
   text-align: center;
   padding: 1rem;
   font-weight: 500;
@@ -764,6 +856,7 @@ export default {
 .btn-suspend {
   background: #f8d7da;
   color: #721c24;
+  border-radius: 8px;
 }
 
 
@@ -1002,5 +1095,84 @@ export default {
     width: 95%;
     margin: 1rem;
   }
+}
+
+/* Tömeges műveletek */
+.bulk-actions {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.bulk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.selected-count {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-bulk {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.btn-bulk-available {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.btn-bulk-available:hover {
+  background: #c3e6cb;
+}
+
+.btn-bulk-unavailable {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.btn-bulk-unavailable:hover {
+  background: #ffeaa7;
+}
+
+.btn-bulk-clear {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.btn-bulk-clear:hover {
+  background: #e9ecef;
+}
+
+/* Checkbox oszlop */
+.checkbox-col {
+  width: 40px;
+  text-align: center;
+}
+
+.select-all,
+.select-item {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 </style>

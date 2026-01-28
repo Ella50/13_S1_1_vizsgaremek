@@ -5,11 +5,11 @@
       <h1>Személyes rendeléseim</h1>
       <div class="header-actions">
         <button @click="showMonthPicker = !showMonthPicker" class="btn-month-picker">
-          <i class="icon-calendar"></i>
           {{ selectedMonthDisplay }}
         </button>
         <button @click="refreshData" class="btn-refresh">
-          <i class="icon-refresh"></i> Frissítés
+          ⟳
+          Frissítés
         </button>
       </div>
     </div>
@@ -19,7 +19,7 @@
       <div class="month-picker-header">
         <h3>Hónap kiválasztása</h3>
         <button @click="showMonthPicker = false" class="btn-close">
-          <i class="icon-close"></i>
+          x
         </button>
       </div>
       <div class="month-grid">
@@ -35,11 +35,11 @@
       </div>
       <div class="year-selector">
         <button @click="changeYear(-1)" class="btn-year-nav">
-          <i class="icon-chevron-left"></i>
+          ➤
         </button>
         <span class="current-year">{{ currentYear }}</span>
         <button @click="changeYear(1)" class="btn-year-nav">
-          <i class="icon-chevron-right"></i>
+          ➤
         </button>
       </div>
     </div>
@@ -61,9 +61,6 @@
 
     <!-- Nincs rendelés -->
     <div v-else-if="filteredOrders.length === 0 && availableDates.length === 0" class="no-orders">
-      <div class="no-orders-icon">
-        <i class="icon-empty"></i>
-      </div>
       <p>Nincsenek elérhető rendelési napok a kiválasztott hónapban</p>
     </div>
 
@@ -91,7 +88,6 @@
           <thead>
             <tr>
               <th class="col-date">Dátum</th>
-              <th class="col-day">Nap</th>
               <th class="col-soup">Leves</th>
               <th class="col-option">A opció</th>
               <th class="col-option">B opció</th>
@@ -120,10 +116,6 @@
                 </div>
               </td>
 
-              <!-- Nap -->
-              <td class="col-day">
-                <span class="day-name">{{ date.day_name }}</span>
-              </td>
 
               <!-- Leves -->
               <td class="col-soup">
@@ -196,10 +188,10 @@
                 </div>
                 <div v-else class="choice-disabled">
                   <span v-if="date.has_order" class="already-ordered">
-                    <i class="icon-check"></i> Rendelve
+                    Rendelve
                   </span>
                   <span v-else-if="isPastDeadline(date.date)" class="past-deadline">
-                    <i class="icon-clock"></i> Határidő lejárt
+                     Határidő lejárt
                   </span>
                   <span v-else class="cannot-order">
                     Nem rendelhető
@@ -210,13 +202,13 @@
               <!-- Státusz -->
               <td class="col-status">
                 <span v-if="date.has_order" class="status-badge ordered">
-                  <i class="icon-check-circle"></i> Rendelve
+                  Rendelve
                 </span>
                 <span v-else-if="isPastDeadline(date.date)" class="status-badge deadline">
-                  <i class="icon-alert"></i> Lejárt
+                  Lejárt
                 </span>
                 <span v-else class="status-badge available">
-                  <i class="icon-available"></i> Rendelhető
+                  Rendelhető
                 </span>
               </td>
 
@@ -229,7 +221,7 @@
                     class="btn-action btn-cancel"
                     :title="getCancelDeadlineInfo(date.date)"
                   >
-                    <i class="icon-cancel"></i> Lemondás
+                    Lemondás
                   </button>
                   <button 
                     v-else-if="!date.has_order && canOrderForDate(date.date)"
@@ -237,7 +229,7 @@
                     class="btn-action btn-order"
                     :disabled="!selectedOptions[date.date]"
                   >
-                    <i class="icon-order"></i> Rendelés
+                    Rendelés
                   </button>
                   <span v-else class="no-action">-</span>
                 </div>
@@ -247,29 +239,14 @@
         </table>
       </div>
 
-      <!-- Tájékoztató -->
-      <div class="table-info">
-        <div class="info-item">
-          <span class="info-icon today-marker"></span>
-          <span>Mai nap</span>
-        </div>
-        <div class="info-item">
-          <span class="info-icon deadline-marker"></span>
-          <span>Rendelési határidő: előző nap 10:00-ig</span>
-        </div>
-        <div class="info-item">
-          <span class="info-icon edit-marker"></span>
-          <span>Módosítható lemondási határidő: aznap 8:00-ig</span>
-        </div>
-      </div>
+
     </div>
 
     <!-- Kiszállítás információk -->
     <div class="delivery-info">
-      <h3><i class="icon-info"></i> Fontos információk</h3>
+      <h3>Fontos információk</h3>
       <ul>
         <li>A rendelést az előző nap <strong>10:00-ig</strong> lehet leadni</li>
-        <li>A rendelést az adott nap <strong>8:00-ig</strong> lehet lemondani</li>
         <li>A menü ára tartalmazza a levest és a választott főételt</li>
         <li>A számlázás hónap végén történik</li>
         <li>Kérdés esetén keresd a konyha személyzetét</li>
@@ -640,9 +617,6 @@ export default {
 
 .page-header h1 {
   margin: 0;
-  color: #2c3e50;
-  font-size: 2rem;
-  font-weight: 700;
 }
 
 .header-actions {
@@ -662,7 +636,6 @@ export default {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -734,7 +707,6 @@ export default {
   border-radius: 8px;
   text-align: center;
   cursor: pointer;
-  font-weight: 600;
   color: #2c3e50;
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border 0.12s ease;
 }
@@ -760,7 +732,6 @@ export default {
 
 .current-year {
   font-size: 1.15rem;
-  font-weight: 700;
   color: #2c3e50;
   min-width: 80px;
   text-align: center;
@@ -809,13 +780,12 @@ export default {
   font-size: 0.85rem;
   color: #7f8c8d;
   margin-bottom: 0.25rem;
-  font-weight: 600;
+
 }
 
 .stat-value {
   display: block;
   font-size: 1.35rem;
-  font-weight: 800;
   color: #2c3e50;
 }
 
@@ -834,7 +804,6 @@ export default {
   background: #f8f9fa;
   padding: 0.9rem 0.75rem;
   text-align: left;
-  font-weight: 800;
   color: #2c3e50;
   border-bottom: 2px solid #f1f2f6;
   font-size: 0.85rem;
@@ -866,7 +835,7 @@ export default {
   background: #f0fdf4;
 }
 
-/* oszlopok */
+
 .col-date { width: 100px; }
 .col-day { width: 120px; }
 .col-soup, .col-option, .col-other { width: 220px; }
@@ -874,7 +843,7 @@ export default {
 .col-status { width: 150px; }
 .col-actions { width: 170px; }
 
-/* dátum */
+
 .date-display {
   display: flex;
   flex-direction: column;
@@ -882,7 +851,6 @@ export default {
 }
 .date-number {
   font-size: 1.6rem;
-  font-weight: 900;
   line-height: 1;
 }
 .date-month {
@@ -892,7 +860,7 @@ export default {
   letter-spacing: 0.04em;
 }
 .day-name {
-  font-weight: 700;
+
   color: #2c3e50;
 }
 
@@ -903,7 +871,7 @@ export default {
   gap: 0.25rem;
 }
 .meal-name {
-  font-weight: 700;
+
   color: #2c3e50;
   line-height: 1.35;
 }
@@ -919,7 +887,7 @@ export default {
 .meal-price {
   font-size: 0.85rem;
   color: #27ae60;
-  font-weight: 800;
+
 }
 
 /* választás */
@@ -972,7 +940,7 @@ export default {
   text-align: center;
   font-size: 0.85rem;
   color: #7f8c8d;
-  font-weight: 700;
+
 }
 .already-ordered { color: #27ae60; }
 .past-deadline { color: #e74c3c; }
@@ -985,7 +953,7 @@ export default {
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
   font-size: 0.85rem;
-  font-weight: 800;
+
   border: 1px solid transparent;
 }
 .status-badge.ordered {
@@ -1014,7 +982,6 @@ export default {
   padding: 0.45rem 0.8rem;
   border-radius: 6px;
   font-size: 0.85rem;
-  font-weight: 800;
   cursor: pointer;
   border: none;
   display: inline-flex;
@@ -1054,7 +1021,6 @@ export default {
 .no-action {
   color: #95a5a6;
   font-style: italic;
-  font-weight: 700;
 }
 
 .table-info {
@@ -1073,7 +1039,7 @@ export default {
   gap: 0.5rem;
   color: #7f8c8d;
   font-size: 0.9rem;
-  font-weight: 700;
+
 }
 
 .info-icon {
@@ -1107,7 +1073,7 @@ export default {
   padding-left: 1.25rem;
   color: #7f8c8d;
   line-height: 1.6;
-  font-weight: 600;
+
 }
 .delivery-info li { margin-bottom: 0.5rem; }
 .delivery-info strong { color: #2c3e50; }
