@@ -10,6 +10,7 @@ import ResetPassword from '../components/auth/ResetPassword.vue'
 import PasswordResetForm from '../components/auth/PasswordResetForm.vue'
 import MenuMaker from '../components/views/kitchen/MenuMaker.vue'
 import Ingredients from '../components/views/kitchen/Ingredients.vue'
+import LunchTime from '../components/views/kitchen/LunchTime.vue'
 
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
 
@@ -92,6 +93,12 @@ const routes = [
         component: PersonalOrders,
         meta: { requiresAuth: true }
     },
+    {
+        path: '/kitchen/lunchtime',
+        name: 'LunchTime',
+        component: LunchTime,
+        meta: { requiresAuth: true }
+    }
     
 ]
 
