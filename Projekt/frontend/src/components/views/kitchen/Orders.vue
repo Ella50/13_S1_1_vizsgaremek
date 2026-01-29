@@ -1,945 +1,1377 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="orders-container">
     <!-- Fejléc -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800 mb-2">Havi Étrend Rendelés</h1>
-      <p class="text-gray-600">
-        Válassza ki a következő hónap menüjeit. Minden naphoz válasszon A vagy B opciót.
-      </p>
+    <div class="header-section">
+      <h1><i class="fas fa-utensils"></i> Rendelések Kezelése</h1>
+      <p class="subtitle">Konyhai rendelések áttekintése és előkészítési listák</p>
     </div>
 
-    <!-- Hónapválasztó -->
-    <div class="mb-6 bg-white rounded-lg shadow-md p-6">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <label for="monthSelect" class="block text-sm font-medium text-gray-700 mb-2">
-            Hónap kiválasztása
-          </label>
-          <div class="flex items-center space-x-4">
-            <button
-              @click="previousMonth"
-              class="p-2 rounded-full hover:bg-gray-100"
-              :disabled="isCurrentMonth"
-            >
-              <ChevronLeftIcon class="h-5 w-5 text-gray-600" />
-            </button>
-            
-            <select
-              id="monthSelect"
-              v-model="selectedMonth"
-              @change="loadMonthlyMenu"
-              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option v-for="month in availableMonths" :key="month.value" :value="month.value">
-                {{ month.label }}
-              </option>
-            </select>
-            
-            <button
-              @click="nextMonth"
-              class="p-2 rounded-full hover:bg-gray-100"
-            >
-              <ChevronRightIcon class="h-5 w-5 text-gray-600" />
-            </button>
-          </div>
+    <!-- Szűrők és vezérlők -->
+    <div class="filters-section card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="viewMode">Nézet:</label>
+          <select id="viewMode" v-model="viewMode" class="form-select">
+            <option value="daily">Napi nézet</option>
+            <option value="weekly">Heti nézet</option>
+            <option value="monthly">Havi nézet</option>
+          </select>
         </div>
 
-        <div class="flex items-center space-x-4">
-          <!-- Állapot szűrők -->
-          <div class="flex space-x-2">
-            <button
-              v-for="filter in statusFilters"
-              :key="filter.id"
-              @click="toggleStatusFilter(filter.id)"
-              class="px-3 py-1 rounded-full text-sm transition-colors"
-              :class="getStatusFilterClass(filter.id)"
-            >
-              {{ filter.label }}
-            </button>
-          </div>
-
-          <!-- Gyorsválasztó gombok -->
-          <div class="flex space-x-2">
-            <button
-              @click="selectAllA"
-              class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200"
-            >
-              Minden A
-            </button>
-            <button
-              @click="selectAllB"
-              class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200"
-            >
-              Minden B
-            </button>
-            <button
-              @click="clearAll"
-              class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
-            >
-              Töröl
-            </button>
-          </div>
+        <!-- Dátum választó viewMode alapján -->
+        <div class="filter-group" v-if="viewMode === 'daily'">
+          <label for="datePicker">Dátum:</label>
+          <input type="date" id="datePicker" v-model="selectedDate" class="form-control" />
         </div>
-      </div>
-    </div>
 
-    <!-- Figyelmeztetés ha nincs jogosultság -->
-    <div v-if="!isEligibleToOrder" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-      <div class="flex">
-        <ExclamationTriangleIcon class="h-5 w-5 text-yellow-400 flex-shrink-0" />
-        <div class="ml-3">
-          <p class="text-sm text-yellow-700">
-            Ön nem jogosult rendelésre. Kérjük, vegye fel a kapcsolatot az adminisztrációval.
-          </p>
+        <div class="filter-group" v-if="viewMode === 'weekly'">
+          <label for="weekPicker">Hét:</label>
+          <input type="week" id="weekPicker" v-model="selectedWeek" class="form-control" />
         </div>
-      </div>
-    </div>
 
-    <!-- Betöltés állapota -->
-    <div v-if="loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      <p class="mt-4 text-gray-600">Havi menük betöltése...</p>
-    </div>
-
-    <!-- Üres állapot -->
-    <div v-else-if="filteredDailyMenus.length === 0 && !loading" class="text-center py-12 bg-gray-50 rounded-lg">
-      <CalendarDaysIcon class="mx-auto h-12 w-12 text-gray-400" />
-      <h3 class="mt-4 text-lg font-medium text-gray-900">Nincs elérhető menü</h3>
-      <p class="mt-2 text-sm text-gray-500">
-        A kiválasztott hónapra nem áll rendelkezésre menü.
-      </p>
-    </div>
-
-    <!-- Havi rendelési táblázat -->
-    <div v-else class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Dátum
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nap
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Menü A
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Menü B
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                Választás
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ár
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Állapot
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Műveletek
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr 
-              v-for="day in filteredDailyMenus" 
-              :key="day.date"
-              :class="getRowClass(day)"
-            >
-              <!-- Dátum -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">
-                  {{ formatDate(day.date) }}
-                </div>
-                <div v-if="isHoliday(day.date)" class="text-xs text-red-600">
-                  Ünnepnap
-                </div>
-                <div v-if="isWeekend(day.date)" class="text-xs text-blue-600">
-                  Hétvége
-                </div>
-              </td>
-
-              <!-- Nap neve -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="getDayClass(day.date)">
-                  {{ getDayName(day.date) }}
-                </span>
-              </td>
-
-              <!-- Menü A -->
-              <td class="px-6 py-4">
-                <div v-if="day.menuA" class="space-y-1">
-                  <div class="font-medium text-gray-900">{{ day.menuA.name }}</div>
-                  <div class="text-sm text-gray-600">{{ day.menuA.description }}</div>
-                  <div v-if="day.menuA.allergens && day.menuA.allergens.length > 0" class="mt-1">
-                    <span class="text-xs text-red-600 font-medium">Allergének:</span>
-                    <span class="text-xs text-gray-600 ml-1">{{ day.menuA.allergens.join(', ') }}</span>
-                  </div>
-                </div>
-                <div v-else class="text-gray-400 text-sm italic">
-                  Nincs menü
-                </div>
-              </td>
-
-              <!-- Menü B -->
-              <td class="px-6 py-4">
-                <div v-if="day.menuB" class="space-y-1">
-                  <div class="font-medium text-gray-900">{{ day.menuB.name }}</div>
-                  <div class="text-sm text-gray-600">{{ day.menuB.description }}</div>
-                  <div v-if="day.menuB.allergens && day.menuB.allergens.length > 0" class="mt-1">
-                    <span class="text-xs text-red-600 font-medium">Allergének:</span>
-                    <span class="text-xs text-gray-600 ml-1">{{ day.menuB.allergens.join(', ') }}</span>
-                  </div>
-                </div>
-                <div v-else class="text-gray-400 text-sm italic">
-                  Nincs menü
-                </div>
-              </td>
-
-              <!-- Választás -->
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div v-if="day.hasMenu" class="flex justify-center space-x-2">
-                  <!-- A opció -->
-                  <button
-                    @click="selectOption(day.date, 'A')"
-                    :disabled="!day.menuA || day.isPast || !isOrderable(day)"
-                    class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors"
-                    :class="getOptionButtonClass(day, 'A')"
-                  >
-                    <span class="font-semibold">A</span>
-                  </button>
-
-                  <!-- B opció -->
-                  <button
-                    @click="selectOption(day.date, 'B')"
-                    :disabled="!day.menuB || day.isPast || !isOrderable(day)"
-                    class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors"
-                    :class="getOptionButtonClass(day, 'B')"
-                  >
-                    <span class="font-semibold">B</span>
-                  </button>
-
-                  <!-- Lemondás -->
-                  <button
-                    v-if="day.selectedOption"
-                    @click="cancelOrder(day.date)"
-                    :disabled="day.isPast"
-                    class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-red-300 hover:border-red-500 hover:bg-red-50"
-                    title="Lemondás"
-                  >
-                    <XMarkIcon class="h-5 w-5 text-red-500" />
-                  </button>
-                </div>
-                <div v-else class="text-gray-400 text-sm">
-                  Nincs menü
-                </div>
-              </td>
-
-              <!-- Ár -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div v-if="day.selectedOption && day.hasMenu" class="text-right">
-                  <div class="font-bold text-gray-900">
-                    {{ getPrice(day) }} Ft
-                  </div>
-                  <div class="text-xs text-gray-500">
-                    {{ getUserPriceLabel() }}
-                  </div>
-                </div>
-                <div v-else class="text-gray-400">
-                  -
-                </div>
-              </td>
-
-              <!-- Állapot -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="getStatusClass(day)">
-                  {{ getStatusText(day) }}
-                </span>
-              </td>
-
-              <!-- Műveletek -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div class="flex space-x-2">
-                  <button
-                    v-if="day.menuA"
-                    @click="showMenuDetails(day.menuA)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    <EyeIcon class="h-5 w-5" />
-                  </button>
-                  <button
-                    v-if="day.menuB"
-                    @click="showMenuDetails(day.menuB)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    <EyeIcon class="h-5 w-5" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Összesítő panel -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Havi rendelés összesítése</h3>
-      
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <div class="text-sm font-medium text-blue-800">Összes nap</div>
-          <div class="text-2xl font-bold text-blue-900">{{ totalDays }}</div>
+        <div class="filter-group" v-if="viewMode === 'monthly'">
+          <label for="monthPicker">Hónap:</label>
+          <input type="month" id="monthPicker" v-model="selectedMonth" class="form-control" />
         </div>
-        
-        <div class="bg-green-50 p-4 rounded-lg">
-          <div class="text-sm font-medium text-green-800">Rendelt napok</div>
-          <div class="text-2xl font-bold text-green-900">{{ selectedDaysCount }}</div>
-        </div>
-        
-        <div class="bg-purple-50 p-4 rounded-lg">
-          <div class="text-sm font-medium text-purple-800">A opció</div>
-          <div class="text-2xl font-bold text-purple-900">{{ optionACount }}</div>
-        </div>
-        
-        <div class="bg-yellow-50 p-4 rounded-lg">
-          <div class="text-sm font-medium text-yellow-800">B opció</div>
-          <div class="text-2xl font-bold text-yellow-900">{{ optionBCount }}</div>
-        </div>
-      </div>
 
-      <div class="mt-6 pt-6 border-t">
-        <div class="flex justify-between items-center">
-          <div>
-            <p class="text-sm text-gray-600">Kiválasztott hónap:</p>
-            <p class="font-medium">{{ formatMonth(selectedMonth) }}</p>
-          </div>
-          <div class="text-right">
-            <p class="text-sm text-gray-600">Becsült havi összeg:</p>
-            <p class="text-2xl font-bold text-blue-600">{{ totalAmount }} Ft</p>
-          </div>
+        <div class="filter-group">
+          <label for="statusFilter">Státusz:</label>
+          <select id="statusFilter" v-model="statusFilter" class="form-select">
+            <option value="all">Összes</option>
+            <option value="Rendelve">Rendelve</option>
+            <option value="Lemondva">Lemondva</option>
+            <option value="Fizetve">Fizetve</option>
+          </select>
         </div>
-      </div>
 
-      <!-- Megjegyzés -->
-      <div class="mt-6">
-        <label for="monthlyNote" class="block text-sm font-medium text-gray-700 mb-2">
-          Havi megjegyzések (pl.: allergia, speciális diéta)
-        </label>
-        <textarea
-          id="monthlyNote"
-          v-model="monthlyNote"
-          rows="2"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Speciális igények..."
-        ></textarea>
-      </div>
-
-      <!-- Művelet gombok -->
-      <div class="mt-8 flex flex-col sm:flex-row gap-4">
-        <button
-          @click="saveDraft"
-          :disabled="loading"
-          class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          Piszkozat mentése
-        </button>
-        <button
-          @click="submitMonthlyOrder"
-          :disabled="selectedDaysCount === 0 || loading"
-          class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          Havi rendelés leadása
-        </button>
-        <button
-          @click="clearAll"
-          class="flex-1 bg-red-100 text-red-700 px-6 py-3 rounded-lg font-medium hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-        >
-          Minden törlése
-        </button>
-      </div>
-    </div>
-
-    <!-- Menü részletek modal -->
-    <div v-if="selectedMenu" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-start mb-6">
-          <div>
-            <h3 class="text-2xl font-bold text-gray-900">{{ selectedMenu.name }}</h3>
-            <p class="text-gray-600">{{ selectedMenu.description }}</p>
-          </div>
-          <button @click="selectedMenu = null" class="text-gray-400 hover:text-gray-600">
-            <XMarkIcon class="h-6 w-6" />
+        <div class="filter-actions">
+          <button @click="loadOrders" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> Frissítés
           </button>
+          <!--<button @click="exportData" class="btn btn-success" :disabled="!orders.length">
+            <i class="fas fa-file-export"></i> Export
+          </button> -->
         </div>
+      </div>
+    </div>
 
-        <div class="space-y-6">
-          <div v-if="selectedMenu.allergens && selectedMenu.allergens.length > 0">
-            <h4 class="font-medium text-gray-900 mb-2">Allergének:</h4>
-            <div class="flex flex-wrap gap-2">
-              <span v-for="allergen in selectedMenu.allergens" :key="allergen"
-                    class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                {{ allergen }}
-              </span>
+    <!-- Statisztikák -->
+    <div class="stats-section" v-if="stats.totalOrders > 0">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon bg-primary">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-info">
+              <h3>{{ stats.totalOrders }}</h3>
+              <p>Összes rendelés</p>
             </div>
           </div>
-
-          <div v-if="selectedMenu.ingredients">
-            <h4 class="font-medium text-gray-900 mb-2">Összetevők:</h4>
-            <p class="text-gray-700">{{ selectedMenu.ingredients }}</p>
-          </div>
-
-          <div v-if="selectedMenu.nutritionalInfo">
-            <h4 class="font-medium text-gray-900 mb-2">Tápanyag információ:</h4>
-            <pre class="text-gray-700 whitespace-pre-wrap">{{ selectedMenu.nutritionalInfo }}</pre>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon bg-success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>{{ stats.activeOrders }}</h3>
+              <p>Aktív rendelés</p>
+            </div>
           </div>
         </div>
-
-        <div class="mt-8 pt-6 border-t">
-          <button
-            @click="selectedMenu = null"
-            class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700"
-          >
-            Bezárás
-          </button>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon bg-warning">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>{{ stats.cancelledOrders }}</h3>
+              <p>Lemondva</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon bg-info">
+              <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-info">
+              <h3>{{ formatCurrency(stats.totalRevenue) }}</h3>
+              <p>Bevétel</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Sikeresség visszajelzés -->
-    <div v-if="orderSuccess" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg p-8 max-w-md w-full">
-        <div class="text-center">
-          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-            <CheckIcon class="h-6 w-6 text-green-600" />
+    <!-- Fő tartalom -->
+    <div class="main-content">
+      <!-- Rendelések listája -->
+      <div class="orders-list-section card">
+        <div class="card-header">
+          <h3><i class="fas fa-list"></i> Rendelések</h3>
+          <div class="card-actions">
+            <div class="pagination-info" v-if="orders.length > 0">
+              {{ paginationInfo }}
+            </div>
+           <!-- <button @click="toggleFilters" class="btn btn-sm btn-outline-secondary">
+              <i class="fas fa-filter"></i> Szűrők
+            </button>-->
           </div>
-          <h3 class="mt-4 text-lg font-medium text-gray-900">Havi rendelés sikeres!</h3>
-          <p class="mt-2 text-sm text-gray-500">
-            {{ selectedDaysCount }} napra leadtad a rendelésedet.
-          </p>
-          <p class="mt-2 text-sm font-medium text-blue-600">
-            Összeg: {{ totalAmount }} Ft
-          </p>
-          <div class="mt-6 space-y-3">
-            <button
-              @click="orderSuccess = false"
-              class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700"
-            >
-              Rendben
-            </button>
-            <button
-              @click="viewInvoice"
-              class="w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-200"
-            >
-              Számla megtekintése
-            </button>
+        </div>
+        
+        <div class="card-body">
+          <!-- Betöltés indikátor -->
+          <div v-if="loading" class="loading-overlay">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Betöltés...</span>
+            </div>
+            <p>Rendelések betöltése...</p>
+          </div>
+
+          <!-- Üres állapot -->
+          <div v-else-if="!orders.length" class="empty-state">
+            <i class="fas fa-clipboard-list fa-3x"></i>
+            <h4>Nincsenek rendelések</h4>
+            <p v-if="viewMode === 'daily'">Nincs rendelés {{ selectedDate }} dátumra.</p>
+            <p v-else-if="viewMode === 'weekly'">Nincs rendelés a kiválasztott héten.</p>
+            <p v-else-if="viewMode === 'monthly'">Nincs rendelés a kiválasztott hónapban.</p>
+            <p v-else>Válassz ki egy dátumot a rendelések megtekintéséhez.</p>
+          </div>
+
+          <!-- Rendelések táblázata -->
+          <div v-else class="table-responsive">
+            <table class="table table-hover orders-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Név</th>
+                  <th>Dátum</th>
+                  <th>Opció</th>
+                  <th>Étel</th>
+                  <th>Ár</th>
+                  <th>Státusz</th>
+                  <th>Rendelés ideje</th>
+                  <th>Műveletek</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="order in orders" :key="order.id">
+                  <td>{{ order.id }}</td>
+                  <td>
+                    <strong>{{ order.user?.email || 'Ismeretlen' }}</strong>
+                    <small class="text-muted d-block">{{ order.user?.student_class || order.user?.userType }}</small>
+                </td>
+                  <td>{{ formatDate(order.orderDate) }}</td>
+                  <td>
+                    <span class="badge" :class="getOptionBadgeClass(order.selectedOption)">
+                      {{ getOptionDisplay(order.selectedOption) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div v-if="order.menuItem">
+                      <small class="text-muted">Leves:</small> {{ order.menuItem.soupMeal?.mealName || '-' }}
+                      <br>
+                      <small class="text-muted">Főétel:</small> 
+                      <span v-if="order.selectedOption === 'A'">
+                        {{ order.menuItem.optionAMeal?.mealName || '-' }}
+                      </span>
+                      <span v-else-if="order.selectedOption === 'B'">
+                        {{ order.menuItem.optionBMeal?.mealName || '-' }}
+                      </span>
+                      <span v-else>-</span>
+                    </div>
+                    <div v-else>-</div>
+                  </td>
+                  <td>
+                    <strong>{{ formatCurrency(order.price || 0) }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge" :class="getStatusBadgeClass(order.orderStatus)">
+                      {{ order.orderStatus }}
+                    </span>
+                  </td>
+                  <td>
+                    {{ formatDateTime(order.created_at) }}
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <button 
+                        @click="viewOrderDetails(order)" 
+                        class="btn btn-outline-info"
+                        title="Részletek"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button 
+                        v-if="order.orderStatus === 'Rendelve'"
+                        @click="cancelOrder(order)" 
+                        class="btn btn-outline-warning"
+                        title="Lemondás"
+                      >
+                        <i class="fas fa-ban"></i>
+                      </button>
+                      <button 
+                        v-if="order.orderStatus === 'Lemondva'"
+                        @click="restoreOrder(order)" 
+                        class="btn btn-outline-success"
+                        title="Visszaállítás"
+                      >
+                        <i class="fas fa-undo"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Lapozás -->
+          <div v-if="orders.length > 0 && totalPages > 1" class="pagination-section">
+            <nav aria-label="Rendelések lapozása">
+              <ul class="pagination justify-content-center">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <button class="page-link" @click="changePage(currentPage - 1)">
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                </li>
+                
+                <li v-for="page in visiblePages" :key="page" 
+                    class="page-item" :class="{ active: page === currentPage }">
+                  <button class="page-link" @click="changePage(page)">
+                    {{ page }}
+                  </button>
+                </li>
+                
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <button class="page-link" @click="changePage(currentPage + 1)">
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+            <div class="page-size-selector">
+              <select v-model="pageSize" @change="changePageSize" class="form-select form-select-sm">
+                <option value="10">10 / oldal</option>
+                <option value="25">25 / oldal</option>
+                <option value="50">50 / oldal</option>
+                <option value="100">100 / oldal</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Havi előkészületi lista (csak havi nézetben) -->
+      <div v-if="viewMode === 'monthly'" class="preparation-section card mt-4">
+        <div class="card-header">
+          <h3><i class="fas fa-clipboard-check"></i> Havi Előkészületi Lista</h3>
+          <button @click="loadMonthlyPreparation" class="btn btn-primary btn-sm">
+            <i class="fas fa-calculator"></i> Összesítés számítása
+          </button>
+        </div>
+        
+        <div class="card-body">
+          <!-- Betöltés állapot -->
+          <div v-if="monthlyLoading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Összesítés számítása...</span>
+            </div>
+            <p class="mt-2">Havi előkészületi lista generálása...</p>
+          </div>
+
+          <!-- Havi adatok -->
+          <div v-else-if="monthlyData">
+            <!-- Összegző információk -->
+            <div class="monthly-summary mb-4">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="summary-card">
+                    <h5>Összes rendelés</h5>
+                    <h2 class="text-primary">{{ monthlyData.total_orders }}</h2>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="summary-card">
+                    <h5>A opció</h5>
+                    <h2 class="text-success">{{ monthlyData.summary_by_option.A || 0 }}</h2>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="summary-card">
+                    <h5>B opció</h5>
+                    <h2 class="text-info">{{ monthlyData.summary_by_option.B || 0 }}</h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ételenkénti összesítés -->
+            <div class="meal-breakdown mb-5" v-if="monthlyData.meal_counts">
+              <h4 class="mb-3"><i class="fas fa-utensil-spoon"></i> Ételenkénti Összesítés</h4>
+              
+              <!-- Levesek -->
+              <div class="meal-category mb-4" v-if="monthlyData.meal_counts.soups && monthlyData.meal_counts.soups.length">
+                <h5 class="text-primary">
+                  <i class="fas fa-bowl-rice"></i> Levesek ({{ monthlyData.meal_counts.soups.length }} fajta)
+                </h5>
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Étel neve</th>
+                        <th>Darabszám</th>
+                        <th>%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="soup in monthlyData.meal_counts.soups" :key="'soup-' + soup.id">
+                        <td>{{ soup.name || `Leves #${soup.id}` }}</td>
+                        <td>
+                          <span class="badge bg-primary">{{ soup.count }}</span>
+                        </td>
+                        <td>
+                          <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-primary" 
+                                 :style="{ width: (soup.count / monthlyData.total_orders * 100) + '%' }"></div>
+                          </div>
+                          <small>{{ ((soup.count / monthlyData.total_orders) * 100).toFixed(1) }}%</small>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- A opciók -->
+              <div class="meal-category mb-4" v-if="monthlyData.meal_counts.optionA && monthlyData.meal_counts.optionA.length">
+                <h5 class="text-success">
+                  <i class="fas fa-drumstick-bite"></i> A Opció ételek ({{ monthlyData.meal_counts.optionA.length }} fajta)
+                </h5>
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Étel neve</th>
+                        <th>Darabszám</th>
+                        <th>%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="meal in monthlyData.meal_counts.optionA" :key="'optionA-' + meal.id">
+                        <td>{{ meal.name || `A opció #${meal.id}` }}</td>
+                        <td>
+                          <span class="badge bg-success">{{ meal.count }}</span>
+                        </td>
+                        <td>
+                          <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" 
+                                 :style="{ width: (meal.count / (monthlyData.summary_by_option.A || 1) * 100) + '%' }"></div>
+                          </div>
+                          <small>{{ ((meal.count / (monthlyData.summary_by_option.A || 1)) * 100).toFixed(1) }}%</small>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- B opciók -->
+              <div class="meal-category mb-4" v-if="monthlyData.meal_counts.optionB && monthlyData.meal_counts.optionB.length">
+                <h5 class="text-info">
+                  <i class="fas fa-fish"></i> B Opció ételek ({{ monthlyData.meal_counts.optionB.length }} fajta)
+                </h5>
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Étel neve</th>
+                        <th>Darabszám</th>
+                        <th>%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="meal in monthlyData.meal_counts.optionB" :key="'optionB-' + meal.id">
+                        <td>{{ meal.name || `B opció #${meal.id}` }}</td>
+                        <td>
+                          <span class="badge bg-info">{{ meal.count }}</span>
+                        </td>
+                        <td>
+                          <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-info" 
+                                 :style="{ width: (meal.count / (monthlyData.summary_by_option.B || 1) * 100) + '%' }"></div>
+                          </div>
+                          <small>{{ ((meal.count / (monthlyData.summary_by_option.B || 1)) * 100).toFixed(1) }}%</small>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Export gomb 
+            <div class="text-center mt-4">
+              <button @click="exportMonthlyPreparation" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Havi előkészületi lista exportálása
+              </button>
+              <button @click="printMonthlyPreparation" class="btn btn-primary ms-2">
+                <i class="fas fa-print"></i> Nyomtatás
+              </button>
+            </div>-->
+          </div>
+
+          <!-- Üres állapot havi előkészülethez -->
+          <div v-else class="text-center py-5">
+            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+            <h5>Nincs havi előkészületi lista</h5>
+            <p class="text-muted">Kattints az "Összesítés számítása" gombra a havi adatok generálásához.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Részletek modal -->
+      <div v-if="selectedOrder" class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Rendelés részletei #{{ selectedOrder.id }}</h5>
+              <button type="button" class="btn-close" @click="selectedOrder = null"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Egyszerű rendelés részletek -->
+              <div class="order-details-simple">
+                <div class="row mb-3">
+                 <div class="col-md-6">
+                    <h6>Felhasználó:</h6>
+                    <p>{{ selectedOrder.user?.email || 'Ismeretlen' }}</p>
+                    <p class="text-muted small">{{ selectedOrder.user?.userType }}</p>
+                </div>
+                  <div class="col-md-6">
+                    <h6>Rendelés információk:</h6>
+                    <p>Dátum: {{ formatDate(selectedOrder.orderDate) }}</p>
+                    <p>Opció: 
+                      <span class="badge" :class="getOptionBadgeClass(selectedOrder.selectedOption)">
+                        {{ getOptionDisplay(selectedOrder.selectedOption) }}
+                      </span>
+                    </p>
+                    <p>Ár: {{ formatCurrency(selectedOrder.price || 0) }}</p>
+                  </div>
+                </div>
+                
+                <div class="row mb-3" v-if="selectedOrder.menuItem">
+                  <div class="col-md-6">
+                    <h6>Leves:</h6>
+                    <p>{{ selectedOrder.menuItem.soupMeal?.mealName || '-' }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Főétel:</h6>
+                    <p v-if="selectedOrder.selectedOption === 'A'">
+                      {{ selectedOrder.menuItem.optionAMeal?.mealName || '-' }}
+                    </p>
+                    <p v-else-if="selectedOrder.selectedOption === 'B'">
+                      {{ selectedOrder.menuItem.optionBMeal?.mealName || '-' }}
+                    </p>
+                    <p v-else>-</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="selectedOrder = null">
+                Bezárás
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="selectedOrder" class="modal-backdrop fade show"></div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CalendarDaysIcon,
-  ExclamationTriangleIcon,
-  CheckIcon,
-  EyeIcon,
-  XMarkIcon
-} from '@heroicons/vue/24/outline'
+<script>
+import axios from 'axios';
 
-const store = useStore()
-const router = useRouter()
+export default {
+  name: 'Orders',
 
-// Reaktív állapotok
-const selectedMonth = ref('')
-const dailyMenus = ref([])
-const monthlyNote = ref('')
-const loading = ref(false)
-const orderSuccess = ref(false)
-const selectedMenu = ref(null)
-const activeStatusFilters = ref(['available', 'ordered', 'past'])
-
-// Felhasználó adatai
-const currentUser = computed(() => store.state.auth.user)
-const userType = computed(() => currentUser.value?.userType || 'Tanuló')
-
-// Hónapok generálása
-const availableMonths = computed(() => {
-  const months = []
-  const today = new Date()
-  const currentYear = today.getFullYear()
+  data() {
+    return {
+      // View settings
+      viewMode: 'daily',
+      selectedDate: new Date().toISOString().split('T')[0],
+      selectedWeek: this.getCurrentWeek(),
+      selectedMonth: new Date().toISOString().slice(0, 7),
+      
+      // Filters
+      statusFilter: 'all',
+      
+      // Orders data
+      orders: [],
+      loading: false,
+      monthlyLoading: false,
+      
+      // Pagination
+      currentPage: 1,
+      totalPages: 1,
+      pageSize: 25,
+      totalItems: 0,
+      
+      // Stats
+      stats: {
+        totalOrders: 0,
+        activeOrders: 0,
+        cancelledOrders: 0,
+        totalRevenue: 0
+      },
+      
+      // Monthly preparation data
+      monthlyData: null,
+      
+      // Selected order for details
+      selectedOrder: null,
+      
+      // API base URL - JAVÍTVA: nincs dupla /api
+      apiBaseUrl: '/api/kitchen/orders'
+    };
+  },
   
-  // Következő 6 hónap
-  for (let i = 0; i < 6; i++) {
-    const date = new Date(currentYear, today.getMonth() + i, 1)
-    const monthValue = date.toISOString().slice(0, 7) // YYYY-MM
-    const monthLabel = date.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' })
+  computed: {
+    paginationInfo() {
+      const start = ((this.currentPage - 1) * this.pageSize) + 1;
+      const end = Math.min(this.currentPage * this.pageSize, this.totalItems);
+      return `${start}-${end} / ${this.totalItems} rendelés`;
+    },
     
-    months.push({ value: monthValue, label: monthLabel })
-  }
-  
-  return months
-})
-
-const isCurrentMonth = computed(() => {
-  const currentMonth = new Date().toISOString().slice(0, 7)
-  return selectedMonth.value === currentMonth
-})
-
-// Állapot szűrők
-const statusFilters = [
-  { id: 'available', label: 'Rendelhető' },
-  { id: 'ordered', label: 'Rendelt' },
-  { id: 'past', label: 'Múlt' },
-  { id: 'holiday', label: 'Ünnepnap' },
-  { id: 'weekend', label: 'Hétvége' }
-]
-
-// Váltózók
-const isEligibleToOrder = computed(() => {
-  const eligibleTypes = ['Tanuló', 'Tanár', 'Dolgozó', 'Külsős']
-  return eligibleTypes.includes(userType.value)
-})
-
-const filteredDailyMenus = computed(() => {
-  return dailyMenus.value.filter(day => {
-    // Állapot szűrők
-    if (!activeStatusFilters.value.includes('past') && day.isPast) return false
-    if (!activeStatusFilters.value.includes('ordered') && day.selectedOption) return false
-    if (!activeStatusFilters.value.includes('available') && day.hasMenu && !day.isPast && !day.selectedOption) return false
-    if (!activeStatusFilters.value.includes('holiday') && isHoliday(day.date)) return false
-    if (!activeStatusFilters.value.includes('weekend') && isWeekend(day.date)) return false
-    
-    return true
-  })
-})
-
-const selectedDaysCount = computed(() => {
-  return dailyMenus.value.filter(day => day.selectedOption).length
-})
-
-const optionACount = computed(() => {
-  return dailyMenus.value.filter(day => day.selectedOption === 'A').length
-})
-
-const optionBCount = computed(() => {
-  return dailyMenus.value.filter(day => day.selectedOption === 'B').length
-})
-
-const totalDays = computed(() => {
-  return dailyMenus.value.filter(day => day.hasMenu).length
-})
-
-const totalAmount = computed(() => {
-  return dailyMenus.value.reduce((sum, day) => {
-    if (day.selectedOption && day.hasMenu && !day.isPast) {
-      return sum + getPrice(day)
-    }
-    return sum
-  }, 0)
-})
-
-// Inicializálás
-onMounted(() => {
-  const today = new Date()
-  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-  selectedMonth.value = nextMonth.toISOString().slice(0, 7)
-  loadMonthlyMenu()
-})
-
-// Függvények
-async function loadMonthlyMenu() {
-  if (!selectedMonth.value) return
-  
-  loading.value = true
-  try {
-    const response = await axios.get('/api/monthly-menu', {
-      params: { 
-        month: selectedMonth.value,
-        userId: currentUser.value?.id 
+    visiblePages() {
+      const pages = [];
+      const maxVisible = 5;
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+      let end = Math.min(this.totalPages, start + maxVisible - 1);
+      
+      if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
       }
-    })
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      return pages;
+    },
     
-    // Napi struktúra létrehozása
-    dailyMenus.value = createDailyMenuStructure(response.data)
+    selectedYear() {
+      return this.selectedMonth ? this.selectedMonth.split('-')[0] : new Date().getFullYear();
+    },
     
-    // Korábbi rendelések betöltése
-    await loadExistingOrders()
+    selectedMonthNumber() {
+      return this.selectedMonth ? this.selectedMonth.split('-')[1] : new Date().getMonth() + 1;
+    }
+  },
+  
+  mounted() {
+    this.loadOrders();
+    this.loadStats();
+  },
+  
+  watch: {
+    viewMode() {
+      this.currentPage = 1;
+      this.loadOrders();
+    },
+    
+    selectedDate() {
+      this.currentPage = 1;
+      this.loadOrders();
+    },
+    
+    selectedWeek() {
+      this.currentPage = 1;
+      this.loadOrders();
+    },
+    
+    selectedMonth() {
+      this.currentPage = 1;
+      this.loadOrders();
+    },
+    
+    statusFilter() {
+      this.currentPage = 1;
+      this.loadOrders();
+    }
+  },
+  
+  methods: {
+    async loadOrders() {
+  this.loading = true;
+  try {
+    let url = '';
+    let params = {};
+    
+    // Add date filter based on view mode
+    switch (this.viewMode) {
+      case 'daily':
+        url = `http://localhost:8000/api/kitchen/orders/date/${this.selectedDate}`;
+        break;
+      case 'weekly':
+        const [year, week] = this.selectedWeek.split('-W');
+        const firstDay = this.getDateOfISOWeek(week, year);
+        const lastDay = new Date(firstDay);
+        lastDay.setDate(firstDay.getDate() + 6);
+        
+        params.start_date = firstDay.toISOString().split('T')[0];
+        params.end_date = lastDay.toISOString().split('T')[0];
+        url = 'http://localhost:8000/api/kitchen/orders';
+        break;
+      case 'monthly':
+        params.year = this.selectedYear;
+        params.month = this.selectedMonthNumber;
+        url = 'http://localhost:8000/api/kitchen/orders';
+        break;
+      default:
+        url = 'http://localhost:8000/api/kitchen/orders';
+    }
+    
+    console.log('API hívás:', { url, params });
+    
+    const token = localStorage.getItem('token') || this.getAuthToken();
+    const response = await axios.get(url, { 
+      params,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    console.log('Teljes API válasz:', response.data);
+    
+    // **FONTOS MÓDOSÍTÁS: Kezeljük a BOM karaktert**
+    let responseData = response.data;
+    
+    // Ha a válasz string, próbáljuk megparse-olni
+    if (typeof responseData === 'string') {
+      try {
+        // Távolítsuk el a BOM karaktert
+        responseData = responseData.replace(/^\uFEFF/, '');
+        responseData = JSON.parse(responseData);
+      } catch (parseError) {
+        console.error('JSON parse hiba:', parseError);
+        throw new Error('Érvénytelen JSON válasz');
+      }
+    }
+    
+    // Ellenőrizzük a success mezőt
+    if (responseData.success === true) {
+      console.log('✅ API sikeres választ adott');
+      
+      // Napi nézet esetén külön kezeljük
+      if (this.viewMode === 'daily') {
+        // Az adatok response.data.data alatt vannak
+        const dailyData = responseData.data || responseData;
+        this.orders = dailyData.orders || [];
+        this.totalItems = dailyData.total_count || this.orders.length;
+        this.totalPages = 1;
+        
+        // Stats frissítése
+        if (dailyData.summary) {
+          this.updateStatsFromResponse(dailyData.summary);
+        }
+        
+        console.log(`✅ Napi rendelések betöltve: ${this.orders.length} db`);
+        
+        // Debug: nézzük meg az első rendelést
+        if (this.orders.length > 0) {
+          console.log('Első rendelés:', this.orders[0]);
+          console.log('User adatok:', this.orders[0].user);
+          console.log('MenuItem adatok:', this.orders[0].menu_item);
+        }
+      } else {
+        // Heti/havi nézet
+        const ordersData = responseData.data || responseData;
+        this.orders = ordersData.orders || [];
+        
+        // Pagination
+        if (ordersData.pagination) {
+          this.totalItems = ordersData.pagination.total || 0;
+          this.totalPages = ordersData.pagination.last_page || 1;
+        } else {
+          this.totalItems = this.orders.length;
+          this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+        }
+        
+        // Stats
+        if (ordersData.summary) {
+          this.updateStatsFromResponse(ordersData.summary);
+        }
+        
+        console.log(`✅ Heti/havi rendelések betöltve: ${this.orders.length} db`);
+      }
+      
+    } else {
+      console.error('❌ API nem adott vissza success=true-t', responseData);
+      this.orders = [];
+      this.totalItems = 0;
+      this.totalPages = 1;
+    }
+    
   } catch (error) {
-    console.error('Hiba a havi menük betöltésekor:', error)
-    dailyMenus.value = []
+    console.error('❌ Hiba a rendelések betöltésekor:', error);
+    console.error('Error details:', error.response?.data);
+    this.orders = [];
+    this.totalItems = 0;
+    this.totalPages = 1;
   } finally {
-    loading.value = false
+    this.loading = false;
   }
-}
+},
 
-function createDailyMenuStructure(menuItems) {
-  const year = parseInt(selectedMonth.value.split('-')[0])
-  const month = parseInt(selectedMonth.value.split('-')[1]) - 1
-  
-  // A hónap napjainak számolása
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const dailyMenus = []
-  
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day)
-    const dateString = date.toISOString().split('T')[0]
-    const dayOfWeek = date.getDay()
-    
-    // Az adott nap menüinek szűrése
-    const dayMenus = menuItems.filter(item => {
-      const itemDate = new Date(item.available_date)
-      return itemDate.toISOString().split('T')[0] === dateString
-    })
-    
-    // A és B opciók szétválasztása (feltételezve, hogy van egy 'option_type' mező)
-    const menuA = dayMenus.find(item => item.option_type === 'A')
-    const menuB = dayMenus.find(item => item.option_type === 'B')
-    
-    const hasMenu = menuA || menuB
-    const isPast = date < new Date(new Date().setHours(0, 0, 0, 0))
-    const isHoliday = checkIfHoliday(date)
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-    
-    dailyMenus.push({
-      date: dateString,
-      menuA,
-      menuB,
-      hasMenu,
-      isPast,
-      isHoliday,
-      isWeekend,
-      selectedOption: null,
-      orderStatus: null,
-      orderId: null
-    })
-  }
-  
-  return dailyMenus
-}
 
-async function loadExistingOrders() {
+// Új helper metódus a statisztikák frissítéséhez
+updateStatsFromResponse(summary) {
+    this.stats = {
+        totalOrders: summary.total_orders || summary.total || 0,
+        activeOrders: summary.active_orders || 0,
+        cancelledOrders: summary.cancelled_orders || 0,
+        totalRevenue: summary.total_revenue || 0
+    };
+},
+    
+    async loadStats() {
   try {
-    const response = await axios.get('/api/user-orders', {
-      params: {
-        userId: currentUser.value?.id,
-        month: selectedMonth.value
-      }
-    })
+    const token = localStorage.getItem('token') || this.getAuthToken();
     
-    // Meglévő rendelések alkalmazása
-    response.data.forEach(order => {
-      const day = dailyMenus.value.find(d => d.date === order.orderDate)
-      if (day) {
-        day.selectedOption = order.selectedOption
-        day.orderStatus = order.orderStatus
-        day.orderId = order.id
+    // Használjuk a napi összefoglaló endpoint-ot a statisztikákhoz
+    const today = new Date().toISOString().split('T')[0];
+    const response = await axios.get(`http://localhost:8000/api/kitchen/orders/date/${today}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
       }
-    })
-  } catch (error) {
-    console.error('Hiba a rendelések betöltésekor:', error)
-  }
-}
-
-function selectOption(date, option) {
-  const day = dailyMenus.value.find(d => d.date === date)
-  if (day && !day.isPast && isOrderable(day)) {
-    day.selectedOption = option
-    day.orderStatus = 'Rendelve'
-  }
-}
-
-function cancelOrder(date) {
-  const day = dailyMenus.value.find(d => d.date === date)
-  if (day && !day.isPast) {
-    day.selectedOption = null
-    day.orderStatus = null
-    day.orderId = null
-  }
-}
-
-function getPrice(day) {
-  const menu = day.selectedOption === 'A' ? day.menuA : day.menuB
-  if (!menu) return 0
-  
-  // Felhasználó típusának megfelelő ár
-  const price = menu.prices?.find(p => p.userType === userType.value)
-  return price?.amount || 0
-}
-
-function getOptionButtonClass(day, option) {
-  const isSelected = day.selectedOption === option
-  const menu = option === 'A' ? day.menuA : day.menuB
-  
-  if (!menu || day.isPast || !isOrderable(day)) {
-    return 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-  }
-  
-  if (isSelected) {
-    return option === 'A' 
-      ? 'border-blue-500 bg-blue-100 text-blue-700' 
-      : 'border-green-500 bg-green-100 text-green-700'
-  }
-  
-  return 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-}
-
-function getStatusClass(day) {
-  if (day.isPast) {
-    return 'bg-gray-100 text-gray-800'
-  }
-  
-  if (day.selectedOption) {
-    return day.orderStatus === 'Lemondva' 
-      ? 'bg-red-100 text-red-800'
-      : 'bg-green-100 text-green-800'
-  }
-  
-  if (!day.hasMenu) {
-    return 'bg-gray-100 text-gray-800'
-  }
-  
-  return 'bg-blue-100 text-blue-800'
-}
-
-function getStatusText(day) {
-  if (day.isPast) return 'Múlt'
-  if (!day.hasMenu) return 'Nincs menü'
-  if (day.selectedOption) {
-    return day.orderStatus === 'Lemondva' ? 'Lemondva' : 'Rendelve'
-  }
-  return 'Rendelhető'
-}
-
-function getRowClass(day) {
-  if (day.isPast) return 'bg-gray-50'
-  if (!day.hasMenu) return 'bg-gray-50'
-  if (day.isHoliday) return 'bg-red-50'
-  if (day.isWeekend) return 'bg-blue-50'
-  return ''
-}
-
-function getDayClass(date) {
-  const day = new Date(date).getDay()
-  if (day === 0 || day === 6) {
-    return 'bg-blue-100 text-blue-800'
-  }
-  return 'bg-gray-100 text-gray-800'
-}
-
-function isOrderable(day) {
-  if (!day.hasMenu) return false
-  if (day.isPast) return false
-  if (day.isHoliday) return false
-  
-  // További korlátozások, pl. rendelési határidő
-  const today = new Date()
-  const orderDate = new Date(day.date)
-  const daysDiff = Math.floor((orderDate - today) / (1000 * 60 * 60 * 24))
-  
-  // Pl. maximum 14 nap előre lehet rendelni
-  return daysDiff <= 14 && daysDiff >= 0
-}
-
-function checkIfHoliday(date) {
-  // Ünnepnapok listája - valós implementációban adatbázisból kellene
-  const holidays = [
-    '01-01', // Újév
-    '03-15', // 1848-as forradalom
-    '05-01', // Munka ünnepe
-    '08-20', // Szent István ünnepe
-    '10-23', // 1956-os forradalom
-    '11-01', // Mindenszentek
-    '12-25', // Karácsony
-    '12-26'  // Karácsony
-  ]
-  
-  const monthDay = (date.getMonth() + 1).toString().padStart(2, '0') + '-' + 
-                   date.getDate().toString().padStart(2, '0')
-  
-  return holidays.includes(monthDay)
-}
-
-function isWeekend(dateString) {
-  const date = new Date(dateString)
-  return date.getDay() === 0 || date.getDay() === 6
-}
-
-function isHoliday(dateString) {
-  const date = new Date(dateString)
-  return checkIfHoliday(date)
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('hu-HU')
-}
-
-function formatMonth(monthString) {
-  const [year, month] = monthString.split('-')
-  const date = new Date(year, month - 1, 1)
-  return date.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' })
-}
-
-function getDayName(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('hu-HU', { weekday: 'short' })
-}
-
-function getUserPriceLabel() {
-  const labels = {
-    'Tanuló': 'Diák ár',
-    'Tanár': 'Tanár ár',
-    'Dolgozó': 'Dolgozó ár',
-    'Külsős': 'Külsős ár'
-  }
-  return labels[userType.value] || 'Normál ár'
-}
-
-function toggleStatusFilter(filterId) {
-  const index = activeStatusFilters.value.indexOf(filterId)
-  if (index > -1) {
-    activeStatusFilters.value.splice(index, 1)
-  } else {
-    activeStatusFilters.value.push(filterId)
-  }
-}
-
-function getStatusFilterClass(filterId) {
-  return activeStatusFilters.value.includes(filterId)
-    ? 'bg-blue-100 text-blue-700'
-    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-}
-
-// Gyorsválasztók
-function selectAllA() {
-  dailyMenus.value.forEach(day => {
-    if (day.menuA && !day.isPast && isOrderable(day) && !day.selectedOption) {
-      day.selectedOption = 'A'
-      day.orderStatus = 'Rendelve'
-    }
-  })
-}
-
-function selectAllB() {
-  dailyMenus.value.forEach(day => {
-    if (day.menuB && !day.isPast && isOrderable(day) && !day.selectedOption) {
-      day.selectedOption = 'B'
-      day.orderStatus = 'Rendelve'
-    }
-  })
-}
-
-function clearAll() {
-  if (confirm('Biztosan törölni szeretné az összes kijelölést?')) {
-    dailyMenus.value.forEach(day => {
-      if (!day.isPast) {
-        day.selectedOption = null
-        day.orderStatus = null
-      }
-    })
-  }
-}
-
-async function saveDraft() {
-  loading.value = true
-  try {
-    const draftData = {
-      month: selectedMonth.value,
-      selections: dailyMenus.value
-        .filter(day => day.selectedOption)
-        .map(day => ({
-          date: day.date,
-          option: day.selectedOption,
-          menuId: day.selectedOption === 'A' ? day.menuA?.id : day.menuB?.id
-        })),
-      note: monthlyNote.value
-    }
+    });
     
-    await axios.post('/api/order-drafts', draftData)
-    alert('Piszkozat mentve!')
-  } catch (error) {
-    console.error('Hiba a piszkozat mentésekor:', error)
-    alert('Hiba történt a mentés során.')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function submitMonthlyOrder() {
-  if (selectedDaysCount.value === 0) {
-    alert('Kérjük, válasszon ki legalább egy napot!')
-    return
-  }
-  
-  if (!confirm('Biztosan leadja a havi rendelést?')) {
-    return
-  }
-  
-  loading.value = true
-  try {
-    const orderData = {
-      month: selectedMonth.value,
-      orders: dailyMenus.value
-        .filter(day => day.selectedOption && !day.isPast)
-        .map(day => ({
-          date: day.date,
-          menuId: day.selectedOption === 'A' ? day.menuA?.id : day.menuB?.id,
-          selectedOption: day.selectedOption,
-          price: getPrice(day)
-        })),
-      note: monthlyNote.value,
-      userId: currentUser.value?.id
-    }
-    
-    const response = await axios.post('/api/monthly-orders', orderData)
+    console.log('Stats API válasz:', response.data);
     
     if (response.data.success) {
-      orderSuccess.value = true
-      // Frissítjük a rendelési állapotokat
-      await loadExistingOrders()
+      const summaryData = response.data.data?.summary || response.data.summary || {};
+      this.updateStatsFromResponse(summaryData);
     }
   } catch (error) {
-    console.error('Hiba a rendelés leadásakor:', error)
-    alert('Hiba történt a rendelés leadása során.')
-  } finally {
-    loading.value = false
+    console.error('Hiba a statisztikák betöltésekor:', error);
+    // Ha hiba van, állítsunk alapértékeket
+    this.stats = {
+      totalOrders: 0,
+      activeOrders: 0,
+      cancelledOrders: 0,
+      totalRevenue: 0
+    };
   }
-}
-
-function showMenuDetails(menu) {
-  selectedMenu.value = menu
-}
-
-function previousMonth() {
-  if (!isCurrentMonth.value) {
-    const [year, month] = selectedMonth.value.split('-').map(Number)
-    const date = new Date(year, month - 2, 1)
-    selectedMonth.value = date.toISOString().slice(0, 7)
-    loadMonthlyMenu()
+},
+    
+    async loadMonthlyPreparation() {
+      this.monthlyLoading = true;
+      try {
+        const token = localStorage.getItem('token') || this.getAuthToken();
+        const response = await axios.get(
+          `http://localhost:8000/api/kitchen/orders/monthly-preparation/${this.selectedYear}/${this.selectedMonthNumber}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json'
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          this.monthlyData = response.data.data;
+        }
+      } catch (error) {
+        console.error('Hiba a havi előkészület betöltésekor:', error);
+        
+        // Fallback: manuális számítás ha nincs endpoint
+        if (error.response?.status === 404) {
+          this.calculateMonthlyPreparationManually();
+        }
+      } finally {
+        this.monthlyLoading = false;
+      }
+    },
+    
+    // Helper methods
+    calculateMonthlyPreparationManually() {
+      // Fallback számítás ha nincs backend endpoint
+      const ordersThisMonth = this.orders.filter(order => {
+        const orderDate = new Date(order.orderDate);
+        return orderDate.getMonth() + 1 == this.selectedMonthNumber && 
+               orderDate.getFullYear() == this.selectedYear;
+      });
+      
+      const mealCounts = { soups: {}, optionA: {}, optionB: {} };
+      
+      ordersThisMonth.forEach(order => {
+        if (order.menuItem?.soupMeal) {
+          const soupId = order.menuItem.soup;
+          mealCounts.soups[soupId] = (mealCounts.soups[soupId] || 0) + 1;
+        }
+        
+        if (order.selectedOption === 'A' && order.menuItem?.optionAMeal) {
+          const mealId = order.menuItem.optionA;
+          mealCounts.optionA[mealId] = (mealCounts.optionA[mealId] || 0) + 1;
+        }
+        
+        if (order.selectedOption === 'B' && order.menuItem?.optionBMeal) {
+          const mealId = order.menuItem.optionB;
+          mealCounts.optionB[mealId] = (mealCounts.optionB[mealId] || 0) + 1;
+        }
+      });
+      
+      this.monthlyData = {
+        total_orders: ordersThisMonth.length,
+        meal_counts: {
+          soups: Object.entries(mealCounts.soups).map(([id, count]) => ({ 
+            id: id,
+            name: 'Leves ' + id,
+            count: count 
+          })),
+          optionA: Object.entries(mealCounts.optionA).map(([id, count]) => ({ 
+            id: id,
+            name: 'A opció ' + id,
+            count: count 
+          })),
+          optionB: Object.entries(mealCounts.optionB).map(([id, count]) => ({ 
+            id: id,
+            name: 'B opció ' + id,
+            count: count 
+          }))
+        },
+        summary_by_option: {
+          A: ordersThisMonth.filter(o => o.selectedOption === 'A').length,
+          B: ordersThisMonth.filter(o => o.selectedOption === 'B').length
+        }
+      };
+    },
+    
+    // Order actions
+    viewOrderDetails(order) {
+      this.selectedOrder = order;
+    },
+    
+    async cancelOrder(order) {
+      if (!confirm('Biztosan lemondja ezt a rendelést?')) return;
+      
+      try {
+        const token = localStorage.getItem('token') || this.getAuthToken();
+        const response = await axios.delete(`http://localhost:8000/api/user/personal-orders/${order.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+        if (response.data.success) {
+          alert('Rendelés sikeresen lemondva');
+          this.loadOrders();
+          this.loadStats();
+        }
+      } catch (error) {
+        console.error('Hiba a rendelés lemondásakor:', error);
+        alert('Hiba a rendelés lemondásakor');
+      }
+    },
+    
+    async restoreOrder(order) {
+      if (!confirm('Biztosan visszaállítja ezt a rendelést?')) return;
+      
+      try {
+        // Ez egy admin endpoint lehet, de lehet még nincs
+        // Most csak frissítjük a helyi állapotot
+        order.orderStatus = 'Rendelve';
+        alert('Rendelés helyileg visszaállítva');
+      } catch (error) {
+        console.error('Hiba a rendelés visszaállításakor:', error);
+        alert('Hiba a rendelés visszaállításakor');
+      }
+    },
+    
+    // Token helper
+    getAuthToken() {
+      // Próbáld meg a különböző helyeken megtalálni a tokent
+      return localStorage.getItem('auth_token') || 
+             localStorage.getItem('sanctum-token') ||
+             sessionStorage.getItem('token') ||
+             '';
+    },
+    
+    // Export methods
+    exportData() {
+      let exportData = [];
+      
+      if (this.viewMode === 'monthly' && this.monthlyData) {
+        // Export monthly preparation data
+        exportData = this.formatMonthlyDataForExport();
+      } else {
+        // Export order list
+        exportData = this.orders.map(order => ({
+          ID: order.id,
+          Név: order.user?.name || '',
+          Osztály: order.user?.student_class || '',
+          Dátum: this.formatDate(order.orderDate),
+          Opció: this.getOptionDisplay(order.selectedOption),
+          Leves: order.menuItem?.soupMeal?.mealName || '',
+          Főétel: order.selectedOption === 'A' 
+            ? order.menuItem?.optionAMeal?.mealName || ''
+            : order.menuItem?.optionBMeal?.mealName || '',
+          Ár: order.price || 0,
+          Státusz: order.orderStatus,
+          'Rendelés ideje': this.formatDateTime(order.created_at)
+        }));
+      }
+      
+      this.downloadCSV(exportData, `rendelesek_${this.selectedDate || this.selectedMonth}.csv`);
+    },
+    
+    formatMonthlyDataForExport() {
+      const data = [];
+      
+      // Summary
+      data.push(['Havi Összesítés', '', '', '']);
+      data.push(['Hónap', this.selectedMonth, '', '']);
+      data.push(['Összes rendelés', this.monthlyData.total_orders, '', '']);
+      data.push(['A opció', this.monthlyData.summary_by_option.A || 0, '', '']);
+      data.push(['B opció', this.monthlyData.summary_by_option.B || 0, '', '']);
+      data.push(['', '', '', '']);
+      
+      // Soups
+      data.push(['LEVESEK', 'Darabszám', '%', '']);
+      this.monthlyData.meal_counts?.soups?.forEach(soup => {
+        const percentage = ((soup.count / this.monthlyData.total_orders) * 100).toFixed(1);
+        data.push([soup.name, soup.count, `${percentage}%`, '']);
+      });
+      data.push(['', '', '', '']);
+      
+      // Option A
+      data.push(['A OPCIÓ ÉTELEK', 'Darabszám', '%', '']);
+      this.monthlyData.meal_counts?.optionA?.forEach(meal => {
+        const totalA = this.monthlyData.summary_by_option.A || 1;
+        const percentage = ((meal.count / totalA) * 100).toFixed(1);
+        data.push([meal.name, meal.count, `${percentage}%`, '']);
+      });
+      data.push(['', '', '', '']);
+      
+      // Option B
+      data.push(['B OPCIÓ ÉTELEK', 'Darabszám', '%', '']);
+      this.monthlyData.meal_counts?.optionB?.forEach(meal => {
+        const totalB = this.monthlyData.summary_by_option.B || 1;
+        const percentage = ((meal.count / totalB) * 100).toFixed(1);
+        data.push([meal.name, meal.count, `${percentage}%`, '']);
+      });
+      
+      return data;
+    },
+    
+    exportMonthlyPreparation() {
+      if (!this.monthlyData) {
+        alert('Először generáld a havi adatokat!');
+        return;
+      }
+      
+      const exportData = this.formatMonthlyDataForExport();
+      this.downloadCSV(exportData, `havi_elokeszület_${this.selectedMonth}.csv`);
+    },
+    
+    printMonthlyPreparation() {
+      window.print();
+    },
+    
+    downloadCSV(data, filename) {
+      // Tömb vagy objektum ellenőrzése
+      let csvContent;
+      
+      if (Array.isArray(data[0]) && !Array.isArray(data[0][0])) {
+        // Objektumok tömbje
+        const headers = Object.keys(data[0]);
+        csvContent = [
+          headers.join(','),
+          ...data.map(row => 
+            headers.map(header => `"${row[header] || ''}"`).join(',')
+          )
+        ].join('\n');
+      } else {
+        // 2D tömb
+        csvContent = data.map(row => 
+          row.map(cell => `"${cell}"`).join(',')
+        ).join('\n');
+      }
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    },
+    
+    // UI helpers
+    formatDate(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      return d.toLocaleDateString('hu-HU');
+    },
+    
+    formatDateTime(datetime) {
+      if (!datetime) return '';
+      const d = new Date(datetime);
+      return d.toLocaleString('hu-HU');
+    },
+    
+    formatCurrency(amount) {
+      return new Intl.NumberFormat('hu-HU', {
+        style: 'currency',
+        currency: 'HUF',
+        minimumFractionDigits: 0
+      }).format(amount);
+    },
+    
+    getOptionDisplay(option) {
+      const options = {
+        'A': 'A opció',
+        'B': 'B opció',
+        'soup': 'Csak leves',
+        'other': 'Egyéb'
+      };
+      return options[option] || option;
+    },
+    
+    getOptionBadgeClass(option) {
+      const classes = {
+        'A': 'bg-success',
+        'B': 'bg-info',
+        'soup': 'bg-primary',
+        'other': 'bg-secondary'
+      };
+      return classes[option] || 'bg-secondary';
+    },
+    
+    getStatusBadgeClass(status) {
+      const classes = {
+        'Rendelve': 'bg-success',
+        'Lemondva': 'bg-warning',
+        'Fizetve': 'bg-info'
+      };
+      return classes[status] || 'bg-secondary';
+    },
+    
+    // Pagination
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.loadOrders();
+      }
+    },
+    
+    changePageSize() {
+      this.currentPage = 1;
+      this.loadOrders();
+    },
+    
+    // Date helpers
+    getCurrentWeek() {
+      const now = new Date();
+      const oneJan = new Date(now.getFullYear(), 0, 1);
+      const weekNumber = Math.ceil(((now - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
+      return `${now.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+    },
+    
+    getDateOfISOWeek(week, year) {
+      const simple = new Date(year, 0, 1 + (week - 1) * 7);
+      const dow = simple.getDay();
+      const ISOweekStart = simple;
+      if (dow <= 4) {
+        ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+      } else {
+        ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+      }
+      return ISOweekStart;
+    },
+    
+    toggleFilters() {
+      console.log('Toggle filters');
+    }
   }
-}
-
-function nextMonth() {
-  const [year, month] = selectedMonth.value.split('-').map(Number)
-  const date = new Date(year, month, 1)
-  selectedMonth.value = date.toISOString().slice(0, 7)
-  loadMonthlyMenu()
-}
-
-function viewInvoice() {
-  router.push('/invoice-preview')
-}
+};
 </script>
+
+<style scoped>
+/* A stílusok maradnak ugyanazok, csak rövidebb */
+.orders-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.header-section {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.header-section h1 {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.filters-section {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.stats-section {
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  color: white;
+  font-size: 24px;
+}
+
+.stat-info h3 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.stat-info p {
+  margin: 5px 0 0 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+.card-header {
+  background: white;
+  border-bottom: 1px solid #eee;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.3rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px;
+  color: #6c757d;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px;
+  color: #6c757d;
+}
+
+.empty-state i {
+  color: #dee2e6;
+  margin-bottom: 20px;
+}
+
+.orders-table th {
+  font-weight: 600;
+  color: #495057;
+  border-top: none;
+  background-color: #f8f9fa;
+}
+
+.orders-table td {
+  vertical-align: middle;
+}
+
+.badge {
+  font-size: 0.85em;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.pagination-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.page-size-selector {
+  width: 120px;
+}
+
+.preparation-section .meal-category {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.preparation-section h4, .preparation-section h5 {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.summary-card {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.summary-card h5 {
+  color: #6c757d;
+  margin-bottom: 10px;
+}
+
+.summary-card h2 {
+  margin: 0;
+  font-weight: 700;
+}
+
+.ingredient-type {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.modal-backdrop {
+  opacity: 0.5;
+}
+
+.order-details-simple h6 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.order-details-simple p {
+  margin-bottom: 10px;
+}
+
+@media print {
+  .filters-section,
+  .stats-section,
+  .card-header .btn,
+  .pagination-section,
+  .btn {
+    display: none !important;
+  }
+  
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #dee2e6 !important;
+  }
+  
+  .table {
+    border: 1px solid #dee2e6;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .stat-card {
+    margin-bottom: 15px;
+  }
+  
+  .card-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .pagination-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+</style>

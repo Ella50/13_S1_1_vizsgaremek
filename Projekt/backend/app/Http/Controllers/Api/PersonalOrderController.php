@@ -131,84 +131,67 @@ class PersonalOrderController extends Controller
      * Elérhető rendelési dátumok
      */
     public function getAvailableDates()
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
+    
+    try {
+        Log::info('getAvailableDates - kezdés', ['user_id' => $user->id]);
         
-        try {
-            Log::info('getAvailableDates - kezdés', ['user_id' => $user->id]);
-            
-            // Először ellenőrizzük a MenuItem-eket
-            $menuItemsCount = MenuItem::count();
-            Log::info('MenuItem-ek száma', ['count' => $menuItemsCount]);
-            
-            $availableDates = MenuItem::where('day', '>', now()->format('Y-m-d'))
-                ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
-                ->orderBy('day')
-                ->get()
-                ->map(function($menuItem) use ($user) {
-                    Log::debug('MenuItem feldolgozása', [
-                        'id' => $menuItem->id,
-                        'day' => $menuItem->day,
-                        'soup_id' => $menuItem->soup,
-                        'optionA_id' => $menuItem->optionA,
-                        'optionB_id' => $menuItem->optionB,
-                        'has_soupMeal' => $menuItem->relationLoaded('soupMeal'),
-                        'soup_meal' => $menuItem->soupMeal ? $menuItem->soupMeal->mealName : null
-                    ]);
-                    
-                    // Ellenőrizzük, hogy van-e már rendelés
-                    $hasOrder = Order::where('user_id', $user->id)
-                        ->where('menuItems_id', $menuItem->id)
-                        ->where('orderStatus', 'Rendelve')
-                        ->exists();
-                    
-                    $order = null;
-                    if ($hasOrder) {
-                        $order = Order::where('user_id', $user->id)
-                            ->where('menuItems_id', $menuItem->id)
-                            ->where('orderStatus', 'Rendelve')
-                            ->first();
-                    }
-                        
-                    return [
-                        'date' => $menuItem->day->format('Y-m-d'),
-                        'display_date' => $menuItem->day->format('Y. m. d.'),
-                        'day_name' => $menuItem->day->translatedFormat('l'),
-                        'has_order' => $hasOrder,
-                        'menu_item_id' => $menuItem->id,
-                        'order_id' => $order ? $order->id : null,
-                        'selected_option' => $order ? $order->selectedOption : null,
-                        'menu' => $menuItem->getMenuData(),
-                        'can_order' => $this->canOrderForDate($menuItem->day),
-                        'order_deadline' => $this->getOrderDeadline($menuItem->day)
-                    ];
-                });
+        $menuItemsCount = MenuItem::count();
+        Log::info('MenuItem-ek száma', ['count' => $menuItemsCount]);
+        
+        $availableDates = MenuItem::where('day', '>', now()->format('Y-m-d'))
+            ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
+            ->orderBy('day')
+            ->get()
+            ->map(function($menuItem) use ($user) {
+                // MINDEN rendelést megkeresünk erre a napra (Rendelve és Lemondva is)
+                $order = Order::where('user_id', $user->id)
+                    ->where('menuItems_id', $menuItem->id)
+                    ->first(); // first(), nem where exists
                 
-            Log::info('getAvailableDates - sikeres', ['count' => $availableDates->count()]);
+                $hasOrder = !is_null($order);
+                
+                return [
+                    'date' => $menuItem->day->format('Y-m-d'),
+                    'display_date' => $menuItem->day->format('Y. m. d.'),
+                    'day_name' => $menuItem->day->translatedFormat('l'),
+                    'has_order' => $hasOrder,
+                    'menu_item_id' => $menuItem->id,
+                    'order_id' => $order ? $order->id : null,
+                    'order_status' => $order ? $order->orderStatus : null, // EZ HIÁNYZOTT!
+                    'selected_option' => $order ? $order->selectedOption : null,
+                    'menu' => $menuItem->getMenuData(),
+                    'can_order' => $this->canOrderForDate($menuItem->day),
+                    'order_deadline' => $this->getOrderDeadline($menuItem->day)
+                ];
+            });
             
-            return response()->json([
-                'success' => true,
-                'data' => $availableDates,
-                'count' => $availableDates->count(),
-                'debug' => [
-                    'menu_items_count' => $menuItemsCount,
-                    'user_id' => $user->id
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Elérhető dátumok hiba', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Hiba az elérhető dátumok lekérdezésekor.',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
+        Log::info('getAvailableDates - sikeres', ['count' => $availableDates->count()]);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $availableDates,
+            'count' => $availableDates->count(),
+            'debug' => [
+                'menu_items_count' => $menuItemsCount,
+                'user_id' => $user->id
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Elérhető dátumok hiba', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba az elérhető dátumok lekérdezésekor.',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
     }
+}
     private function canOrderForDate($date)
     {
         $orderDate = \Carbon\Carbon::parse($date);
@@ -447,20 +430,6 @@ class PersonalOrderController extends Controller
 
 
 
-    private function canCancelOrder($order)
-    {
-        try {
-            $orderDate = \Carbon\Carbon::parse($order->orderDate);
-            $deadline = $orderDate->copy()->setTime(8, 0, 0); // aznap 8:00-ig
-            return now() <= $deadline;
-        } catch (\Exception $e) {
-            Log::error('Lemondhatóság ellenőrzése hiba', [
-                'error' => $e->getMessage(),
-                'order_id' => $order->id
-            ]);
-            return false;
-        }
-    }
 
 
 
@@ -776,6 +745,103 @@ public function updateOption(Request $request, $orderId)
     }
 }
 
+// PersonalOrderController.php - az updateOption metódus után
+
+/**
+ * Rendelés lemondása
+ */
+public function destroy($id)
+{
+    $user = Auth::user();
+    
+    try {
+        $order = Order::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+            
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A rendelés nem található.'
+            ], 404);
+        }
+        
+        // Ellenőrizzük, hogy lemondható-e
+        if ($order->orderStatus !== 'Rendelve') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Csak aktív rendelés lemondható.'
+            ], 400);
+        }
+        
+        // Ellenőrizzük a lemondási határidőt
+        if (!$this->canCancelOrder($order)) {
+            $orderDate = \Carbon\Carbon::parse($order->orderDate);
+            $deadline = $orderDate->copy()->setTime(8, 0, 0);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'A lemondási határidő lejárt. Lemondhatóság: ' . $deadline->format('H:i') . '-ig.',
+                'deadline' => $deadline->format('Y-m-d H:i:s')
+            ], 400);
+        }
+        
+        // Rendelés állapotának frissítése
+        $order->orderStatus = 'Lemondva';
+        $order->save();
+        
+        Log::info('Rendelés lemondva', [
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'date' => $order->orderDate
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Rendelés sikeresen lemondva!',
+            'data' => $order
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Rendelés lemondása hiba', [
+            'error' => $e->getMessage(),
+            'user_id' => $user->id,
+            'order_id' => $id
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt a rendelés lemondása során.',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
+
+public function cancel($id)
+{
+    return $this->destroy($id);
+}
+/**
+ * Ellenőrzi, hogy lemondható-e a rendelés
+ */
+private function canCancelOrder($order)
+{
+    try {
+        $orderDate = \Carbon\Carbon::parse($order->orderDate);
+        $deadline = $orderDate->copy()->setTime(8, 0, 0); // aznap 8:00-ig
+        
+        // Ha az orderDate ma van, akkor még ma 8:00-ig lehet lemondani
+        // Ha az orderDate holnap van, akkor még holnap 8:00-ig lehet lemondani
+        return now() <= $deadline;
+    } catch (\Exception $e) {
+        Log::error('Lemondhatóság ellenőrzése hiba', [
+            'error' => $e->getMessage(),
+            'order_id' => $order->id
+        ]);
+        return false;
+    }
+}
+
 /**
  * Ellenőrzi, hogy módosítható-e a rendelés
  */
@@ -799,6 +865,9 @@ private function getModifyDeadline($date)
     $orderDate = \Carbon\Carbon::parse($date);
     return $orderDate->copy()->subDay()->setTime(10, 0, 0)->format('Y-m-d H:i:s');
 }
+
+
+
 
 
 }

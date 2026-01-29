@@ -11,8 +11,11 @@ import PasswordResetForm from '../components/auth/PasswordResetForm.vue'
 import MenuMaker from '../components/views/kitchen/MenuMaker.vue'
 import Ingredients from '../components/views/kitchen/Ingredients.vue'
 import LunchTime from '../components/views/kitchen/LunchTime.vue'
+import Orders from '../components/views/kitchen/Orders.vue'
 
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
+import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
+
 
 
 const routes = [
@@ -94,11 +97,23 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: '/personal-invoices',
+        name: 'PersonalInvoices',
+        component: PersonalInvoices,
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/kitchen/lunchtime',
         name: 'LunchTime',
         component: LunchTime,
         meta: { requiresAuth: true }
-    }
+    },
+    {
+        path: '/kitchen/orders',
+        name: 'Orders',
+        component: Orders,
+        meta: { requiresAuth: true }
+    },
     
 ]
 

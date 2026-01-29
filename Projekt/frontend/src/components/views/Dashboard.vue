@@ -32,6 +32,9 @@
         <router-link to="/personal-orders" class="link-card">
           <h3>Rendelések</h3>
         </router-link>
+        <router-link to="/personal-invoices" class="link-card">
+          <h3>Számlák</h3>
+        </router-link>
       </div>
       
       <div v-if="isKitchen" class="kitchen-links">
