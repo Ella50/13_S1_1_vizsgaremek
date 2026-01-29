@@ -72,9 +72,29 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/available-months', [PersonalOrderController::class, 'getAvailableMonths']);
             Route::get('/month/{year}/{month}', [PersonalOrderController::class, 'getAvailableDatesByMonth']);
             Route::post('/', [PersonalOrderController::class, 'store']);
-            Route::delete('/{id}', [PersonalOrderController::class, 'cancel']);
+            Route::patch('/{order}/update-option', [PersonalOrderController::class, 'updateOption']);
+            Route::delete('/{order}', [PersonalOrderController::class, 'destroy']); // Ez a destroy
+            Route::delete('/{order}/cancel', [PersonalOrderController::class, 'cancel']); // Ez az alias
+            Route::post('/{order}/reorder', [PersonalOrderController::class, 'reorder']);
 
         });
+
+        Route::prefix('personal-invoices')->group(function () {
+
+            Route::get('/', [InvoiceController::class, 'userInvoices']);
+
+            Route::get('/{invoice}/orders', [InvoiceController::class, 'invoiceOrders']);
+
+            Route::get('/{invoice}/preview', [InvoiceController::class, 'previewInvoice']);
+            
+    
+            Route::get('/{invoice}/download', [InvoiceController::class, 'downloadInvoice']);
+
+        });
+
+            
+    
+    
     });
     
 
@@ -121,7 +141,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/weekly', [OrdersController::class, 'getWeeklySummary']);
             Route::get('/preparation/{date}', [OrdersController::class, 'getPreparationList']);
             Route::get('/export', [OrdersController::class, 'exportOrders']);
+            Route::get('/monthly-preparation/{year}/{month}', [OrdersController::class, 'getMonthlyPreparation']);
+    
         });
+
+   
 
         //Hozzávalók kezelése (ingredient.vue)
         Route::prefix('ingredients')->group(function () {
