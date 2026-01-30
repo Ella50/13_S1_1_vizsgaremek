@@ -2,8 +2,7 @@
   <div class="orders-container">
     <!-- Fejléc -->
     <div class="header-section">
-      <h1><i class="fas fa-utensils"></i> Rendelések Kezelése</h1>
-      <p class="subtitle">Konyhai rendelések áttekintése és előkészítési listák</p>
+      <h1>Rendelések Kezelése</h1>
     </div>
 
     <!-- Szűrők és vezérlők -->
@@ -1110,13 +1109,10 @@ updateStatsFromResponse(summary) {
 
 .header-section {
   margin-bottom: 30px;
-  text-align: center;
+
 }
 
-.header-section h1 {
-  color: #2c3e50;
-  font-weight: 600;
-}
+
 
 .subtitle {
   color: #7f8c8d;

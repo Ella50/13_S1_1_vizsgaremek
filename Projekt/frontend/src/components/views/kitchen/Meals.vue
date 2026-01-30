@@ -1588,11 +1588,7 @@ async loadAllIngredients() {
   margin-bottom:2rem;
 }
 
-.header h1{
-  margin:0;
-  color:#2c3e50;
-  font-size:1.8rem;
-}
+
 
 .btn-add{
   background:#27ae60;
