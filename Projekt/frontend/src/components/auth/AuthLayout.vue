@@ -2,17 +2,17 @@
   <div class="login-wrapper col-12">
     <div class="left-side row-12">
         <div class="upper col-4">
-            <!-- <img src="../../../falevel.png" alt="">-->
+            <img src="../../../falevel.png" alt="">
         </div>
         <div class="middle col-4">
-            <!-- <img src="../../../eMenza.png" alt="">-->
+             <img src="../../../eMenza.png" alt="">
         </div>
         <div class="bottom col-4">
             <div class="bottom-left">
-                <!-- <img src="../../../faag.png" alt="">-->
+                <img src="../../../faag.png" alt="">
             </div>
             <div class="bottom-right">
-                <!-- Abrosz kép háttérként????? -->
+                
             </div>
         </div>
     </div>

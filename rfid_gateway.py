@@ -51,7 +51,6 @@ def serial_reader():
                     latest["uid"] = line
                     latest["scanned_at"] = now_iso()
 
-                # opcionális log fájl
                 with open("rfid.txt", "a", encoding="utf-8") as f:
                     f.write(line + "\n")
 
