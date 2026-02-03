@@ -100,9 +100,6 @@
     <!-- Üres állapot -->
     <div v-else-if="!loading && ingredients.length === 0" class="empty-state">
       <h3>Nincsenek hozzávalók</h3>
-      <p>
-        Még nem lettek felvéve hozzávalók, vagy a szűrőknek nem felel meg egyetlen hozzávaló sem.
-      </p>
       <button
         @click="openCreateModal"
         class="btn-add-empty"
@@ -234,7 +231,7 @@
                 <div class="edit-container">
                   <div class="edit-header">
                     <h3>
-                      {{ editingIngredient ? 'Hozzávaló szerkesztése' : 'Új hozzávaló' }}
+                      Hozzávaló szerkesztése
                     </h3>
                     <p>
                       Módosítsd a(z) {{ ingredient.ingredientName }} hozzávaló adatait
@@ -280,9 +277,7 @@
                       <!-- Tápértékek -->
                       <div class="form-section">
                         <h4>Tápértékek (100g-ra)</h4>
-                        <p class="section-subtitle">
-                          Opcionális adatok, de ajánlott kitölteni az étel tervezéshez
-                        </p>
+
                         
                         <div class="form-row nutrition-grid">
                           <!-- Energia -->
@@ -376,9 +371,6 @@
                           <label for="isAvailable" class="checkbox-label">
                             Hozzávaló elérhető a felhasználásra
                           </label>
-                          <p class="checkbox-help">
-                            Ha nincs bejelölve, a hozzávaló nem lesz elérhető az új ételekhez
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -459,9 +451,7 @@
               <!-- Tápértékek -->
               <div class="form-section">
                 <h4>Tápértékek (100g-ra)</h4>
-                <p class="section-subtitle">
-                  Opcionális adatok, de ajánlott kitölteni az étel tervezéshez
-                </p>
+
                 
                 <div class="form-row nutrition-grid">
                   <!-- Energia -->
@@ -555,9 +545,7 @@
                   <label for="newIsAvailable" class="checkbox-label">
                     Hozzávaló elérhető a felhasználásra
                   </label>
-                  <p class="checkbox-help">
-                    Ha nincs bejelölve, a hozzávaló nem lesz elérhető az új ételekhez
-                  </p>
+
                 </div>
               </div>
             </div>
@@ -1502,11 +1490,7 @@ button{
   font-weight: 600;
 }
 
-.section-subtitle {
-  margin: 0 0 1rem 0;
-  color: #6c757d;
-  font-size: 0.875rem;
-}
+
 
 .form-row {
   display: grid;
@@ -1566,12 +1550,7 @@ button{
   cursor: pointer;
 }
 
-.checkbox-help {
-  margin: 0;
-  color: #6c757d;
-  font-size: 0.875rem;
-  margin-left: 1.75rem;
-}
+
 
 /* Form művelet gombok */
 .form-actions {

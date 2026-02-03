@@ -53,6 +53,19 @@ class User extends Authenticatable
         return $this->belongsTo(City::class);
     }
 
+    public function county()
+    {
+        return $this->hasOneThrough(
+            County::class,
+            City::class,
+            'id',           // cities tábla elsődleges kulcsa
+            'id',           // counties tábla elsődleges kulcsa
+            'city_id',      // users tábla külső kulcsa (city_id)
+            'county_id'     // cities tábla külső kulcsa (county_id)
+        );
+    }
+    
+
     public function studentClass()
     {
         return $this->belongsTo(studentClass::class, 'class_id');

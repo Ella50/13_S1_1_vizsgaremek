@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PersonalOrderController;
 use App\Http\Controllers\Api\OrdersController;
 use App\Http\Controllers\AdminRfidController;
 use App\Http\Controllers\LunchTimeController;
+use App\Http\Controllers\Api\InvoiceController;
 
 
 // Publikus utvonalak
@@ -80,16 +81,10 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::prefix('personal-invoices')->group(function () {
-
             Route::get('/', [InvoiceController::class, 'userInvoices']);
-
             Route::get('/{invoice}/orders', [InvoiceController::class, 'invoiceOrders']);
-
             Route::get('/{invoice}/preview', [InvoiceController::class, 'previewInvoice']);
-            
-    
             Route::get('/{invoice}/download', [InvoiceController::class, 'downloadInvoice']);
-
         });
 
             
@@ -117,7 +112,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Konyha
     Route::prefix('kitchen')->group(function () {
 
-
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::get('/meals/with-allergens', [KitchenController::class, 'mealsWithAllergens']);
         Route::post('/meals', [KitchenController::class, 'storeMeal']);
@@ -129,9 +123,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/meals/{id}/ingredients', [KitchenController::class, 'updateMealIngredients']);
         Route::get('/ingredients/search', [KitchenController::class, 'searchIngredients']);
         Route::get('/ingredients', [KitchenController::class, 'getAllIngredients']);
-
+        
         Route::get('/categories', [KitchenController::class, 'getCategories']);
-
 
         // Konyhai rendelések összesítése
         Route::prefix('orders')->group(function () {
