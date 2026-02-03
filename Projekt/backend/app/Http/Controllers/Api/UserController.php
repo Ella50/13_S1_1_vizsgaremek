@@ -8,9 +8,42 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Api\AuthController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
+
+    public function me(): JsonResponse
+    {
+        try {
+            /** @var User|null $user */
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nincs bejelentkezett felhasználó'
+                ], 401);
+            }
+            
+            $user->load(['city', 'studentClass', 'group', 'rfidCard']);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $user,
+                'message' => 'Felhasználói adatok betöltve'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az adatok betöltése során: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+        
     /**
      * Összes felhasználó lekérése
      */

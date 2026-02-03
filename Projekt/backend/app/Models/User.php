@@ -81,10 +81,25 @@ class User extends Authenticatable
         return $this->belongsTo(\App\Models\RfidCard::class, 'rfidCard_id');
     }
 
-    public function user()
+    /*public function user() HA NEM MŰKÖDNE AZ RFID OLVASÓ, AKKOR EZT VISSZAÁLLÍTANI
     {
         return $this->hasOne(\App\Models\User::class, 'rfidCard_id');
+    }*/
+
+
+    public function userHealthRestrictions()
+    {
+        return $this->hasMany(UserHealthRestriction::class, 'user_id');
     }
+
+    public function allergens()
+    {
+        return $this->belongsToMany(Allergen::class, 'userHealthRestrictions', 'user_id', 'allergen_id')
+                    ->wherePivotNotNull('allergen_id')
+                    ->withPivot('hasDiabetes');
+    }
+
+
 
 
 }
