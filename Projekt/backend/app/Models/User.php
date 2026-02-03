@@ -53,6 +53,19 @@ class User extends Authenticatable
         return $this->belongsTo(City::class);
     }
 
+    public function county()
+    {
+        return $this->hasOneThrough(
+            County::class,
+            City::class,
+            'id',           // cities tábla elsődleges kulcsa
+            'id',           // counties tábla elsődleges kulcsa
+            'city_id',      // users tábla külső kulcsa (city_id)
+            'county_id'     // cities tábla külső kulcsa (county_id)
+        );
+    }
+    
+
     public function studentClass()
     {
         return $this->belongsTo(studentClass::class, 'class_id');
@@ -68,10 +81,25 @@ class User extends Authenticatable
         return $this->belongsTo(\App\Models\RfidCard::class, 'rfidCard_id');
     }
 
-    public function user()
+    /*public function user() HA NEM MŰKÖDNE AZ RFID OLVASÓ, AKKOR EZT VISSZAÁLLÍTANI
     {
         return $this->hasOne(\App\Models\User::class, 'rfidCard_id');
+    }*/
+
+
+    public function userHealthRestrictions()
+    {
+        return $this->hasMany(UserHealthRestriction::class, 'user_id');
     }
+
+    public function allergens()
+    {
+        return $this->belongsToMany(Allergen::class, 'userHealthRestrictions', 'user_id', 'allergen_id')
+                    ->wherePivotNotNull('allergen_id')
+                    ->withPivot('hasDiabetes');
+    }
+
+
 
 
 }

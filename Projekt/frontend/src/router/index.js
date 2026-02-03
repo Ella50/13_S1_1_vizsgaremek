@@ -12,9 +12,10 @@ import MenuMaker from '../components/views/kitchen/MenuMaker.vue'
 import Ingredients from '../components/views/kitchen/Ingredients.vue'
 import LunchTime from '../components/views/kitchen/LunchTime.vue'
 import Orders from '../components/views/kitchen/Orders.vue'
-
+import UserProfile from '../components/views/users/UserProfile.vue'
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
-import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
+
+//import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
 
 
 
@@ -96,12 +97,12 @@ const routes = [
         component: PersonalOrders,
         meta: { requiresAuth: true }
     },
-    {
+    /*{
         path: '/personal-invoices',
         name: 'PersonalInvoices',
         component: PersonalInvoices,
         meta: { requiresAuth: true }
-    },
+    },*/
     {
         path: '/kitchen/lunchtime',
         name: 'LunchTime',
@@ -114,6 +115,13 @@ const routes = [
         component: Orders,
         meta: { requiresAuth: true }
     },
+    {
+        path: '/profile',
+        name: 'UserProfile',
+        component: UserProfile,
+        meta: { requiresAuth: true }
+    },
+
     
 ]
 

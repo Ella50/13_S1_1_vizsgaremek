@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\PersonalOrderController;
 use App\Http\Controllers\Api\OrdersController;
 use App\Http\Controllers\AdminRfidController;
 use App\Http\Controllers\LunchTimeController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\UserHealthController;
 
 
 // Publikus utvonalak
@@ -24,7 +26,7 @@ Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']
 Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 
 
-//Menü utvonalak (nem a sanctumba van ezért publikusak)
+//Menü utvonalak (nem a sanctumba van ezért publikusak??)
 
 Route::prefix('menu')->group(function () {
     Route::get('/available-dates', [MenuController::class, 'availableDates']);
@@ -37,6 +39,9 @@ Route::prefix('menu')->group(function () {
     Route::get('/today', [MenuController::class, 'getTodayMenu']);
     Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
 });
+
+
+
 
 
 // védett utvonalak
@@ -54,12 +59,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/kitchen/lunchtime/verify', [LunchTimeController::class, 'verify']);
     Route::post('/kitchen/lunchtime/consume', [LunchTimeController::class, 'consume']);
   
+
+    // Allergén lista (globális)
+    Route::get('/allergens', [UserHealthController::class, 'getAllergens']);
   
-    // User profile
+    // User profil
     Route::prefix('user')->group(function () {
         Route::get('/profile', [UserController::class, 'profile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);
+
+
+        Route::get('/health-data', [UserHealthController::class, 'getUserHealthData']);
+        Route::get('/allergens', [UserHealthController::class, 'getUserAllergens']);
+        Route::post('/allergens', [UserHealthController::class, 'addAllergen']); 
+        Route::delete('/allergens/{id}', [UserHealthController::class, 'removeAllergen']); 
+        Route::put('/diabetes', [UserHealthController::class, 'updateDiabetes']); 
+    
+    
+    
+
         
         // Személyes rendelések
         Route::prefix('personal-orders')->group(function () {
@@ -80,16 +99,10 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::prefix('personal-invoices')->group(function () {
-
             Route::get('/', [InvoiceController::class, 'userInvoices']);
-
             Route::get('/{invoice}/orders', [InvoiceController::class, 'invoiceOrders']);
-
             Route::get('/{invoice}/preview', [InvoiceController::class, 'previewInvoice']);
-            
-    
             Route::get('/{invoice}/download', [InvoiceController::class, 'downloadInvoice']);
-
         });
 
             
@@ -117,7 +130,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Konyha
     Route::prefix('kitchen')->group(function () {
 
-
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::get('/meals/with-allergens', [KitchenController::class, 'mealsWithAllergens']);
         Route::post('/meals', [KitchenController::class, 'storeMeal']);
@@ -129,9 +141,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/meals/{id}/ingredients', [KitchenController::class, 'updateMealIngredients']);
         Route::get('/ingredients/search', [KitchenController::class, 'searchIngredients']);
         Route::get('/ingredients', [KitchenController::class, 'getAllIngredients']);
-
+        
         Route::get('/categories', [KitchenController::class, 'getCategories']);
-
 
         // Konyhai rendelések összesítése
         Route::prefix('orders')->group(function () {
@@ -163,8 +174,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/lunchtime/consume', [LunchTimeController::class, 'consume']);
         Route::get('/orders/today', [KitchenController::class, 'getTodayOrders']);
 
-    });
+        });
+
 });
+
 
 /*
 Route::post('/reset-password', [App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLinkEmail']);

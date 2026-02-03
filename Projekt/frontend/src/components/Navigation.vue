@@ -48,6 +48,10 @@
       <router-link v-if="AuthService.isAuthenticated()" to="/menu/week">
         Heti menü
       </router-link>
+
+      <router-link v-if="AuthService.isAuthenticated()" to="/profile">
+        Profil
+      </router-link>
       
       <button 
         @click="logout" 

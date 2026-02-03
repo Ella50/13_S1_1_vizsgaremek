@@ -235,43 +235,48 @@ class AdminController extends Controller
     
     // Felhasználó részletes adatainak lekérése
     public function getUserDetails($id)
-    {
-        try {
-            Log::info('getUserDetails called', ['id' => $id]);
-            
-            // Ellenőrizzük, hogy szám-e
-            if (!is_numeric($id)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Érvénytelen felhasználó azonosító'
-                ], 400);
-            }
-            
-            $user = User::with(['city', 'city.county', 'studentClass', 'group', 'rfidCard'])->find($id);
-            
-            if (!$user) {
-                Log::warning('User not found', ['id' => $id]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Felhasználó nem található'
-                ], 404);
-            }
-            
-            Log::info('User found', ['id' => $user->id, 'name' => $user->firstName]);
-            
-            return response()->json([
-                'success' => true,
-                'data' => $user
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('getUserDetails error: ' . $e->getMessage());
+{
+    try {
+        Log::info('getUserDetails called', ['id' => $id]);
+        
+        if (!is_numeric($id)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hiba történt a felhasználó betöltése során'
-            ], 500);
+                'message' => 'Érvénytelen felhasználó azonosító'
+            ], 400);
         }
+        
+        $user = User::with([
+            'city', 
+            'city.county', // <-- A county-t is betöltjük a városon keresztül
+            'studentClass', 
+            'group', 
+            'rfidCard'
+        ])->find($id);
+        
+        if (!$user) {
+            Log::warning('User not found', ['id' => $id]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Felhasználó nem található'
+            ], 404);
+        }
+        
+        Log::info('User found', ['id' => $user->id, 'name' => $user->firstName]);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $user
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('getUserDetails error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt a felhasználó betöltése során'
+        ], 500);
     }
+}
     
     // Felhasználó frissítése
     public function updateUser(Request $request, $id)

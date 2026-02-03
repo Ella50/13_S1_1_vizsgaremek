@@ -91,37 +91,113 @@ class OrdersController extends Controller
      * Dátum szerinti összesítés
      */
     public function getByDate($date)
-{
-    $user = Auth::user();
-    if (!in_array($user->userType, ['Konyha', 'Admin'])) {
-        return $this->unauthorized();
+    {
+        $user = Auth::user();
+        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+            return $this->unauthorized();
+        }
+        
+        // Aznapi rendelések
+        $orders = Order::whereDate('orderDate', $date)
+            ->with([
+                'user:id,userType',
+                'menuItem' => function($q) {
+                    $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
+                },
+                'price'
+            ])
+            ->get();
+        
+        // Aznapi menü
+        $menu = MenuItem::whereDate('day', $date)
+            ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
+            ->first();
+            
+        // **ÚJ: Ételenkénti összesítés**
+        $mealSummary = $this->getMealSummary($orders, $menu);
+        
+        // Részeletes összesítés
+        $detailedSummary = $this->getDetailedSummary($orders);
+        
+        return $this->success([
+            'date' => $date,
+            'menu' => $menu,
+            'orders' => $orders,
+            'summary' => $detailedSummary,
+            'meal_summary' => $mealSummary, // Ételenkénti összesítés
+            'total_count' => $orders->count(),
+        ]);
     }
-    
-    $orders = Order::whereDate('orderDate', $date)
-        ->with([
-            'user:id,userType',
-            'menuItem' => function($q) {
-                $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
-            },
-            'price'
-        ])
-        ->get();
+
+    private function getMealSummary($orders, $menu)
+    {
+        $summary = [
+            'soup' => [
+                'name' => $menu && $menu->soupMeal ? $menu->soupMeal->mealName : 'Nincs megadva',
+                'count' => 0,
+                'orders' => []
+            ],
+            'option_a' => [
+                'name' => $menu && $menu->optionAMeal ? $menu->optionAMeal->mealName : 'Nincs megadva',
+                'count' => 0,
+                'orders' => []
+            ],
+            'option_b' => [
+                'name' => $menu && $menu->optionBMeal ? $menu->optionBMeal->mealName : 'Nincs megadva',
+                'count' => 0,
+                'orders' => []
+            ],
+            'other' => [
+                'name' => $menu && $menu->otherMeal ? $menu->otherMeal->mealName : 'Nincs megadva',
+                'count' => 0,
+                'orders' => []
+            ]
+        ];
         
-    $menu = MenuItem::whereDate('day', $date)
-        ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
-        ->first();
+        foreach ($orders as $order) {
+            // Csak "Rendelve" státuszú rendeléseket számoljuk
+            if ($order->orderStatus !== 'Rendelve') {
+                continue;
+            }
+            
+            // Leves - minden rendeléshez tartozik leves (ha van)
+            $summary['soup']['count']++;
+            $summary['soup']['orders'][] = $order->id;
+            
+            // Főételek az opció alapján
+            switch ($order->selectedOption) {
+                case 'A':
+                    $summary['option_a']['count']++;
+                    $summary['option_a']['orders'][] = $order->id;
+                    break;
+                    
+                case 'B':
+                    $summary['option_b']['count']++;
+                    $summary['option_b']['orders'][] = $order->id;
+                    break;
+                    
+                case 'other':
+                    $summary['other']['count']++;
+                    $summary['other']['orders'][] = $order->id;
+                    break;
+                    
+                case 'soup':
+                    // Csak leves opciónál nem számoljuk a főételt
+                    break;
+            }
+        }
         
-    $summary = $this->getDetailedSummary($orders);
-    
-    return $this->success([
-        'date' => $date,
-        'menu' => $menu,
-        'orders' => $orders,
-        'summary' => $summary,
-        'total_count' => $orders->count(),
-        'export_data' => $this->prepareExportData($orders, $menu)
-    ]);
-}
+        // Összesítés opciónként
+        $summary['total_by_option'] = [
+            'A' => $summary['option_a']['count'],
+            'B' => $summary['option_b']['count'],
+            'soup' => $orders->where('selectedOption', 'soup')->count(),
+            'other' => $summary['other']['count'],
+            'total_soup' => $summary['soup']['count']
+        ];
+        
+        return $summary;
+    }
     
     /**
      * Mai rendelések összesítése
@@ -403,17 +479,21 @@ class OrdersController extends Controller
      */
     private function getDetailedSummary($orders)
     {
+        $activeOrders = $orders->where('orderStatus', 'Rendelve');
+        $cancelledOrders = $orders->where('orderStatus', 'Lemondva');
+        
         return [
-            'total' => $orders->count(),
-            'by_option' => $orders->groupBy('selectedOption')->map->count(),
-            'by_user_type' => $orders->groupBy('user.userType')->map->count(),
-            'total_revenue' => $orders->sum(function($order) {
+            'total_orders' => $orders->count(),
+            'active_orders' => $activeOrders->count(),
+            'cancelled_orders' => $cancelledOrders->count(),
+            'total_revenue' => $activeOrders->sum(function($order) {
                 return $order->price->amount ?? 0;
             }),
-            'average_order_value' => $orders->count() > 0 ? 
-                round($orders->sum(function($order) {
+            'by_option' => $activeOrders->groupBy('selectedOption')->map->count(),
+            'average_order_value' => $activeOrders->count() > 0 ? 
+                round($activeOrders->sum(function($order) {
                     return $order->price->amount ?? 0;
-                }) / $orders->count(), 2) : 0
+                }) / $activeOrders->count(), 2) : 0
         ];
     }
     

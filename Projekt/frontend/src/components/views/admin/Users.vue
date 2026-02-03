@@ -511,66 +511,63 @@ export default {
 
 
     async openEditModal(userId) {
-      
-      this.showEditModal = true
-      this.editLoading = true
-      this.citiesForCounty = []
-      
-      try {
-        const userFromList = this.users.data.find(u => u.id == userId)
-        
-        if (userFromList) {
-          this.editUser = {
-            id: userFromList.id,
-            firstName: userFromList.firstName || '',
-            lastName: userFromList.lastName || '',
-            thirdName: userFromList.thirdName || '',
-            email: userFromList.email || '',
-            userType: userFromList.userType || 'Tanuló',
-            userStatus: userFromList.userStatus || 'active',
-            county_id: userFromList.county_id || null,
-            city_id: userFromList.city_id || null,
-            address: '', // Ezek nincsenek a listában
-            hasDiscount: userFromList.hasDiscount || false,
-           // rfidCard: userData.rfidCard || null,
-           // rfid_uid: userData.rfidCard?.cardNumber || null,
-          }
-        }
-
-        const response = await AuthService.api.get(`/admin/users/${userId}`)
-
-        
-        if (response.data.success) {
-          const userData = response.data.data
-          
-          this.editUser = {
-            ...this.editUser,
-            address: userData.address || this.editUser.address,
-            thirdName: userData.thirdName || this.editUser.thirdName,
-            hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
-            county_id: userData.county_id || this.editUser.county_id,
-            city_id: userData.city_id || this.editUser.city_id
-          }
-          if (this.editUser.county_id) {
-            await this.loadCitiesForCounty()
-          }
-          console.log('Full user data loaded successfully')
-        }
-      } 
-      catch (error) {
-        console.error('Failed to load full user details:', error.message)
-        console.log('Using basic data from list')
-        
-        if (!this.editUser.id) {
-          alert('Felhasználó nem található')
-          this.closeEditModal()
-          return
-        }
-      } 
-      finally {
-        this.editLoading = false
+  this.showEditModal = true
+  this.editLoading = true
+  this.citiesForCounty = []
+  
+  try {
+    // Először csak az alapadatok
+    const userFromList = this.users.data.find(u => u.id == userId)
+    
+    if (userFromList) {
+      this.editUser = {
+        id: userFromList.id,
+        firstName: userFromList.firstName || '',
+        lastName: userFromList.lastName || '',
+        thirdName: userFromList.thirdName || '',
+        email: userFromList.email || '',
+        userType: userFromList.userType || 'Tanuló',
+        userStatus: userFromList.userStatus || 'active',
+        address: '', // Ezek nincsenek a listában
+        hasDiscount: userFromList.hasDiscount || false,
       }
-    },
+    }
+
+    // Teljes adatok betöltése
+    const response = await AuthService.api.get(`/admin/users/${userId}`)
+    
+    if (response.data.success) {
+      const userData = response.data.data
+      
+      this.editUser = {
+        ...this.editUser,
+        address: userData.address || this.editUser.address,
+        thirdName: userData.thirdName || this.editUser.thirdName,
+        hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
+        county_id: userData.city?.county?.id || null, // <-- Itt változik!
+        city_id: userData.city_id || this.editUser.city_id
+      }
+      
+      if (this.editUser.county_id) {
+        await this.loadCitiesForCounty()
+      }
+      console.log('Full user data loaded successfully')
+    }
+  } 
+  catch (error) {
+    console.error('Failed to load full user details:', error.message)
+    console.log('Using basic data from list')
+    
+    if (!this.editUser.id) {
+      alert('Felhasználó nem található')
+      this.closeEditModal()
+      return
+    }
+  } 
+  finally {
+    this.editLoading = false
+  }
+},
     //Segédfüggvény
     fallbackToLocalData(userId) {
           console.log('DEBUG: Falling back to local data for user ID:', userId)
@@ -620,62 +617,63 @@ export default {
         },
     
     async saveUserChanges() {
-      if (!confirm('Biztosan menti a módosításokat?')) {
-        return
-      }
-      
-      this.saving = true
-      
-      try {
-        const updateData = {
-          firstName: this.editUser.firstName,
-          lastName: this.editUser.lastName,
-          thirdName: this.editUser.thirdName,
-          email: this.editUser.email,
-          userType: this.editUser.userType,
-          userStatus: this.editUser.userStatus,
-          address: this.editUser.address,
-          hasDiscount: this.editUser.hasDiscount
-        }
-        
-        
-        console.log('DEBUG: Sending update to /admin/users/' + this.editUser.id)
-        console.log('DEBUG: Update data:', updateData)
-        
-        const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
-        
-        console.log('DEBUG: Update response:', response.data)
-        
-        if (response.data.success) {
-          const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
-          if (userIndex !== -1) {
-            Object.keys(updateData).forEach(key => {
-              if (updateData[key] !== undefined) {
-                this.users.data[userIndex][key] = updateData[key]
-              }
-            })
+  if (!confirm('Biztosan menti a módosításokat?')) {
+    return
+  }
+  
+  this.saving = true
+  
+  try {
+    const updateData = {
+      firstName: this.editUser.firstName,
+      lastName: this.editUser.lastName,
+      thirdName: this.editUser.thirdName,
+      email: this.editUser.email,
+      userType: this.editUser.userType,
+      userStatus: this.editUser.userStatus,
+      address: this.editUser.address,
+      hasDiscount: this.editUser.hasDiscount,
+      city_id: this.editUser.city_id // <-- Csak city_id-t küldjük
+    }
+    
+    console.log('DEBUG: Sending update to /admin/users/' + this.editUser.id)
+    console.log('DEBUG: Update data:', updateData)
+    
+    const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
+    
+    console.log('DEBUG: Update response:', response.data)
+    
+    if (response.data.success) {
+      // Frissítjük a listában is
+      const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
+      if (userIndex !== -1) {
+        Object.keys(updateData).forEach(key => {
+          if (updateData[key] !== undefined) {
+            this.users.data[userIndex][key] = updateData[key]
           }
-          
-          alert('Felhasználó sikeresen frissítve!')
-          this.closeEditModal()
-        } else {
-          alert(response.data.message || 'Ismeretlen hiba történt')
-        }
-      } catch (error) {
-        console.error('DEBUG: Update failed:', error)
-
-        if (error.response?.data?.errors) {
-          const errors = Object.values(error.response.data.errors).flat()
-          alert('Validációs hibák:\n' + errors.join('\n'))
-        } else if (error.response?.data?.message) {
-          alert('Hiba: ' + error.response.data.message)
-        } else {
-          alert('Hiba történt a mentés során')
-        }
-      } finally {
-        this.saving = false
+        })
       }
-    },
+      
+      alert('Felhasználó sikeresen frissítve!')
+      this.closeEditModal()
+    } else {
+      alert(response.data.message || 'Ismeretlen hiba történt')
+    }
+  } catch (error) {
+    console.error('DEBUG: Update failed:', error)
+
+    if (error.response?.data?.errors) {
+      const errors = Object.values(error.response.data.errors).flat()
+      alert('Validációs hibák:\n' + errors.join('\n'))
+    } else if (error.response?.data?.message) {
+      alert('Hiba: ' + error.response.data.message)
+    } else {
+      alert('Hiba történt a mentés során')
+    }
+  } finally {
+    this.saving = false
+  }
+},
 
     async updateStatus(userId, newUserStatus) {
       if (!confirm(`Biztosan ${newUserStatus === 'active' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
@@ -856,7 +854,6 @@ export default {
 
 .header h1 {
   margin: 0 0 1rem 0;
-  color: #2c3e50;
 }
 
 .header-actions {
