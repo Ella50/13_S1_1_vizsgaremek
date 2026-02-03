@@ -33,7 +33,7 @@ Route::prefix('menu')->group(function () {
     Route::get('/existing-dates', [MenuController::class, 'existingDates']);
     Route::get('/{date}', [MenuController::class, 'getMenuByDate']) ->where('date', '^\d{4}-\d{2}-\d{2}$');
     Route::post('/', [MenuController::class, 'saveMenu']);
-    Route::post('/', [MenuController::class, 'store']);
+    Route::put('/{id}', [MenuController::class, 'store']);
     //Route::put('/{menu}', [MenuController::class, 'update']);
 
     Route::get('/today', [MenuController::class, 'getTodayMenu']);
