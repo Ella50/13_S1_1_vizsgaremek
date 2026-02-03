@@ -113,39 +113,45 @@ class MenuController extends Controller
     }
 
     public function getWeeklyMenu(Request $request)
-    {
-        $from = $request->query('from');
-        
-        $start = $from
-            ? Carbon::parse($from)->startOfWeek(Carbon::MONDAY)
-            : Carbon::now()->startOfWeek(Carbon::MONDAY);
-            
-        $end = $start->copy()->addDays(6);
+{
+    $from = $request->query('from');
 
-        $menus = MenuItem::whereBetween('day', [$start->toDateString(), $end->toDateString()])
-            ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
-            ->get()
-            ->keyBy(fn($item) => $item->day->format('Y-m-d'));
+    $start = $from
+        ? Carbon::parse($from)->startOfDay()
+        : Carbon::now()->startOfWeek(Carbon::MONDAY)->startOfDay();
 
-        $out = [];
-        for ($i = 0; $i < 7; $i++) {
-            $day = $start->copy()->addDays($i)->format('Y-m-d');
-            $menu = $menus->get($day);
-            
-            $out[] = [
-                'day' => $day,
-                'day_name' => $this->getHungarianDayName($day),
-                'menu' => $menu ? $menu->getMenuWithMeals() : null
-            ];
-        }
+    $end = (clone $start)->addDays(6)->endOfDay();
 
-        return response()->json([
-            'success' => true,
-            'data' => $out,
-            'week_start' => $start->format('Y-m-d'),
-            'week_end' => $end->format('Y-m-d')
-        ], 200);
+    // Menü lekérés + nap szerint indexelés
+    $menusByDay = MenuItem::query()
+        ->whereBetween('day', [$start, $end])
+        ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
+        ->get()
+        ->keyBy(fn($m) => Carbon::parse($m->day)->toDateString()); // "YYYY-MM-DD"
+
+    $days = [];
+
+    for ($i = 0; $i < 7; $i++) {
+        $d = (clone $start)->addDays($i)->toDateString();
+
+        $menuItem = $menusByDay->get($d);
+
+        $days[] = [
+            'day' => $d,
+            'day_name' => Carbon::parse($d)->locale('hu')->dayName,
+            // ugyanaz a forma, mint getMenuByDate()
+            'menu' => $menuItem ? $menuItem->getMenuWithMeals() : null
+        ];
     }
+
+    return response()->json([
+        'success' => true,
+        'data' => $days,
+        'week_start' => $start->toDateString(),
+        'week_end' => $end->toDateString()
+    ]);
+}
+
     
     private function getHungarianDayName($date)
     {
@@ -161,6 +167,55 @@ class MenuController extends Controller
         
         $carbonDate = Carbon::parse($date);
         return $days[$carbonDate->format('l')] ?? $carbonDate->format('l');
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'day' => ['required', 'date'],
+            'soup' => ['required', 'integer'],
+            'optionA' => ['required', 'integer'],
+            'optionB' => ['required', 'integer'],
+            'other' => ['nullable', 'integer'],
+        ]);
+
+        // ha nálad más mezőnevek vannak (pl soup_id), itt írd át!
+        $menu = MenuItem::updateOrCreate(['day' => $data['day']], // keresési feltétel (UNIQUE)
+        [
+            'soup' => $data['soup'],
+            'optionA' => $data['optionA'],
+            'optionB' => $data['optionB'],
+            'other' => $data['other'] ?? null,
+        ]);
+
+        return response()->json($menu, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        \Log::info('UPDATE menu', ['id' => $id, 'payload' => $request->all()]);
+
+        $data = $request->validate([
+            'day' => ['required', 'date'],
+            'soup' => ['required', 'integer'],
+            'optionA' => ['required', 'integer'],
+            'optionB' => ['required', 'integer'],
+            'other' => ['nullable', 'integer'],
+        ]);
+
+        $menu = MenuItem::findOrFail($id);
+
+        // Ha a day unique, ez csak akkor fog ütközni,
+        // ha átírod a day-t olyan napra, ami már más rekordé.
+        $menu->update([
+            'day' => $data['day'],
+            'soup' => $data['soup'],
+            'optionA' => $data['optionA'],
+            'optionB' => $data['optionB'],
+            'other' => $data['other'] ?? null,
+        ]);
+
+        return response()->json($menu, 200);
     }
 }
 

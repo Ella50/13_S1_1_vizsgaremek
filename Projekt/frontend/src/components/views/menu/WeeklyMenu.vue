@@ -30,18 +30,28 @@
         <div class="card">
           <div v-if="d.menu" class="menu-list">
             <div class="row">
+              <div class="label">Leves:</div>
               <div class="txt">{{ d.menu.soup?.mealName || '—' }}</div>
             </div>
 
+            <div class="divider"></div>
+
             <div class="row">
+              <div class="label">A opció:</div>
               <div class="txt">{{ d.menu.optionA?.mealName || '—' }}</div>
             </div>
 
+            <div class="divider"></div>
+
             <div class="row">
+              <div class="label">B opció:</div>
               <div class="txt">{{ d.menu.optionB?.mealName || '—' }}</div>
             </div>
 
+            <div v-if="d.menu.other" class="divider"></div>
+
             <div v-if="d.menu.other" class="row">
+              <div class="label">Egyéb:</div>
               <div class="txt">{{ d.menu.other?.mealName || '—' }}</div>
             </div>
           </div>
@@ -63,7 +73,7 @@ export default {
     return {
       loading: false,
       error: '',
-      currentWeekStart: null, // YYYY-MM-DD (hétfő)
+      currentWeekStart: null, // YYYY-MM-DD (hétfő, local)
       weekDays: [] // mindig 7 nap: [{ day, menu }]
     }
   },
@@ -72,12 +82,16 @@ export default {
     weekDisplay() {
       if (!this.currentWeekStart) return ''
 
-      const start = new Date(this.currentWeekStart + 'T00:00:00')
+      const start = this.parseYMDLocal(this.currentWeekStart) // local date
       const end = new Date(start)
-      end.setDate(end.getDate() + 4) // H–P tartományt mutatunk
+      end.setDate(end.getDate() + 6) // H–V
 
-      const fmt = (d) =>
-        d.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' })
+      const fmt = (d) => {
+        // "jan. 1." formátum
+        const s = d.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' })
+        // hu-HU néha "jan. 1." néha "jan. 1." (változó), biztosítjuk a pontot a nap után
+        return s.endsWith('.') ? s : (s + '.')
+      }
 
       return `${fmt(start)} - ${fmt(end)}`
     },
@@ -98,38 +112,68 @@ export default {
   },
 
   methods: {
+    // ====== DÁTUM SEGÉDEK (timezone-biztos) ======
+    toYMDLocal(dateObj) {
+      const y = dateObj.getFullYear()
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0')
+      const d = String(dateObj.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
+    },
+
+    parseYMDLocal(ymd) {
+      const [y, m, d] = String(ymd).slice(0, 10).split('-').map(Number)
+      return new Date(y, m - 1, d) // local
+    },
+
+    normalizeDayKey(day) {
+      if (!day) return day
+      // "2026-02-03T00:00:00.000000Z" vagy "2026-02-03 00:00:00" -> "2026-02-03"
+      return String(day).slice(0, 10)
+    },
+
+    // ====== HÉT KEZDŐNAP ======
     setCurrentWeekStart() {
       const today = new Date()
       const dow = today.getDay() // 0 vasárnap, 1 hétfő...
-      const diff = dow === 0 ? -6 : 1 - dow
+      const diff = dow === 0 ? -6 : 1 - dow // vissza hétfőre
       const monday = new Date(today)
       monday.setDate(today.getDate() + diff)
       monday.setHours(0, 0, 0, 0)
-      this.currentWeekStart = monday.toISOString().slice(0, 10)
+      this.currentWeekStart = this.toYMDLocal(monday)
     },
 
     buildEmptyWeek(startDay) {
       const out = []
-      const start = new Date(startDay + 'T00:00:00')
+      const start = this.parseYMDLocal(startDay)
       for (let i = 0; i < 7; i++) {
         const d = new Date(start)
         d.setDate(start.getDate() + i)
-        out.push({ day: d.toISOString().slice(0, 10), menu: null })
+        out.push({ day: this.toYMDLocal(d), menu: null })
       }
       return out
     },
 
     normalizeWeeklyResponse(data) {
       // 1) tömb: [{day, menu}]
-      if (Array.isArray(data)) return data
+      if (Array.isArray(data)) {
+        return data.map((x) => ({
+          day: this.normalizeDayKey(x.day),
+          menu: x.menu ?? null
+        }))
+      }
 
       // 2) { weekly_menu: ... }
       if (data && data.weekly_menu) {
         const wm = data.weekly_menu
-        if (Array.isArray(wm)) return wm
+        if (Array.isArray(wm)) {
+          return wm.map((x) => ({
+            day: this.normalizeDayKey(x.day),
+            menu: x.menu ?? null
+          }))
+        }
         if (typeof wm === 'object') {
           return Object.keys(wm).map((day) => ({
-            day,
+            day: this.normalizeDayKey(day),
             menu: wm[day]?.menu ?? wm[day] ?? null
           }))
         }
@@ -138,7 +182,7 @@ export default {
       // 3) dátum-kulcsos objektum
       if (data && typeof data === 'object') {
         return Object.keys(data).map((day) => ({
-          day,
+          day: this.normalizeDayKey(day),
           menu: data[day]?.menu ?? data[day] ?? null
         }))
       }
@@ -153,10 +197,11 @@ export default {
 
       try {
         const res = await AuthService.api.get('/menu/week', {
-          params: { from: this.currentWeekStart }
+          params: { from: this.currentWeekStart } // hétfő
         })
 
-        const normalized = this.normalizeWeeklyResponse(res.data)
+        const normalized = this.normalizeWeeklyResponse(res.data?.data ?? res.data)
+
 
         // beillesztjük a fix 7 napba
         const map = new Map(normalized.map((x) => [x.day, x.menu ?? null]))
@@ -166,52 +211,53 @@ export default {
         }))
       } catch (e) {
         console.error('Heti menü betöltése sikertelen:', e)
-        this.error =
-          e?.response?.data?.message || 'Hiba történt a heti menü betöltésekor'
+        this.error = e?.response?.data?.message || 'Hiba történt a heti menü betöltésekor'
       } finally {
         this.loading = false
       }
     },
 
     prevWeek() {
-      const d = new Date(this.currentWeekStart + 'T00:00:00')
+      const d = this.parseYMDLocal(this.currentWeekStart)
       d.setDate(d.getDate() - 7)
-      this.currentWeekStart = d.toISOString().slice(0, 10)
+      this.currentWeekStart = this.toYMDLocal(d)
       this.fetchWeeklyMenu()
     },
 
     nextWeek() {
-      const d = new Date(this.currentWeekStart + 'T00:00:00')
+      const d = this.parseYMDLocal(this.currentWeekStart)
       d.setDate(d.getDate() + 7)
-      this.currentWeekStart = d.toISOString().slice(0, 10)
+      this.currentWeekStart = this.toYMDLocal(d)
       this.fetchWeeklyMenu()
     },
 
     isoDayOfWeek(dateString) {
       // ISO day: Mon=1..Sun=7
-      const d = new Date(dateString + 'T00:00:00')
+      const d = this.parseYMDLocal(dateString)
       const day = d.getDay() // Sun=0..Sat=6
       return day === 0 ? 7 : day
     },
 
     huDayName(dateString) {
-      const d = new Date(dateString + 'T00:00:00')
-      // nagybetűs kezdő
+      const d = this.parseYMDLocal(dateString)
       const s = d.toLocaleDateString('hu-HU', { weekday: 'long' })
       return s.charAt(0).toUpperCase() + s.slice(1)
     },
 
     shortDate(dateString) {
-      const d = new Date(dateString + 'T00:00:00')
-      return d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      const d = this.parseYMDLocal(dateString)
+      return d.toLocaleDateString('hu-HU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
     }
   }
 }
 </script>
 
 <style scoped>
-
-button{
+button {
   width: 20%;
 }
 
@@ -229,8 +275,6 @@ button{
 .header h1 {
   margin: 0 0 1rem 0;
   color: #7b2c2c;
-
-
 }
 
 .week-navigation {
@@ -242,7 +286,6 @@ button{
 
 .week-range {
   font-size: 1.125rem;
-
   color: #7b2c2c;
   min-width: 220px;
 }
@@ -254,10 +297,10 @@ button{
   border: none;
   border-radius: 999px;
   cursor: pointer;
-
 }
-.nav-btn:hover { filter: brightness(0.95); }
-
+.nav-btn:hover {
+  filter: brightness(0.95);
+}
 
 .weekly-schedule {
   display: grid;
@@ -271,29 +314,23 @@ button{
 }
 
 /* ====== TÖRDELÉSI LÉPCSŐK ====== */
-
-/* 3-2 (összesen 3 oszlop, így 5 elem: 3 az első sorban, 2 a másodikban) */
 @media (max-width: 1200px) {
   .weekly-schedule {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-/* 2-2-1 (2 oszlop, 5 elem: 2+2+1) */
 @media (max-width: 900px) {
   .weekly-schedule {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* 1-1-1-1-1 (mobil: 1 oszlop) */
 @media (max-width: 600px) {
   .weekly-schedule {
     grid-template-columns: 1fr;
   }
 }
-
-
 
 /* felül a "nap" */
 .day-pill {
@@ -302,7 +339,6 @@ button{
   border-radius: 16px;
   text-align: center;
   padding: 0.6rem 0.8rem;
-
   margin: 0 auto 0.7rem;
 }
 
@@ -334,14 +370,12 @@ button{
 }
 
 .row {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  align-items: center;
-  gap: 0.6rem;
+  display: block;
   padding-bottom: 0.7rem;
   border-bottom: 1px dashed rgba(208, 122, 122, 0.35);
 }
 .row:last-child { border-bottom: none; padding-bottom: 0; }
+
 
 .txt {
   color: #7b2c2c;
@@ -354,7 +388,6 @@ button{
   place-items: center;
   text-align: center;
   color: #a26b6b;
-
   padding: 1rem;
 }
 
@@ -374,8 +407,12 @@ button{
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -393,11 +430,17 @@ button{
   border-radius: 999px;
   cursor: pointer;
 }
-.btn-retry:hover { filter: brightness(0.95); }
+.btn-retry:hover {
+  filter: brightness(0.95);
+}
 
 /* mobilon is scroll marad, csak kisebb kártyák */
 @media (max-width: 768px) {
-  .header h1 { font-size: 2.2rem; }
-  .day-card { flex: 0 0 240px; }
+  .header h1 {
+    font-size: 2.2rem;
+  }
+  .day-card {
+    flex: 0 0 240px;
+  }
 }
 </style>

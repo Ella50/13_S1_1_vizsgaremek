@@ -223,9 +223,10 @@ export default {
           this.isEdit = true
           this.editingMenuId = res.data.id
 
-          this.selectedMeals.soup = this.meals.find(m => m.id === res.data.soup)
-          this.selectedMeals.optionA = this.meals.find(m => m.id === res.data.optionA)
-          this.selectedMeals.optionB = this.meals.find(m => m.id === res.data.optionB)
+          this.selectedMeals.soup = res.data.soup ?? null
+          this.selectedMeals.optionA = res.data.optionA ?? null
+          this.selectedMeals.optionB = res.data.optionB ?? null
+          this.selectedMeals.other = res.data.other ?? null
         }
       } catch (e) {
         this.isEdit = false
@@ -265,7 +266,8 @@ resetMealsOnly() {
         day: this.selectedDate,
         soup: this.selectedMeals.soup.id,
         optionA: this.selectedMeals.optionA.id,
-        optionB: this.selectedMeals.optionB.id
+        optionB: this.selectedMeals.optionB.id,
+        other: this.selectedMeals.other?.id ?? null
       }
 
       try {
