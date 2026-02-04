@@ -14,31 +14,59 @@ use Illuminate\Http\JsonResponse;
 class UserController extends Controller
 {
 
-    public function me(): JsonResponse
+    public function me(Request $request)
     {
         try {
-            /** @var User|null $user */
-            $user = Auth::user();
-            
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Nincs bejelentkezett felhasználó'
-                ], 401);
-            }
-            
-            $user->load(['city', 'studentClass', 'group', 'rfidCard']);
+            $user = $request->user()->load(['city', 'studentClass', 'group',  'rfidCard']);
             
             return response()->json([
                 'success' => true,
                 'data' => $user,
                 'message' => 'Felhasználói adatok betöltve'
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Hiba történt az adatok betöltése során: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        $validator = Validator::make($request->all(), [
+            'firstName' => 'sometimes|string|max:255',
+            'lastName' => 'sometimes|string|max:255',
+            'thirdName' => 'sometimes|nullable|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'address' => 'sometimes|nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validációs hiba',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user->update($request->only(['firstName', 'lastName', 'thirdName', 'email', 'address']));
+            
+            $user->load(['city', 'studentClass', 'group', 'rfidCard']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $user,
+                'message' => 'Profil sikeresen frissítve'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a profil frissítése során: ' . $e->getMessage()
             ], 500);
         }
     }
