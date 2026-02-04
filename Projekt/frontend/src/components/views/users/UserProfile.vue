@@ -1,186 +1,203 @@
 <template>
-  <div class="user-profile-container">
+  <div class="container mt-4">
     <div class="card">
-      <div class="card-header">
-        <h2>Profilom</h2>
-        <p>Személyes adataid és egészségügyi információk</p>
+      <div class="card-header bg-primary text-white">
+        <h2 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profilom</h2>
       </div>
       
-      <!-- Alerts -->
-      <div v-if="successMessage" class="alert alert-success">
-        {{ successMessage }}
-      </div>
-      <div v-if="errorMessage" class="alert alert-danger">
-        {{ errorMessage }}
-      </div>
-
-      <div class="profile-content">
-        <!-- User Info Section -->
-        <div class="profile-section">
-          <h3>Személyes adatok</h3>
-          
-          <form @submit.prevent="updateProfile">
-            <div class="row">
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Keresztnév *</label>
-                  <input type="text" v-model="profileForm.firstName" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Vezetéknév *</label>
-                  <input type="text" v-model="profileForm.lastName" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Középső név</label>
-                  <input type="text" v-model="profileForm.thirdName" class="form-control">
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Email cím *</label>
-                  <input type="email" v-model="profileForm.email" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label>Település</label>
-                  <input type="text" v-model="profileForm.city" class="form-control" disabled>
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>Cím</label>
-                  <input type="text" v-model="profileForm.address" class="form-control">
-                </div>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary" :disabled="isUpdating">
-                <span v-if="isUpdating">Mentés...</span>
-                <span v-else>Adatok mentése</span>
-              </button>
-            </div>
-          </form>
+      <!-- Loading State -->
+      <div v-if="isLoading" class="card-body text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Betöltés...</span>
         </div>
-
-        <!-- Health Info Section -->
-        <div class="profile-section">
-          <div class="section-header">
-            <h3>Egészségügyi információk</h3>
-          </div>
-
-          <!-- Allergens Management -->
-          <div class="allergen-management">
-            <h4>Allergéneim</h4>
+        <p class="mt-3 text-muted">Adatok betöltése...</p>
+      </div>
+      
+      <!-- Error State -->
+      <div v-else-if="error" class="card-body">
+        <div class="alert alert-danger">
+          <h4 class="alert-heading">Hiba!</h4>
+          <p>{{ error }}</p>
+          <button @click="retryLoading" class="btn btn-outline-danger">
+            <i class="fas fa-redo me-2"></i>Újra próbálom
+          </button>
+        </div>
+      </div>
+      
+      <!-- Content -->
+      <div v-else class="card-body">
+        <!-- Success/Error Messages -->
+        <div v-if="message" :class="['alert', messageType === 'success' ? 'alert-success' : 'alert-danger']">
+          {{ message }}
+        </div>
+        
+        <div class="row">
+          <!-- Left Column - Personal Info -->
+          <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Személyes adatok</h5>
+              </div>
+              <div class="card-body">
+                <form @submit.prevent="updateProfile">
+                  <div class="mb-3">
+                    <label class="form-label">Keresztnév *</label>
+                    <input type="text" v-model="profileForm.firstName" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Vezetéknév *</label>
+                    <input type="text" v-model="profileForm.lastName" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Középső név</label>
+                    <input type="text" v-model="profileForm.thirdName" class="form-control">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Email cím *</label>
+                    <input type="email" v-model="profileForm.email" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Cím</label>
+                    <input type="text" v-model="profileForm.address" class="form-control">
+                  </div>
+                  
+                  <button type="submit" class="btn btn-primary" :disabled="isUpdating">
+                    <i class="fas fa-save me-2"></i>
+                    <span v-if="isUpdating">Mentés...</span>
+                    <span v-else>Adatok mentése</span>
+                  </button>
+                </form>
+              </div>
+            </div>
             
-            <!-- Current Allergens -->
-            <div v-if="userAllergens.length > 0" class="current-allergens">
-              <div class="allergen-list">
-                <div v-for="allergen in userAllergens" :key="allergen.id" class="allergen-item">
-                  <div class="allergen-info">
-                    <img v-if="allergen.icon_url" :src="allergen.icon_url" :alt="allergen.allergenName" class="allergen-icon">
-                    <span>{{ allergen.allergenName }}</span>
-                  </div>
-                  <button @click="removeAllergen(allergen.id)" class="btn btn-sm btn-danger" title="Eltávolítás">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
+            <!-- Password Change -->
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-key me-2"></i>Jelszó megváltoztatása</h5>
               </div>
-            </div>
-            <div v-else class="no-allergens">
-              <p class="text-muted">Nincsenek allergéneid beállítva.</p>
-            </div>
-
-            <!-- Add Allergen -->
-            <div class="add-allergen-form">
-              <div class="row align-items-end">
-                <div class="col-md-8">
-                  <div class="form-group">
-                    <label>Új allergén hozzáadása</label>
-                    <select v-model="newAllergenId" class="form-control" :disabled="availableAllergens.length === 0">
-                      <option value="">Válassz allergént...</option>
-                      <option v-for="allergen in availableAllergens" 
-                              :key="allergen.id" 
-                              :value="allergen.id">
-                        {{ allergen.allergenName }}
-                      </option>
-                    </select>
-                    <small v-if="availableAllergens.length === 0" class="text-muted">
-                      Nincs elérhető allergén hozzáadásra
-                    </small>
+              <div class="card-body">
+                <form @submit.prevent="changePassword">
+                  <div class="mb-3">
+                    <label class="form-label">Jelenlegi jelszó *</label>
+                    <input type="password" v-model="passwordForm.current_password" class="form-control" required>
                   </div>
-                </div>
-                <div class="col-md-4">
-                  <button @click="addAllergen" 
-                          class="btn btn-success btn-block" 
-                          :disabled="!newAllergenId || isAddingAllergen">
-                    <span v-if="isAddingAllergen">Hozzáadás...</span>
-                    <span v-else>Hozzáadás</span>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Új jelszó *</label>
+                    <input type="password" v-model="passwordForm.new_password" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Új jelszó megerősítése *</label>
+                    <input type="password" v-model="passwordForm.new_password_confirmation" class="form-control" required>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-warning" :disabled="isChangingPassword">
+                    <i class="fas fa-key me-2"></i>
+                    <span v-if="isChangingPassword">Mentés...</span>
+                    <span v-else>Jelszó megváltoztatása</span>
                   </button>
-                </div>
+                </form>
               </div>
             </div>
           </div>
-
-          <!-- Diabetes Checkbox -->
-          <div class="diabetes-section">
-            <div class="form-check">
-              <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" 
-                     id="hasDiabetes" class="form-check-input">
-              <label for="hasDiabetes" class="form-check-label">
-                <strong>Cukorbeteg vagyok</strong>
-              </label>
-              <small class="form-text text-muted">
-                Ha cukorbeteg vagy, a konyha ezt figyelembe veszi az ételeid tervezésénél.
-              </small>
-            </div>
-          </div>
-        </div>
-
-        <!-- Password Change Section -->
-        <div class="profile-section">
-          <h3>Jelszó megváltoztatása</h3>
           
-          <form @submit.prevent="changePassword">
-            <div class="row">
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Jelenlegi jelszó *</label>
-                  <input type="password" v-model="passwordForm.current_password" class="form-control" required>
-                </div>
+          <!-- Right Column - Health Info -->
+          <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Egészségügyi információk</h5>
               </div>
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Új jelszó *</label>
-                  <input type="password" v-model="passwordForm.new_password" class="form-control" required>
+              <div class="card-body">
+                <!-- Diabetes -->
+                <div class="mb-4">
+                  <div class="form-check">
+                    <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" 
+                           id="hasDiabetes" class="form-check-input" :disabled="isUpdatingDiabetes">
+                    <label for="hasDiabetes" class="form-check-label fw-bold">
+                      Cukorbeteg vagyok
+                    </label>
+                    <div class="form-text text-muted">
+                      Ha cukorbeteg vagy, a konyha ezt figyelembe veszi az ételeid tervezésénél.
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Új jelszó megerősítése *</label>
-                  <input type="password" v-model="passwordForm.new_password_confirmation" class="form-control" required>
+                
+                <!-- Allergens -->
+                <div>
+                  <h6 class="mb-3">Allergéneim</h6>
+                  
+                  <!-- Current Allergens -->
+                  <div v-if="userAllergens.length > 0" class="mb-4">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                      <div v-for="allergen in userAllergens" :key="allergen.id" 
+                           class="badge bg-info d-flex align-items-center gap-2">
+                        <img v-if="allergen.icon" :src="getAllergenIcon(allergen.icon)" 
+                             :alt="allergen.allergenName" class="allergen-icon">
+                        <span>{{ allergen.allergenName }}</span>
+                        <button @click="removeAllergen(allergen.id)" class="btn-close btn-close-white btn-sm ms-1"
+                                title="Eltávolítás"></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="mb-4">
+                    <p class="text-muted fst-italic">Nincsenek allergéneid beállítva.</p>
+                  </div>
+                  
+                  <!-- Add Allergen -->
+                  <div>
+                    <label class="form-label">Új allergén hozzáadása</label>
+                    <div class="input-group">
+                      <select v-model="newAllergenId" class="form-select" :disabled="availableAllergens.length === 0">
+                        <option value="">Válassz allergént...</option>
+                        <option v-for="allergen in availableAllergens" 
+                                :key="allergen.id" 
+                                :value="allergen.id">
+                          {{ allergen.allergenName }}
+                        </option>
+                      </select>
+                      <button @click="addAllergen" 
+                              class="btn btn-success" 
+                              :disabled="!newAllergenId || isAddingAllergen">
+                        <i class="fas fa-plus me-2"></i>
+                        <span v-if="isAddingAllergen">Hozzáadás...</span>
+                        <span v-else>Hozzáadás</span>
+                      </button>
+                    </div>
+                    <div v-if="availableAllergens.length === 0" class="form-text text-muted">
+                      Nincs elérhető allergén hozzáadásra
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary" :disabled="isChangingPassword">
-                <span v-if="isChangingPassword">Mentés...</span>
-                <span v-else>Jelszó megváltoztatása</span>
-              </button>
+            
+            <!-- User Info Summary -->
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Egyéb információk</h5>
+              </div>
+              <div class="card-body">
+                <dl class="row">
+                  <dt class="col-sm-4">Felhasználó típus:</dt>
+                  <dd class="col-sm-8">{{ userType }}</dd>
+                  
+                  <dt class="col-sm-4">Osztály:</dt>
+                  <dd class="col-sm-8">{{ className || '-' }}</dd>
+                  
+                  <dt class="col-sm-4">Csoport:</dt>
+                  <dd class="col-sm-8">{{ groupName || '-' }}</dd>
+                  
+                  <dt class="col-sm-4">Regisztráció dátuma:</dt>
+                  <dd class="col-sm-8">{{ createdAt }}</dd>
+                </dl>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
@@ -188,7 +205,7 @@
 </template>
 
 <script>
-import axios from '../../../axios';
+import axios from 'axios';
 
 export default {
   name: 'UserProfile',
@@ -203,8 +220,7 @@ export default {
         lastName: '',
         thirdName: '',
         email: '',
-        address: '',
-        city: ''
+        address: ''
       },
       
       // Password form
@@ -221,112 +237,207 @@ export default {
       newAllergenId: '',
       
       // UI states
+      isLoading: true,
       isUpdating: false,
       isChangingPassword: false,
       isAddingAllergen: false,
-      isLoading: true,
+      isUpdatingDiabetes: false,
       
       // Messages
-      successMessage: '',
-      errorMessage: ''
+      message: '',
+      messageType: '',
+      error: ''
     };
+  },
+  
+  computed: {
+    userType() {
+      return this.user?.userType || 'Ismeretlen';
+    },
+    className() {
+      return this.user?.studentClass?.className || '';
+    },
+    groupName() {
+      return this.user?.group?.groupName || '';
+    },
+    createdAt() {
+      if (!this.user?.created_at) return '';
+      return new Date(this.user.created_at).toLocaleDateString('hu-HU');
+    }
   },
   
   async created() {
     await this.loadUserData();
-    await this.loadAllergens();
   },
   
   methods: {
+    // Helper function to get allergen icon URL
+    getAllergenIcon(iconPath) {
+      if (!iconPath) return '';
+      if (iconPath.startsWith('http')) return iconPath;
+      return `/storage/${iconPath.replace(/^\/+/, '')}`;
+    },
+    
+    // Load user data
     async loadUserData() {
+      this.isLoading = true;
+      this.error = '';
+      
       try {
-        const response = await axios.get('/user/me');
-        this.user = response.data.data;
+        // Try to get user data
+        const userResponse = await axios.get('/user/me');
+
+        // Ellenőrizd a válasz struktúrát
+        console.log('User response:', userResponse.data);
+    
+        // Azt feltételezem, hogy a data.data struktúrában jön a user
+        this.user = userResponse.data.data || userResponse.data.user || userResponse.data;
         
         // Fill profile form
         this.profileForm = {
-          firstName: this.user.firstName,
-          lastName: this.user.lastName,
+          firstName: this.user.firstName || '',
+          lastName: this.user.lastName || '',
           thirdName: this.user.thirdName || '',
-          email: this.user.email,
-          address: this.user.address || '',
-          city: this.user.city ? this.user.city.cityName : ''
+          email: this.user.email || '',
+          address: this.user.address || ''
         };
         
         // Load health data
         await this.loadHealthData();
         
+        // Load available allergens
+        await this.loadAvailableAllergens();
+        
       } catch (error) {
         console.error('Error loading user data:', error);
-        this.showError('Hiba történt az adatok betöltése során.');
+        this.error = 'Hiba történt az adatok betöltése során. Ellenőrizd az internetkapcsolatot és jelentkezz be újra.';
       } finally {
         this.isLoading = false;
       }
     },
     
-    async loadHealthData() {
-      try {
-        const response = await axios.get('/user/health');
-        this.userAllergens = response.data.allergens;
-        this.hasDiabetes = response.data.has_diabetes;
-      } catch (error) {
-        console.error('Error loading health data:', error);
-      }
-    },
+    // Load health data
+async loadHealthData() {
+  try {
+    const response = await axios.get('/user/health');
     
-    async loadAllergens() {
-      try {
-        const response = await axios.get('/allergens');
-        const allAllergens = response.data;
-        
-        // Filter out allergens already added by user
-        const userAllergenIds = this.userAllergens.map(a => a.id);
-        this.availableAllergens = allAllergens.filter(
-          allergen => !userAllergenIds.includes(allergen.id)
-        );
-        
-      } catch (error) {
-        console.error('Error loading allergens:', error);
-      }
-    },
+    // Ellenőrizd a válasz struktúrát
+    console.log('Health data response:', response.data);
     
+    // Allergének kezelése
+    let userAllergens = [];
+    if (response.data.allergens && Array.isArray(response.data.allergens)) {
+      userAllergens = response.data.allergens;
+    } else if (Array.isArray(response.data)) {
+      userAllergens = response.data;
+    } else if (response.data.data && Array.isArray(response.data.data)) {
+      userAllergens = response.data.data;
+    }
+    
+    // Diabetes állapot kezelése
+    let hasDiabetes = false;
+    if (typeof response.data.has_diabetes !== 'undefined') {
+      hasDiabetes = response.data.has_diabetes;
+    } else if (typeof response.data.hasDiabetes !== 'undefined') {
+      hasDiabetes = response.data.hasDiabetes;
+    }
+    
+    this.userAllergens = userAllergens;
+    this.hasDiabetes = hasDiabetes;
+    
+  } catch (error) {
+    console.error('Error loading health data:', error);
+    console.error('Error response:', error.response?.data);
+    this.showMessage('Hiba történt az egészségügyi adatok betöltése során.', 'error');
+  }
+},
+    
+    // Load available allergens
+async loadAvailableAllergens() {
+  try {
+    const response = await axios.get('/allergens');
+    
+    // Ellenőrizd a válasz struktúrát
+    console.log('Allergens API response:', response.data);
+    
+    // Többféle lehetséges válasz struktúra kezelése
+    let allAllergens = [];
+    
+    if (Array.isArray(response.data)) {
+      // Ha a válasz maga egy tömb
+      allAllergens = response.data;
+    } else if (response.data.data && Array.isArray(response.data.data)) {
+      // Ha van data mező, ami tömb
+      allAllergens = response.data.data;
+    } else if (response.data.allergens && Array.isArray(response.data.allergens)) {
+      // Ha van allergens mező, ami tömb
+      allAllergens = response.data.allergens;
+    } else if (typeof response.data === 'object' && response.data !== null) {
+      // Ha objektum, próbáljuk kinyerni belőle az értékeket
+      allAllergens = Object.values(response.data);
+    }
+    
+    // Ellenőrizd, hogy végül tömb-e
+    if (!Array.isArray(allAllergens)) {
+      console.warn('Allergens is not an array:', allAllergens);
+      allAllergens = [];
+    }
+    
+    // Filter out allergens already added by user
+    const userAllergenIds = this.userAllergens.map(a => a.id);
+    this.availableAllergens = allAllergens.filter(
+      allergen => allergen && allergen.id && !userAllergenIds.includes(allergen.id)
+    );
+    
+    // Debug információ
+    console.log('Available allergens after filtering:', this.availableAllergens);
+    
+  } catch (error) {
+    console.error('Error loading allergens:', error);
+    console.error('Error response:', error.response?.data);
+    this.availableAllergens = [];
+  }
+},
+    
+    // Update profile
     async updateProfile() {
       this.isUpdating = true;
-      this.clearMessages();
+      this.clearMessage();
       
       try {
-        const response = await axios.put(`/user/${this.user.id}`, this.profileForm);
+        const response = await axios.put('/user/update', this.profileForm);
         
         this.user = response.data.data;
-        this.showSuccess('Profiladatok sikeresen frissítve!');
+        this.showMessage('Profiladatok sikeresen frissítve!', 'success');
         
       } catch (error) {
         console.error('Error updating profile:', error);
         
         if (error.response?.data?.errors) {
           const errors = Object.values(error.response.data.errors).flat();
-          this.showError(errors.join(', '));
+          this.showMessage(errors.join(', '), 'error');
         } else {
-          this.showError(error.response?.data?.message || 'Hiba történt a profil frissítése során.');
+          this.showMessage(error.response?.data?.message || 'Hiba történt a profil frissítése során.', 'error');
         }
       } finally {
         this.isUpdating = false;
       }
     },
     
+    // Change password
     async changePassword() {
       if (this.passwordForm.new_password !== this.passwordForm.new_password_confirmation) {
-        this.showError('Az új jelszavak nem egyeznek!');
+        this.showMessage('Az új jelszavak nem egyeznek!', 'error');
         return;
       }
       
       this.isChangingPassword = true;
-      this.clearMessages();
+      this.clearMessage();
       
       try {
-        const response = await axios.post('/auth/change-password', this.passwordForm);
+        await axios.post('/auth/change-password', this.passwordForm);
         
-        this.showSuccess('Jelszó sikeresen megváltoztatva!');
+        this.showMessage('Jelszó sikeresen megváltoztatva!', 'success');
         
         // Reset form
         this.passwordForm = {
@@ -340,43 +451,57 @@ export default {
         
         if (error.response?.data?.errors) {
           const errors = Object.values(error.response.data.errors).flat();
-          this.showError(errors.join(', '));
+          this.showMessage(errors.join(', '), 'error');
         } else {
-          this.showError(error.response?.data?.message || 'Hiba történt a jelszó módosítása során.');
+          this.showMessage(error.response?.data?.message || 'Hiba történt a jelszó módosítása során.', 'error');
         }
       } finally {
         this.isChangingPassword = false;
       }
     },
     
+    // Add allergen
     async addAllergen() {
-      if (!this.newAllergenId) return;
-      
-      this.isAddingAllergen = true;
-      this.clearMessages();
-      
-      try {
-        await axios.post('/user/allergens', {
-          allergen_id: this.newAllergenId
-        });
-        
-        // Refresh data
-        await this.loadHealthData();
-        await this.loadAllergens();
-        
-        this.newAllergenId = '';
-        this.showSuccess('Allergén sikeresen hozzáadva!');
-        
-      } catch (error) {
-        console.error('Error adding allergen:', error);
-        this.showError(error.response?.data?.message || 'Hiba történt az allergén hozzáadása során.');
-      } finally {
-        this.isAddingAllergen = false;
-      }
-    },
+  if (!this.newAllergenId) return;
+  
+  this.isAddingAllergen = true;
+  this.clearMessage();
+  
+  try {
+    await axios.post('/user/allergens', {
+      allergen_id: this.newAllergenId
+    });
     
+    // Refresh data - várjunk egy kicsit, hogy biztosan frissüljön
+    await Promise.all([
+      this.loadHealthData(),
+      this.loadAvailableAllergens()
+    ]);
+    
+    this.newAllergenId = '';
+    this.showMessage('Allergén sikeresen hozzáadva!', 'success');
+    
+  } catch (error) {
+    console.error('Error adding allergen:', error);
+    console.error('Error response:', error.response?.data);
+    
+    let errorMessage = 'Hiba történt az allergén hozzáadása során.';
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data?.errors) {
+      const errors = Object.values(error.response.data.errors).flat();
+      errorMessage = errors.join(', ');
+    }
+    
+    this.showMessage(errorMessage, 'error');
+  } finally {
+    this.isAddingAllergen = false;
+  }
+},
+    
+    // Remove allergen
     async removeAllergen(allergenId) {
-      this.clearMessages();
+      this.clearMessage();
       
       if (!confirm('Biztosan eltávolítod ezt az allergént?')) {
         return;
@@ -387,244 +512,113 @@ export default {
         
         // Refresh data
         await this.loadHealthData();
-        await this.loadAllergens();
+        await this.loadAvailableAllergens();
         
-        this.showSuccess('Allergén sikeresen eltávolítva!');
+        this.showMessage('Allergén sikeresen eltávolítva!', 'success');
         
       } catch (error) {
         console.error('Error removing allergen:', error);
-        this.showError(error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.');
+        this.showMessage(error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.', 'error');
       }
     },
     
+    // Update diabetes status
     async updateDiabetes() {
+      this.isUpdatingDiabetes = true;
+      this.clearMessage();
+      
       try {
         await axios.put('/user/diabetes', {
           has_diabetes: this.hasDiabetes
         });
         
-        this.showSuccess('Cukorbetegség állapota frissítve!');
+        this.showMessage('Cukorbetegség állapota frissítve!', 'success');
         
       } catch (error) {
         console.error('Error updating diabetes:', error);
-        this.showError('Hiba történt a cukorbetegség állapotának frissítése során.');
+        this.showMessage('Hiba történt a cukorbetegség állapotának frissítése során.', 'error');
+        // Revert checkbox state on error
+        this.hasDiabetes = !this.hasDiabetes;
+      } finally {
+        this.isUpdatingDiabetes = false;
       }
     },
     
-    showSuccess(message) {
-      this.successMessage = message;
-      this.errorMessage = '';
+    // Retry loading
+    retryLoading() {
+      this.loadUserData();
+    },
+    
+    // Message helpers
+    showMessage(text, type = 'success') {
+      this.message = text;
+      this.messageType = type;
       
       // Auto-hide after 5 seconds
       setTimeout(() => {
-        this.successMessage = '';
+        this.clearMessage();
       }, 5000);
     },
     
-    showError(message) {
-      this.errorMessage = message;
-      this.successMessage = '';
-    },
-    
-    clearMessages() {
-      this.successMessage = '';
-      this.errorMessage = '';
+    clearMessage() {
+      this.message = '';
+      this.messageType = '';
     }
   }
 };
 </script>
 
 <style scoped>
-.user-profile-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  margin-bottom: 30px;
-}
-
-.card-header {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.card-header h2 {
-  margin: 0;
-  color: #333;
-}
-
-.card-header p {
-  margin: 5px 0 0 0;
-  color: #666;
-}
-
-.profile-content {
-  padding: 20px;
-}
-
-.profile-section {
-  margin-bottom: 40px;
-  padding-bottom: 30px;
-  border-bottom: 1px solid #eee;
-}
-
-.profile-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.profile-section h3 {
-  margin-bottom: 20px;
-  color: #444;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-actions {
-  margin-top: 30px;
-  text-align: right;
-}
-
-.btn {
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background: #007bff;
-  color: white;
-  border: none;
-}
-
-.btn-primary:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
-.btn-success {
-  background: #28a745;
-  color: white;
-  border: none;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-}
-
-.alert {
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-}
-
-.alert-success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.alert-danger {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* Allergen Styles */
-.allergen-management {
-  margin-bottom: 30px;
-}
-
-.allergen-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.allergen-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 8px 12px;
-  min-width: 200px;
-}
-
-.allergen-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .allergen-icon {
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
   object-fit: contain;
 }
 
-.no-allergens {
-  padding: 20px;
-  text-align: center;
-  background: #f8f9fa;
-  border-radius: 4px;
-  margin-bottom: 20px;
+.badge {
+  font-size: 0.9em;
+  padding: 0.5em 0.8em;
 }
 
-.diabetes-section {
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 4px;
+.btn-close {
+  filter: invert(1);
+  opacity: 0.7;
 }
 
-.form-check {
-  display: flex;
-  align-items: flex-start;
+.btn-close:hover {
+  opacity: 1;
 }
 
-.form-check-input {
-  margin-top: 0.3rem;
-  margin-right: 10px;
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
-.form-check-label {
-  font-size: 16px;
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
 }
 
-.form-text {
-  display: block;
-  margin-top: 5px;
-  color: #6c757d;
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
 }
 
-/* Responsive */
+dl {
+  margin-bottom: 0;
+}
+
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin-bottom: 0.5rem;
+}
+
 @media (max-width: 768px) {
-  .user-profile-container {
-    padding: 10px;
-  }
-  
-  .profile-section {
-    padding: 15px 0;
-  }
-  
-  .allergen-list {
-    flex-direction: column;
-  }
-  
-  .allergen-item {
-    width: 100%;
+  .card {
+    margin-bottom: 1rem;
   }
 }
 </style>
