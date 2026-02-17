@@ -230,6 +230,7 @@ export default {
         new_password_confirmation: ''
       },
       
+      
       // Health data
       hasDiabetes: false,
       userAllergens: [],
