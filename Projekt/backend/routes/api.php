@@ -14,11 +14,13 @@ use App\Http\Controllers\AdminRfidController;
 use App\Http\Controllers\LunchTimeController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\UserHealthController;
-
+use App\Models\User;
 
 // Publikus utvonalak
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::get('/allergens', [UserHealthController::class, 'getAllergens']);
 
 Route::post('/reset-password', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']);
@@ -48,7 +50,7 @@ Route::prefix('menu')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me', [AuthController::class, 'me']);
+    
     
 
     //RFID
@@ -60,17 +62,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/kitchen/lunchtime/consume', [LunchTimeController::class, 'consume']);
   
 
-    // Allergén lista (globális)
-    Route::get('/allergens', [UserHealthController::class, 'getAllergens']);
+
   
     // User profil
     Route::prefix('user')->group(function () {
+        Route::get('/me', [UserController::class, 'me']); //alapból AuthCotroller volt 
         Route::get('/profile', [UserController::class, 'profile']);
-        Route::put('/profile', [UserController::class, 'updateProfile']);
+        Route::put('/update', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);
 
 
-        Route::get('/health-data', [UserHealthController::class, 'getUserHealthData']);
+        Route::get('/health', [UserHealthController::class, 'getUserHealthData']);
         Route::get('/allergens', [UserHealthController::class, 'getUserAllergens']);
         Route::post('/allergens', [UserHealthController::class, 'addAllergen']); 
         Route::delete('/allergens/{id}', [UserHealthController::class, 'removeAllergen']); 

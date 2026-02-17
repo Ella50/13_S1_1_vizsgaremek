@@ -25,6 +25,7 @@ class UserSeeder extends Seeder
             'class_id' => null,
             'group_id' => null,
             'hasDiscount' => false,
+            'hasDiabetes' => false
         ]);
 
         // TANÁR
@@ -42,6 +43,7 @@ class UserSeeder extends Seeder
             'class_id' => null,
             'group_id' => null,
             'hasDiscount' => false,
+            'hasDiabetes' => false
         ]);
 
         User::create([
@@ -58,6 +60,7 @@ class UserSeeder extends Seeder
             'class_id' => null,
             'group_id' => null,
             'hasDiscount' => false,
+            'hasDiabetes' => false
         ]);
 
         // TANULÓ
@@ -75,6 +78,7 @@ class UserSeeder extends Seeder
             'class_id' => null,
             'group_id' => null,
             'hasDiscount' => false,
+            'hasDiabetes' => false
         ]);
 
         User::create([
@@ -91,6 +95,7 @@ class UserSeeder extends Seeder
             'class_id' => null,
             'group_id' => null,
             'hasDiscount' => true,
+            'hasDiabetes' => false
         ]);
 
         // DOLGOZÓ
@@ -108,6 +113,7 @@ class UserSeeder extends Seeder
             'class_id' => null,
             'group_id' => null,
             'hasDiscount' => false,
+            'hasDiabetes' => false
         ]);
 
 
@@ -126,6 +132,7 @@ class UserSeeder extends Seeder
             'class_id' => null,
             'group_id' => null,
             'hasDiscount' => false,
+            'hasDiabetes' => false
         ]);
 
         echo "Teszt felhasználók sikeresen létrehozva\n";

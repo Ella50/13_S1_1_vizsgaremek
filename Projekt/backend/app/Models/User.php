@@ -24,6 +24,7 @@ class User extends Authenticatable
         'group_id',
         'userStatus',
         'hasDiscount',
+        'hasDiabetes',
     ];
 
     protected $hidden = [
@@ -33,6 +34,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'hasDiscount' => 'boolean',
+        'hasDiabetes' => 'boolean',
     ];
 
     // Jelszó mező átnevezése
@@ -95,8 +97,7 @@ class User extends Authenticatable
     public function allergens()
     {
         return $this->belongsToMany(Allergen::class, 'userHealthRestrictions', 'user_id', 'allergen_id')
-                    ->wherePivotNotNull('allergen_id')
-                    ->withPivot('hasDiabetes');
+                    ->wherePivotNotNull('allergen_id');
     }
 
 
