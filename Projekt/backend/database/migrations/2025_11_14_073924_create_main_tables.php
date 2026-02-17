@@ -73,6 +73,7 @@ return new class extends Migration
         //$table->enum('status', array_column(UserStatus::cases(), 'value'))->default('inactive');
         $table->enum('userStatus', ['inactive', 'active', 'suspended'])->default('inactive');
         $table->boolean('hasDiscount')->default(false);
+        $table->boolean('hasDiabetes')->default(false);
         $table->timestamps();
 
     });

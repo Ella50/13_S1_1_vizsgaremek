@@ -917,6 +917,7 @@ export default {
 
 
     getAllergenIconUrl(iconPath) {
+      console.log('Meals.vue - iconPath:', iconPath);
   if (!iconPath) {
     return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
   }

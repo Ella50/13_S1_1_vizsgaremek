@@ -16,10 +16,10 @@
       <!-- Error State -->
       <div v-else-if="error" class="card-body">
         <div class="alert alert-danger">
-          <h4 class="alert-heading">Hiba!</h4>
+          <h4 class="alert-heading">Hiba</h4>
           <p>{{ error }}</p>
           <button @click="retryLoading" class="btn btn-outline-danger">
-            <i class="fas fa-redo me-2"></i>Újra próbálom
+            <i class="fas fa-redo me-2"></i>Újra
           </button>
         </div>
       </div>
@@ -41,40 +41,42 @@
               <div class="card-body">
                 <form @submit.prevent="updateProfile">
                   <div class="mb-3">
-                    <label class="form-label">Keresztnév *</label>
-                    <input type="text" v-model="profileForm.firstName" class="form-control" required>
+                    <label class="form-label">Vezetéknév*</label>
+                    <input type="text" v-model="profileForm.firstName" class="form-control" disabled="">
                   </div>
                   
                   <div class="mb-3">
-                    <label class="form-label">Vezetéknév *</label>
-                    <input type="text" v-model="profileForm.lastName" class="form-control" required>
+                    <label class="form-label">Keresztnév*</label>
+                    
+                    <input type="text" v-model="profileForm.lastName" class="form-control" disabled="">
                   </div>
                   
                   <div class="mb-3">
                     <label class="form-label">Középső név</label>
-                    <input type="text" v-model="profileForm.thirdName" class="form-control">
+                    <input type="text" v-model="profileForm.thirdName" class="form-control" disabled="">
                   </div>
                   
                   <div class="mb-3">
                     <label class="form-label">Email cím *</label>
-                    <input type="email" v-model="profileForm.email" class="form-control" required>
+                    <input type="email" v-model="profileForm.email" class="form-control" disabled="">
                   </div>
+
+                  
                   
                   <div class="mb-3">
+                    <label class="form-label">Irányítószám, város</label>
+                    <input type="text" v-model="profileForm.city" class="form-control" disabled="">
+                  </div>
+
+                  <div class="mb-3">
                     <label class="form-label">Cím</label>
-                    <input type="text" v-model="profileForm.address" class="form-control">
+                    <input type="text" v-model="profileForm.address" class="form-control" disabled="">
                   </div>
                   
-                  <button type="submit" class="btn btn-primary" :disabled="isUpdating">
-                    <i class="fas fa-save me-2"></i>
-                    <span v-if="isUpdating">Mentés...</span>
-                    <span v-else>Adatok mentése</span>
-                  </button>
                 </form>
               </div>
             </div>
             
-            <!-- Password Change -->
             <div class="card">
               <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-key me-2"></i>Jelszó megváltoztatása</h5>
@@ -106,14 +108,12 @@
             </div>
           </div>
           
-          <!-- Right Column - Health Info -->
           <div class="col-md-6">
             <div class="card mb-4">
               <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Egészségügyi információk</h5>
               </div>
               <div class="card-body">
-                <!-- Diabetes -->
                 <div class="mb-4">
                   <div class="form-check">
                     <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" 
@@ -121,13 +121,9 @@
                     <label for="hasDiabetes" class="form-check-label fw-bold">
                       Cukorbeteg vagyok
                     </label>
-                    <div class="form-text text-muted">
-                      Ha cukorbeteg vagy, a konyha ezt figyelembe veszi az ételeid tervezésénél.
-                    </div>
                   </div>
                 </div>
                 
-                <!-- Allergens -->
                 <div>
                   <h6 class="mb-3">Allergéneim</h6>
                   
@@ -136,8 +132,10 @@
                     <div class="d-flex flex-wrap gap-2 mb-3">
                       <div v-for="allergen in userAllergens" :key="allergen.id" 
                            class="badge bg-info d-flex align-items-center gap-2">
-                        <img v-if="allergen.icon" :src="getAllergenIcon(allergen.icon)" 
-                             :alt="allergen.allergenName" class="allergen-icon">
+                        <img v-if="allergen?.icon" 
+                            :src="getAllergenIconUrl(allergen.icon)" 
+                            :alt="allergen.allergenName" 
+                            class="allergen-icon">
                         <span>{{ allergen.allergenName }}</span>
                         <button @click="removeAllergen(allergen.id)" class="btn-close btn-close-white btn-sm ms-1"
                                 title="Eltávolítás"></button>
@@ -220,6 +218,8 @@ export default {
         lastName: '',
         thirdName: '',
         email: '',
+        zipCode: '',
+        city: '',
         address: ''
       },
       
@@ -238,7 +238,6 @@ export default {
       
       // UI states
       isLoading: true,
-      isUpdating: false,
       isChangingPassword: false,
       isAddingAllergen: false,
       isUpdatingDiabetes: false,
@@ -272,157 +271,324 @@ export default {
   
   methods: {
     // Helper function to get allergen icon URL
-    getAllergenIcon(iconPath) {
-      if (!iconPath) return '';
-      if (iconPath.startsWith('http')) return iconPath;
-      return `/storage/${iconPath.replace(/^\/+/, '')}`;
-    },
+getAllergenIconUrl(iconPath) {
+      console.log('Meals.vue - iconPath:', iconPath);
+  if (!iconPath) {
+    return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
+  }
+
+  // Tisztítsd az útvonalat
+  const cleanPath = iconPath.replace(/^\//, '');
+  
+  // Különböző lehetséges útvonalak
+  const baseUrl = 'http://localhost:8000';
+  const pathsToTry = [
+    // 1. Próbáld a storage útvonalat
+    `${baseUrl}/storage/${cleanPath}`,
+    
+    // 2. Ha a storage link nem működik, próbáld a public/images útvonalat
+    `${baseUrl}/images/allergens/${cleanPath.split('/').pop()}`,
+    
+    // 3. Vagy csak a fájlnevét
+    `${baseUrl}/${cleanPath.split('/').pop()}`
+  ];
+
+  // Debug információk
+  console.log('Allergen icon debug:', {
+    originalPath: iconPath,
+    cleanPath: cleanPath,
+    tryingPaths: pathsToTry
+  });
+
+  // Visszaadjuk az elsőt, vagy lehetővé tesszük a váltást
+  return pathsToTry[1]; // Próbáld a public/images útvonalat
+},
+
+
+handleImageError(event) {
+  console.error('Image failed to load:', {
+    src: event.target.src,
+    alt: event.target.alt
+  });
+  
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent) {
+    const fallback = parent.querySelector('.allergen-icon-fallback');
+    if (fallback) {
+      fallback.style.display = 'flex';
+    }
+  }
+},
     
     // Load user data
-    async loadUserData() {
-      this.isLoading = true;
-      this.error = '';
+
+async loadUserData() {
+  this.isLoading = true;
+  this.error = '';
+  
+  try {
+    const userResponse = await axios.get('/user/me');
+
+    console.log('User response:', userResponse.data);
+    
+    // Ha string, akkor először eltávolítjuk a BOM karaktert, majd parse-oljuk
+    let responseData = userResponse.data;
+    if (typeof responseData === 'string') {
+      console.log('Response is string, removing BOM and parsing JSON...');
+      
+      // BOM karakter eltávolítása (első karakter ha ﻿)
+      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+        console.log('BOM detected and removed');
+        responseData = responseData.slice(1);
+      }
       
       try {
-        // Try to get user data
-        const userResponse = await axios.get('/user/me');
-
-        // Ellenőrizd a válasz struktúrát
-        console.log('User response:', userResponse.data);
-    
-        // Azt feltételezem, hogy a data.data struktúrában jön a user
-        this.user = userResponse.data.data || userResponse.data.user || userResponse.data;
-        
-        // Fill profile form
-        this.profileForm = {
-          firstName: this.user.firstName || '',
-          lastName: this.user.lastName || '',
-          thirdName: this.user.thirdName || '',
-          email: this.user.email || '',
-          address: this.user.address || ''
-        };
-        
-        // Load health data
-        await this.loadHealthData();
-        
-        // Load available allergens
-        await this.loadAvailableAllergens();
-        
-      } catch (error) {
-        console.error('Error loading user data:', error);
-        this.error = 'Hiba történt az adatok betöltése során. Ellenőrizd az internetkapcsolatot és jelentkezz be újra.';
-      } finally {
-        this.isLoading = false;
+        responseData = JSON.parse(responseData);
+        console.log('Parsed response:', responseData);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Raw response (first 100 chars):', responseData.substring(0, 100));
+        throw new Error('A válasz nem érvényes JSON formátumú');
       }
-    },
+    }
+    
+    // A válaszban a user a 'user' mezőben van
+    let userData = null;
+    
+    if (responseData.user) {
+      userData = responseData.user;
+      console.log('Using responseData.user');
+    } else if (responseData.data) {
+      userData = responseData.data;
+      console.log('Using responseData.data');
+    } else {
+      userData = responseData;
+      console.log('Using responseData directly');
+    }
+    
+    this.user = userData;
+    
+    // Ha a user object helyes, akkor töltsük fel a formot
+    if (this.user) {
+      console.log('User data loaded:', {
+        firstName: this.user.firstName,
+        lastName: this.user.lastName,
+        email: this.user.email,
+        city_id: this.user.city_id,
+        city: this.user.city // Itt jön a város adat
+      });
+      
+      // Összeállítjuk a város megjelenítését
+      let cityDisplay = '';
+      if (this.user.city) {
+        // Ha van zipCode és cityName
+        const zipCode = this.user.city.zipCode || '';
+        const cityName = this.user.city.cityName || '';
+        cityDisplay = zipCode ? `${zipCode} ${cityName}`.trim() : cityName;
+      }
+      
+      this.profileForm = {
+        firstName: this.user.firstName || '',
+        lastName: this.user.lastName || '',
+        thirdName: this.user.thirdName || '',
+        email: this.user.email || '',
+        address: this.user.address || '',
+        city: cityDisplay // Ezt használd a template-ben
+      };
+    } else {
+      console.error('User object is null or undefined');
+    }
     
     // Load health data
+    await this.loadHealthData();
+    
+    // Load available allergens
+    await this.loadAvailableAllergens();
+    
+  } catch (error) {
+    console.error('Error loading user data:', error);
+    this.error = 'Hiba történt az adatok betöltése során: ' + error.message;
+  } finally {
+    this.isLoading = false;
+  }
+},
+    
+
+
+// Load health data
+// Load health data
 async loadHealthData() {
   try {
     const response = await axios.get('/user/health');
     
-    // Ellenőrizd a válasz struktúrát
     console.log('Health data response:', response.data);
+    
+    // Ha string, akkor először eltávolítjuk a BOM karaktert, majd parse-oljuk
+    let responseData = response.data;
+    if (typeof responseData === 'string') {
+      console.log('Health response is string, removing BOM and parsing JSON...');
+      
+      // BOM karakter eltávolítása (első karakter ha ﻿)
+      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+        console.log('BOM detected and removed');
+        responseData = responseData.slice(1);
+      }
+      
+      try {
+        responseData = JSON.parse(responseData);
+        console.log('Parsed health data:', responseData);
+      } catch (parseError) {
+        console.error('Health data JSON parse error:', parseError);
+        console.error('Raw health response (first 100 chars):', responseData.substring(0, 100));
+        throw parseError;
+      }
+    }
     
     // Allergének kezelése
     let userAllergens = [];
-    if (response.data.allergens && Array.isArray(response.data.allergens)) {
-      userAllergens = response.data.allergens;
-    } else if (Array.isArray(response.data)) {
-      userAllergens = response.data;
-    } else if (response.data.data && Array.isArray(response.data.data)) {
-      userAllergens = response.data.data;
+    if (responseData.allergens && Array.isArray(responseData.allergens)) {
+      for (let i = 0; i < responseData.allergens.length; i++) {
+        userAllergens.push({
+          id: responseData.allergens[i].id,
+          allergenName: responseData.allergens[i].allergenName,
+          icon: responseData.allergens[i].icon,
+          icon_url: responseData.allergens[i].icon_url
+        });
+      }
     }
     
     // Diabetes állapot kezelése
     let hasDiabetes = false;
-    if (typeof response.data.has_diabetes !== 'undefined') {
-      hasDiabetes = response.data.has_diabetes;
-    } else if (typeof response.data.hasDiabetes !== 'undefined') {
-      hasDiabetes = response.data.hasDiabetes;
+    if (typeof responseData.has_diabetes !== 'undefined') {
+      hasDiabetes = responseData.has_diabetes;
     }
     
     this.userAllergens = userAllergens;
     this.hasDiabetes = hasDiabetes;
     
+    console.log('User allergens after load:', this.userAllergens);
+    
   } catch (error) {
     console.error('Error loading health data:', error);
-    console.error('Error response:', error.response?.data);
     this.showMessage('Hiba történt az egészségügyi adatok betöltése során.', 'error');
   }
 },
-    
-    // Load available allergens
+
+// Load available allergens
 async loadAvailableAllergens() {
   try {
     const response = await axios.get('/allergens');
     
-    // Ellenőrizd a válasz struktúrát
     console.log('Allergens API response:', response.data);
     
-    // Többféle lehetséges válasz struktúra kezelése
+    // Ha string, akkor először eltávolítjuk a BOM karaktert, majd parse-oljuk
+    let responseData = response.data;
+    if (typeof responseData === 'string') {
+      console.log('Allergens response is string, removing BOM and parsing JSON...');
+      
+      // BOM karakter eltávolítása (első karakter ha ﻿)
+      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+        console.log('BOM detected and removed');
+        responseData = responseData.slice(1);
+      }
+      
+      try {
+        responseData = JSON.parse(responseData);
+        console.log('Parsed allergens:', responseData);
+      } catch (parseError) {
+        console.error('Allergens JSON parse error:', parseError);
+        console.error('Raw allergens response (first 100 chars):', responseData.substring(0, 100));
+        throw parseError;
+      }
+    }
+    
+    // Ha a válasz közvetlenül egy tömb
     let allAllergens = [];
-    
-    if (Array.isArray(response.data)) {
-      // Ha a válasz maga egy tömb
-      allAllergens = response.data;
-    } else if (response.data.data && Array.isArray(response.data.data)) {
-      // Ha van data mező, ami tömb
-      allAllergens = response.data.data;
-    } else if (response.data.allergens && Array.isArray(response.data.allergens)) {
-      // Ha van allergens mező, ami tömb
-      allAllergens = response.data.allergens;
-    } else if (typeof response.data === 'object' && response.data !== null) {
-      // Ha objektum, próbáljuk kinyerni belőle az értékeket
-      allAllergens = Object.values(response.data);
+    if (Array.isArray(responseData)) {
+      for (let i = 0; i < responseData.length; i++) {
+        allAllergens.push({
+          id: responseData[i].id,
+          allergenName: responseData[i].allergenName,
+          icon: responseData[i].icon,
+          icon_url: responseData[i].icon_url
+        });
+      }
     }
     
-    // Ellenőrizd, hogy végül tömb-e
-    if (!Array.isArray(allAllergens)) {
-      console.warn('Allergens is not an array:', allAllergens);
-      allAllergens = [];
+    console.log('All allergens (processed):', allAllergens);
+    console.log('User allergens (current):', this.userAllergens);
+    
+    // User allergen ID-k gyűjtése
+    const userAllergenIds = [];
+    for (let i = 0; i < this.userAllergens.length; i++) {
+      if (this.userAllergens[i] && this.userAllergens[i].id) {
+        userAllergenIds.push(this.userAllergens[i].id);
+      }
     }
     
-    // Filter out allergens already added by user
-    const userAllergenIds = this.userAllergens.map(a => a.id);
-    this.availableAllergens = allAllergens.filter(
-      allergen => allergen && allergen.id && !userAllergenIds.includes(allergen.id)
-    );
+    console.log('User allergen IDs:', userAllergenIds);
     
-    // Debug információ
+    // Szűrés
+    this.availableAllergens = [];
+    for (let i = 0; i < allAllergens.length; i++) {
+      const allergen = allAllergens[i];
+      if (allergen && allergen.id && !userAllergenIds.includes(allergen.id)) {
+        this.availableAllergens.push(allergen);
+      }
+    }
+    
     console.log('Available allergens after filtering:', this.availableAllergens);
     
   } catch (error) {
     console.error('Error loading allergens:', error);
-    console.error('Error response:', error.response?.data);
     this.availableAllergens = [];
   }
 },
-    
+
+
+
     // Update profile
-    async updateProfile() {
-      this.isUpdating = true;
-      this.clearMessage();
-      
-      try {
-        const response = await axios.put('/user/update', this.profileForm);
-        
-        this.user = response.data.data;
-        this.showMessage('Profiladatok sikeresen frissítve!', 'success');
-        
-      } catch (error) {
-        console.error('Error updating profile:', error);
-        
-        if (error.response?.data?.errors) {
-          const errors = Object.values(error.response.data.errors).flat();
-          this.showMessage(errors.join(', '), 'error');
-        } else {
-          this.showMessage(error.response?.data?.message || 'Hiba történt a profil frissítése során.', 'error');
-        }
-      } finally {
-        this.isUpdating = false;
-      }
-    },
+
+async updateProfile() {
+  this.clearMessage();
+  
+  try {
+    const response = await axios.put('/user/update', this.profileForm);
+    
+    console.log('Update profile response:', response.data);
+    
+    // Ugyanazt a logikát használd, mint a loadUserData-ban
+    this.user = response.data.data || response.data.user || response.data;
+    
+    // Frissítsd a profile formot is
+    this.profileForm = {
+      firstName: this.user.firstName || '',
+      lastName: this.user.lastName || '',
+      thirdName: this.user.thirdName || '',
+      email: this.user.email || '',
+      address: this.user.address || ''
+    };
+    
+    // Töltsd újra az egészségügyi adatokat is
+    await this.loadHealthData();
+    await this.loadAvailableAllergens();
+    
+    this.showMessage('Profiladatok sikeresen frissítve!', 'success');
+    
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    
+    if (error.response?.data?.errors) {
+      const errors = Object.values(error.response.data.errors).flat();
+      this.showMessage(errors.join(', '), 'error');
+    } else {
+      this.showMessage(error.response?.data?.message || 'Hiba történt a profil frissítése során.', 'error');
+    }
+  } finally {
+    this.isUpdating = false;
+  }
+},
     
     // Change password
     async changePassword() {
@@ -461,7 +627,8 @@ async loadAvailableAllergens() {
     },
     
     // Add allergen
-    async addAllergen() {
+    // Add allergen
+async addAllergen() {
   if (!this.newAllergenId) return;
   
   this.isAddingAllergen = true;
@@ -472,11 +639,11 @@ async loadAvailableAllergens() {
       allergen_id: this.newAllergenId
     });
     
-    // Refresh data - várjunk egy kicsit, hogy biztosan frissüljön
-    await Promise.all([
-      this.loadHealthData(),
-      this.loadAvailableAllergens()
-    ]);
+    // Először töltsük újra a health adatokat
+    await this.loadHealthData();
+    
+    // Majd a rendelkezésre álló allergéneket
+    await this.loadAvailableAllergens();
     
     this.newAllergenId = '';
     this.showMessage('Allergén sikeresen hozzáadva!', 'success');
@@ -500,27 +667,30 @@ async loadAvailableAllergens() {
 },
     
     // Remove allergen
-    async removeAllergen(allergenId) {
-      this.clearMessage();
-      
-      if (!confirm('Biztosan eltávolítod ezt az allergént?')) {
-        return;
-      }
-      
-      try {
-        await axios.delete(`/user/allergens/${allergenId}`);
-        
-        // Refresh data
-        await this.loadHealthData();
-        await this.loadAvailableAllergens();
-        
-        this.showMessage('Allergén sikeresen eltávolítva!', 'success');
-        
-      } catch (error) {
-        console.error('Error removing allergen:', error);
-        this.showMessage(error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.', 'error');
-      }
-    },
+
+async removeAllergen(allergenId) {
+  this.clearMessage();
+  
+  if (!confirm('Biztosan eltávolítod ezt az allergént?')) {
+    return;
+  }
+  
+  try {
+    await axios.delete(`/user/allergens/${allergenId}`);
+    
+    // Először töltsük újra a health adatokat
+    await this.loadHealthData();
+    
+    // Majd a rendelkezésre álló allergéneket
+    await this.loadAvailableAllergens();
+    
+    this.showMessage('Allergén sikeresen eltávolítva!', 'success');
+    
+  } catch (error) {
+    console.error('Error removing allergen:', error);
+    this.showMessage(error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.', 'error');
+  }
+},
     
     // Update diabetes status
     async updateDiabetes() {

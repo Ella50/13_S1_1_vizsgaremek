@@ -14,7 +14,7 @@ use App\Http\Controllers\AdminRfidController;
 use App\Http\Controllers\LunchTimeController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\UserHealthController;
-
+use App\Models\User;
 
 // Publikus utvonalak
 Route::post('/register', [AuthController::class, 'register']);
@@ -66,7 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
   
     // User profil
     Route::prefix('user')->group(function () {
-        Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/me', [UserController::class, 'me']); //alapból AuthCotroller volt 
         Route::get('/profile', [UserController::class, 'profile']);
         Route::put('/update', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);

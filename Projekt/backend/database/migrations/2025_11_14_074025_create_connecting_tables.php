@@ -30,8 +30,6 @@ return new class extends Migration
         Schema::create('userHealthRestrictions', function (Blueprint $table) {
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('allergen_id')->nullable()->constrained('allergens');
-            $table->boolean('hasDiabetes')->default(false);
-            $table->primary(['user_id']);
     });
     }
 

@@ -13,8 +13,8 @@ class UserHealthRestriction extends Model
     protected $fillable = [
         'user_id',
         'allergen_id',
-        'hasDiabetes'
     ];
+    public $timestamps = false;
 
     public function allergen()
     {

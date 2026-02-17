@@ -158,13 +158,10 @@ private function getAllergenIconUrl($iconPath)
         return null;
     }
     
-    // Ha már teljes URL, akkor azt adjuk vissza
     if (filter_var($iconPath, FILTER_VALIDATE_URL)) {
         return $iconPath;
     }
-    
-    // Egyébként relatív útvonalként kezeljük
-    // FONTOS: Ellenőrizd, hogy a storage link megfelelően van-e beállítva!
+
     return asset('storage/' . ltrim($iconPath, '/'));
 }
     

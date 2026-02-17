@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
             MenuItemSeeder::class,
             PriceSeeder::class,
             OrderSeeder::class,
-            
+            UserHealthSeeder::class,
         ]);
 
          DB::statement('SET FOREIGN_KEY_CHECKS=1;');

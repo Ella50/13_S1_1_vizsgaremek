@@ -25,6 +25,7 @@ class UserHealthController extends Controller
     {
         $user = Auth::user();
         
+        // Allergének lekérése
         $userAllergens = UserHealthRestriction::where('user_id', $user->id)
             ->whereNotNull('allergen_id')
             ->with('allergen')
@@ -32,11 +33,11 @@ class UserHealthController extends Controller
             ->map(function($restriction) {
                 return $restriction->allergen;
             })
-            ->filter();
-            
-        $hasDiabetes = UserHealthRestriction::where('user_id', $user->id)
-            ->where('hasDiabetes', true)
-            ->exists();
+            ->filter()
+            ->values(); // values() hozzáadva a tömb indexeléséhez
+        
+        // Mivel nincs hasDiabetes mező, a users táblából olvassuk ki
+        $hasDiabetes = $user->hasDiabetes ?? false;
 
         return response()->json([
             'allergens' => $userAllergens,
@@ -56,10 +57,12 @@ class UserHealthController extends Controller
             ->map(function($restriction) {
                 return $restriction->allergen;
             })
-            ->filter();
+            ->filter()
+            ->values();
         
         return response()->json($userAllergens);
     }
+
 
     // Allergén hozzáadása
     public function addAllergen(Request $request)
@@ -81,8 +84,8 @@ class UserHealthController extends Controller
 
         UserHealthRestriction::create([
             'user_id' => $user->id,
-            'allergen_id' => $request->allergen_id,
-            'hasDiabetes' => false
+            'allergen_id' => $request->allergen_id
+            // 'hasDiabetes' mezőt nem adjuk meg, mert nem létezik
         ]);
 
         return response()->json(['message' => 'Allergén hozzáadva']);
@@ -112,22 +115,19 @@ class UserHealthController extends Controller
         ]);
 
         $user = Auth::user();
+        
+        // Statikus update a User modellen
+        User::where('id', $user->id)->update([
+            'hasDiabetes' => $request->has_diabetes
+        ]);
+        
+        // Frissítjük a user objektumot is
+        $user->hasDiabetes = $request->has_diabetes;
 
-        // Töröljük az összes korábbi cukorbetegség jelölést
-        UserHealthRestriction::where('user_id', $user->id)
-            ->where('hasDiabetes', true)
-            ->delete();
-
-        // Ha cukorbeteg, akkor létrehozunk egy új bejegyzést
-        if ($request->has_diabetes) {
-            UserHealthRestriction::create([
-                'user_id' => $user->id,
-                'allergen_id' => null,
-                'hasDiabetes' => true
-            ]);
-        }
-
-        return response()->json(['message' => 'Cukorbetegség állapota frissítve']);
+        return response()->json([
+            'message' => 'Cukorbetegség állapota frissítve',
+            'has_diabetes' => $user->hasDiabetes
+        ]);
     }
 
 }
