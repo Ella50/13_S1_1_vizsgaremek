@@ -46,28 +46,35 @@
     </div>
 
 
-    <div v-if="showMonthPicker" class="month-picker">
-      <div class="month-picker-header">
-        <h3>Hónap kiválasztása</h3>
-        <button @click="showMonthPicker = false" class="btn-close">x</button>
-      </div>
-      <div class="month-grid">
-        <button 
-          v-for="(month, index) in availableMonths" 
-          :key="index"
-          @click="selectMonth(month)"
-          :class="{ active: isMonthSelected(month) }"
-          class="month-option"
-        >
-          {{ month.display }}
-        </button>
-      </div>
-      <div class="year-selector">
-        <button @click="changeYear(-1)" class="btn-year-nav">⪡</button>
-        <span class="current-year">{{ currentYear }}</span>
-        <button @click="changeYear(1)" class="btn-year-nav">⪢</button>
-      </div>
-    </div>
+<div v-if="showMonthPicker" class="month-picker-simple">
+  <div class="month-picker-header">
+    <h3>Hónap kiválasztása</h3>
+    <button @click="showMonthPicker = false" class="btn-close">×</button>
+  </div>
+  
+  <div class="month-selector">
+    <select v-model="selectedMonthValue" class="month-select" @change="onMonthChange">
+      <option value="" disabled selected>Válassz hónapot...</option>
+      <option 
+        v-for="month in availableSchoolMonths" 
+        :key="`${month.year}-${month.month}`"
+        :value="{ year: month.year, month: month.month }"
+      >
+        {{ month.display }}
+      </option>
+    </select>
+  </div>
+  
+  <div class="month-navigation">
+    <button @click="previousMonth" class="btn-month-nav" :disabled="!hasPreviousMonth">
+      ← Előző hónap
+    </button>
+    <span class="current-month-display">{{ currentMonthDisplay }}</span>
+    <button @click="nextMonth" class="btn-month-nav" :disabled="!hasNextMonth">
+      Következő hónap →
+    </button>
+  </div>
+</div>
 
 
     <div v-if="selectedDates.length > 0" class="bulk-status">
@@ -174,6 +181,12 @@
               <td class="col-soup">
                 <div class="meal-info">
                   <div class="meal-name">{{ date.menu.soup?.mealName || 'Nincs adat' }}</div>
+
+                  <div v-if="hasAllergenWarning(date, 'Leves')" class="allergen-warning">
+                  <span class="warning-icon">⚠️</span>
+                  <span class="warning-text">Allergén figyelmeztetés!</span>
+                  </div>
+
                 </div>
               </td>
 
@@ -182,6 +195,12 @@
                 <div class="meal-info">
                   <div class="meal-name">{{ date.menu.optionA?.mealName || 'Nincs adat' }}</div>
                   <div class="meal-price">{{ date.menu.optionA?.price || '' }}</div>
+
+                  <div v-if="hasAllergenWarning(date, 'A opció')" class="allergen-warning">
+                  <span class="warning-icon">⚠️</span>
+                  <span class="warning-text">Allergén figyelmeztetés!</span>
+                  </div>
+
                 </div>
               </td>
 
@@ -190,6 +209,12 @@
                 <div class="meal-info">
                   <div class="meal-name">{{ date.menu.optionB?.mealName || 'Nincs adat' }}</div>
                   <div class="meal-price">{{ date.menu.optionB?.price || '' }}</div>
+
+                  <div v-if="hasAllergenWarning(date, 'B opció')" class="allergen-warning">
+                  <span class="warning-icon">⚠️</span>
+                  <span class="warning-text">Allergén figyelmeztetés!</span>
+
+                  </div>
                 </div>
               </td>
 
@@ -294,9 +319,9 @@
                 <div class="action-buttons">
 
                   <template v-if="date.order_status === 'Rendelve'">
-                    <!-- Még lemondható -->
+                    <!-- Még módosítható/lemondható -->
                     <button 
-                      v-if="canCancelOrder(getOrderForDate(date.date))"
+                      v-if="canModifyOrder(getOrderForDate(date.date))"
                       @click="cancelOrder(date.order_id)"
                       class="btn-action btn-cancel"
                       :title="getCancelDeadlineInfo(date.date)"
@@ -305,20 +330,30 @@
                     </button>
                     
 
+                    <span v-else-if="!canModifyOrder(getOrderForDate(date.date)) && canCancelOrder(getOrderForDate(date.date))" 
+                                class="info-text" 
+                                :title="'Módosítási határidő lejárt, de még lemondható ma 8:00-ig'">
+                            Csak lemondható
+                    </span>
                     <span v-else class="info-text" :title="getCancelDeadlineInfo(date.date)">
-                      Nem módosítható
+                        Nem módosítható
                     </span>
                   </template>
                   
    
                   <template v-else-if="date.order_status === 'Lemondva'">
+                    <!-- Csak akkor jelenjen meg az újrarendelés, ha még nem járt le a határidő -->
                     <button 
+                      v-if="canOrderForDate(date.date)"
                       @click="reorderDate(date)"
                       class="btn-action btn-reorder"
                       title="Újrarendelés"
                     >
                       ↻ Újrarendel
                     </button>
+                    <span v-else class="info-text">
+                      Határidő lejárt
+                    </span>
                   </template>
                   
              
@@ -332,7 +367,7 @@
                   </template>
                   
              
-                  <template v-else>
+                   <template v-else>
                     <span class="info-text">
                       {{ isPastDeadline(date.date) ? 'Határidő lejárt' : '-' }}
                     </span>
@@ -380,19 +415,20 @@ export default {
       selectedOptions: {},
       orderDeadlineHour: 10,
       cancelDeadlineHour: 8,
-      
-      availableMonths: [
-        { year: 2024, month: 1, display: 'Január 2024' },
-        { year: 2024, month: 2, display: 'Február 2024' },
-        { year: 2024, month: 3, display: 'Március 2024' },
-        { year: 2024, month: 4, display: 'Április 2024' },
-        { year: 2024, month: 5, display: 'Május 2024' },
-        { year: 2024, month: 6, display: 'Június 2024' },
-      ]
+
+      availableMonths: [],
     }
   },
   
   computed: {
+    selectedMonthValue: {
+      get() {
+        return this.selectedMonth;
+      },
+      set(value) {
+        this.selectedMonth = value;
+      }
+    },
     selectedMonthDisplay() {
       if (this.selectedMonth) {
         return `${this.getMonthName(this.selectedMonth.month)} ${this.selectedMonth.year}`
@@ -404,6 +440,56 @@ export default {
     currentYear() {
       return this.selectedYear
     },
+    availableSchoolMonths() {
+    const months = [];
+    const currentYear = this.selectedYear;
+    
+    // Szeptembertől decemberig
+    for (let month = 9; month <= 12; month++) {
+      months.push({
+        year: currentYear,
+        month: month,
+        display: this.getMonthNameFull(month) + ' ' + currentYear
+      });
+    }
+    
+    // Januártól júniusig (következő év)
+    for (let month = 1; month <= 6; month++) {
+      months.push({
+        year: currentYear + 1,
+        month: month,
+        display: this.getMonthNameFull(month) + ' ' + (currentYear + 1)
+      });
+    }
+    
+    return months;
+  },
+  
+  currentMonthDisplay() {
+    if (!this.selectedMonth) return 'Nincs kiválasztva';
+    return this.getMonthNameFull(this.selectedMonth.month) + ' ' + this.selectedMonth.year;
+  },
+  
+  hasPreviousMonth() {
+    if (!this.selectedMonth) return false;
+    
+    const currentIndex = this.availableSchoolMonths.findIndex(
+      m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+    );
+    
+    return currentIndex > 0;
+  },
+  
+  hasNextMonth() {
+    if (!this.selectedMonth) return false;
+    
+
+    const currentIndex = this.availableSchoolMonths.findIndex(
+      m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+    );
+    
+    return currentIndex < this.availableSchoolMonths.length - 1;
+  },
     
     filteredOrders() {
       if (!this.selectedMonth) return this.orders;
@@ -459,65 +545,152 @@ export default {
   },
   
   methods: {
-    async loadUserInfo() {
-      this.userLoading = true;
-      try {
-        const response = await AuthService.getUserInfo();
-        this.userInfo = response.data || response;
-      } catch (error) {
-        console.error('Felhasználói adatok betöltése sikertelen:', error);
-        this.userInfo = null;
-      } finally {
-        this.userLoading = false;
-      }
-    },
+    previousMonth() {
+    if (!this.hasPreviousMonth) return;
     
-    async loadInitialData() {
-      this.loading = true;
-      this.error = null;
+    const currentIndex = this.availableSchoolMonths.findIndex(
+      m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+    );
+    
+    if (currentIndex > 0) {
+      const prevMonth = this.availableSchoolMonths[currentIndex - 1];
+      this.selectMonth(prevMonth);
+    }
+  },
+  
+  // Következő hónap
+  nextMonth() {
+    if (!this.hasNextMonth) return;
+    
+    const currentIndex = this.availableSchoolMonths.findIndex(
+      m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+    );
+    
+    if (currentIndex < this.availableSchoolMonths.length - 1) {
+      const nextMonth = this.availableSchoolMonths[currentIndex + 1];
+      this.selectMonth(nextMonth);
+    }
+  },
+   onMonthChange() {
+    if (this.selectedMonth) {
+      this.selectMonth(this.selectedMonth);
+    }
+  },
+  
+  selectMonth(month) {
+    this.selectedMonth = {
+      year: month.year,
+      month: month.month
+    };
+    this.showMonthPicker = false;
+    this.deselectAllDates();
+    this.loadOrdersForSelectedMonth();
+  },
+    onMonthChange() {
+      this.selectMonth(this.selectedMonth);
+    },
+
+    getMonthNameFull(month) {
+        const months = [
+          'Január', 'Február', 'Március', 'Április', 'Május', 'Június',
+          'Július', 'Augusztus', 'Szeptember', 'Október', 'November', 'December'
+        ];
+        return months[month - 1];
+      },
+
+
+    hasAllergenWarning(dateData, mealType) {
+      if (!dateData.allergen_warnings || !Array.isArray(dateData.allergen_warnings)) {
+        return false;
+      }
       
-      try {
-        // 1. Elérhető dátumok betöltése
-        const datesResponse = await AuthService.api.get('/user/personal-orders/available-dates');
-        
-        if (datesResponse.data && datesResponse.data.success === true) {
-          this.availableDates = datesResponse.data.data || [];
-          
-          // 2. MINDEN rendelés betöltése (Rendelve és Lemondva is)
-          if (this.availableDates.length > 0) {
-            try {
-              const ordersResponse = await AuthService.api.get('/user/personal-orders', {
-                params: { with_price: true }
-              });
-              
-              if (ordersResponse.data && ordersResponse.data.success === true) {
-                // Minden rendelést betöltünk, nem csak az aktívakat
-                this.orders = ordersResponse.data.data?.orders || [];
-                this.loadSelectedOptions();
-              }
-            } catch (ordersError) {
-              console.warn('Rendelések betöltése sikertelen:', ordersError);
-              this.orders = [];
-            }
-          }
-        } else if (datesResponse.data && Array.isArray(datesResponse.data)) {
-          this.availableDates = datesResponse.data;
-        } else {
-          this.error = 'Hibás válaszformátum az API-tól';
-        }
-      } catch (err) {
-        console.error('Hiba az adatok betöltésekor:', err);
-        if (err.response && err.response.status === 401) {
-          this.error = 'Hitelesítési hiba. Kérlek jelentkezz be újra.';
-        } else if (err.response && err.response.data) {
-          this.error = err.response.data.message || 'Hiba történt az adatok betöltésekor.';
-        } else {
-          this.error = 'Hálózati hiba történt. Kérlek próbáld újra később.';
-        }
-      } finally {
-        this.loading = false;
+      return dateData.allergen_warnings.some(warning => warning.meal === mealType);
+    },
+
+    getAllergenWarningDetails(dateData, mealType) {
+      if (!dateData.allergen_warnings || !Array.isArray(dateData.allergen_warnings)) {
+        return null;
+      }
+      
+      return dateData.allergen_warnings.find(warning => warning.meal === mealType);
+    },
+
+    showAllergenDetails(dateData, mealType) {
+      const warning = this.getAllergenWarningDetails(dateData, mealType);
+      if (warning) {
+        alert(`Figyelmeztetés: A(z) ${warning.meal_name} olyan allergént tartalmaz, amire Ön érzékeny!`);
       }
     },
+
+async loadAvailableMonths() {
+    if (!this.selectedMonth) {
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+
+      if (currentMonth >= 7 && currentMonth <= 8) {
+        this.selectedMonth = { year: currentYear, month: 9 };
+      } else {
+        this.selectedMonth = { year: currentYear, month: currentMonth };
+      }
+    }
+  },
+    async loadUserInfo() {
+  this.userLoading = true;
+  try {
+
+    const response = await AuthService.api.get('/user/me');
+    this.userInfo = response.data?.data || response.data;
+  } catch (error) {
+    console.error('Felhasználói adatok betöltése sikertelen:', error);
+    this.userInfo = null;
+  } finally {
+    this.userLoading = false;
+  }
+},
+    
+   
+
+async loadInitialData() {
+  this.loading = true;
+  this.error = null;
+  
+  try {
+    // Először töltsük be a hónapokat
+    await this.loadAvailableMonths();
+    
+    // Aztán töltsük be az aktuális hónap adatait
+    await this.loadOrdersForSelectedMonth();
+    
+    // És a rendeléseket is
+    try {
+      const ordersResponse = await AuthService.api.get('/user/personal-orders', {
+        params: { with_price: true }
+      });
+      
+      if (ordersResponse.data && ordersResponse.data.success === true) {
+        this.orders = ordersResponse.data.data?.orders || [];
+        this.loadSelectedOptions();
+      }
+    } catch (ordersError) {
+      console.warn('Rendelések betöltése sikertelen:', ordersError);
+      this.orders = [];
+    }
+    
+  } catch (err) {
+    console.error('Hiba az adatok betöltésekor:', err);
+    if (err.response && err.response.status === 401) {
+      this.error = 'Hitelesítési hiba. Kérlek jelentkezz be újra.';
+    } else if (err.response && err.response.data) {
+      this.error = err.response.data.message || 'Hiba történt az adatok betöltésekor.';
+    } else {
+      this.error = 'Hálózati hiba történt. Kérlek próbáld újra később.';
+    }
+  } finally {
+    this.loading = false;
+  }
+},
     
     // DÁTUM KI JELÖLÉS
     toggleDateSelection(date) {
@@ -664,39 +837,50 @@ export default {
       }
     },
     
-    async reorderDate(dateData) {
-      if (!dateData.menu_item_id) {
-        alert('Hiba: A menü ID nem található.');
-        return;
+
+  async reorderDate(dateData) {
+    if (!dateData.menu_item_id) {
+      alert('Hiba: A menü ID nem található.');
+      return;
+    }
+    
+    const originalOrder = this.getOrderForDate(dateData.date);
+    const selectedOption = originalOrder?.selected_option || 'A'; 
+    
+    if (!confirm(`Biztosan újrarendeli ${selectedOption} opciót ${this.formatDate(dateData.date)}-ra?`)) {
+      return;
+    }
+    
+    try {
+      const response = await AuthService.api.post(`/user/personal-orders/${dateData.order_id}/reorder`, {
+        selectedOption: selectedOption
+      });
+      
+      if (response.data && response.data.success === true) {
+        alert('Újrarendelés sikeres!' + (response.data.allergen_warnings?.length ? ' (Figyelem: allergén tartalom!)' : ''));
+        await this.loadInitialData();
+      } else {
+        throw new Error(response.data?.message || 'Hiba az újrarendelésnél');
       }
+    } catch (err) {
+      console.error('Hiba az újrarendelésnél:', err);
       
-      const originalOrder = this.getOrderForDate(dateData.date);
-      const selectedOption = originalOrder?.selectedOption || 'A';
-      
-      if (!confirm(`Biztosan újrarendeli ${selectedOption} opciót ${this.formatDate(dateData.date)}-ra?`)) {
-        return;
-      }
-      
-      try {
-        const orderData = {
-          date: dateData.date,
-          menuitems_id: dateData.menu_item_id,
-          selectedOption: selectedOption
-        };
-        
-        const response = await AuthService.api.post('/user/personal-orders', orderData);
-        
-        if (response.data && response.data.success === true) {
-          alert('Újrarendelés sikeres!');
-          await this.loadInitialData();
+      // Specifikus hibakezelés
+      if (err.response?.status === 400) {
+        if (err.response.data?.message?.includes('Csak lemondott rendelés')) {
+          alert('Ez a rendelés már aktív, nem kell újrarendelni.');
+        } else if (err.response.data?.message?.includes('határidő')) {
+          alert('A rendelési határidő már lejárt erre a napra.');
         } else {
-          throw new Error(response.data?.message || 'Hiba az újrarendelésnél');
+          alert(err.response.data?.message || 'Hiba az újrarendelésnél.');
         }
-      } catch (err) {
-        console.error('Hiba az újrarendelésnél:', err);
+      } else if (err.response?.status === 409) {
+        alert('Már van aktív rendelése erre a napra.');
+      } else {
         alert(err.response?.data?.message || 'Hiba történt az újrarendelésnél.');
       }
-    },
+    }
+  },
     
     // SEGÉDFÜGGVÉNYEK
     loadSelectedOptions() {
@@ -743,28 +927,58 @@ export default {
       return !this.isPastDeadline(dateString) && !this.getOrderForDate(dateString);
     },
     
+    // PersonalOrders.vue - javítsd a canModifyOrder metódust
+
     // Módosíthatóság ellenőrzése
     canModifyOrder(order) {
       if (!order || order.orderStatus !== 'Rendelve') return false;
       
       const orderDate = new Date(order.orderDate);
+      const now = new Date();
       const modifyDeadline = new Date(orderDate);
       modifyDeadline.setDate(modifyDeadline.getDate() - 1); // előző nap
       modifyDeadline.setHours(10, 0, 0, 0); // 10:00-ig
       
-      return new Date() <= modifyDeadline;
+      // Összehasonlításhoz normalizáljuk az időket
+      now.setSeconds(0, 0);
+      modifyDeadline.setSeconds(0, 0);
+      
+      const canModify = now <= modifyDeadline;
+      
+      console.log('Módosíthatóság ellenőrzése:', {
+        orderDate: order.orderDate,
+        now: now.toISOString(),
+        deadline: modifyDeadline.toISOString(),
+        canModify
+      });
+      
+      return canModify;
     },
-    
+
     // Lemondhatóság ellenőrzése
     canCancelOrder(order) {
       if (!order || order.orderStatus !== 'Rendelve') return false;
       
       const orderDate = new Date(order.orderDate);
+      const now = new Date();
       const cancelDeadline = new Date(orderDate);
       cancelDeadline.setHours(8, 0, 0, 0); // aznap 8:00-ig
       
-      return new Date() <= cancelDeadline;
-    },
+      // Összehasonlításhoz normalizáljuk az időket
+      now.setSeconds(0, 0);
+      cancelDeadline.setSeconds(0, 0);
+      
+      const canCancel = now <= cancelDeadline;
+      
+      console.log('Lemondhatóság ellenőrzése:', {
+        orderDate: order.orderDate,
+        now: now.toISOString(),
+        deadline: cancelDeadline.toISOString(),
+        canCancel
+      });
+      
+      return canCancel;
+},
     
     // Egy dátumhoz tartozó rendelés lekérése (bármilyen állapotban)
     getOrderForDate(dateString) {
@@ -812,10 +1026,33 @@ export default {
       });
     },
     
-    selectMonth(month) {
-      this.selectedMonth = month;
+   selectMonth(month) {
+      this.selectedMonth = {
+        year: month.year,
+        month: month.month
+      };
       this.showMonthPicker = false;
       this.deselectAllDates();
+      this.loadOrdersForSelectedMonth();
+    },
+
+    async loadOrdersForSelectedMonth() {
+      if (!this.selectedMonth) return;
+      
+      this.loading = true;
+      try {
+        const response = await AuthService.api.get(
+          `/user/personal-orders/month/${this.selectedMonth.year}/${this.selectedMonth.month}`
+        );
+        
+        if (response.data && response.data.success === true) {
+          this.availableDates = response.data.data || [];
+        }
+      } catch (error) {
+        console.error('Hiba a havi rendelések betöltésekor:', error);
+      } finally {
+        this.loading = false;
+      }
     },
     
     isMonthSelected(month) {
@@ -836,7 +1073,7 @@ export default {
 </script>
 
 <style scoped>
-/* ALAP STYLE */
+
 .personal-orders-container {
   padding: 2rem;
   max-width: 1400px;
@@ -1600,5 +1837,192 @@ export default {
     font-size: 0.8rem;
     min-width: 85px;
   }
+}
+/* PersonalOrders.vue - Add to style section */
+
+.allergen-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  padding: 0.15rem 0.25rem;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.allergen-warning:hover {
+  background-color: #ffeeba;
+  transform: translateY(-1px);
+}
+
+.warning-icon {
+  font-size: 0.9rem;
+}
+
+.warning-text {
+  font-weight: 500;
+}
+
+/* PersonalOrders.vue - style */
+
+.month-picker-simple {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.month-selector {
+  margin: 1rem 0;
+}
+
+.month-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #2c3e50;
+  background-color: white;
+  cursor: pointer;
+}
+
+.month-select:hover {
+  border-color: #3498db;
+}
+
+.month-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.year-nav-simple {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-year-prev,
+.btn-year-next {
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-year-prev:hover,
+.btn-year-next:hover {
+  background: #eef2f6;
+  transform: translateY(-1px);
+}
+
+.month-picker-simple {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.month-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.month-picker-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.125rem;
+}
+
+.btn-close {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  color: #2c3e50;
+  cursor: pointer;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.btn-close:hover {
+  background: #eef2f6;
+}
+
+.month-selector {
+  margin: 1rem 0;
+}
+
+.month-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #2c3e50;
+  background-color: white;
+  cursor: pointer;
+}
+
+.month-select:hover {
+  border-color: #3498db;
+}
+
+.month-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.month-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-month-nav {
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.btn-month-nav:hover:not(:disabled) {
+  background: #eef2f6;
+  transform: translateY(-1px);
+}
+
+.btn-month-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.current-month-display {
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 150px;
+  text-align: center;
 }
 </style>
