@@ -20,7 +20,11 @@
         <router-link to="/kitchen/ingredients" class="link-card">
           <h3>Összetevők kezelése</h3>
         </router-link>
+        <router-link to="/admin/invoices" class="link-card">
+          <h3>Számlák</h3>
+        </router-link>
       </div>
+      
       
       <div v-if="canViewMenu" class="menu-links">
         <router-link to="/menu/today" class="link-card">
