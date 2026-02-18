@@ -24,6 +24,9 @@
       <router-link v-if="AuthService.isAdmin()" to="/admin/invoices">
         Számlák
       </router-link>
+
+
+
       
 
       <!-- Konyha -->
