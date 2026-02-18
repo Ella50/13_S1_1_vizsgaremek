@@ -11,7 +11,7 @@
         Menü
       </router-link>
       <router-link v-if="AuthService.isAdmin()" to="/kitchen/ingredients">
-        Összetevők
+        Hozzávalók
       </router-link>
       <router-link v-if="AuthService.isAdmin()" to="/kitchen/menu-maker">
         Menük
@@ -25,7 +25,7 @@
       <!-- Konyha -->
 
       <router-link v-if="AuthService.isKitchen()" to="/kitchen/ingredients">
-        Összetevők
+        Hozzávalók
       </router-link>
       <router-link v-if="AuthService.isKitchen()" to="/kitchen/menu-maker">
         Menük
@@ -149,7 +149,7 @@ nav a.router-link-active {
 }
 
 button {
-  background: #e74c3c;
+  background: var(--piros);
   color: white;
   border: none;
   padding: 0.5rem 1rem;

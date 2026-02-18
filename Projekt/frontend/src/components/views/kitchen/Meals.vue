@@ -21,7 +21,10 @@
       </select>
     </div>
     
-    <div v-if="loading" class="loading">Ételek betöltése...</div>
+    <div v-if="loading" class="loading">
+      <div class="spinner"></div>
+       <p>Ételek betöltése...</p>
+    </div>
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <div v-else class="meals-container">
@@ -1590,9 +1593,29 @@ async loadAllIngredients() {
 }
 
 
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--barack);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+}
+
 
 .btn-add{
-  background:#27ae60;
+  background: var(--zold);
   color:#fff;
   border:0;
   padding:.75rem 1.5rem;
@@ -1650,6 +1673,7 @@ async loadAllIngredients() {
   justify-content:space-between;
   align-items:flex-start;
   margin-bottom:1rem;
+
 }
 
 .meal-header h3{
@@ -1659,7 +1683,7 @@ async loadAllIngredients() {
 }
 
 .meal-category{
-  background:#3498db;
+  background: var(--barack);
   color:#fff;
   padding:.25rem .75rem;
   border-radius:20px;
@@ -1740,7 +1764,7 @@ async loadAllIngredients() {
 .btn-view{background:#2ecc71;color:#fff;}
 .btn-view:hover{background:#27ae60;}
 
-.btn-delete{background:#e74c3c;color:#fff;}
+.btn-delete{background:var(--piros);color:#fff;}
 .btn-delete:hover{background:#c0392b;}
 
 .modal-overlay{
@@ -1868,7 +1892,7 @@ form{padding:0 1.5rem;}
 
 .btn-save{
   padding:.75rem 1.5rem;
-  background:#27ae60;
+  background:var(--zold);
   color:#fff;
   border:0;
   border-radius:4px;
@@ -2516,6 +2540,8 @@ form{padding:0 1.5rem;}
 .allergen-tag[title*="Zeller"]{border-color:#7849b644;background:#967ebec4;}
 .allergen-tag[title*="Rákfélék"]{border-color:#2dc5be44;background:#6bafbbc2;}
 .allergen-tag[title*="Mustár"]{border-color:#17157262;background:#84889eb9;}
+.allergen-tag[title*="Kukorica"]{border-color:#5a244262;background:#df6fa3b9;}
+.allergen-tag[title*="Szójabab"]{border-color:#5a244262;background:#ca5b8fb9;}
 
 *{
   scrollbar-width:thin;

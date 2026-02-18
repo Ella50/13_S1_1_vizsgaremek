@@ -338,11 +338,20 @@ button{
 }
 .sortable li:active { cursor: grabbing; }
 
-.menu-maker { padding: 2rem; }
+.menu-maker {
+  padding: 2rem; 
+  max-width:1400px;
+  margin:0 auto;
+}
+
 .actions { display: flex; gap: 1rem; margin-bottom: 2rem; }
 button { padding: 0.5rem 1rem; }
 button.active { background: #3498db; color: white; }
 .secondary { background: #eee; }
+
+.actions button{
+  background-color: var(--zold);
+}
 
 .modal-overlay {
   position: fixed;

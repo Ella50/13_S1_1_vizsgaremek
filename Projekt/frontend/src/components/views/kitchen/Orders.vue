@@ -1,30 +1,27 @@
 <template>
   <div class="orders-container">
-    <!-- Fejléc -->
     <div class="header-section">
       <h1>Rendelések Kezelése</h1>
     </div>
 
-    <!-- Szűrők és vezérlők -->
     <div class="filters-section card">
       <div class="filter-row">
 
-
-        <!-- Dátum választó viewMode alapján -->
+        <!-- Dátum választó-->
         <div class="filter-group" v-if="viewMode === 'daily'">
           <label for="datePicker">Dátum:</label>
           <input type="date" id="datePicker" v-model="selectedDate" class="form-control" @change="loadOrders" />
         </div>
 
         <div class="filter-actions">
-          <button @click="loadOrders" class="btn btn-primary" :disabled="loading">
-            <i class="fas fa-sync-alt"></i> {{ loading ? 'Betöltés...' : 'Frissítés' }}
+          <button @click="loadOrders" class="datepicker-btn" :disabled="loading">
+            {{ loading ? 'Betöltés...' : 'Frissítés' }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Napi összesítés (csak daily módban) -->
+    <!-- Napi összesítés -->
     <div v-if="viewMode === 'daily' && dailyMealSummary" class="daily-summary-section card mt-4">
       <div class="card-header">
         <h3><i class="fas fa-clipboard-check"></i> Napi Összesítés - {{ formatDate(selectedDate) }}</h3>
@@ -35,7 +32,7 @@
           <!-- Leves összesítés -->
           <div class="col-md-4">
             <div class="meal-summary-card">
-              <div class="meal-icon">
+              <div class="meal-icon" id="leves-opcio">
                 <span>Leves</span>
               </div>
               <div class="meal-info">
@@ -51,7 +48,7 @@
           <!-- A opció összesítés -->
           <div class="col-md-4">
             <div class="meal-summary-card">
-              <div class="meal-icon bg-success">
+              <div class="meal-icon" id="A-opcio">
                 <span>A</span>
               </div>
               <div class="meal-info">
@@ -67,7 +64,7 @@
           <!-- B opció összesítés -->
           <div class="col-md-4">
             <div class="meal-summary-card">
-              <div class="meal-icon bg-info">
+              <div class="meal-icon" id="B-opcio">
                 <span>B</span>
               </div>
               <div class="meal-info">
@@ -578,9 +575,7 @@ export default {
       return classes[status] || 'bg-secondary';
     },
     
-    // Token helper
     getAuthToken() {
-      // Próbáld meg a különböző helyeken megtalálni a tokent
       return localStorage.getItem('auth_token') || 
              localStorage.getItem('sanctum-token') ||
              sessionStorage.getItem('token') ||
@@ -611,6 +606,7 @@ export default {
 </script>
 
 <style scoped>
+
 .orders-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -622,6 +618,16 @@ export default {
   margin-bottom: 30px;
 }
 
+
+.datepicker-btn{
+  background-color: var(--zold);
+  color: white;
+  font-weight: 500;
+  height: 40px;
+  padding: 3px 20px;
+  border-radius: 3px;
+
+}
 
 
 .filters-section {
@@ -692,12 +698,16 @@ export default {
   flex-shrink: 0;
 }
 
-.meal-icon.bg-success {
-  background: #28a745;
+#leves-opcio {
+  background: var(--emenza-piros);
 }
 
-.meal-icon.bg-info {
-  background: #17a2b8;
+#A-opcio {
+  background: var(--emenza-szurke);
+}
+
+#B-opcio {
+  background: var(--emenza-zold);
 }
 
 .meal-info h4 {
