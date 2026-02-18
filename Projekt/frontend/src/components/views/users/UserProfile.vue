@@ -1,16 +1,14 @@
 <template>
   <div class="container mt-4">
     <div class="card">
-      <div class="card-header bg-primary text-white">
-        <h2 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profilom</h2>
+      <div class="card-header">
+        <h1 class="mb-0">Profilom</h1>
       </div>
       
       <!-- Loading State -->
-      <div v-if="isLoading" class="card-body text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Betöltés...</span>
-        </div>
-        <p class="mt-3 text-muted">Adatok betöltése...</p>
+      <div v-if="isLoading" class="card-body text-center py-5 loading">
+        <div class="spinner" role="status"></div>
+        <p>Adatok betöltése...</p>
       </div>
       
       <!-- Error State -->
@@ -19,24 +17,24 @@
           <h4 class="alert-heading">Hiba</h4>
           <p>{{ error }}</p>
           <button @click="retryLoading" class="btn btn-outline-danger">
-            <i class="fas fa-redo me-2"></i>Újra
+             Újra
           </button>
         </div>
       </div>
       
       <!-- Content -->
       <div v-else class="card-body">
-        <!-- Success/Error Messages -->
+        <!-- Success/Error Messages 
         <div v-if="message" :class="['alert', messageType === 'success' ? 'alert-success' : 'alert-danger']">
           {{ message }}
-        </div>
+        </div>-->
         
         <div class="row">
-          <!-- Left Column - Personal Info -->
+
           <div class="col-md-6">
             <div class="card mb-4">
               <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Személyes adatok</h5>
+                <h5 class="mb-0">Személyes adatok</h5>
               </div>
               <div class="card-body">
                 <form @submit.prevent="updateProfile">
@@ -79,7 +77,7 @@
             
             <div class="card">
               <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-key me-2"></i>Jelszó megváltoztatása</h5>
+                <h5 class="mb-0">Jelszó megváltoztatása</h5>
               </div>
               <div class="card-body">
                 <form @submit.prevent="changePassword">
@@ -98,8 +96,7 @@
                     <input type="password" v-model="passwordForm.new_password_confirmation" class="form-control" required>
                   </div>
                   
-                  <button type="submit" class="btn btn-warning" :disabled="isChangingPassword">
-                    <i class="fas fa-key me-2"></i>
+                  <button type="submit" class="changepassword-btn" :disabled="isChangingPassword">
                     <span v-if="isChangingPassword">Mentés...</span>
                     <span v-else>Jelszó megváltoztatása</span>
                   </button>
@@ -111,7 +108,7 @@
           <div class="col-md-6">
             <div class="card mb-4">
               <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Egészségügyi információk</h5>
+                <h5 class="mb-0">Egészségügyi információk</h5>
               </div>
               <div class="card-body">
                 <div class="mb-4">
@@ -127,17 +124,16 @@
                 <div>
                   <h6 class="mb-3">Allergéneim</h6>
                   
-                  <!-- Current Allergens -->
                   <div v-if="userAllergens.length > 0" class="mb-4">
                     <div class="d-flex flex-wrap gap-2 mb-3">
                       <div v-for="allergen in userAllergens" :key="allergen.id" 
-                           class="badge bg-info d-flex align-items-center gap-2">
+                           class="badge d-flex align-items-center gap-2 allergen-tag" :title="allergen?.allergenName">
                         <img v-if="allergen?.icon" 
                             :src="getAllergenIconUrl(allergen.icon)" 
                             :alt="allergen.allergenName" 
                             class="allergen-icon">
-                        <span>{{ allergen.allergenName }}</span>
-                        <button @click="removeAllergen(allergen.id)" class="btn-close btn-close-white btn-sm ms-1"
+                        <span > {{ allergen.allergenName }}</span>
+                        <button @click="removeAllergen(allergen.id)" class="btn-close "
                                 title="Eltávolítás"></button>
                       </div>
                     </div>
@@ -159,9 +155,8 @@
                         </option>
                       </select>
                       <button @click="addAllergen" 
-                              class="btn btn-success" 
+                              class="btn-add" 
                               :disabled="!newAllergenId || isAddingAllergen">
-                        <i class="fas fa-plus me-2"></i>
                         <span v-if="isAddingAllergen">Hozzáadás...</span>
                         <span v-else>Hozzáadás</span>
                       </button>
@@ -174,10 +169,10 @@
               </div>
             </div>
             
-            <!-- User Info Summary -->
+
             <div class="card">
               <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Egyéb információk</h5>
+                <h5 class="mb-0">Egyéb információk</h5>
               </div>
               <div class="card-body">
                 <dl class="row">
@@ -209,10 +204,9 @@ export default {
   name: 'UserProfile',
   data() {
     return {
-      // User data
       user: null,
       
-      // Profile form
+
       profileForm: {
         firstName: '',
         lastName: '',
@@ -223,7 +217,7 @@ export default {
         address: ''
       },
       
-      // Password form
+
       passwordForm: {
         current_password: '',
         new_password: '',
@@ -231,19 +225,18 @@ export default {
       },
       
       
-      // Health data
       hasDiabetes: false,
       userAllergens: [],
       availableAllergens: [],
       newAllergenId: '',
       
-      // UI states
+
       isLoading: true,
       isChangingPassword: false,
       isAddingAllergen: false,
       isUpdatingDiabetes: false,
       
-      // Messages
+
       message: '',
       messageType: '',
       error: ''
@@ -281,16 +274,13 @@ getAllergenIconUrl(iconPath) {
   // Tisztítsd az útvonalat
   const cleanPath = iconPath.replace(/^\//, '');
   
-  // Különböző lehetséges útvonalak
+
   const baseUrl = 'http://localhost:8000';
   const pathsToTry = [
-    // 1. Próbáld a storage útvonalat
     `${baseUrl}/storage/${cleanPath}`,
     
-    // 2. Ha a storage link nem működik, próbáld a public/images útvonalat
     `${baseUrl}/images/allergens/${cleanPath.split('/').pop()}`,
     
-    // 3. Vagy csak a fájlnevét
     `${baseUrl}/${cleanPath.split('/').pop()}`
   ];
 
@@ -749,7 +739,22 @@ async removeAllergen(allergenId) {
 .badge {
   font-size: 0.9em;
   padding: 0.5em 0.8em;
+  color: black;
+  font-weight: normal;
 }
+
+.allergen-tag[title*="Glutén"]{border-color:#6a8b0e50;background:#e7e3a4;}
+.allergen-tag[title*="Tej"]{border-color:#3d5e6359;background:#60747775;}
+.allergen-tag[title*="Tojás"]{border-color:#6e42c160;background:#3a0e4e4f;}
+.allergen-tag[title*="Hal"]{border-color:#dfc01350;background:#ffdb79c5;}
+.allergen-tag[title*="Dió"]{border-color:#f87f1c6c;background:#ca8d5c7e;}
+.allergen-tag[title*="Földimogyoró"]{border-color:#df77227e;background:#f7c584b9;}
+.allergen-tag[title*="Zeller"]{border-color:#7849b644;background:#967ebec4;}
+.allergen-tag[title*="Rákfélék"]{border-color:#2dc5be44;background:#6bafbbc2;}
+.allergen-tag[title*="Mustár"]{border-color:#17157262;background:#84889eb9;}
+.allergen-tag[title*="Kukorica"]{border-color:#5a244262;background:#df6fa3b9;}
+.allergen-tag[title*="Szójabab"]{border-color:#5a244262;background:#e48da3b9;}
+
 
 .btn-close {
   filter: invert(1);
@@ -766,13 +771,27 @@ async removeAllergen(allergenId) {
 }
 
 .card-header {
-  background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
 }
 
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--barack);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
 }
 
 dl {
@@ -791,5 +810,14 @@ dd {
   .card {
     margin-bottom: 1rem;
   }
+}
+
+
+.changepassword-btn{
+  background: #1fa317;;
+}
+
+.btn-add, .changepassword-btn{
+  margin-top: 10px;
 }
 </style>

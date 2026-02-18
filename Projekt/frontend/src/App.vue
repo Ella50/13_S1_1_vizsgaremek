@@ -48,4 +48,26 @@ main {
 main.with-nav {
   padding-top: 0;
 }
+
+:root {
+  --zold:#1fa317; /*hozzáadás, frissítés, bejelentkezés, submit gombok (még nem mindenhol)*/
+  --piros: #e74c3c; /*kijelentkezés, törlés*/
+
+  --emenza-piros: #FF3131;
+  --emenza-zold: #7ED957;
+  --emenza-szurke:  #D9D9D9;
+
+  --bordo: #7b2c2c;
+  --barack: #f0a24a;
+  --sarga: #f7c77a;
+  --border:  #d07a7a;
+  --shadow: rgba(255, 170, 0, 0.25); /*#FFAA00*/
+
+
+
+
+
+
+} 
+
 </style>

@@ -313,7 +313,7 @@ button {
   width: 100%;
 }
 
-/* ====== TÖRDELÉSI LÉPCSŐK ====== */
+
 @media (max-width: 1200px) {
   .weekly-schedule {
     grid-template-columns: repeat(3, 1fr);
@@ -400,7 +400,7 @@ button {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #f0a24a;
+  border-top: 4px solid var(--barack);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem auto;

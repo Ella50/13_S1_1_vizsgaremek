@@ -1087,7 +1087,7 @@ button{
 }
 
 .btn-add {
-  background: #27ae60;
+  background: var(--zold);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -1175,7 +1175,7 @@ button{
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border-top: 4px solid var(--barack);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem auto;
