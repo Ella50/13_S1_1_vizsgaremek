@@ -14,6 +14,8 @@ import LunchTime from '../components/views/kitchen/LunchTime.vue'
 import Orders from '../components/views/kitchen/Orders.vue'
 import UserProfile from '../components/views/users/UserProfile.vue'
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
+import AdminInvoice from '../components/views/admin/AdminInvoice.vue'
+
 
 //import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
 
@@ -121,6 +123,12 @@ const routes = [
         component: UserProfile,
         meta: { requiresAuth: true }
     },
+    {
+        path: '/admin/invoices',
+        name: 'AdminInvoice',
+        component: AdminInvoice,
+        meta: { requiresAuth: true }
+    }
 
     
 ]
