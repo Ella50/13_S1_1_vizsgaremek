@@ -301,17 +301,17 @@ export default {
       availableDates: [],
       selectedMonth: null,
       showMonthPicker: false,
-      tempSelections: {}, // Ideiglenes választások új rendeléshez
+      tempSelections: {},
     }
   },
   
   computed: {
-    // Elérhető hónapok (szeptember - június)
+
     availableMonths() {
       const months = []
       const currentYear = new Date().getFullYear()
       
-      // Aktuális tanév meghatározása (szeptembertől)
+
       const now = new Date()
       const startYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
       
@@ -387,7 +387,6 @@ export default {
       const currentMonth = now.getMonth() + 1
       const currentYear = now.getFullYear()
       
-      // Ha nyári szünet van (július-augusztus), akkor szeptembert mutassuk
       if (currentMonth >= 7 && currentMonth <= 8) {
         this.selectedMonth = { year: currentYear, month: 9 }
       } else {
@@ -402,7 +401,7 @@ export default {
       this.error = null
       
       try {
-        // Elérhető dátumok betöltése a kiválasztott hónapra
+
         const response = await AuthService.api.get(
           `/user/personal-orders/month/${this.selectedMonth.year}/${this.selectedMonth.month}`
         )
@@ -411,7 +410,7 @@ export default {
           this.availableDates = response.data.data || []
         }
         
-        // Rendelések betöltése
+
         const ordersResponse = await AuthService.api.get('/user/personal-orders')
         if (ordersResponse.data?.success) {
           this.orders = ordersResponse.data.data?.orders || []
@@ -424,7 +423,7 @@ export default {
       }
     },
     
-    // Hónap navigáció
+
     previousMonth() {
       if (!this.canGoToPreviousMonth) return
       const index = this.availableMonths.findIndex(
@@ -453,7 +452,7 @@ export default {
              this.selectedMonth?.month === month.month
     },
     
-    // Dátum segédfüggvények
+
     getDayNumber(dateString) {
       return new Date(dateString).getDate()
     },
@@ -481,27 +480,27 @@ export default {
       await this.changeOrderOption(date, newOption)
     },
     
-    // Határidő ellenőrzés - EGYETLEN függvény minden művelethez!
+  
     canModifyOrder(dateString) {
       const orderDate = new Date(dateString)
       const now = new Date()
       
-      // Állítsuk be a határidőt: előző munkanap 10:00
+
       const deadline = new Date(orderDate)
       deadline.setDate(deadline.getDate() - 1) // előző nap
       deadline.setHours(10, 0, 0, 0) // 10:00
       
-      // Ha szombat vagy vasárnap, akkor péntek 10:00 a határidő
+
       if (orderDate.getDay() === 1) { // Hétfő
         deadline.setDate(orderDate.getDate() - 3) // Péntek
-      } else if (orderDate.getDay() === 0) { // Vasárnap (ritka, de lehet)
+      } else if (orderDate.getDay() === 0) { 
         deadline.setDate(orderDate.getDate() - 2) // Péntek
       }
       
       return now <= deadline
     },
     
-    // Opciók megjelenítése/kezelése
+
     canShowOption(date, option) {
       if (option === 'A') return !!date.menu.optionA
       if (option === 'B') return !!date.menu.optionB
@@ -509,11 +508,11 @@ export default {
     },
     
     isOptionSelected(date, option) {
-      // Ha van rendelés, a selected_option alapján
+
       if (date.has_order) {
         return date.selected_option === option
       }
-      // Ha nincs rendelés, a tempSelections alapján
+
       return this.tempSelections[date.date] === option
     },
     
@@ -521,23 +520,23 @@ export default {
       // Cukorbetegek nem kattinthatnak
       if (this.userInfo?.hasDiabetes) return true
       
-      // Ha nincs rendelés és lejárt a határidő
+ 
       if (!date.has_order && !this.canModifyOrder(date.date)) return true
       
-      // Ha van rendelés és lejárt a határidő
+    
       if (date.has_order && !this.canModifyOrder(date.date)) return true
       
       return false
     },
     
     handleOptionClick(date, option) {
-      // Ha van rendelés, akkor módosítás
+
       if (date.has_order) {
         if (date.order_status === 'Rendelve' && this.canModifyOrder(date.date)) {
           this.changeOrderOption(date, option)
         }
       } 
-      // Ha nincs rendelés, akkor ideiglenes kiválasztás
+
       else {
         if (this.canModifyOrder(date.date)) {
           this.selectOptionForNewOrder(date, option)
@@ -546,17 +545,17 @@ export default {
     },
     
     canPlaceOrder(date) {
-      // Van-e választás? (cukorbetegeknek automatikus)
+
       if (this.userInfo?.hasDiabetes) return true
       return !!this.tempSelections[date.date]
     },
     
     getDiabeticChoice(date) {
-      // Itt kellene egy mező, hogy melyik opció cukormentes
+
       return 'A'
     },
     
-    // Allergén kezelés
+
     hasAllergenWarning(date, mealType) {
       return date.allergen_warnings?.some(w => w.meal === mealType) || false
     },
@@ -579,7 +578,7 @@ export default {
       return deadline.toLocaleDateString('hu-HU') + ' 10:00'
     },
     
-    // Rendelési műveletek
+
     selectOptionForNewOrder(date, option) {
       this.tempSelections[date.date] = option
     },
@@ -706,8 +705,7 @@ export default {
         alert(err.response?.data?.message || 'Hiba történt az újrarendelés során')
       }
     },
-    
-    // Segédfüggvények
+
     getOrderForDate(dateString) {
       return this.orders.find(o => o.orderDate === dateString)
     },
@@ -747,10 +745,8 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
 }
 
-/* Fejléc */
 .orders-header {
   display: flex;
   justify-content: space-between;
@@ -773,7 +769,7 @@ export default {
   align-items: center;
 }
 
-/* Hónap választó */
+
 .month-selector {
   display: flex;
   align-items: center;

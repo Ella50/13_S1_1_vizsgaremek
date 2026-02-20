@@ -29,7 +29,7 @@ class PersonalOrderController extends Controller
         ]);
         
         try {
-            // Ellenőrizzük, hogy létezik-e az orders tábla
+          
             $tableExists = DB::select("SHOW TABLES LIKE 'orders'");
             if (empty($tableExists)) {
                 throw new \Exception('Orders tábla nem létezik');
@@ -65,7 +65,7 @@ class PersonalOrderController extends Controller
         
         $orders = $query->paginate(20);
         
-        // Havi összegzés
+   
         $monthlyStats = $this->getMonthlyStats1($user->id);
         
         return response()->json([
@@ -84,9 +84,7 @@ class PersonalOrderController extends Controller
         
     }
     
-    /**
-     * Napi rendelés lekérdezése
-     */
+  
     public function getByDate($date)
     {
         $user = Auth::user();
@@ -100,7 +98,7 @@ class PersonalOrderController extends Controller
             $order = Order::where('user_id', $user->id)
                 ->whereDate('orderDate', $date)
                 ->with(['menuItem' => function($q) {
-                    // **JAVÍTVA**
+               
                     $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
                 }])
                 ->first();
@@ -129,10 +127,7 @@ class PersonalOrderController extends Controller
         }
     }
     
-    /**
-     * Elérhető rendelési dátumok
-     */
-    // PersonalOrderController.php - getAvailableDates metódus
+
 
 public function getAvailableDates()
 {
@@ -149,14 +144,14 @@ public function getAvailableDates()
             ->orderBy('day')
             ->get()
             ->map(function($menuItem) use ($user) {
-                // MINDEN rendelést megkeresünk erre a napra (Rendelve és Lemondva is)
+
                 $order = Order::where('user_id', $user->id)
                     ->where('menuItems_id', $menuItem->id)
                     ->first();
                 
                 $hasOrder = !is_null($order);
                 
-                // Allergének ellenőrzése az ételhez
+
                 $allergenWarnings = $this->checkAllergensForMenu($menuItem, $user);
                 
                 return [
@@ -166,12 +161,12 @@ public function getAvailableDates()
                     'has_order' => $hasOrder,
                     'menu_item_id' => $menuItem->id,
                     'order_id' => $order ? $order->id : null,
-                    'order_status' => $order ? $order->orderStatus : null, // EZ FONTOS!
+                    'order_status' => $order ? $order->orderStatus : null,
                     'selected_option' => $order ? $order->selectedOption : null,
                     'menu' => $menuItem->getMenuData(),
                     'can_order' => $this->canOrderForDate($menuItem->day),
                     'order_deadline' => $this->getOrderDeadline($menuItem->day),
-                    'allergen_warnings' => $allergenWarnings, // Allergén figyelmeztetések
+                    'allergen_warnings' => $allergenWarnings, 
                 ];
             });
             
@@ -201,12 +196,12 @@ public function getAvailableDates()
     }
 }
 
-    // PersonalOrderController.php - új metódusok
+
 
 private function checkAllergensForMenu($menuItem, $user)
 {
     try {
-        // Felhasználó allergénjeinek lekérése
+
         $userAllergens = UserHealthRestriction::where('user_id', $user->id)
             ->whereNotNull('allergen_id')
             ->with('allergen')
@@ -223,7 +218,7 @@ private function checkAllergensForMenu($menuItem, $user)
         $userAllergenIds = $userAllergens->pluck('id')->toArray();
         $warnings = [];
         
-        // Ellenőrizzük a levest
+        
         if ($menuItem->soup) {
             $soupAllergens = $this->getMealAllergens($menuItem->soup);
             $commonAllergens = array_intersect($userAllergenIds, $soupAllergens);
@@ -237,7 +232,7 @@ private function checkAllergensForMenu($menuItem, $user)
             }
         }
         
-        // Ellenőrizzük az A opciót
+
         if ($menuItem->optionA) {
             $optionAAllergens = $this->getMealAllergens($menuItem->optionA);
             $commonAllergens = array_intersect($userAllergenIds, $optionAAllergens);
@@ -251,7 +246,7 @@ private function checkAllergensForMenu($menuItem, $user)
             }
         }
         
-        // Ellenőrizzük a B opciót
+
         if ($menuItem->optionB) {
             $optionBAllergens = $this->getMealAllergens($menuItem->optionB);
             $commonAllergens = array_intersect($userAllergenIds, $optionBAllergens);
@@ -265,7 +260,7 @@ private function checkAllergensForMenu($menuItem, $user)
             }
         }
         
-        // Ellenőrizzük az Egyéb kategóriát
+  
         if ($menuItem->other) {
             $otherAllergens = $this->getMealAllergens($menuItem->other);
             $commonAllergens = array_intersect($userAllergenIds, $otherAllergens);
@@ -326,10 +321,7 @@ private function checkAllergensForMenu($menuItem, $user)
     }
 
     
-    /**
-     * Havi statisztika számítás
-     */
-    // PersonalOrderController.php-be
+
         private function getMonthlyStats1($userId)
         {
             try {
@@ -337,7 +329,7 @@ private function checkAllergensForMenu($menuItem, $user)
                 
                 $stats = Order::where('user_id', $userId)
                     ->where('orderStatus', 'Rendelve')
-                    ->with('price') // Betöltjük az árat
+                    ->with('price')
                     ->select(
                         DB::raw('YEAR(orderDate) as year'),
                         DB::raw('MONTH(orderDate) as month'),
@@ -391,7 +383,7 @@ private function checkAllergensForMenu($menuItem, $user)
             ], 404);
         }
         
-        // Ellenőrizzük, hogy van-e már rendelés erre a napra
+
         $existingOrder = Order::where('user_id', $user->id)
             ->where('menuItems_id', $request->menuitems_id)
             ->where('orderStatus', 'Rendelve')
@@ -404,8 +396,7 @@ private function checkAllergensForMenu($menuItem, $user)
                 'data' => $existingOrder
             ], 409);
         }
-        
-        // Ellenőrizzük a rendelési határidőt
+
         if (!$this->canOrderForDate($menuItem->day)) {
             return response()->json([
                 'success' => false,
@@ -415,14 +406,13 @@ private function checkAllergensForMenu($menuItem, $user)
         }
         
         try {
-            // Ár meghatározása - userType és hasDiscount alapján
+
             $price = $this->calculateUserPrice($user);
             
-            // Ha nincs ár, hozzunk létre egy alapértelmezettet
+
             if (!$price) {
                 $priceCategory = $user->hasDiscount ? 'Kedvezményes' : 'Normál';
                 
-                // Alapértelmezett árak
                 $defaultAmounts = [
                     'Tanuló' => ['Normál' => 450, 'Kedvezményes' => 300],
                     'Tanár' => ['Normál' => 650, 'Kedvezményes' => 400],
@@ -494,16 +484,11 @@ private function checkAllergensForMenu($menuItem, $user)
         }
     }
 
-/**
- * Felhasználó árának kiszámítása
- */
-/**
- * Felhasználó árának kiszámítása
- */
+
     private function calculateUserPrice($user)
     {
         try {
-            // Meghatározzuk a kategóriát a hasDiscount alapján
+
             $priceCategory = $user->hasDiscount ? 'Kedvezményes' : 'Normál';
             
             Log::debug('Árkalkuláció', [
@@ -513,7 +498,7 @@ private function checkAllergensForMenu($menuItem, $user)
                 'priceCategory' => $priceCategory
             ]);
             
-            // Keresés a prices táblában
+
             $price = Price::where('userType', $user->userType)
                 ->where('priceCategory', $priceCategory)
                 ->where('validFrom', '<=', now()->toDateString())
@@ -521,7 +506,7 @@ private function checkAllergensForMenu($menuItem, $user)
                     $query->where('validTo', '>=', now()->toDateString())
                         ->orWhereNull('validTo');
                 })
-                ->orderBy('validFrom', 'desc') // Legújabb ár
+                ->orderBy('validFrom', 'desc')
                 ->first();
                 
             if (!$price) {
@@ -531,7 +516,7 @@ private function checkAllergensForMenu($menuItem, $user)
                     'user_id' => $user->id
                 ]);
                 
-                // Visszaesés: próbáljunk csak userType alapján
+
                 $price = Price::where('userType', $user->userType)
                     ->orderBy('validFrom', 'desc')
                     ->first();
@@ -654,7 +639,7 @@ private function checkAllergensForMenu($menuItem, $user)
         } catch (\Exception $e) {
             Log::error('Elérhető hónapok hiba', ['error' => $e->getMessage()]);
             
-            // Visszaadjuk a következő 6 hónapot
+     
             $defaultMonths = [];
             $now = now();
             
@@ -710,7 +695,7 @@ public function updateOption(Request $request, $orderId)
             ], 404);
         }
         
-        // Ellenőrizzük, hogy módosítható-e
+ 
         if ($order->orderStatus !== 'Rendelve') {
             return response()->json([
                 'success' => false,
@@ -718,7 +703,7 @@ public function updateOption(Request $request, $orderId)
             ], 400);
         }
         
-        // Ellenőrizzük a módosítási határidőt
+   
         $menuItem = MenuItem::find($order->menuItems_id);
         if (!$this->canModifyOrder($order)) {
             return response()->json([
@@ -728,7 +713,7 @@ public function updateOption(Request $request, $orderId)
             ], 400);
         }
         
-        // Opció frissítése
+
         $order->selectedOption = $request->selectedOption;
         $order->save();
         
@@ -781,7 +766,7 @@ public function destroy($id)
             ], 404);
         }
         
-        // Ellenőrizzük, hogy lemondható-e
+    
         if ($order->orderStatus !== 'Rendelve') {
             return response()->json([
                 'success' => false,
@@ -789,7 +774,7 @@ public function destroy($id)
             ], 400);
         }
         
-        // Ellenőrizzük a lemondási határidőt
+        
         if (!$this->canCancelOrder($order)) {
             $orderDate = \Carbon\Carbon::parse($order->orderDate);
             $deadline = $orderDate->copy()->setTime(8, 0, 0);
@@ -801,7 +786,7 @@ public function destroy($id)
             ], 400);
         }
         
-        // Rendelés állapotának frissítése
+      
         $order->orderStatus = 'Lemondva';
         $order->save();
         
@@ -836,17 +821,14 @@ public function cancel($id)
 {
     return $this->destroy($id);
 }
-/**
- * Ellenőrzi, hogy lemondható-e a rendelés
- */
+
 private function canCancelOrder($order)
 {
     try {
         $orderDate = \Carbon\Carbon::parse($order->orderDate);
         $deadline = $orderDate->copy()->setTime(8, 0, 0); // aznap 8:00-ig
         
-        // Ha az orderDate ma van, akkor még ma 8:00-ig lehet lemondani
-        // Ha az orderDate holnap van, akkor még holnap 8:00-ig lehet lemondani
+
         return now() <= $deadline;
     } catch (\Exception $e) {
         Log::error('Lemondhatóság ellenőrzése hiba', [
@@ -857,9 +839,7 @@ private function canCancelOrder($order)
     }
 }
 
-/**
- * Ellenőrzi, hogy módosítható-e a rendelés
- */
+
 private function canModifyOrder($order)
 {
     try {
