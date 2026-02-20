@@ -5,15 +5,12 @@ const api = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("auth_token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    config.headers.Accept = "application/json";
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// FONTOS: token az interceptorból (mert ez egy külön axios instance)
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("auth_token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 export default api;
 
@@ -23,9 +20,25 @@ export async function fetchInvoices() {
   return data;
 }
 
-export async function fetchInvoice(id) {
-  const { data } = await api.get(`/invoices/${id}`);
-  return data;
+export async function adminFetchInvoices(params = {}) {
+  const res = await api.get("/admin/invoices", { params });
+  return res.data;
+}
+
+export async function adminFetchInvoice(id) {
+  const res = await api.get(`/admin/invoices/${id}`);
+  return res.data;
+}
+
+export async function adminGenerateInvoicesForMonth(month /* YYYY-MM */) {
+  const res = await api.post("/admin/invoices/generate-month", { month });
+  return res.data;
+}
+
+
+export async function adminMarkInvoicePaid(id) {
+  const res = await api.post(`/admin/invoices/${id}/paid`);
+  return res.data;
 }
 
 export async function downloadInvoicePdf(id, filename = "szamla.pdf") {
@@ -42,26 +55,4 @@ export async function downloadInvoicePdf(id, filename = "szamla.pdf") {
   a.remove();
 
   window.URL.revokeObjectURL(url);
-}
-
-export async function adminFetchInvoices(params = {}) {
-  const res = await api.get("/admin/invoices", { params });
-  return res.data;
-}
-
-export async function adminFetchInvoice(id) {
-  const res = await api.get(`/admin/invoices/${id}`);
-  return res.data;
-}
-
-export async function adminGenerateInvoicesForMonth(payload) {
-  // payload: { month: "2026-02" }
-  const res = await api.post("/admin/invoices/generate-month", payload);
-  return res.data;
-}
-
-
-export async function adminMarkInvoicePaid(id) {
-  const res = await api.post(`/admin/invoices/${id}/paid`);
-  return res.data;
 }

@@ -150,10 +150,9 @@ const error = ref("");
 
 const rows = ref([]);
 const selected = ref(null);
-
 const payingId = ref(null);
 
-const billingMonth = ref(""); // YYYY-MM (input type="month")
+const billingMonth = ref(""); // YYYY-MM
 
 function formatFt(n) {
   const x = Number(n || 0);
@@ -175,23 +174,18 @@ function formatDate(dateStr) {
   return `${y}-${m}-${day}`;
 }
 
-function monthToFirstDay(yyyyMm) {
-  if (!yyyyMm) return null;
-  const [y, m] = yyyyMm.split("-");
-  return `${y}-${m}-01`;
-}
-
-const totalSum = computed(() =>
-  rows.value.reduce((sum, i) => sum + Number(i.totalAmount || 0), 0)
-);
+const totalSum = computed(() => {
+  const arr = Array.isArray(rows.value) ? rows.value : [];
+  return arr.reduce((sum, i) => sum + Number(i.totalAmount || 0), 0);
+});
 
 async function load() {
   loading.value = true;
   error.value = "";
   try {
-    const month = monthToFirstDay(billingMonth.value);
-    const res = await adminFetchInvoices({ month: selectedMonth.value })
-    rows.value = res.data ?? res.invoices ?? []
+    // backend oldalon te döntöd el, hogy month paramot "YYYY-MM"-ként várod-e
+    const res = await adminFetchInvoices({ month: billingMonth.value });
+    rows.value = Array.isArray(res?.data) ? res.data : (res?.invoices ?? []);
   } catch (e) {
     error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
   } finally {
@@ -203,8 +197,8 @@ async function generate() {
   generating.value = true;
   error.value = "";
   try {
-    const month = monthToFirstDay(billingMonth.value);
-    await adminGenerateInvoicesForMonth({ billingMonth: month });
+    // FONTOS: a service stringet vár: adminGenerateInvoicesForMonth("2026-02")
+    await adminGenerateInvoicesForMonth(billingMonth.value);
     await load();
   } catch (e) {
     error.value = e?.response?.data?.message || "Hiba a számlák generálásakor";
@@ -229,6 +223,9 @@ function close() {
 
 async function pdf(inv) {
   const filename = `${inv.invoiceNumber || "szamla"}.pdf`;
+  // Admin PDF-hez külön endpointod van: /admin/invoices/{invoice}/pdf
+  // A downloadInvoicePdf jelenleg a user endpointot hívja (/invoices/{id}/pdf)
+  // Ezért vagy írunk adminPdf függvényt a service-be, vagy itt közvetlenül meghívjuk.
   await downloadInvoicePdf(inv.id, filename);
 }
 
