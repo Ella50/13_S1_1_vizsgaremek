@@ -81,6 +81,7 @@ class PersonalOrderController extends Controller
                 'stats' => $monthlyStats
             ]
         ]);
+        
     }
     
     /**

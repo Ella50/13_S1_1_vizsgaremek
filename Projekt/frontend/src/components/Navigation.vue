@@ -45,6 +45,7 @@
       <router-link v-if="AuthService.isKitchen()" to="/kitchen/lunchtime">
         Ebédeltetés
       </router-link>
+
       
 
       <!--Minden bejelentkezett-->

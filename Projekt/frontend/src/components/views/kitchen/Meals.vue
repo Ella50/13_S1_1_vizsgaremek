@@ -788,24 +788,20 @@ export default {
   },
   
   methods: {
-    async checkAuthAndFetch() {
+     checkAuthAndFetch() {
+
       if (!AuthService.isAuthenticated()) {
+
         this.$router.push('/login')
+
         return
+
       }
-      
-      if (!this.canEdit) {
-        this.error = 'Nincs megfelelő jogosultságod az ételek kezeléséhez'
-        this.$router.push('/dashboard')
-        return
-      }
-      
-      // Mindkét betöltést elindítjuk
-      await Promise.all([
-        this.fetchMeals(),
-        this.loadAllIngredients()
-      ])
+
+
+      this.fetchMeals()
     },
+
     
     async fetchMeals() {
   this.loading = true
