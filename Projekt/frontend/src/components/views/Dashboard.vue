@@ -45,6 +45,9 @@
         <router-link to="/personal-invoices" class="link-card">
           <h3>Számlák</h3>
         </router-link>
+        <router-link to="/kitchen/meals" class="link-card">
+          <h3>Ételek</h3>
+        </router-link>
       </div>
       
       <div v-if="isKitchen" class="kitchen-links">
