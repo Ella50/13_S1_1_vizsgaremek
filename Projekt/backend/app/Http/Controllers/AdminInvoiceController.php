@@ -25,7 +25,10 @@ class AdminInvoiceController extends Controller
         $userIds = Order::query()
             ->whereBetween('orderDate', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->where('orderStatus', 'Rendelve')
-            ->whereNull('invoice_id')
+            ->where(function ($q) {
+                $q->whereNull('invoice_id')
+                ->orWhereDoesntHave('invoice');
+            })
             ->distinct()
             ->pluck('user_id');
 
@@ -39,7 +42,10 @@ class AdminInvoiceController extends Controller
                     ->where('user_id', $userId)
                     ->whereBetween('orderDate', [$monthStart->toDateString(), $monthEnd->toDateString()])
                     ->where('orderStatus', 'Rendelve')
-                    ->whereNull('invoice_id')
+                    ->where(function ($q) {
+                        $q->whereNull('invoice_id')
+                        ->orWhereDoesntHave('invoice');
+                    })
                     ->lockForUpdate()
                     ->get();
 
