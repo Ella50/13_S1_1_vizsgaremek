@@ -1,5 +1,6 @@
 <template>
   <AuthLayout>
+    
     <h2 class="title">Bejelentkezés</h2>
 
     <form @submit.prevent="handleLogin" class="login-form">

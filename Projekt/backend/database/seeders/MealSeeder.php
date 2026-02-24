@@ -90,7 +90,78 @@ class MealSeeder extends Seeder
                 'picture' => '',
                 'created_at' => now(),
                 'updated_at' => now()
-            ]
+            ],
+                        [
+                'mealName' => 'Rakott krumpli',
+                'mealType' => MealType::FOETEL->value,
+                'description' => 'Hagyományos rakott krumpli kolbásszal, tojással',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+
+            [
+                'mealName' => 'Túrós csusza',
+                'mealType' => MealType::FOETEL->value,
+                'description' => 'Tészta túróval, tejföllel, szalonna',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+
+            [
+                'mealName' => 'Csirkepaprikás',
+                'mealType' => MealType::FOETEL->value,
+                'description' => 'Szaftos csirkepaprikás galuskával',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+
+            [
+                'mealName' => 'Palacsinta',
+                'mealType' => MealType::EGYEB->value,
+                'description' => 'Házi palacsinta nutellás vagy lekváros töltelékkel',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+
+            [
+                'mealName' => 'Magyaros burgonyás pogácsa',
+                'mealType' => MealType::FOETEL->value,
+                'description' => 'Sós pogácsa burgonyával',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+
+            [
+                'mealName' => 'Cézár saláta',
+                'mealType' => MealType::FOETEL->value,
+                'description' => 'Ropogós saláta csirkével, sajttal, Cézár öntettel',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+
+            [
+                'mealName' => 'Almás pite',
+                'mealType' => MealType::EGYEB->value,
+                'description' => 'Omlós tészta, fahéjas almás töltelék',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+
+            [
+                'mealName' => 'Frankfurti leves',
+                'mealType' => MealType::LEVES->value,
+                'description' => 'Zöldséges leves virslivel',
+                'picture' => '',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
         ]);
     }
 }

@@ -127,7 +127,7 @@ class AdminController extends Controller
     }
     
     /**
-     * Városok keresése (opcionális, ha keresni szeretnél)
+     * Városok keresése
      */
     public function searchCities(Request $request)
     {
