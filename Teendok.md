@@ -1,48 +1,46 @@
-Egyéb:
-- adminnak kérvények: cukorbeteg dokumentum (több allergén?)
+## Egyéb:
+- adminnak kérvények: cukorbeteg dokumentum (több allergén?) + kedvezmény dokumentum --> ehhez alter user table kell
 - számla (adminnak és usereknek is)
 - rating
 - fizetés
 - class, group
 - étkeztetés időpont
+- menüben legyen logo
 
 
-Register.vue
-- harmadik név, város, cím
-
-Login.vue
+## Login.vue
 - jelszó elfelejtve
 
 
-Meals.vue
+## Meals.vue
 - pontosabb tápérték számítás
-- több étel seeder-rel
-- ha cukorbeteg akkor az adatok nem pontosak
+- több étel seeder-rel -> hiányos allergének, hozzávalók
+- ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
 
 
-Ingredient.vue
+## Ingredient.vue
 - amikor hozzáadunk egy összetevőt a listához, akkor az allergénjeit is be lehessen állítani
 
 
-Orders.vue
+## Orders.vue
 - a cukormentes rendelések összessége is meg legyen jelenítve (A opcióból készül a ckormentes opció) + a táblázatban is
 
 
-MenuMaker.vue
-- frontend
+## MenuMaker.vue
+- frontend üres 
 
 
-Userprofil.vue
+## Userprofil.vue
 - jelszó változtatás
 - kedvezményes vagy normál ár
 - cukorbeteg-e disabled -> kérvényezés az adminnak
 
 
-TodayMenu.vue
+## TodayMenu.vue
 - frontend
 
 
-PersonalOrders.vue
+## PersonalOrders.vue
 - nincs még kész
 - cukormentes opció az A-ból
 - lemondás, rendelés, módosítás
@@ -50,7 +48,7 @@ PersonalOrders.vue
 
 
 
-Teszt(robotframework)
+## Teszt(robotframework)
 -Dokumentáció: táblázat(log) + képernyőképek + teszt adatok kiírása
 
 (

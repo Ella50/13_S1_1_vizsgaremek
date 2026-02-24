@@ -19,6 +19,12 @@ use App\Http\Controllers\AdminInvoiceController;
 
 // Publikus utvonalak
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/counties', [AuthController::class, 'getCounties']);
+Route::get('/cities/by-countyReg/{county_id}', [AuthController::class, 'getCitiesByCountyReg']);
+Route::get('/countiesReg', [AuthController::class, 'getCountiesReg']);
+Route::get('/cities/searchReg', [AuthController::class, 'searchCitiesReg']);
+
+
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/allergens', [UserHealthController::class, 'getAllergens']);

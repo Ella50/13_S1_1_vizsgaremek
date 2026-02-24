@@ -113,7 +113,7 @@
               <div class="card-body">
                 <div class="mb-4">
                   <div class="form-check">
-                    <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" 
+                    <input type="checkbox" disabled="" v-model="hasDiabetes" @change="updateDiabetes" 
                            id="hasDiabetes" class="form-check-input" :disabled="isUpdatingDiabetes">
                     <label for="hasDiabetes" class="form-check-label fw-bold">
                       Cukorbeteg vagyok
@@ -190,6 +190,18 @@
                 </dl>
               </div>
             </div>
+
+
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Dokumentumok</h5>
+              </div>
+              <div class="card-body">
+                  
+              </div>
+            </div>
+
+
           </div>
         </div>
       </div>

@@ -17,9 +17,11 @@
         </div>
     </div>
 
-    <div class="right-side row-12">
-      <!-- A form tartalma-->
-      <slot></slot>
+    <div class="right-side">
+      <div class="right-side-content">
+        <!-- A form tartalma -->
+        <slot></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -31,6 +33,19 @@ export default {
 </script>
 
 <style>
+
+
+.left-side {
+  width: 50%;
+  height: 100vh;
+  background: #fff7e6;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden; 
+  flex-shrink: 0; 
+}
 
 .upper, .middle, .bottom {
   height: 33%;
@@ -76,7 +91,7 @@ export default {
 }
 
 .bottom-right{
-    background-image: url("../../../abrosz.png");
+   /*background-image: url("../../../abrosz.png");*/
     height: 100%;
     width: 100%;
     background-repeat: no-repeat;
@@ -96,41 +111,52 @@ export default {
 
 
 
-.left-side {
-  width: 50%;
-  height: 100%;
-  background: #fff7e6;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
- 
-}
-
-
 .right-side {
   width: 50%;
+  height: 100vh;
   background: #ffd294;
+  overflow-y: auto; /* Függőleges görgetés engedélyezve */
+  overflow-x: hidden; /* Vízszintes görgetés tiltva */
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  padding: 3rem;
+  padding: 2rem 1rem;
+  flex-shrink: 0; /* Ne zsugorodjon */
 }
 
+.right-side-content {
+  width: 100%;
+  max-width: 800px;
+  margin: auto; /* Ez fogja középre igazítani vertikálisan is */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* Reszponzív beállítások */
+@media (max-width: 768px) {
+  .right-side {
+    padding: 1rem 0.5rem;
+  }
+  
+  .right-side-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .right-side-content {
+    padding: 1rem;
+  }
+}
 .title {
   font-size: 2.5rem;
   color: #9d1f1f;
   margin-bottom: 1.5rem;
 }
 
-.avatar {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: #d1d1d1;
-  margin: 0 auto 1.5rem auto;
-}
+
 
 .login-form {
   width: 70%;
@@ -184,38 +210,118 @@ button:disabled {
   margin-top: 0.5rem;
 }
 
+@media (max-width: 1024px) {
+  .right-side {
+    padding: 1.5rem 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .login-wrapper {
     flex-direction: column;
-    width: 100%;
-
-    overflow: hidden; 
-  }
-  .left-side{
-    width: 100%;
-    height: 30%;
+    height: 100vh;
     overflow: hidden;
- }
+  }
+
+  /* Bal oldal - felső rész */
+  .left-side {
+    width: 100%;
+    height: 30vh; /* Fix magasság */
+    min-height: 200px; /* Minimum magasság */
+    overflow: hidden;
+  }
+
+  .upper, .middle, .bottom {
+    height: 33.33%;
+  }
+
+  .upper img {
+    max-width: 30%;
+    left: -5%;
+  }
+
+  .bottom-left img {
+    max-width: 25%;
+    bottom: -10%;
+    left: -7%;
+  }
+
+  .middle img {
+    max-width: 150%;
+  }
+
+  /* Jobb oldal - alsó, görgethető rész */
   .right-side {
     width: 100%;
-    height: 70%;
-    overflow: hidden;
+    height: 70vh; /* Maradék magasság */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1.5rem 1rem;
   }
- .upper, .middle, .bottom {
-  height: 33%;
+
+  .right-side-content {
+    padding-bottom: 2rem; /* Extra hely a görgetéshez */
+  }
 }
+
+@media (max-width: 480px) {
+  .left-side {
+    height: 25vh; /* Kisebb magasság mobilon */
+    min-height: 150px;
+  }
+
+  .right-side {
+    height: 75vh;
+    padding: 1rem 0.8rem;
+  }
+
+  .upper img {
+    max-width: 25%;
+  }
 
   .bottom-left img {
     max-width: 20%;
-    position: absolute;
-    bottom: -4%;
-    left: -7%;
+    bottom: -15%;
   }
-  .upper img {
-    max-width: 20%;
-    position: absolute;
-    top: -1%;
-    left: -4%;
+
+  .middle img {
+    max-width: 120%;
+  }
+}
+
+@media (max-width: 360px) {
+  .left-side {
+    height: 20vh;
+    min-height: 120px;
+  }
+
+  .right-side {
+    height: 80vh;
+  }
+}
+
+/* Magasabb képernyők esetén */
+@media (min-height: 800px) and (max-width: 768px) {
+  .left-side {
+    height: 25vh;
+  }
+  
+  .right-side {
+    height: 75vh;
+  }
+}
+
+/* Táblagép landscape nézet */
+@media (orientation: landscape) and (max-width: 1024px) {
+  .left-side {
+    height: 100vh;
+    width: 40%;
+  }
+  
+  .right-side {
+    height: 100vh;
+    width: 60%;
+    overflow-y: auto;
   }
 }
   
