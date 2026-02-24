@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.4.1 (Python 3.13.5 on win32)" generated="2026-02-24T10:22:47.426447" rpa="false" schemaversion="5">
+<suite id="s1" name="Regisztracio" source="C:\Users\AtkariAriella\Desktop\13_S1_1_vizsgaremek\Tesztelés\robot_tests\tests\regisztracio.robot">
+<test id="s1-t1" name="Sikeres regisztráció" line="35">
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:47.608011" level="INFO">Opening browser 'chrome' to base url 'http://localhost:5173/register'.</msg>
+<msg time="2026-02-24T10:22:47.905197" level="WARN">Error sending stats to Plausible: error sending request for url (https://plausible.io/api/event)</msg>
+<arg>${SIGNUP URL}</arg>
+<arg>${BROWSER}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-02-24T10:22:47.607770" elapsed="1.092849"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-02-24T10:22:48.700958" elapsed="0.031647"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>css=#app</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-02-24T10:22:48.732931" elapsed="0.010130"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-24T10:22:50.743929" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-24T10:22:48.743303" elapsed="2.000989"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${SIGNUP_EMAIL_INPUT}</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-02-24T10:22:50.744675" elapsed="0.009327"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${SIGNUP_PASSWORD_INPUT}</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-02-24T10:22:50.754306" elapsed="0.009788"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:50.764547" level="INFO">Typing text 'Szabó' into text field '//*[@id="app"]/main/div/div[2]/form/input[2]'.</msg>
+<arg>${SIGNUP_LASTNAME_INPUT}</arg>
+<arg>${VALID_LASTNAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:22:50.764344" elapsed="0.087459"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:50.852762" level="INFO">Typing text 'Imre' into text field '//*[@id="app"]/main/div/div[2]/form/input[1]'.</msg>
+<arg>${SIGNUP_FIRSTNAME_INPUT}</arg>
+<arg>${VALID_FIRSTNAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:22:50.852399" elapsed="0.060531"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:50.913420" level="INFO">Typing text 'szabo.imre@iskola.hu' into text field '//*[@id="app"]/main/div/div[2]/form/input[3]'.</msg>
+<arg>${SIGNUP_EMAIL_INPUT}</arg>
+<arg>${VALID_EMAIL}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:22:50.913203" elapsed="0.059218"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:50.973047" level="INFO">Typing text 'szabo123' into text field '//*[@id="app"]/main/div/div[2]/form/input[4]'.</msg>
+<arg>${SIGNUP_PASSWORD_INPUT}</arg>
+<arg>${VALID_PASS}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:22:50.972834" elapsed="0.050114"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:51.023380" level="INFO">Typing text 'szabo123' into text field '//*[@id="app"]/main/div/div[2]/form/input[5]'.</msg>
+<arg>${SIGNUP_PASSWORD_AGAIN_INPUT}</arg>
+<arg>${VALID_PASS}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:22:51.023168" elapsed="0.052708"/>
+</kw>
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:51.076279" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/form/button'.</msg>
+<arg>${SIGNUP_BUTTON}</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:22:51.076097" elapsed="0.063255"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-24T10:22:53.140127" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-24T10:22:51.139622" elapsed="2.000590"/>
+</kw>
+<kw name="Handle Alert" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:53.140698" level="INFO">HANDLE::&lt;class 'datetime.timedelta'&gt;::0:00:05</msg>
+<msg time="2026-02-24T10:22:53.145003" level="INFO">${alert_text} = Sikeres regisztáció!</msg>
+<var>${alert_text}</var>
+<arg>ACCEPT</arg>
+<arg>timeout=5s</arg>
+<doc>Handles the current alert and returns its message.</doc>
+<status status="PASS" start="2026-02-24T10:22:53.140507" elapsed="0.004534"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-02-24T10:22:53.145614" level="INFO">Alert szövege: Sikeres regisztáció!</msg>
+<arg>Alert szövege: ${alert_text}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-02-24T10:22:53.145340" elapsed="0.000348"/>
+</kw>
+<kw name="Should Contain" owner="BuiltIn">
+<arg>${alert_text}</arg>
+<arg>Sikeres regisztáció!</arg>
+<doc>Fails if ``container`` does not contain ``item`` one or more times.</doc>
+<status status="PASS" start="2026-02-24T10:22:53.145941" elapsed="0.000540"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-24T10:22:55.147987" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-24T10:22:53.146913" elapsed="2.001416"/>
+</kw>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:55.258497" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-19.png"&gt;&lt;img src="selenium-screenshot-19.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-02-24T10:22:55.150227" elapsed="0.108349"/>
+</kw>
+<kw name="Get Location" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:55.264177" level="INFO">${CURRENT_URL} = http://localhost:5173/login</msg>
+<var>${CURRENT_URL}</var>
+<doc>Returns the current browser window URL.</doc>
+<status status="PASS" start="2026-02-24T10:22:55.258866" elapsed="0.005346"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-02-24T10:22:55.264724" level="INFO">Jelenlegi URL: http://localhost:5173/login</msg>
+<arg>Jelenlegi URL: ${CURRENT_URL}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-02-24T10:22:55.264483" elapsed="0.000283"/>
+</kw>
+<kw name="Close Browser" owner="SeleniumLibrary" type="TEARDOWN">
+<doc>Closes the current browser.</doc>
+<status status="PASS" start="2026-02-24T10:22:55.265065" elapsed="2.126821"/>
+</kw>
+<doc>Érvényes adatokkal való regisztráció</doc>
+<status status="PASS" start="2026-02-24T10:22:47.606853" elapsed="9.785278"/>
+</test>
+<test id="s1-t2" name="Sikertelen regisztráció" line="76">
+<kw name="Open Browser" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:22:57.393518" level="INFO">Opening browser 'chrome' to base url 'http://localhost:5173/register'.</msg>
+<arg>${SIGNUP URL}</arg>
+<arg>${BROWSER}</arg>
+<doc>Opens a new browser instance to the optional ``url``.</doc>
+<status status="PASS" start="2026-02-24T10:22:57.393310" elapsed="0.796295"/>
+</kw>
+<kw name="Maximize Browser Window" owner="SeleniumLibrary">
+<doc>Maximizes current browser window.</doc>
+<status status="PASS" start="2026-02-24T10:22:58.190405" elapsed="0.033604"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>css=#app</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-02-24T10:22:58.224349" elapsed="0.008617"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-24T10:23:00.233816" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-24T10:22:58.233204" elapsed="2.000713"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${SIGNUP_EMAIL_INPUT}</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.234260" elapsed="0.009644"/>
+</kw>
+<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
+<arg>${SIGNUP_PASSWORD_INPUT}</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until the element ``locator`` appears on the current page.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.244192" elapsed="0.009076"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:23:00.253930" level="INFO">Typing text 'szabo' into text field '//*[@id="app"]/main/div/div[2]/form/input[2]'.</msg>
+<arg>${SIGNUP_LASTNAME_INPUT}</arg>
+<arg>${INVALID_LASTNAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.253698" elapsed="0.083848"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:23:00.338168" level="INFO">Typing text 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' into text field '//*[@id="app"]/main/div/div[2]/form/input[1]'.</msg>
+<arg>${SIGNUP_FIRSTNAME_INPUT}</arg>
+<arg>${INVALID_FIRSTNAME}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.337914" elapsed="0.115692"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:23:00.454260" level="INFO">Typing text 'szabo@iskola.hu' into text field '//*[@id="app"]/main/div/div[2]/form/input[3]'.</msg>
+<arg>${SIGNUP_EMAIL_INPUT}</arg>
+<arg>${INVALID_EMAIL}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.454040" elapsed="0.061830"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:23:00.516484" level="INFO">Typing text 'szabo' into text field '//*[@id="app"]/main/div/div[2]/form/input[4]'.</msg>
+<arg>${SIGNUP_PASSWORD_INPUT}</arg>
+<arg>${INVALID_PASS}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.516284" elapsed="0.045020"/>
+</kw>
+<kw name="Input Text" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:23:00.561723" level="INFO">Typing text 'szabo' into text field '//*[@id="app"]/main/div/div[2]/form/input[5]'.</msg>
+<arg>${SIGNUP_PASSWORD_AGAIN_INPUT}</arg>
+<arg>${INVALID_PASS}</arg>
+<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.561519" elapsed="0.047923"/>
+</kw>
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:23:00.609842" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/form/button'.</msg>
+<arg>${SIGNUP_BUTTON}</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.609662" elapsed="0.058774"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-24T10:23:02.669307" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-24T10:23:00.668684" elapsed="2.000952"/>
+</kw>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-02-24T10:23:02.850055" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-20.png"&gt;&lt;img src="selenium-screenshot-20.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-02-24T10:23:02.670707" elapsed="0.179427"/>
+</kw>
+<kw name="Close Browser" owner="SeleniumLibrary" type="TEARDOWN">
+<doc>Closes the current browser.</doc>
+<status status="PASS" start="2026-02-24T10:23:02.850479" elapsed="2.120078"/>
+</kw>
+<doc>Érvénytelen jelszóval való regisztráció</doc>
+<status status="PASS" start="2026-02-24T10:22:57.392878" elapsed="7.578495"/>
+</test>
+<doc>Regisztráció tesztelése</doc>
+<status status="PASS" start="2026-02-24T10:22:47.427529" elapsed="17.546946"/>
+</suite>
+<statistics>
+<total>
+<stat pass="2" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat name="Regisztracio" id="s1" pass="2" fail="0" skip="0">Regisztracio</stat>
+</suite>
+</statistics>
+<errors>
+<msg time="2026-02-24T10:22:47.905197" level="WARN">Error sending stats to Plausible: error sending request for url (https://plausible.io/api/event)</msg>
+</errors>
+</robot>

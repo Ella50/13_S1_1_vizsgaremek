@@ -95,7 +95,7 @@ export default {
     },
     userName() {
       const user = this.user
-      return user ? `${user.firstName} ${user.lastName}` : 'Vendég'
+      return user ? `${user.lastName} ${user.firstName}` : 'Vendég'
     }
   },
   

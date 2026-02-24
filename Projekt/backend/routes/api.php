@@ -124,7 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     
     // Admin
-    Route::prefix('admin')->group(function () {
+    Route::middleware(['auth:sanctum', \App\Http\Middleware\CheckAdmin::class])->prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
         Route::post('/users/bulk-status', [AdminController::class, 'bulkUpdateUserStatus']);
         Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
