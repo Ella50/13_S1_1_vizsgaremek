@@ -11,9 +11,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Middleware;
+use Illuminate\Support\Facades\Auth;
+
 
 class AdminController extends Controller
 {
+
     // Összes felhasználó lekérdezése
     public function getUsers(Request $request)
     {

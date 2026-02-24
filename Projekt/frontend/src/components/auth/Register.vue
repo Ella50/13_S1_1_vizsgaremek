@@ -45,6 +45,11 @@ export default {
   },
   methods: {
     async handleRegister() {
+      const emailRegex = /@iskola\.hu$/;
+      if (!emailRegex.test(this.form.email)) {
+        this.error = 'Csak iskolai email cím fogadható el!';
+        return;
+      }
       if (this.form.password !== this.form.password_confirmation) {
         this.error = 'A jelszavak nem egyeznek'
         return

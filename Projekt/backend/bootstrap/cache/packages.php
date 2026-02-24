@@ -1,4 +1,11 @@
 <?php return array (
+  'andreaselia/laravel-api-to-postman' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'AndreasElia\\PostmanGenerator\\PostmanGeneratorServiceProvider',
+    ),
+  ),
   'barryvdh/laravel-dompdf' => 
   array (
     'aliases' => 
