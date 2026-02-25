@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Document extends Model
 {
@@ -30,16 +31,16 @@ class Document extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Helper metódus a fájl URL-jének lekéréséhez
+ 
     public function getUrlAttribute()
     {
-        return Storage::disk('public')->url($this->file_path);
+        return Storage::disk('public')->url($this->filePath); 
     }
 
-    // Helper metódus a fájl méretének formázásához
+
     public function getFormattedSizeAttribute()
     {
-        $bytes = $this->file_size;
+        $bytes = $this->fileSize;
         $units = ['B', 'KB', 'MB', 'GB'];
         
         for ($i = 0; $bytes > 1024; $i++) {

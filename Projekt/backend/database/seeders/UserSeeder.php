@@ -84,7 +84,7 @@ class UserSeeder extends Seeder
         User::create([
             'firstName' => 'Kiss',
             'lastName' => 'Erika',
-            'email' => 'kiss.erika@eiskola.hu',
+            'email' => 'kiss.erika@iskola.hu',
             'password' => Hash::make('tanulo456'),
             'userType' => 'Tanuló',
             'userStatus' => 'inactive',

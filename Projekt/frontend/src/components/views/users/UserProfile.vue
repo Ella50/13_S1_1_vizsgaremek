@@ -178,6 +178,9 @@
                 <dl class="row">
                   <dt class="col-sm-4">Felhasználó típus:</dt>
                   <dd class="col-sm-8">{{ userType }}</dd>
+
+                  <dt class="col-sm-4">Kedvezmény:</dt>
+                  <dd class="col-sm-8">{{ hasDiscount ? 'Nem' : 'Igen' }}</dd>
                   
                   <dt class="col-sm-4">Osztály:</dt>
                   <dd class="col-sm-8">{{ className || '-' }}</dd>
@@ -192,12 +195,17 @@
             </div>
 
 
-<div class="card mt-4">
+            <div class="card mt-4">
               <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Dokumentumok</h5>
-                <span class="badge bg-info text-dark">Max 5MB</span>
+                <span class="badge">Max 5MB</span>
+
               </div>
+
+              <small class="text-muted"> Engedélyezett formátumok: PDF, DOC, DOCX, JPG, PNG</small>
+
               <div class="card-body">
+
                 
                 <!-- Kedvezmény dokumentum -->
                 <div class="document-section mb-4">
@@ -226,9 +234,9 @@
                           <i class="fas fa-download"></i>
                         </button>
                         <button @click="confirmDelete(discountDocument)" 
-                                class="btn btn-sm btn-outline-danger" 
+                                class="btn btn-sm btn-delete" 
                                 title="Törlés">
-                          <i class="fas fa-trash"></i>
+                                TÖRLÉS
                         </button>
                       </div>
                     </div>
@@ -243,14 +251,14 @@
                              :accept="allowedFileTypes"
                              :disabled="isUploading.discount">
                       <button type="submit" 
-                              class="btn btn-success" 
+                              class="btn btn-success upload-button"
                               :disabled="!selectedFiles.discount || isUploading.discount">
                         <span v-if="isUploading.discount" class="spinner-border spinner-border-sm me-1"></span>
-                        <i v-else class="fas fa-upload me-1"></i>
+     
                         {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
                       </button>
                     </div>
-                    <small class="text-muted">Engedélyezett formátumok: PDF, DOC, DOCX, JPG, PNG</small>
+
                   </form>
                 </div>
 
@@ -298,14 +306,13 @@
                              :accept="allowedFileTypes"
                              :disabled="isUploading.diabetes">
                       <button type="submit" 
-                              class="btn btn-success" 
+                              class="btn btn-success upload-button" 
                               :disabled="!selectedFiles.diabetes || isUploading.diabetes">
                         <span v-if="isUploading.diabetes" class="spinner-border spinner-border-sm me-1"></span>
                         <i v-else class="fas fa-upload me-1"></i>
                         {{ isUploading.diabetes ? 'Feltöltés...' : 'Feltöltés' }}
                       </button>
                     </div>
-                    <small class="text-muted">Engedélyezett formátumok: PDF, DOC, DOCX, JPG, PNG</small>
                   </form>
                 </div>
 
@@ -366,6 +373,7 @@ export default {
       userAllergens: [],
       availableAllergens: [],
       newAllergenId: '',
+      hasDiscount: false,
       
 
       isLoading: true,
@@ -407,6 +415,9 @@ export default {
 
     userType() {
       return this.user?.userType || 'Ismeretlen';
+    },
+    hasDiscount() {
+      return this.user?.hasDiscount || '-';
     },
     className() {
       return this.user?.studentClass?.className || '';
@@ -949,8 +960,7 @@ async updateProfile() {
       }
     },
     
-    // Add allergen
-    // Add allergen
+
 async addAllergen() {
   if (!this.newAllergenId) return;
   
@@ -962,10 +972,9 @@ async addAllergen() {
       allergen_id: this.newAllergenId
     });
     
-    // Először töltsük újra a health adatokat
+
     await this.loadHealthData();
     
-    // Majd a rendelkezésre álló allergéneket
     await this.loadAvailableAllergens();
     
     this.newAllergenId = '';
@@ -989,7 +998,6 @@ async addAllergen() {
   }
 },
     
-    // Remove allergen
 
 async removeAllergen(allergenId) {
   this.clearMessage();
@@ -1001,10 +1009,10 @@ async removeAllergen(allergenId) {
   try {
     await axios.delete(`/user/allergens/${allergenId}`);
     
-    // Először töltsük újra a health adatokat
+
     await this.loadHealthData();
     
-    // Majd a rendelkezésre álló allergéneket
+
     await this.loadAvailableAllergens();
     
     this.showMessage('Allergén sikeresen eltávolítva!', 'success');
@@ -1151,5 +1159,13 @@ dd {
 
 .btn-add, .changepassword-btn{
   margin-top: 10px;
+}
+
+.text-muted {
+  padding-left: 20px;
+}
+
+.upload-button{
+  width: 30%;
 }
 </style>

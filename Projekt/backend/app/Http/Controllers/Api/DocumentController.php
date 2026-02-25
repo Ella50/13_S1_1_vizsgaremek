@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,7 @@ class DocumentController extends Controller
      */
     public function index()
     {
-        $documents = Document::with('user:id,name,email')->latest()->get();
+        $documents = Document::with('user:id,firstName,lastName,email')->latest()->get();
         
         return response()->json([
             'documents' => $documents
@@ -39,27 +40,27 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'document' => 'required|file|mimes:pdf,doc,docx,jpg,png|max:5120', // 5MB
-            'type' => 'required|in:discount,diabetes' // Dokumentum típusának megadása
+            'document' => 'required|file|mimes:pdf,doc,docx,jpg,png|max:5120',
+            'type' => 'required|in:discount,diabetes'
         ]);
 
         $file = $request->file('document');
         $originalName = $file->getClientOriginalName();
-        // Egyedi fájlnév generálása, hogy ne legyen ütközés
         $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-
-        // Fájl mentése a storage/app/public/documents mappába
         $path = $file->storeAs('documents', $fileName, 'public');
 
         $document = Document::create([
             'user_id' => Auth::id(),
-            'original_name' => $originalName, // snake_case a migrációnak megfelelően
-            'file_name' => $fileName, // snake_case
-            'file_path' => $path, // snake_case
-            'mime_type' => $file->getMimeType(), // snake_case
-            'file_size' => $file->getSize(), // snake_case
-            'type' => $request->type, // 'discount' vagy 'diabetes'
+            'originalName' => $originalName,
+            'fileName' => $fileName, 
+            'filePath' => $path, 
+            'mimeType' => $file->getMimeType(),
+            'fileSize' => $file->getSize(),
+            'type' => $request->type,
         ]);
+
+        // Betöltjük a user kapcsolatot is a válaszhoz
+        $document->load('user');
 
         return response()->json([
             'message' => 'Fájl feltöltve',
@@ -77,11 +78,11 @@ class DocumentController extends Controller
             return response()->json(['error' => 'Nincs jogosultságod ehhez a dokumentumhoz'], 403);
         }
 
-        if (!Storage::disk('public')->exists($document->file_path)) {
+        if (!Storage::disk('public')->exists($document->filePath)) { // JAVÍTVA: filePath
             return response()->json(['error' => 'A fájl nem található'], 404);
         }
 
-        return Storage::disk('public')->download($document->file_path, $document->original_name);
+        return Storage::disk('public')->download($document->filePath, $document->originalName); // JAVÍTVA: filePath, originalName
     }
 
     /**
@@ -89,11 +90,11 @@ class DocumentController extends Controller
      */
     public function adminDownload(Document $document)
     {
-        if (!Storage::disk('public')->exists($document->file_path)) {
+        if (!Storage::disk('public')->exists($document->filePath)) { // JAVÍTVA: filePath
             return response()->json(['error' => 'A fájl nem található'], 404);
         }
 
-        return Storage::disk('public')->download($document->file_path, $document->original_name);
+        return Storage::disk('public')->download($document->filePath, $document->originalName); // JAVÍTVA: filePath, originalName
     }
 
     /**
@@ -101,17 +102,14 @@ class DocumentController extends Controller
      */
     public function destroy(Document $document)
     {
-        // Ellenőrizzük, hogy a felhasználó a saját dokumentumát törli-e
         if (Auth::id() !== $document->user_id) {
             return response()->json(['error' => 'Nincs jogosultságod ehhez a dokumentumhoz'], 403);
         }
 
-        // Fájl törlése a storage-ból
-        if (Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+        if (Storage::disk('public')->exists($document->filePath)) { // JAVÍTVA: filePath
+            Storage::disk('public')->delete($document->filePath);
         }
 
-        // Rekord törlése az adatbázisból
         $document->delete();
 
         return response()->json(['message' => 'Dokumentum sikeresen törölve']);
@@ -122,12 +120,10 @@ class DocumentController extends Controller
      */
     public function adminDestroy(Document $document)
     {
-        // Fájl törlése a storage-ból
-        if (Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+        if (Storage::disk('public')->exists($document->filePath)) { // JAVÍTVA: filePath
+            Storage::disk('public')->delete($document->filePath);
         }
 
-        // Rekord törlése az adatbázisból
         $document->delete();
 
         return response()->json(['message' => 'Dokumentum sikeresen törölve']);
