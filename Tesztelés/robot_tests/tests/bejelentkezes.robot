@@ -11,9 +11,9 @@ ${VALID_PASS}       admin123
 ${INVALID_EMAIL}      szabo.david@iskola.hu
 ${INVALID_PASS}       tegla
 
-${LOGIN_EMAIL_INPUT}             xpath=//*[@id="app"]/main/div/div[2]/form/input[1]
-${LOGIN_PASSWORD_INPUT}             xpath=//*[@id="app"]/main/div/div[2]/form/input[2]
-${LOGIN_BUTTON}                 //*[@id="app"]/main/div/div[2]/form/button
+${LOGIN_EMAIL_INPUT}             //*[@id="app"]/main/div/div[2]/div/form/input[1]
+${LOGIN_PASSWORD_INPUT}          //*[@id="app"]/main/div/div[2]/div/form/input[2]
+${LOGIN_BUTTON}                 //*[@id="app"]/main/div/div[2]/div/form/button
 ${LOGOUT_BUTTON}                //*[@id="logout"]
 
 

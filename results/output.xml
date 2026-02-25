@@ -1,262 +1,233 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 7.4.1 (Python 3.13.5 on win32)" generated="2026-02-24T10:25:18.807961" rpa="false" schemaversion="5">
-<suite id="s1" name="13 S1 1 vizsgaremek" source="C:\Users\AtkariAriella\Desktop\13_S1_1_vizsgaremek">
-<suite id="s1-s1" name="Tesztelés" source="C:\Users\AtkariAriella\Desktop\13_S1_1_vizsgaremek\Tesztelés">
-<suite id="s1-s1-s1" name="Robot Tests" source="C:\Users\AtkariAriella\Desktop\13_S1_1_vizsgaremek\Tesztelés\robot_tests">
-<suite id="s1-s1-s1-s1" name="Tests" source="C:\Users\AtkariAriella\Desktop\13_S1_1_vizsgaremek\Tesztelés\robot_tests\tests">
-<suite id="s1-s1-s1-s1-s1" name="Regisztracio" source="C:\Users\AtkariAriella\Desktop\13_S1_1_vizsgaremek\Tesztelés\robot_tests\tests\regisztracio.robot">
-<test id="s1-s1-s1-s1-s1-t1" name="Sikeres regisztráció" line="35">
+<robot generator="Robot 7.4.1 (Python 3.13.5 on win32)" generated="2026-02-25T10:24:50.539126" rpa="false" schemaversion="5">
+<suite id="s1" name="13 S1 1 vizsgaremek" source="C:\Users\FarkasDominik\Documents\GitHub\13_S1_1_vizsgaremek">
+<suite id="s1-s1" name="Tesztelés" source="C:\Users\FarkasDominik\Documents\GitHub\13_S1_1_vizsgaremek\Tesztelés">
+<suite id="s1-s1-s1" name="Robot Tests" source="C:\Users\FarkasDominik\Documents\GitHub\13_S1_1_vizsgaremek\Tesztelés\robot_tests">
+<suite id="s1-s1-s1-s1" name="Tests" source="C:\Users\FarkasDominik\Documents\GitHub\13_S1_1_vizsgaremek\Tesztelés\robot_tests\tests">
+<suite id="s1-s1-s1-s1-s1" name="Menuszerkesztes" source="C:\Users\FarkasDominik\Documents\GitHub\13_S1_1_vizsgaremek\Tesztelés\robot_tests\tests\menuszerkesztes.robot">
+<test id="s1-s1-s1-s1-s1-t1" name="Sikeres menükészítés" line="33">
 <kw name="Open Browser" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:19.068692" level="INFO">Opening browser 'chrome' to base url 'http://localhost:5173/register'.</msg>
-<arg>${SIGNUP URL}</arg>
+<msg time="2026-02-25T10:24:50.712203" level="INFO">Opening browser 'chrome' to base url 'http://localhost:5173/login'.</msg>
+<arg>${LOGIN URL}</arg>
 <arg>${BROWSER}</arg>
 <doc>Opens a new browser instance to the optional ``url``.</doc>
-<status status="PASS" start="2026-02-24T10:25:19.068318" elapsed="0.899561"/>
+<status status="PASS" start="2026-02-25T10:24:50.711898" elapsed="0.720646"/>
 </kw>
 <kw name="Maximize Browser Window" owner="SeleniumLibrary">
 <doc>Maximizes current browser window.</doc>
-<status status="PASS" start="2026-02-24T10:25:19.969817" elapsed="0.032855"/>
+<status status="PASS" start="2026-02-25T10:24:51.432947" elapsed="0.025617"/>
 </kw>
 <kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
 <arg>css=#app</arg>
 <arg>timeout=10s</arg>
 <doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-24T10:25:20.003028" elapsed="0.013658"/>
+<status status="PASS" start="2026-02-25T10:24:51.458839" elapsed="0.007108"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-24T10:25:22.017754" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-25T10:24:53.466873" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-24T10:25:20.016979" elapsed="2.001293"/>
+<status status="PASS" start="2026-02-25T10:24:51.466205" elapsed="2.001244"/>
 </kw>
 <kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
-<arg>${SIGNUP_EMAIL_INPUT}</arg>
+<arg>${MENUMAKER_EMAIL_INPUT}</arg>
 <arg>timeout=10s</arg>
 <doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.019119" elapsed="0.016176"/>
+<status status="PASS" start="2026-02-25T10:24:53.468399" elapsed="0.010158"/>
 </kw>
 <kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
-<arg>${SIGNUP_PASSWORD_INPUT}</arg>
+<arg>${MENUMAKER_PASSWORD_INPUT}</arg>
 <arg>timeout=10s</arg>
 <doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.035615" elapsed="0.009612"/>
+<status status="PASS" start="2026-02-25T10:24:53.478764" elapsed="0.004991"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:22.045982" level="INFO">Typing text 'Szabó' into text field '//*[@id="app"]/main/div/div[2]/form/input[2]'.</msg>
-<arg>${SIGNUP_LASTNAME_INPUT}</arg>
-<arg>${VALID_LASTNAME}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.045590" elapsed="0.087873"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:22.134261" level="INFO">Typing text 'Imre' into text field '//*[@id="app"]/main/div/div[2]/form/input[1]'.</msg>
-<arg>${SIGNUP_FIRSTNAME_INPUT}</arg>
-<arg>${VALID_FIRSTNAME}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.133887" elapsed="0.064490"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:22.199145" level="INFO">Typing text 'szabo.imre@iskola.hu' into text field '//*[@id="app"]/main/div/div[2]/form/input[3]'.</msg>
-<arg>${SIGNUP_EMAIL_INPUT}</arg>
+<msg time="2026-02-25T10:24:53.484170" level="INFO">Typing text 'admin@iskola.hu' into text field '//*[@id="app"]/main/div/div[2]/div/form/input[1]'.</msg>
+<arg>${MENUMAKER_EMAIL_INPUT}</arg>
 <arg>${VALID_EMAIL}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.198757" elapsed="0.061507"/>
+<status status="PASS" start="2026-02-25T10:24:53.483940" elapsed="0.053507"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:22.261447" level="INFO">Typing text 'szabo123' into text field '//*[@id="app"]/main/div/div[2]/form/input[4]'.</msg>
-<arg>${SIGNUP_PASSWORD_INPUT}</arg>
+<msg time="2026-02-25T10:24:53.538277" level="INFO">Typing text 'admin123' into text field '//*[@id="app"]/main/div/div[2]/div/form/input[2]'.</msg>
+<arg>${MENUMAKER_PASSWORD_INPUT}</arg>
 <arg>${VALID_PASS}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.261056" elapsed="0.051985"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:22.313675" level="INFO">Typing text 'szabo123' into text field '//*[@id="app"]/main/div/div[2]/form/input[5]'.</msg>
-<arg>${SIGNUP_PASSWORD_AGAIN_INPUT}</arg>
-<arg>${VALID_PASS}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.313331" elapsed="0.052513"/>
+<status status="PASS" start="2026-02-25T10:24:53.537908" elapsed="0.038530"/>
 </kw>
 <kw name="Click Button" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:22.366441" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/form/button'.</msg>
-<arg>${SIGNUP_BUTTON}</arg>
+<msg time="2026-02-25T10:24:53.576974" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/div/form/button'.</msg>
+<arg>${MENUMAKER_BUTTON}</arg>
 <doc>Clicks the button identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.366138" elapsed="0.060078"/>
+<status status="PASS" start="2026-02-25T10:24:53.576691" elapsed="0.041308"/>
+</kw>
+<kw name="Wait Until Location Contains" owner="SeleniumLibrary">
+<arg>dashboard</arg>
+<arg>timeout=15s</arg>
+<doc>Waits until the current URL contains ``expected``.</doc>
+<status status="PASS" start="2026-02-25T10:24:53.618318" elapsed="1.020051"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-24T10:25:24.427601" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-25T10:24:56.639649" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-24T10:25:22.426525" elapsed="2.001886"/>
+<status status="PASS" start="2026-02-25T10:24:54.638661" elapsed="2.001533"/>
 </kw>
-<kw name="Handle Alert" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:24.431930" level="INFO">HANDLE::&lt;class 'datetime.timedelta'&gt;::0:00:05</msg>
-<msg time="2026-02-24T10:25:24.448789" level="INFO">${alert_text} = Sikeres regisztáció!</msg>
-<var>${alert_text}</var>
-<arg>ACCEPT</arg>
-<arg>timeout=5s</arg>
-<doc>Handles the current alert and returns its message.</doc>
-<status status="PASS" start="2026-02-24T10:25:24.430131" elapsed="0.019177"/>
-</kw>
-<kw name="Log" owner="BuiltIn">
-<msg time="2026-02-24T10:25:24.451947" level="INFO">Alert szövege: Sikeres regisztáció!</msg>
-<arg>Alert szövege: ${alert_text}</arg>
-<doc>Logs the given message with the given level.</doc>
-<status status="PASS" start="2026-02-24T10:25:24.450459" elapsed="0.001884"/>
-</kw>
-<kw name="Should Contain" owner="BuiltIn">
-<arg>${alert_text}</arg>
-<arg>Sikeres regisztáció!</arg>
-<doc>Fails if ``container`` does not contain ``item`` one or more times.</doc>
-<status status="PASS" start="2026-02-24T10:25:24.453128" elapsed="0.001363"/>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:24:56.640951" level="INFO">Clicking element '//*[@id="app"]/main/div/div/div/a[4]'.</msg>
+<arg>${MENUMAKER_CLICK_MENU}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:24:56.640648" elapsed="0.062750"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-24T10:25:26.456834" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-25T10:24:58.705160" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-24T10:25:24.455201" elapsed="2.002522"/>
+<status status="PASS" start="2026-02-25T10:24:56.703994" elapsed="2.002362"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:24:58.710685" level="INFO">Clicking element '//*[@id="app"]/main/div/div/button[2]'.</msg>
+<arg>${MENUMAKER_CLICK_EDIT}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:24:58.708729" elapsed="0.134394"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-25T10:25:00.845109" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-25T10:24:58.843401" elapsed="2.002874"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:00.853704" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/select'.</msg>
+<arg>${MENUMAKER_SELECT_DATE_EDIT}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:00.849918" elapsed="0.097381"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-25T10:25:02.949823" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-25T10:25:00.947661" elapsed="2.003751"/>
+</kw>
+<kw name="Select From List By Index" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:02.958994" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[2]/div/div/select' by index 1.</msg>
+<arg>${MENUMAKER_SELECT_DATE_EDIT}</arg>
+<arg>1</arg>
+<doc>Selects options from selection list ``locator`` by ``indexes``.</doc>
+<status status="PASS" start="2026-02-25T10:25:02.955185" elapsed="0.113456"/>
+</kw>
+<kw name="Click Button" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:03.069586" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/div/div/button[1]'.</msg>
+<arg>${MENUMAKER_CONTINUE_BUTTON}</arg>
+<doc>Clicks the button identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:03.069105" elapsed="0.088245"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-25T10:25:05.158671" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-25T10:25:03.157767" elapsed="2.001486"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.161310" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[2]/div[1]/button'.</msg>
+<arg>${MENUMAKER_ADD_SOUP}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.160222" elapsed="0.054122"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.215652" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[1]/button[2]'.</msg>
+<arg>${MENUMAKER_SELECT_OPA}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.215220" elapsed="0.044821"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.260830" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[2]/div[2]/button'.</msg>
+<arg>${MENUMAKER_ADD_OPA}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.260444" elapsed="0.036297"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.297577" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[1]/button[3]'.</msg>
+<arg>${MENUMAKER_SELECT_OPB}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.297157" elapsed="0.035528"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.333255" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[2]/div[5]/button'.</msg>
+<arg>${MENUMAKER_ADD_OPB}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.332966" elapsed="0.044883"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.379015" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[1]/button[4]'.</msg>
+<arg>${MENUMAKER_SELECT_OTHERS}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.378451" elapsed="0.037312"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.416566" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[2]/div[1]/button'.</msg>
+<arg>${MENUMAKER_ADD_OTHERS}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.416120" elapsed="0.028822"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:05.445656" level="INFO">Clicking element '//*[@id="app"]/main/div/div[2]/div/div/div[3]/button[1]'.</msg>
+<arg>${MENUMAKER_SAVE_BUTTON}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.445276" elapsed="0.049703"/>
+</kw>
+<kw name="Wait Until Page Contains" owner="SeleniumLibrary">
+<arg>A menü módosítása sikeresen el lett mentve.</arg>
+<arg>timeout=10s</arg>
+<doc>Waits until ``text`` appears on the current page.</doc>
+<status status="PASS" start="2026-02-25T10:25:05.495248" elapsed="0.859472"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-25T10:25:08.355732" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-25T10:25:06.355016" elapsed="2.001712"/>
 </kw>
 <kw name="Capture Page Screenshot" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:26.569595" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-5.png"&gt;&lt;img src="selenium-screenshot-5.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-02-25T10:25:08.474487" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-32.png"&gt;&lt;img src="selenium-screenshot-32.png" width="800px"&gt;&lt;/a&gt;</msg>
 <doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
-<status status="PASS" start="2026-02-24T10:25:26.459929" elapsed="0.109911"/>
+<status status="PASS" start="2026-02-25T10:25:08.357700" elapsed="0.116965"/>
 </kw>
-<kw name="Get Location" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:26.575482" level="INFO">${CURRENT_URL} = http://localhost:5173/login</msg>
-<var>${CURRENT_URL}</var>
-<doc>Returns the current browser window URL.</doc>
-<status status="PASS" start="2026-02-24T10:25:26.570173" elapsed="0.005438"/>
-</kw>
-<kw name="Log" owner="BuiltIn">
-<msg time="2026-02-24T10:25:26.576366" level="INFO">Jelenlegi URL: http://localhost:5173/login</msg>
-<arg>Jelenlegi URL: ${CURRENT_URL}</arg>
-<doc>Logs the given message with the given level.</doc>
-<status status="PASS" start="2026-02-24T10:25:26.575996" elapsed="0.000502"/>
+<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
+<msg time="2026-02-25T10:25:08.575766" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-33.png"&gt;&lt;img src="selenium-screenshot-33.png" width="800px"&gt;&lt;/a&gt;</msg>
+<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
+<status status="PASS" start="2026-02-25T10:25:08.475062" elapsed="0.100978"/>
 </kw>
 <kw name="Close Browser" owner="SeleniumLibrary" type="TEARDOWN">
 <doc>Closes the current browser.</doc>
-<status status="PASS" start="2026-02-24T10:25:26.576890" elapsed="2.203221"/>
+<status status="PASS" start="2026-02-25T10:25:08.576825" elapsed="2.256559"/>
 </kw>
-<doc>Érvényes adatokkal való regisztráció</doc>
-<status status="PASS" start="2026-02-24T10:25:19.064931" elapsed="9.715556"/>
+<doc>Sikeres menükészítés még nem létező napra</doc>
+<status status="PASS" start="2026-02-25T10:24:50.709668" elapsed="20.124140"/>
 </test>
-<test id="s1-s1-s1-s1-s1-t2" name="Sikertelen regisztráció" line="76">
-<kw name="Open Browser" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:28.790337" level="INFO">Opening browser 'chrome' to base url 'http://localhost:5173/register'.</msg>
-<arg>${SIGNUP URL}</arg>
-<arg>${BROWSER}</arg>
-<doc>Opens a new browser instance to the optional ``url``.</doc>
-<status status="PASS" start="2026-02-24T10:25:28.789792" elapsed="0.616590"/>
-</kw>
-<kw name="Maximize Browser Window" owner="SeleniumLibrary">
-<doc>Maximizes current browser window.</doc>
-<status status="PASS" start="2026-02-24T10:25:29.407010" elapsed="0.238423"/>
-</kw>
-<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
-<arg>css=#app</arg>
-<arg>timeout=10s</arg>
-<doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-24T10:25:29.646826" elapsed="0.028590"/>
-</kw>
-<kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-24T10:25:31.676645" level="INFO">Slept 2 seconds.</msg>
-<arg>2s</arg>
-<doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-24T10:25:29.675705" elapsed="2.001156"/>
-</kw>
-<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
-<arg>${SIGNUP_EMAIL_INPUT}</arg>
-<arg>timeout=10s</arg>
-<doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-24T10:25:31.677203" elapsed="0.009692"/>
-</kw>
-<kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
-<arg>${SIGNUP_PASSWORD_INPUT}</arg>
-<arg>timeout=10s</arg>
-<doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-24T10:25:31.687204" elapsed="0.008750"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:31.696580" level="INFO">Typing text 'szabo' into text field '//*[@id="app"]/main/div/div[2]/form/input[2]'.</msg>
-<arg>${SIGNUP_LASTNAME_INPUT}</arg>
-<arg>${INVALID_LASTNAME}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:31.696271" elapsed="0.088316"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:31.786719" level="INFO">Typing text 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' into text field '//*[@id="app"]/main/div/div[2]/form/input[1]'.</msg>
-<arg>${SIGNUP_FIRSTNAME_INPUT}</arg>
-<arg>${INVALID_FIRSTNAME}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:31.786064" elapsed="0.216189"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:32.002983" level="INFO">Typing text 'szabo@gmail.com' into text field '//*[@id="app"]/main/div/div[2]/form/input[3]'.</msg>
-<arg>${SIGNUP_EMAIL_INPUT}</arg>
-<arg>${INVALID_EMAIL}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:32.002565" elapsed="0.064356"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:32.067647" level="INFO">Typing text 'szabo' into text field '//*[@id="app"]/main/div/div[2]/form/input[4]'.</msg>
-<arg>${SIGNUP_PASSWORD_INPUT}</arg>
-<arg>${INVALID_PASS}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:32.067330" elapsed="0.048837"/>
-</kw>
-<kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:32.116780" level="INFO">Typing text 'szabo' into text field '//*[@id="app"]/main/div/div[2]/form/input[5]'.</msg>
-<arg>${SIGNUP_PASSWORD_AGAIN_INPUT}</arg>
-<arg>${INVALID_PASS}</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:32.116460" elapsed="0.051891"/>
-</kw>
-<kw name="Click Button" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:32.169106" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/form/button'.</msg>
-<arg>${SIGNUP_BUTTON}</arg>
-<doc>Clicks the button identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-24T10:25:32.168695" elapsed="0.062348"/>
-</kw>
-<kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-24T10:25:34.232024" level="INFO">Slept 2 seconds.</msg>
-<arg>2s</arg>
-<doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-24T10:25:32.231365" elapsed="2.000946"/>
-</kw>
-<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
-<msg time="2026-02-24T10:25:34.381196" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-6.png"&gt;&lt;img src="selenium-screenshot-6.png" width="800px"&gt;&lt;/a&gt;</msg>
-<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
-<status status="PASS" start="2026-02-24T10:25:34.232854" elapsed="0.148538"/>
-</kw>
-<kw name="Close Browser" owner="SeleniumLibrary" type="TEARDOWN">
-<doc>Closes the current browser.</doc>
-<status status="PASS" start="2026-02-24T10:25:34.381780" elapsed="2.202028"/>
-</kw>
-<doc>Érvénytelen jelszóval való regisztráció</doc>
-<status status="PASS" start="2026-02-24T10:25:28.785448" elapsed="7.799393"/>
-</test>
-<doc>Regisztráció tesztelése</doc>
-<status status="PASS" start="2026-02-24T10:25:18.899297" elapsed="17.701396"/>
+<doc>Menükészítő tesztelése</doc>
+<status status="PASS" start="2026-02-25T10:24:50.597882" elapsed="20.240830"/>
 </suite>
-<status status="PASS" start="2026-02-24T10:25:18.895370" elapsed="17.727847"/>
+<status status="PASS" start="2026-02-25T10:24:50.595752" elapsed="20.247274"/>
 </suite>
-<status status="PASS" start="2026-02-24T10:25:18.887363" elapsed="17.746445"/>
+<status status="PASS" start="2026-02-25T10:24:50.593051" elapsed="20.260418"/>
 </suite>
-<status status="PASS" start="2026-02-24T10:25:18.877613" elapsed="17.760900"/>
+<status status="PASS" start="2026-02-25T10:24:50.587628" elapsed="20.270401"/>
 </suite>
-<status status="PASS" start="2026-02-24T10:25:18.844398" elapsed="17.801728"/>
+<status status="PASS" start="2026-02-25T10:24:50.565111" elapsed="20.296431"/>
 </suite>
 <statistics>
 <total>
-<stat pass="2" fail="0" skip="0">All Tests</stat>
+<stat pass="1" fail="0" skip="0">All Tests</stat>
 </total>
 <tag>
 </tag>
 <suite>
-<stat name="13 S1 1 vizsgaremek" id="s1" pass="2" fail="0" skip="0">13 S1 1 vizsgaremek</stat>
-<stat name="Tesztelés" id="s1-s1" pass="2" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés</stat>
-<stat name="Robot Tests" id="s1-s1-s1" pass="2" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés.Robot Tests</stat>
-<stat name="Tests" id="s1-s1-s1-s1" pass="2" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés.Robot Tests.Tests</stat>
-<stat name="Regisztracio" id="s1-s1-s1-s1-s1" pass="2" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés.Robot Tests.Tests.Regisztracio</stat>
+<stat name="13 S1 1 vizsgaremek" id="s1" pass="1" fail="0" skip="0">13 S1 1 vizsgaremek</stat>
+<stat name="Tesztelés" id="s1-s1" pass="1" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés</stat>
+<stat name="Robot Tests" id="s1-s1-s1" pass="1" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés.Robot Tests</stat>
+<stat name="Tests" id="s1-s1-s1-s1" pass="1" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés.Robot Tests.Tests</stat>
+<stat name="Menuszerkesztes" id="s1-s1-s1-s1-s1" pass="1" fail="0" skip="0">13 S1 1 vizsgaremek.Tesztelés.Robot Tests.Tests.Menuszerkesztes</stat>
 </suite>
 </statistics>
 <errors>
