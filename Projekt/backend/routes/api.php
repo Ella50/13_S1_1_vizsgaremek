@@ -84,6 +84,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [UserController::class, 'profile']);
         Route::put('/update', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);
+        Route::post('/documents', [DocumentController::class, 'store']);
+        Route::get('/documents/{document}/download', [DocumentController::class, 'download']) //User sajátját tölti le
+        ->middleware('can:view,document');
+        Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])
+        ->middleware('can:delete,document');
 
 
         Route::get('/health', [UserHealthController::class, 'getUserHealthData']);
@@ -147,6 +152,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show']);
         Route::post('/invoices/generate-month', [AdminInvoiceController::class, 'generateMonth']);
         Route::get('/invoices/{invoice}/pdf', [AdminInvoiceController::class, 'downloadPdf']);
+
+
+        //Dokuments
+        Route::get('/admin/documents', [DocumentController::class, 'index']);
+        Route::get('/admin/documents/{document}/download', [DocumentController::class, 'adminDownload']);
     });
     
     // Konyha
