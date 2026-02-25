@@ -14,6 +14,7 @@ use App\Http\Controllers\AdminRfidController;
 use App\Http\Controllers\LunchTimeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Api\UserHealthController;
+use App\Http\Controllers\Api\DocumentController;
 use App\Models\User;
 use App\Http\Controllers\AdminInvoiceController;
 
@@ -85,6 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);
         Route::post('/documents', [DocumentController::class, 'store']);
+         Route::get('/documents', [DocumentController::class, 'myDocuments']);
         Route::get('/documents/{document}/download', [DocumentController::class, 'download']) //User sajátját tölti le
         ->middleware('can:view,document');
         Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])
