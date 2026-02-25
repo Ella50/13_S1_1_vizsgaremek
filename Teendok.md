@@ -52,6 +52,7 @@
 -Dokumentáció: táblázat(log) + képernyőképek + teszt adatok kiírása
 
 (
+    pip install robotframework-seleniumlibrary
     Robotframework használat: python -m robot --outputdir results tests\bejelentkezes.robot
 )
 

@@ -100,6 +100,32 @@ class User extends Authenticatable
                     ->wherePivotNotNull('allergen_id');
     }
 
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
+    }
+
+    // Helper metódusok a dokumentumok típus szerinti lekéréséhez
+    public function getDiscountDocument()
+    {
+        return $this->documents()->where('type', 'discount')->latest()->first();
+    }
+
+    public function getDiabetesDocument()
+    {
+        return $this->documents()->where('type', 'diabetes')->latest()->first();
+    }
+
+    public function hasDiscountDocument()
+    {
+        return $this->documents()->where('type', 'discount')->exists();
+    }
+
+    public function hasDiabetesDocument()
+    {
+        return $this->documents()->where('type', 'diabetes')->exists();
+    }
+
 
 
 
