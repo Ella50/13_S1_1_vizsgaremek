@@ -29,6 +29,8 @@ class Price extends Model
         'validTo' => 'date',
         'amount' => 'decimal:2'
     ];
+    
+    public $timestamps = false;
 
     /**
      * Kapcsolat a rendelésekkel
