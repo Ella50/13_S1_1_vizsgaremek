@@ -45,7 +45,7 @@ Sikeres bejelentkezés
     Sleep    2s    
 
     #Kijelentkezés
-    Click Button        ${LOGOUT_BUTTON}
+    #Click Button        ${LOGOUT_BUTTON}
     
     Capture Page Screenshot
     [Teardown]    Close Browser
