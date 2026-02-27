@@ -1,0 +1,4094 @@
+{
+  "info": {
+    "_postman_id": "ac9eb194-fc2c-4fe6-8327-58f6c1af9d0f",
+    "name": "2026_02_25_131507_laravel_collection.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52647820",
+    "_collection_link": "https://go.postman.co/collection/52647820-ac9eb194-fc2c-4fe6-8327-58f6c1af9d0f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "api/register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/register?lastName=Teszt&firstName=Janos&county_id=5&city_id=3&email=teszt.janos@gmail.com&password=teszt&password_confirmation=teszt&userType=Tanuló&address=Béke utca 3",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "register"
+          ],
+          "query": [
+            {
+              "key": "lastName",
+              "value": "Teszt",
+              "type": "text"
+            },
+            {
+              "key": "firstName",
+              "value": "Janos",
+              "type": "text"
+            },
+            {
+              "key": "county_id",
+              "value": "5",
+              "type": "text"
+            },
+            {
+              "key": "city_id",
+              "value": "3",
+              "type": "text"
+            },
+            {
+              "key": "email",
+              "value": "teszt.janos@gmail.com",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "teszt",
+              "type": "text"
+            },
+            {
+              "key": "password_confirmation",
+              "value": "teszt",
+              "type": "text"
+            },
+            {
+              "key": "userType",
+              "value": "Tanuló",
+              "type": "text"
+            },
+            {
+              "key": "address",
+              "value": "Béke utca 3",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_regisztracio",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/register?lastName=Teszt&firstName=Janos&county_id=5&city_id=3&email=teszt.janos@iskola.hu&password=teszt1234&password_confirmation=teszt1234&userType=Tanuló&address=Béke utca 3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "lastName",
+                  "value": "Teszt",
+                  "type": "text"
+                },
+                {
+                  "key": "firstName",
+                  "value": "Janos",
+                  "type": "text"
+                },
+                {
+                  "key": "county_id",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "city_id",
+                  "value": "3",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "teszt.janos@iskola.hu",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "teszt1234",
+                  "type": "text"
+                },
+                {
+                  "key": "password_confirmation",
+                  "value": "teszt1234",
+                  "type": "text"
+                },
+                {
+                  "key": "userType",
+                  "value": "Tanuló",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "Béke utca 3",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.30"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 25 Feb 2026 14:07:53 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"user\": {\n        \"id\": 8,\n        \"firstName\": \"Janos\",\n        \"lastName\": \"Teszt\",\n        \"email\": \"teszt.janos@iskola.hu\",\n        \"userType\": \"Tanuló\",\n        \"userStatus\": \"inactive\"\n    },\n    \"token\": \"1|licveJAd7ROS5YlrQmNHgwKf1zlHEswnqcrOFwFr8467b9e5\",\n    \"message\": \"Regisztráció sikeres. Várja az admin jóváhagyását.\"\n}"
+        },
+        {
+          "name": "sikertelen_regisztracio",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/register?lastName=Teszt&firstName=Janos&county_id=5&city_id=3&email=teszt.janos@gmail.com&password=teszt&password_confirmation=teszt&userType=Tanuló&address=Béke utca 3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "lastName",
+                  "value": "Teszt",
+                  "type": "text"
+                },
+                {
+                  "key": "firstName",
+                  "value": "Janos",
+                  "type": "text"
+                },
+                {
+                  "key": "county_id",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "city_id",
+                  "value": "3",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "teszt.janos@gmail.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "teszt",
+                  "type": "text"
+                },
+                {
+                  "key": "password_confirmation",
+                  "value": "teszt",
+                  "type": "text"
+                },
+                {
+                  "key": "userType",
+                  "value": "Tanuló",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "Béke utca 3",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "status": "Unprocessable Content",
+          "code": 422,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.30"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 25 Feb 2026 14:08:56 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"errors\": {\n        \"password\": [\n            \"The password field must be at least 8 characters.\"\n        ]\n    },\n    \"message\": \"Validációs hiba\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/cities/by-countyReg/{county_id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/cities/by-countyReg/:county_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cities",
+            "by-countyReg",
+            ":county_id"
+          ],
+          "variable": [
+            {
+              "key": "county_id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/countiesReg",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/countiesReg",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "countiesReg"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/cities/searchReg",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/cities/searchReg",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cities",
+            "searchReg"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "try {\r",
+              "    const response = pm.response.json();\r",
+              "    \r",
+              "    if (response.token) {\r",
+              "        pm.environment.set(\"auth_token\", response.token);\r",
+              "        pm.collectionVariables.set(\"auth_token\", response.token);\r",
+              "        console.log(\"Token elmentve:\", response.token.substring(0, 20) + \"...\");\r",
+              "        \r",
+              "        pm.test(\"Token saved successfully\", function() {\r",
+              "            pm.expect(response.token).to.not.be.empty;\r",
+              "        });\r",
+              "    } else {\r",
+              "        console.log(\"❌ Nincs token a válaszban\");\r",
+              "\r",
+              "    }\r",
+              "    \r",
+              "    if (response.user) {\r",
+              "        pm.environment.set(\"user_id\", response.user.id);\r",
+              "        pm.environment.set(\"user_type\", response.user.userType);\r",
+              "        \r",
+              "        if (response.user.userType === \"Admin\") {\r",
+              "            pm.test(\"Admin user authenticated\", function() {\r",
+              "                pm.expect(response.user.userType).to.equal(\"Admin\");\r",
+              "            });\r",
+              "        }\r",
+              "    }\r",
+              "    \r",
+              "    // Alap tesztek\r",
+              "    pm.test(\"Login successful\", function() {\r",
+              "        pm.expect(pm.response.code).to.equal(200);\r",
+              "    });\r",
+              "    \r",
+              "    if (response.success !== undefined) {\r",
+              "        pm.test(\"Success field exists\", function() {\r",
+              "            pm.expect(response.success).to.be.true;\r",
+              "        });\r",
+              "    }\r",
+              "    \r",
+              "} catch (e) {\r",
+              "    console.error(\"Hiba:\", e);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/login?email={{admin_e}}&password={{admin_p}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "login"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "{{admin_e}}"
+            },
+            {
+              "key": "password",
+              "value": "{{admin_p}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_bejelentkezes",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/login?email={{admin_e}}&password={{admin_p}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{admin_e}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_p}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.30"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 25 Feb 2026 13:52:47 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"user\": {\n        \"id\": 1,\n        \"firstName\": \"Admin\",\n        \"lastName\": \"Felhasználó\",\n        \"email\": \"admin@iskola.hu\",\n        \"userType\": \"Admin\",\n        \"userStatus\": \"active\"\n    },\n    \"token\": \"4|5IzYJf1wJ9eFIHwXbW5KkrETPsVGh6bp8oF1xNIk57bd568a\"\n}"
+        },
+        {
+          "name": "sikertelen_bejelentkezes_hibasadatok",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/login?email=fazekas.bela@iskola.hu&password=fazbela",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "fazekas.bela@iskola.hu"
+                },
+                {
+                  "key": "password",
+                  "value": "fazbela"
+                }
+              ]
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.30"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 25 Feb 2026 13:54:51 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": false,\n    \"message\": \"Hibás bejelentkezési adatok\"\n}"
+        },
+        {
+          "name": "sikertelen_bejelentkezes_inaktivuser",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/login?email=kiss.erika@iskola.hu&password=tanulo456",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "kiss.erika@iskola.hu"
+                },
+                {
+                  "key": "password",
+                  "value": "tanulo456"
+                }
+              ]
+            }
+          },
+          "status": "Forbidden",
+          "code": 403,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.30"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 25 Feb 2026 13:58:03 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": false,\n    \"message\": \"Felhasználó nincs aktiválva. Várja az admin jóváhagyását.\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/allergens",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/allergens",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "allergens"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "api/allergens",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/allergens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "allergens"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.30"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 25 Feb 2026 13:59:41 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "[\n    {\n        \"id\": 8,\n        \"allergenName\": \"Diófélék\",\n        \"icon\": \"allergens/diofelek.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/diofelek.png\"\n    },\n    {\n        \"id\": 5,\n        \"allergenName\": \"Földimogyoró\",\n        \"icon\": \"allergens/foldiMogyoro.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/foldiMogyoro.png\"\n    },\n    {\n        \"id\": 1,\n        \"allergenName\": \"Glutén\",\n        \"icon\": \"allergens/gluten.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/gluten.png\"\n    },\n    {\n        \"id\": 4,\n        \"allergenName\": \"Hal\",\n        \"icon\": \"allergens/hal.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/hal.png\"\n    },\n    {\n        \"id\": 11,\n        \"allergenName\": \"Kukorica\",\n        \"icon\": \"allergens/kukorica.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/kukorica.png\"\n    },\n    {\n        \"id\": 10,\n        \"allergenName\": \"Mustár\",\n        \"icon\": \"allergens/mustar.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/mustar.png\"\n    },\n    {\n        \"id\": 2,\n        \"allergenName\": \"Rákfélék\",\n        \"icon\": \"allergens/rakfelek.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/rakfelek.png\"\n    },\n    {\n        \"id\": 6,\n        \"allergenName\": \"Szójabab\",\n        \"icon\": \"allergens/szoja.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/szoja.png\"\n    },\n    {\n        \"id\": 7,\n        \"allergenName\": \"Tej\",\n        \"icon\": \"allergens/tej.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/tej.png\"\n    },\n    {\n        \"id\": 3,\n        \"allergenName\": \"Tojás\",\n        \"icon\": \"allergens/tojas.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/tojas.png\"\n    },\n    {\n        \"id\": 9,\n        \"allergenName\": \"Zeller\",\n        \"icon\": \"allergens/celery.png\",\n        \"icon_url\": \"http://localhost:8000/storage/allergens/celery.png\"\n    }\n]"
+        }
+      ]
+    },
+    {
+      "name": "api/menu/available-dates",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/menu/available-dates",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "menu",
+            "available-dates"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/menu/existing-dates",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/menu/existing-dates",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "menu",
+            "existing-dates"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/menu/{date}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/menu/:date",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "menu",
+            ":date"
+          ],
+          "variable": [
+            {
+              "key": "date"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/menu",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/menu",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "menu"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/menu/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/menu/:id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "menu",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/menu/today",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/menu/today",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "menu",
+            "today"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/menu/week",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/menu/week",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "menu",
+            "week"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/logout",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "logout"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/rfid/latest-scan",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/rfid/latest-scan",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "rfid",
+            "latest-scan"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/users/{id}/rfid/assign",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users/:id/rfid/assign",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users",
+            ":id",
+            "rfid",
+            "assign"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/rfid/latest-scan",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/rfid/latest-scan",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "rfid",
+            "latest-scan"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/lunchtime/verify",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/lunchtime/verify",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "lunchtime",
+            "verify"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/lunchtime/consume",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/lunchtime/consume",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "lunchtime",
+            "consume"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/invoices",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/invoices",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "invoices"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/invoices/{invoice}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/invoices/:invoice",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "invoices",
+            ":invoice"
+          ],
+          "variable": [
+            {
+              "key": "invoice"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/me",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/update",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "update"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/documents",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/documents",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "documents"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/documents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/documents",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "documents"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/documents/{document}/download",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/documents/:document/download",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "documents",
+            ":document",
+            "download"
+          ],
+          "variable": [
+            {
+              "key": "document"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/documents/{document}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/documents/:document",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "documents",
+            ":document"
+          ],
+          "variable": [
+            {
+              "key": "document"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/allergens",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/allergens",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "allergens"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/allergens",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/allergens?allergen_id=3",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "allergens"
+          ],
+          "query": [
+            {
+              "key": "allergen_id",
+              "value": "3",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "allergia hozzáadás",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/allergens?allergen_id=3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "allergens"
+              ],
+              "query": [
+                {
+                  "key": "allergen_id",
+                  "value": "3",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 14:59:49 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"message\": \"Allergén hozzáadva\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/user/allergens/{id}",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/allergens/3",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "allergens",
+            "3"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "allergia törlése",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/allergens/3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "allergens",
+                "3"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:01:05 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"message\": \"Allergén eltávolítva\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/user/diabetes",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/diabetes",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "diabetes"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/personal-orders",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/personal-orders/{order}/update-option",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders/:order/update-option?selectedOption=B",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders",
+            ":order",
+            "update-option"
+          ],
+          "query": [
+            {
+              "key": "selectedOption",
+              "value": "B",
+              "type": "text"
+            }
+          ],
+          "variable": [
+            {
+              "key": "order",
+              "value": "7"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_rendeles_modositas",
+          "originalRequest": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/personal-orders/:order/update-option?selectedOption=B",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "personal-orders",
+                ":order",
+                "update-option"
+              ],
+              "query": [
+                {
+                  "key": "selectedOption",
+                  "value": "B",
+                  "type": "text"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "order",
+                  "value": "7"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:17:25 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Opció sikeresen módosítva!\",\n    \"data\": {\n        \"id\": 7,\n        \"user_id\": 1,\n        \"menuItems_id\": 3,\n        \"orderDate\": \"2026-03-02T00:00:00.000000Z\",\n        \"selectedOption\": \"B\",\n        \"orderStatus\": \"Rendelve\",\n        \"invoice_id\": null,\n        \"price_id\": 7,\n        \"cancelledAt\": null,\n        \"created_at\": \"2026-02-26T15:15:39.000000Z\",\n        \"updated_at\": \"2026-02-26T15:17:25.000000Z\",\n        \"menu_item\": {\n            \"id\": 3,\n            \"soup\": 8,\n            \"optionA\": 9,\n            \"optionB\": 2,\n            \"other\": null,\n            \"day\": \"2026-03-02T00:00:00.000000Z\",\n            \"created_at\": \"2026-02-26T14:54:18.000000Z\",\n            \"updated_at\": \"2026-02-26T14:54:18.000000Z\"\n        },\n        \"price\": {\n            \"id\": 7,\n            \"userType\": \"Admin\",\n            \"priceCategory\": \"Normál\",\n            \"amount\": \"450.00\",\n            \"validFrom\": \"2026-02-26T00:00:00.000000Z\",\n            \"validTo\": null\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/user/personal-orders/date/{date}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders/date/:date",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders",
+            "date",
+            ":date"
+          ],
+          "variable": [
+            {
+              "key": "date"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/personal-orders/available-dates",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders/available-dates",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders",
+            "available-dates"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/personal-orders/available-months",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders/available-months",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders",
+            "available-months"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/personal-orders/month/{year}/{month}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders/month/:year/:month",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders",
+            "month",
+            ":year",
+            ":month"
+          ],
+          "variable": [
+            {
+              "key": "year"
+            },
+            {
+              "key": "month"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sikeres_rendeles",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders?date=2026-03-02&menuitems_id=3&selectedOption=A",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders"
+          ],
+          "query": [
+            {
+              "key": "date",
+              "value": "2026-03-02",
+              "type": "text"
+            },
+            {
+              "key": "menuitems_id",
+              "value": "3",
+              "type": "text"
+            },
+            {
+              "key": "selectedOption",
+              "value": "A",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikertelen_rendeles",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/personal-orders?date=2026-02-27&menuitems_id=1&selectedOption=A",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "personal-orders"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-02-27",
+                  "type": "text"
+                },
+                {
+                  "key": "menuitems_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "selectedOption",
+                  "value": "A",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:08:04 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": false,\n    \"message\": \"A rendelési határidő lejárt erre a napra.\",\n    \"deadline\": \"2026-02-25 10:00:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/user/personal-orders/{order}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders/:order",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders",
+            ":order"
+          ],
+          "variable": [
+            {
+              "key": "order"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/user/personal-orders/{order}/cancel",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/user/personal-orders/:order/cancel",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "personal-orders",
+            ":order",
+            "cancel"
+          ],
+          "variable": [
+            {
+              "key": "order"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/users/bulk-status",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users/bulk-status",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users",
+            "bulk-status"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/users/{user}/status",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users/:user/status?userStatus=active",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users",
+            ":user",
+            "status"
+          ],
+          "query": [
+            {
+              "key": "userStatus",
+              "value": "active",
+              "type": "text"
+            }
+          ],
+          "variable": [
+            {
+              "key": "user",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_statuszvaltas",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/:user/status?userStatus=active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                ":user",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "userStatus",
+                  "value": "active",
+                  "type": "text"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:19:27 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Felhasználó státusza frissítve\",\n    \"user\": {\n        \"id\": 3,\n        \"firstName\": \"Nagy\",\n        \"lastName\": \"Anna\",\n        \"thirdName\": null,\n        \"city_id\": 3,\n        \"address\": \"Tanár utca 3.\",\n        \"email\": \"nagy.anna@iskola.hu\",\n        \"userType\": \"Tanár\",\n        \"rfidCard_id\": null,\n        \"class_id\": null,\n        \"group_id\": null,\n        \"userStatus\": \"active\",\n        \"hasDiscount\": false,\n        \"hasDiabetes\": false,\n        \"created_at\": \"2026-02-26T14:54:16.000000Z\",\n        \"updated_at\": \"2026-02-26T14:54:16.000000Z\"\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/admin/users/{user}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users/:user",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users",
+            ":user"
+          ],
+          "variable": [
+            {
+              "key": "user"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/users/{user}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users/:user",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users",
+            ":user"
+          ],
+          "variable": [
+            {
+              "key": "user"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/users/{user}",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users/:user",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users",
+            ":user"
+          ],
+          "variable": [
+            {
+              "key": "user",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/counties",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/counties",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "counties"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/cities/by-county/{county_id}",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/cities/by-county/:county_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "cities",
+            "by-county",
+            ":county_id"
+          ],
+          "variable": [
+            {
+              "key": "county_id",
+              "value": "7"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_varosok_megye_szerint",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/cities/by-county/:county_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "cities",
+                "by-county",
+                ":county_id"
+              ],
+              "variable": [
+                {
+                  "key": "county_id",
+                  "value": "7"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:26:31 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": 14,\n            \"cityName\": \"Abony\",\n            \"zipCode\": \"2740\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 17,\n            \"cityName\": \"Acsa\",\n            \"zipCode\": \"2683\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 42,\n            \"cityName\": \"Albertirsa\",\n            \"zipCode\": \"2730\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 59,\n            \"cityName\": \"Alsónémedi\",\n            \"zipCode\": \"2351\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 85,\n            \"cityName\": \"Apaj\",\n            \"zipCode\": \"2345\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 91,\n            \"cityName\": \"Áporka\",\n            \"zipCode\": \"2338\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 105,\n            \"cityName\": \"Aszód\",\n            \"zipCode\": \"2170\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 128,\n            \"cityName\": \"Bag\",\n            \"zipCode\": \"2191\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 284,\n            \"cityName\": \"Bénye\",\n            \"zipCode\": \"2216\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 302,\n            \"cityName\": \"Bernecebaráti\",\n            \"zipCode\": \"2639\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 315,\n            \"cityName\": \"Biatorbágy\",\n            \"zipCode\": \"2051\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 411,\n            \"cityName\": \"Budajenő\",\n            \"zipCode\": \"2093\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 412,\n            \"cityName\": \"Budakalász\",\n            \"zipCode\": \"2011\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 413,\n            \"cityName\": \"Budakeszi\",\n            \"zipCode\": \"2092\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 414,\n            \"cityName\": \"Budaörs\",\n            \"zipCode\": \"2040\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 417,\n            \"cityName\": \"Bugyi\",\n            \"zipCode\": \"2347\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 439,\n            \"cityName\": \"Cegléd\",\n            \"zipCode\": \"2738\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 440,\n            \"cityName\": \"Cegléd\",\n            \"zipCode\": \"2700\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 441,\n            \"cityName\": \"Ceglédbercel\",\n            \"zipCode\": \"2737\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 488,\n            \"cityName\": \"Csemő\",\n            \"zipCode\": \"2713\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 518,\n            \"cityName\": \"Csévharaszt\",\n            \"zipCode\": \"2212\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 528,\n            \"cityName\": \"Csobánka\",\n            \"zipCode\": \"2014\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 535,\n            \"cityName\": \"Csokvaomány\",\n            \"zipCode\": \"3647\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 552,\n            \"cityName\": \"Csörnyeföld\",\n            \"zipCode\": \"8873\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 557,\n            \"cityName\": \"Csővár\",\n            \"zipCode\": \"2615\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 561,\n            \"cityName\": \"Dabas\",\n            \"zipCode\": \"2373\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 562,\n            \"cityName\": \"Dabas\",\n            \"zipCode\": \"2371\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 563,\n            \"cityName\": \"Dabas\",\n            \"zipCode\": \"2370\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 572,\n            \"cityName\": \"Dánszentmiklós\",\n            \"zipCode\": \"2735\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 573,\n            \"cityName\": \"Dány\",\n            \"zipCode\": \"2118\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 603,\n            \"cityName\": \"Délegyháza\",\n            \"zipCode\": \"2337\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 617,\n            \"cityName\": \"Diósd\",\n            \"zipCode\": \"2049\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 632,\n            \"cityName\": \"Domaszék\",\n            \"zipCode\": \"6781\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 644,\n            \"cityName\": \"Dorog\",\n            \"zipCode\": \"2510\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 668,\n            \"cityName\": \"Dunabogdány\",\n            \"zipCode\": \"2023\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 672,\n            \"cityName\": \"Dunaharaszti\",\n            \"zipCode\": \"2330\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 673,\n            \"cityName\": \"Dunakeszi\",\n            \"zipCode\": \"2120\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 687,\n            \"cityName\": \"Dunavarsány\",\n            \"zipCode\": \"2336\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 698,\n            \"cityName\": \"Ecser\",\n            \"zipCode\": \"2233\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 750,\n            \"cityName\": \"Érd\",\n            \"zipCode\": \"2036\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 751,\n            \"cityName\": \"Érd\",\n            \"zipCode\": \"2035\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 752,\n            \"cityName\": \"Érd\",\n            \"zipCode\": \"2030\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 755,\n            \"cityName\": \"Erdőkertes\",\n            \"zipCode\": \"2113\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 788,\n            \"cityName\": \"Farmos\",\n            \"zipCode\": \"2765\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 817,\n            \"cityName\": \"Felsőpakony\",\n            \"zipCode\": \"2363\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 852,\n            \"cityName\": \"Fonyód\",\n            \"zipCode\": \"8640\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 885,\n            \"cityName\": \"Galgagyörk\",\n            \"zipCode\": \"2681\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 886,\n            \"cityName\": \"Galgahévíz\",\n            \"zipCode\": \"2193\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 887,\n            \"cityName\": \"Galgamácsa\",\n            \"zipCode\": \"2183\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 935,\n            \"cityName\": \"Gödöllő\",\n            \"zipCode\": \"2100\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 940,\n            \"cityName\": \"Golop\",\n            \"zipCode\": \"3906\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 941,\n            \"cityName\": \"Gomba\",\n            \"zipCode\": \"2217\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 942,\n            \"cityName\": \"Gombosszeg\",\n            \"zipCode\": \"8984\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 958,\n            \"cityName\": \"Gyál\",\n            \"zipCode\": \"2360\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 971,\n            \"cityName\": \"Gyöngyfa\",\n            \"zipCode\": \"7954\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1044,\n            \"cityName\": \"Halásztelek\",\n            \"zipCode\": \"2314\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1091,\n            \"cityName\": \"Herceghalom\",\n            \"zipCode\": \"2053\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1100,\n            \"cityName\": \"Hernád\",\n            \"zipCode\": \"2376\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1120,\n            \"cityName\": \"Hévízgyörk\",\n            \"zipCode\": \"2192\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1172,\n            \"cityName\": \"Iklad\",\n            \"zipCode\": \"2181\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1182,\n            \"cityName\": \"Inárcs\",\n            \"zipCode\": \"2365\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1185,\n            \"cityName\": \"Ipolydamásd\",\n            \"zipCode\": \"2631\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1187,\n            \"cityName\": \"Ipolytölgyes\",\n            \"zipCode\": \"2633\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1191,\n            \"cityName\": \"Isaszeg\",\n            \"zipCode\": \"2117\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1235,\n            \"cityName\": \"Jászkarajenő\",\n            \"zipCode\": \"2746\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1257,\n            \"cityName\": \"Kakucs\",\n            \"zipCode\": \"2366\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1312,\n            \"cityName\": \"Kartal\",\n            \"zipCode\": \"2173\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1322,\n            \"cityName\": \"Káva\",\n            \"zipCode\": \"2215\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1346,\n            \"cityName\": \"Kemence\",\n            \"zipCode\": \"2638\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1373,\n            \"cityName\": \"Kerepes\",\n            \"zipCode\": \"2145\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1374,\n            \"cityName\": \"Kerepes\",\n            \"zipCode\": \"2144\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1455,\n            \"cityName\": \"Kiskunlacháza\",\n            \"zipCode\": \"2340\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1464,\n            \"cityName\": \"Kismaros\",\n            \"zipCode\": \"2623\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1467,\n            \"cityName\": \"Kisnémedi\",\n            \"zipCode\": \"2165\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1469,\n            \"cityName\": \"Kisoroszi\",\n            \"zipCode\": \"2024\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1486,\n            \"cityName\": \"Kistarcsa\",\n            \"zipCode\": \"2143\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1503,\n            \"cityName\": \"Kocs\",\n            \"zipCode\": \"2898\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1506,\n            \"cityName\": \"Kocsola\",\n            \"zipCode\": \"7212\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1531,\n            \"cityName\": \"Kompolt\",\n            \"zipCode\": \"3356\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1532,\n            \"cityName\": \"Kondó\",\n            \"zipCode\": \"3775\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1559,\n            \"cityName\": \"Kőszegpaty\",\n            \"zipCode\": \"9739\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1622,\n            \"cityName\": \"Leányfalu\",\n            \"zipCode\": \"2016\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1642,\n            \"cityName\": \"Letkés\",\n            \"zipCode\": \"2632\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1660,\n            \"cityName\": \"Lónya\",\n            \"zipCode\": \"4836\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1683,\n            \"cityName\": \"Maglód\",\n            \"zipCode\": \"2234\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1715,\n            \"cityName\": \"Majosháza\",\n            \"zipCode\": \"2339\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1717,\n            \"cityName\": \"Makád\",\n            \"zipCode\": \"2322\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1740,\n            \"cityName\": \"Márianosztra\",\n            \"zipCode\": \"2629\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1793,\n            \"cityName\": \"Mende\",\n            \"zipCode\": \"2235\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1838,\n            \"cityName\": \"Mikebuda\",\n            \"zipCode\": \"2736\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1876,\n            \"cityName\": \"Mőcsény\",\n            \"zipCode\": \"7163\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1889,\n            \"cityName\": \"Monok\",\n            \"zipCode\": \"3905\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1890,\n            \"cityName\": \"Monor\",\n            \"zipCode\": \"2213\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1936,\n            \"cityName\": \"Nagybörzsöny\",\n            \"zipCode\": \"2634\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1970,\n            \"cityName\": \"Nagykáta\",\n            \"zipCode\": \"2760\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1976,\n            \"cityName\": \"Nagykónyi\",\n            \"zipCode\": \"7092\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1980,\n            \"cityName\": \"Nagykovácsi\",\n            \"zipCode\": \"2094\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 1990,\n            \"cityName\": \"Nagymaros\",\n            \"zipCode\": \"2626\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2014,\n            \"cityName\": \"Nagytarcsa\",\n            \"zipCode\": \"2142\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2088,\n            \"cityName\": \"Nyáregyháza\",\n            \"zipCode\": \"2723\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2090,\n            \"cityName\": \"Nyársapát\",\n            \"zipCode\": \"2712\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2147,\n            \"cityName\": \"Öcs\",\n            \"zipCode\": \"8292\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2211,\n            \"cityName\": \"Oszkó\",\n            \"zipCode\": \"9825\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2217,\n            \"cityName\": \"Ózd\",\n            \"zipCode\": \"3604\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2251,\n            \"cityName\": \"Pánd\",\n            \"zipCode\": \"2214\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2287,\n            \"cityName\": \"Páty\",\n            \"zipCode\": \"2071\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2291,\n            \"cityName\": \"Pécel\",\n            \"zipCode\": \"2119\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2319,\n            \"cityName\": \"Penc\",\n            \"zipCode\": \"2614\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2324,\n            \"cityName\": \"Perbál\",\n            \"zipCode\": \"2074\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2333,\n            \"cityName\": \"Perőcsény\",\n            \"zipCode\": \"2637\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2336,\n            \"cityName\": \"Péteri\",\n            \"zipCode\": \"2209\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2349,\n            \"cityName\": \"Pilis\",\n            \"zipCode\": \"2721\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2350,\n            \"cityName\": \"Pilisborosjenő\",\n            \"zipCode\": \"2097\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2351,\n            \"cityName\": \"Piliscsaba\",\n            \"zipCode\": \"2087\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2352,\n            \"cityName\": \"Piliscsaba\",\n            \"zipCode\": \"2081\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2354,\n            \"cityName\": \"Pilisjászfalu\",\n            \"zipCode\": \"2080\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2356,\n            \"cityName\": \"Pilisszántó\",\n            \"zipCode\": \"2095\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2357,\n            \"cityName\": \"Pilisszentiván\",\n            \"zipCode\": \"2084\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2358,\n            \"cityName\": \"Pilisszentkereszt\",\n            \"zipCode\": \"2099\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2359,\n            \"cityName\": \"Pilisszentkereszt\",\n            \"zipCode\": \"2098\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2360,\n            \"cityName\": \"Pilisszentlászló\",\n            \"zipCode\": \"2009\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2361,\n            \"cityName\": \"Pilisvörösvár\",\n            \"zipCode\": \"2085\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2371,\n            \"cityName\": \"Pócsmegyer\",\n            \"zipCode\": \"2017\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2381,\n            \"cityName\": \"Pölöske\",\n            \"zipCode\": \"8929\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2421,\n            \"cityName\": \"Pusztaradvány\",\n            \"zipCode\": \"3874\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2423,\n            \"cityName\": \"Pusztaszemes\",\n            \"zipCode\": \"8619\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2426,\n            \"cityName\": \"Pusztavacs\",\n            \"zipCode\": \"2378\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2429,\n            \"cityName\": \"Putnok\",\n            \"zipCode\": \"3630\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2447,\n            \"cityName\": \"Ráckeve\",\n            \"zipCode\": \"2300\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2448,\n            \"cityName\": \"Rád\",\n            \"zipCode\": \"2613\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2475,\n            \"cityName\": \"Remeteszőlős\",\n            \"zipCode\": \"2094\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2625,\n            \"cityName\": \"Sóly\",\n            \"zipCode\": \"8193\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2674,\n            \"cityName\": \"Sormás\",\n            \"zipCode\": \"8881\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2686,\n            \"cityName\": \"Sümegcsehi\",\n            \"zipCode\": \"8357\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2687,\n            \"cityName\": \"Sümegprága\",\n            \"zipCode\": \"8351\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2704,\n            \"cityName\": \"Szada\",\n            \"zipCode\": \"2111\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2758,\n            \"cityName\": \"Százhalombatta\",\n            \"zipCode\": \"2440\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2812,\n            \"cityName\": \"Szentendre\",\n            \"zipCode\": \"2000\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2832,\n            \"cityName\": \"Szentlőrinckáta\",\n            \"zipCode\": \"2255\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2834,\n            \"cityName\": \"Szentmártonkáta\",\n            \"zipCode\": \"2254\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2847,\n            \"cityName\": \"Szigetbecse\",\n            \"zipCode\": \"2321\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2848,\n            \"cityName\": \"Szigetcsép\",\n            \"zipCode\": \"2317\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2849,\n            \"cityName\": \"Szigethalom\",\n            \"zipCode\": \"2315\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2850,\n            \"cityName\": \"Szigetmonostor\",\n            \"zipCode\": \"2015\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2851,\n            \"cityName\": \"Szigetszentmárton\",\n            \"zipCode\": \"2318\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2852,\n            \"cityName\": \"Szigetszentmiklós\",\n            \"zipCode\": \"2310\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2853,\n            \"cityName\": \"Szigetújfalu\",\n            \"zipCode\": \"2319\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2871,\n            \"cityName\": \"Szob\",\n            \"zipCode\": \"2628\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2872,\n            \"cityName\": \"Szőc\",\n            \"zipCode\": \"8452\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2885,\n            \"cityName\": \"Szőlősgyörök\",\n            \"zipCode\": \"8692\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2886,\n            \"cityName\": \"Szombathely\",\n            \"zipCode\": \"9707\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2908,\n            \"cityName\": \"Táborfalva\",\n            \"zipCode\": \"2381\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2911,\n            \"cityName\": \"Tahitótfalu\",\n            \"zipCode\": \"2022\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2912,\n            \"cityName\": \"Tahitótfalu\",\n            \"zipCode\": \"2021\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2915,\n            \"cityName\": \"Taksony\",\n            \"zipCode\": \"2335\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2926,\n            \"cityName\": \"Tápióbicske\",\n            \"zipCode\": \"2764\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2927,\n            \"cityName\": \"Tápiógyörgye\",\n            \"zipCode\": \"2767\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2928,\n            \"cityName\": \"Tápióság\",\n            \"zipCode\": \"2253\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2929,\n            \"cityName\": \"Tápiószecső\",\n            \"zipCode\": \"2251\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2930,\n            \"cityName\": \"Tápiószele\",\n            \"zipCode\": \"2766\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2931,\n            \"cityName\": \"Tápiószentmárton\",\n            \"zipCode\": \"2711\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2932,\n            \"cityName\": \"Tápiószőlős\",\n            \"zipCode\": \"2769\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2955,\n            \"cityName\": \"Tárnok\",\n            \"zipCode\": \"2461\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2967,\n            \"cityName\": \"Tatárszentgyörgy\",\n            \"zipCode\": \"2375\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2975,\n            \"cityName\": \"Telki\",\n            \"zipCode\": \"2089\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 2989,\n            \"cityName\": \"Tésa\",\n            \"zipCode\": \"2635\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3002,\n            \"cityName\": \"Tinnye\",\n            \"zipCode\": \"2086\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3074,\n            \"cityName\": \"Tóalmás\",\n            \"zipCode\": \"2252\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3113,\n            \"cityName\": \"Torony\",\n            \"zipCode\": \"9791\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3114,\n            \"cityName\": \"Törtel\",\n            \"zipCode\": \"2747\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3118,\n            \"cityName\": \"Tótszentgyörgy\",\n            \"zipCode\": \"7981\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3122,\n            \"cityName\": \"Tótújfalu\",\n            \"zipCode\": \"7918\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3126,\n            \"cityName\": \"Tura\",\n            \"zipCode\": \"2194\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3142,\n            \"cityName\": \"Újhartyán\",\n            \"zipCode\": \"2367\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3148,\n            \"cityName\": \"Újlengyel\",\n            \"zipCode\": \"2724\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3158,\n            \"cityName\": \"Újszilvás\",\n            \"zipCode\": \"2768\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3170,\n            \"cityName\": \"Uraiújfalu\",\n            \"zipCode\": \"9651\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3176,\n            \"cityName\": \"Uszód\",\n            \"zipCode\": \"6332\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3177,\n            \"cityName\": \"Uzsa\",\n            \"zipCode\": \"8321\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3178,\n            \"cityName\": \"Vác\",\n            \"zipCode\": \"2600\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3179,\n            \"cityName\": \"Vácduka\",\n            \"zipCode\": \"2167\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3180,\n            \"cityName\": \"Vácegres\",\n            \"zipCode\": \"2184\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3181,\n            \"cityName\": \"Váchartyán\",\n            \"zipCode\": \"2164\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3182,\n            \"cityName\": \"Váckisújfalu\",\n            \"zipCode\": \"2185\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3183,\n            \"cityName\": \"Vácrátót\",\n            \"zipCode\": \"2163\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3184,\n            \"cityName\": \"Vácszentlászló\",\n            \"zipCode\": \"2115\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3194,\n            \"cityName\": \"Valkó\",\n            \"zipCode\": \"2114\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3201,\n            \"cityName\": \"Vámosmikola\",\n            \"zipCode\": \"2635\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3231,\n            \"cityName\": \"Vasad\",\n            \"zipCode\": \"2211\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3259,\n            \"cityName\": \"Vecsés\",\n            \"zipCode\": \"2220\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3272,\n            \"cityName\": \"Veresegyház\",\n            \"zipCode\": \"2112\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3273,\n            \"cityName\": \"Verőce\",\n            \"zipCode\": \"2621\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3275,\n            \"cityName\": \"Verseg\",\n            \"zipCode\": \"2174\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3304,\n            \"cityName\": \"Visegrád\",\n            \"zipCode\": \"2026\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3305,\n            \"cityName\": \"Visegrád\",\n            \"zipCode\": \"2025\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3386,\n            \"cityName\": \"Zebegény\",\n            \"zipCode\": \"2627\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3398,\n            \"cityName\": \"Zsámbék\",\n            \"zipCode\": \"2072\",\n            \"county_id\": 7\n        },\n        {\n            \"id\": 3399,\n            \"cityName\": \"Zsámbok\",\n            \"zipCode\": \"2116\",\n            \"county_id\": 7\n        }\n    ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/admin/cities/search",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/cities/search",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "cities",
+            "search"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/invoices",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/invoices",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "invoices"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/invoices/{invoice}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/invoices/:invoice",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "invoices",
+            ":invoice"
+          ],
+          "variable": [
+            {
+              "key": "invoice"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/invoices/generate-month",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/invoices/generate-month",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "invoices",
+            "generate-month"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/invoices/{invoice}/pdf",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/invoices/:invoice/pdf",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "invoices",
+            ":invoice",
+            "pdf"
+          ],
+          "variable": [
+            {
+              "key": "invoice"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/admin/documents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/admin/documents",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "admin",
+            "documents"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/admin/admin/documents/{document}/download",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/admin/documents/:document/download",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "admin",
+            "documents",
+            ":document",
+            "download"
+          ],
+          "variable": [
+            {
+              "key": "document"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/meals",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/meals/with-allergens",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals/with-allergens",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals",
+            "with-allergens"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/meals",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n        \"mealName\": \"Töltött káposzta\",\r\n        \"category\": \"Főétel\",\r\n        \"description\": \"Házi töltött káposzta tejföllel.\",\r\n        \"ingredients\": [\r\n            {\r\n                \"ingredient_id\": 5,\r\n                \"amount\": 100,\r\n                \"unit\": \"kg\"\r\n            },\r\n            {\r\n                \"ingredient_id\": 20,\r\n                \"amount\": 220,\r\n                \"unit\": \"g\"\r\n            }\r\n        ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals?mealName=Töltött káposzta&category=Főétel&description=Házi töltött káposzta tejföllel.&ingridient_id=6&amount=100&unit=g",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals"
+          ],
+          "query": [
+            {
+              "key": "mealName",
+              "value": "Töltött káposzta"
+            },
+            {
+              "key": "category",
+              "value": "Főétel"
+            },
+            {
+              "key": "description",
+              "value": "Házi töltött káposzta tejföllel."
+            },
+            {
+              "key": "ingridient_id",
+              "value": "6"
+            },
+            {
+              "key": "amount",
+              "value": "100"
+            },
+            {
+              "key": "unit",
+              "value": "g"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_etel_hozzadas",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n        \"mealName\": \"Töltött káposzta\",\r\n        \"category\": \"Főétel\",\r\n        \"description\": \"Házi töltött káposzta tejföllel.\",\r\n        \"ingredients\": [\r\n            {\r\n                \"ingredient_id\": 5,\r\n                \"amount\": 100,\r\n                \"unit\": \"kg\"\r\n            },\r\n            {\r\n                \"ingredient_id\": 20,\r\n                \"amount\": 220,\r\n                \"unit\": \"g\"\r\n            }\r\n        ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/meals?mealName=Töltött káposzta&category=Főétel&description=Házi töltött káposzta tejföllel.&ingridient_id=6&amount=100&unit=g",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "meals"
+              ],
+              "query": [
+                {
+                  "key": "mealName",
+                  "value": "Töltött káposzta"
+                },
+                {
+                  "key": "category",
+                  "value": "Főétel"
+                },
+                {
+                  "key": "description",
+                  "value": "Házi töltött káposzta tejföllel."
+                },
+                {
+                  "key": "ingridient_id",
+                  "value": "6"
+                },
+                {
+                  "key": "amount",
+                  "value": "100"
+                },
+                {
+                  "key": "unit",
+                  "value": "g"
+                }
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:42:11 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Étel sikeresen hozzáadva. (2 összetevő hozzáadva)\",\n    \"meal\": {\n        \"id\": 20,\n        \"mealName\": \"Töltött káposzta\",\n        \"category\": \"Főétel\",\n        \"description\": \"Házi töltött káposzta tejföllel.\",\n        \"ingredients_count\": 2,\n        \"created_at\": \"2026-02-26T15:42:11.000000Z\",\n        \"updated_at\": \"2026-02-26T15:42:11.000000Z\"\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/kitchen/meals/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals/:id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/meals/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals/:id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/meals/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals/:id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/meals/{id}/ingredients",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals/:id/ingredients",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals",
+            ":id",
+            "ingredients"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/meals/{id}/ingredients",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/meals/:id/ingredients",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "meals",
+            ":id",
+            "ingredients"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/ingredients",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/ingredients",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "ingredients"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/categories",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/categories",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "categories"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/orders",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/orders",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/orders/date/{date}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/orders/date/:date",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "orders",
+            "date",
+            ":date"
+          ],
+          "variable": [
+            {
+              "key": "date"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/orders/preparation/{date}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/orders/preparation/:date",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "orders",
+            "preparation",
+            ":date"
+          ],
+          "variable": [
+            {
+              "key": "date"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/orders/monthly-preparation/{year}/{month}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/orders/monthly-preparation/:year/:month",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "orders",
+            "monthly-preparation",
+            ":year",
+            ":month"
+          ],
+          "variable": [
+            {
+              "key": "year"
+            },
+            {
+              "key": "month"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/ingredients",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/ingredients?ingredientName=Kakukkfű&ingredientType=Fűszer&fiber=200",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "ingredients"
+          ],
+          "query": [
+            {
+              "key": "ingredientName",
+              "value": "Kakukkfű",
+              "type": "text"
+            },
+            {
+              "key": "ingredientType",
+              "value": "Fűszer",
+              "type": "text"
+            },
+            {
+              "key": "fiber",
+              "value": "200",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_hozzavalo_hozzadas",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/ingredients?ingredientName=Kakukkfű&ingredientType=Fűszer&fiber=200",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "ingredients"
+              ],
+              "query": [
+                {
+                  "key": "ingredientName",
+                  "value": "Kakukkfű",
+                  "type": "text"
+                },
+                {
+                  "key": "ingredientType",
+                  "value": "Fűszer",
+                  "type": "text"
+                },
+                {
+                  "key": "fiber",
+                  "value": "200",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:39:53 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"message\": \"Hozzávaló sikeresen létrehozva\",\n    \"data\": {\n        \"ingredientName\": \"Kakukkfű\",\n        \"ingredientType\": \"Fűszer\",\n        \"fiber\": \"200\",\n        \"id\": 46\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/kitchen/ingredients/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/ingredients/:id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "ingredients",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "api/kitchen/ingredients/{id}",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/ingredients/:id?isAvailable=0&fiber=10",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "ingredients",
+            ":id"
+          ],
+          "query": [
+            {
+              "key": "isAvailable",
+              "value": "0",
+              "type": "text"
+            },
+            {
+              "key": "fiber",
+              "value": "10",
+              "type": "text"
+            }
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "4"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikeres_hozzavalo_modositas",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/ingredients/:id?isAvailable=0&fiber=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "ingredients",
+                ":id"
+              ],
+              "query": [
+                {
+                  "key": "isAvailable",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "fiber",
+                  "value": "10",
+                  "type": "text"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:24:29 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"message\": \"Hozzávaló sikeresen frissítve\",\n    \"data\": {\n        \"id\": 4,\n        \"ingredientName\": \"Marhahús (comb)\",\n        \"ingredientType\": \"Hús\",\n        \"energy\": 250,\n        \"protein\": 26,\n        \"carbohydrate\": 0,\n        \"fat\": 15,\n        \"sodium\": 70,\n        \"sugar\": 0,\n        \"fiber\": \"10\",\n        \"isAvailable\": \"0\"\n    }\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/kitchen/ingredients/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/ingredients/:id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "ingredients",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "sikertelen_hozzavalo_torles",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/ingredients/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "ingredients",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "status": "Conflict",
+          "code": 409,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:21:33 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"message\": \"Nem törölhető, mert használatban van étel(ek)ben\",\n    \"count\": 1\n}"
+        },
+        {
+          "name": "sikeres_hozzavalo_torles",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/ingredients/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "kitchen",
+                "ingredients",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "9"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": null,
+          "header": [
+            {
+              "key": "Host",
+              "value": "localhost:8000"
+            },
+            {
+              "key": "Connection",
+              "value": "close"
+            },
+            {
+              "key": "X-Powered-By",
+              "value": "PHP/8.2.29"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, private"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 26 Feb 2026 15:22:38 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "http://localhost:5173"
+            },
+            {
+              "key": "Access-Control-Allow-Credentials",
+              "value": "true"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n    \"message\": \"Hozzávaló sikeresen törölve\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "api/kitchen/ingredients/bulk-availability",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/kitchen/ingredients/bulk-availability",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "kitchen",
+            "ingredients",
+            "bulk-availability"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
