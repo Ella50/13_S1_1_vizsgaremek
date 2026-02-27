@@ -8,7 +8,7 @@ ${LOGIN URL}        http://localhost:5173/login
 ${BROWSER}          chrome
 ${VALID_EMAIL}      admin@iskola.hu
 ${VALID_PASS}       admin123
-${MEAL_NAME}    Teszt étel
+${MEAL_NAME}    A teszt étel
 ${MEAL_ING_1}    Búzaliszt
 ${MEAL_ING_2}    Tojás
 ${MEAL_ING_3}    Tej
@@ -29,7 +29,12 @@ ${NEWMEAL_INGREDIENTS_ADD}    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div
 ${NEWMEAL_INGREDIENTS_AMOUNT}    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[2]/input
 ${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select
 ${MEAL_INGREDIENTS_ADD_BUTTON}    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button
-${NEWMEAL_INGREDIENTS_SAVE_BUTTON}    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button
+${NEWMEAL_INGREDIENTS_SAVE_BUTTON}    //*[@id="app"]/main/div/div[4]/div/form/div[5]/button[2]
+${NEWMEAL_ELEMENT}=    Get WebElement    ${MENUMAKER_SAVE_BUTTON}
+${NEWMEAL_MODAL}=    Get WebElement    //*[@id="app"]/main/div/div[4]/div
+${NEWMEAL_TYPE_SELECT_3}=    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div[1]/div[1]/div/div/div[2]
+${NEWMEAL_TYPE_SELECT_2}=    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div[1]/div[1]/div/div/div
+${NEWMEAL_TYPE_SELECT_1}=    //*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div[1]/div[1]/div/div/div
 
 
 
@@ -76,26 +81,29 @@ Sikeres ételkészítés
     #Étel hozzávalók és emmnyiségek megadása
     Input Text          ${NEWMEAL_MEAL_DESCRIPTION_INPUT}    ${MEAL_DESC}
     Input Text          ${NEWMEAL_INGREDIENTS_ADD}    ${MEAL_ING_1}
+    Click Element       ${NEWMEAL_TYPE_SELECT_1}
     Input Text          ${NEWMEAL_INGREDIENTS_AMOUNT}    ${MEAL_AMOUNT_1}
     Click Element       ${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}
     Select From List By Index    ${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}    0
     Click Element       ${MEAL_INGREDIENTS_ADD_BUTTON}
-
+    Sleep    2s
     Input Text          ${NEWMEAL_INGREDIENTS_ADD}    ${MEAL_ING_2}
+    Click Element       ${NEWMEAL_TYPE_SELECT_2}
     Input Text          ${NEWMEAL_INGREDIENTS_AMOUNT}    ${MEAL_AMOUNT_2}
     Click Element       ${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}
     Select From List By Index    ${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}    4
     Click Element       ${MEAL_INGREDIENTS_ADD_BUTTON}
-
+    Sleep    2s
     Input Text          ${NEWMEAL_INGREDIENTS_ADD}    ${MEAL_ING_3}
+    Click Element       ${NEWMEAL_TYPE_SELECT_3}
     Input Text          ${NEWMEAL_INGREDIENTS_AMOUNT}    ${MEAL_AMOUNT_3}
     Click Element       ${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}
     Select From List By Index    ${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}    2
     Click Element       ${MEAL_INGREDIENTS_ADD_BUTTON}
+    Execute JavaScript    document.querySelector('.btn-save').scrollIntoView()
+    Sleep    5s
     Click Element       ${NEWMEAL_INGREDIENTS_SAVE_BUTTON}
     
-    Sleep    2s
-    Capture Page Screenshot  
-
-    Capture Page Screenshot
+    Sleep    5s
+    Capture Page Screenshot  sikeres_ujetel.png
     [Teardown]    Close Browser

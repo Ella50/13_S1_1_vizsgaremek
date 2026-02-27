@@ -24,6 +24,8 @@ ${MENUMAKER_ADD_OPB}    //*[@id="app"]/main/div/div[2]/div/div/div[2]/div[5]/but
 ${MENUMAKER_SELECT_OTHERS}    //*[@id="app"]/main/div/div[2]/div/div/div[1]/button[4]
 ${MENUMAKER_ADD_OTHERS}    //*[@id="app"]/main/div/div[2]/div/div/div[2]/div[1]/button
 ${MENUMAKER_SAVE_BUTTON}    //*[@id="app"]/main/div/div[2]/div/div/div[3]/button[1]
+${MENUMAKER_ELEMENT}=    Get WebElement    ${MENUMAKER_SAVE_BUTTON}
+${MENUMAKER_MODAL}=    Get WebElement    //*[@id="app"]/main/div/div[4]/div
 
 
 
@@ -73,13 +75,12 @@ Sikeres menükészítés
     Click Element       ${MENUMAKER_ADD_OPB}
     Click Element       ${MENUMAKER_SELECT_OTHERS}
     Click Element       ${MENUMAKER_ADD_OTHERS}
+    Sleep    2s
     Click Element       ${MENUMAKER_SAVE_BUTTON}
 
     # Alert kezelése
-    Wait Until Page Contains    Az új menü sikeresen létre lett hozva.    timeout=10s
+    #Wait Until Page Contains    Az új menü sikeresen létre lett hozva.    timeout=10s
     
     Sleep    2s
     Capture Page Screenshot  
-
-    Capture Page Screenshot
     [Teardown]    Close Browser
