@@ -116,9 +116,6 @@ Sikertelen regisztráció
     Input Password      ${SIGNUP_PASSWORD_AGAIN_INPUT}    ${INVALID_PASS}
 
     Click Button        ${SIGNUP_BUTTON}
-
-    Sleep    2s
-    Capture Page Screenshot    
-
+    Capture Page Screenshot   
     
     [Teardown]    Close Browser

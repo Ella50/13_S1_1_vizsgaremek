@@ -77,5 +77,4 @@ Sikeres menükészítés
     Sleep    2s
     Capture Page Screenshot  
 
-    Capture Page Screenshot
     [Teardown]    Close Browser

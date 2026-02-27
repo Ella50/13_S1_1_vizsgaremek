@@ -1,267 +1,308 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 7.4.1 (Python 3.13.5 on win32)" generated="2026-02-25T13:25:12.241665" rpa="false" schemaversion="5">
+<robot generator="Robot 7.4.1 (Python 3.13.5 on win32)" generated="2026-02-27T08:54:36.946935" rpa="false" schemaversion="5">
 <suite id="s1" name="Ujetel" source="C:\Users\FarkasDominik\Documents\GitHub\13_S1_1_vizsgaremek\Tesztelés\robot_tests\tests\ujetel.robot">
-<test id="s1-t1" name="Sikeres ételkészítés" line="39">
+<test id="s1-t1" name="Sikeres ételkészítés" line="44">
 <kw name="Open Browser" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:12.418561" level="INFO">Opening browser 'chrome' to base url 'http://localhost:5173/login'.</msg>
+<msg time="2026-02-27T08:54:37.142840" level="INFO">Opening browser 'chrome' to base url 'http://localhost:5173/login'.</msg>
+<msg time="2026-02-27T08:54:37.445562" level="WARN">Error sending stats to Plausible: error sending request for url (https://plausible.io/api/event)</msg>
 <arg>${LOGIN URL}</arg>
 <arg>${BROWSER}</arg>
 <doc>Opens a new browser instance to the optional ``url``.</doc>
-<status status="PASS" start="2026-02-25T13:25:12.418329" elapsed="0.965688"/>
+<status status="PASS" start="2026-02-27T08:54:37.142607" elapsed="1.134365"/>
 </kw>
 <kw name="Maximize Browser Window" owner="SeleniumLibrary">
 <doc>Maximizes current browser window.</doc>
-<status status="PASS" start="2026-02-25T13:25:13.386593" elapsed="0.041509"/>
+<status status="PASS" start="2026-02-27T08:54:38.277785" elapsed="0.032399"/>
 </kw>
 <kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
 <arg>css=#app</arg>
 <arg>timeout=10s</arg>
 <doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-25T13:25:13.428373" elapsed="0.011968"/>
+<status status="PASS" start="2026-02-27T08:54:38.310507" elapsed="0.008834"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-25T13:25:15.441556" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-27T08:54:40.320978" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-25T13:25:13.440614" elapsed="2.001027"/>
+<status status="PASS" start="2026-02-27T08:54:38.319641" elapsed="2.001428"/>
 </kw>
 <kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
 <arg>${NEWMEAL_EMAIL_INPUT}</arg>
 <arg>timeout=10s</arg>
 <doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-25T13:25:15.441945" elapsed="0.009543"/>
+<status status="PASS" start="2026-02-27T08:54:40.321372" elapsed="0.010425"/>
 </kw>
 <kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
 <arg>${NEWMEAL_PASSWORD_INPUT}</arg>
 <arg>timeout=10s</arg>
 <doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2026-02-25T13:25:15.451758" elapsed="0.009749"/>
+<status status="PASS" start="2026-02-27T08:54:40.332077" elapsed="0.009911"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:15.461972" level="INFO">Typing text 'admin@iskola.hu' into text field '//*[@id="app"]/main/div/div[2]/div/form/input[1]'.</msg>
+<msg time="2026-02-27T08:54:40.342497" level="INFO">Typing text 'admin@iskola.hu' into text field '//*[@id="app"]/main/div/div[2]/div/form/input[1]'.</msg>
 <arg>${NEWMEAL_EMAIL_INPUT}</arg>
 <arg>${VALID_EMAIL}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:15.461775" elapsed="0.091246"/>
+<status status="PASS" start="2026-02-27T08:54:40.342262" elapsed="0.094433"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:15.553668" level="INFO">Typing text 'admin123' into text field '//*[@id="app"]/main/div/div[2]/div/form/input[2]'.</msg>
+<msg time="2026-02-27T08:54:40.437288" level="INFO">Typing text 'admin123' into text field '//*[@id="app"]/main/div/div[2]/div/form/input[2]'.</msg>
 <arg>${NEWMEAL_PASSWORD_INPUT}</arg>
 <arg>${VALID_PASS}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:15.553444" elapsed="0.053870"/>
+<status status="PASS" start="2026-02-27T08:54:40.437069" elapsed="0.055848"/>
 </kw>
 <kw name="Click Button" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:15.607722" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/div/form/button'.</msg>
+<msg time="2026-02-27T08:54:40.493390" level="INFO">Clicking button '//*[@id="app"]/main/div/div[2]/div/form/button'.</msg>
 <arg>${NEWMEAL_BUTTON}</arg>
 <doc>Clicks the button identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:15.607536" elapsed="0.061882"/>
+<status status="PASS" start="2026-02-27T08:54:40.493205" elapsed="0.062522"/>
 </kw>
 <kw name="Wait Until Location Contains" owner="SeleniumLibrary">
 <arg>dashboard</arg>
 <arg>timeout=15s</arg>
 <doc>Waits until the current URL contains ``expected``.</doc>
-<status status="PASS" start="2026-02-25T13:25:15.669897" elapsed="1.050700"/>
+<status status="PASS" start="2026-02-27T08:54:40.556168" elapsed="1.041035"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-25T13:25:18.721657" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-27T08:54:43.598378" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-25T13:25:16.720836" elapsed="2.001142"/>
+<status status="PASS" start="2026-02-27T08:54:41.597492" elapsed="2.001217"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:18.723830" level="INFO">Clicking element '//*[@id="app"]/main/div/div/div/a[2]'.</msg>
+<msg time="2026-02-27T08:54:43.600599" level="INFO">Clicking element '//*[@id="app"]/main/div/div/div/a[2]'.</msg>
 <arg>${NEWMEAL_CLICK_MEALS}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:18.723024" elapsed="0.078314"/>
+<status status="PASS" start="2026-02-27T08:54:43.599794" elapsed="0.070786"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-25T13:25:20.802260" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-27T08:54:45.672071" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-25T13:25:18.801724" elapsed="2.000615"/>
+<status status="PASS" start="2026-02-27T08:54:43.670917" elapsed="2.001477"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:20.802888" level="INFO">Clicking element '//*[@id="app"]/main/div/div[1]/button'.</msg>
+<msg time="2026-02-27T08:54:45.674260" level="INFO">Clicking element '//*[@id="app"]/main/div/div[1]/button'.</msg>
 <arg>${NEWMEAL_CLICK_ADDNEWMEALS}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:20.802667" elapsed="0.065700"/>
+<status status="PASS" start="2026-02-27T08:54:45.673441" elapsed="0.076639"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-25T13:25:22.869066" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-27T08:54:47.751398" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-25T13:25:20.868631" elapsed="2.000519"/>
+<status status="PASS" start="2026-02-27T08:54:45.750397" elapsed="2.001150"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:22.869633" level="INFO">Typing text 'Teszt étel' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[1]/input'.</msg>
+<msg time="2026-02-27T08:54:47.752584" level="INFO">Typing text 'A teszt étel' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[1]/input'.</msg>
 <arg>${NEWMEAL_NAME_INPUT}</arg>
 <arg>${MEAL_NAME}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:22.869424" elapsed="0.083919"/>
+<status status="PASS" start="2026-02-27T08:54:47.752086" elapsed="0.106752"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-25T13:25:24.954201" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-27T08:54:49.859921" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-25T13:25:22.953547" elapsed="2.000813"/>
+<status status="PASS" start="2026-02-27T08:54:47.859083" elapsed="2.000922"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:24.955611" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[2]/select'.</msg>
+<msg time="2026-02-27T08:54:49.860783" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[2]/select'.</msg>
 <arg>${NEWMEAL_SELECT_MEALTYPE}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:24.955240" elapsed="0.084434"/>
+<status status="PASS" start="2026-02-27T08:54:49.860552" elapsed="0.068184"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-25T13:25:27.040788" level="INFO">Slept 2 seconds.</msg>
+<msg time="2026-02-27T08:54:51.929853" level="INFO">Slept 2 seconds.</msg>
 <arg>2s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-25T13:25:25.039884" elapsed="2.001236"/>
+<status status="PASS" start="2026-02-27T08:54:49.928944" elapsed="2.001238"/>
 </kw>
 <kw name="Select From List By Index" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.043052" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[2]/select' by index 2.</msg>
+<msg time="2026-02-27T08:54:51.932154" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[2]/select' by index 2.</msg>
 <arg>${NEWMEAL_SELECT_MEALTYPE}</arg>
 <arg>2</arg>
 <doc>Selects options from selection list ``locator`` by ``indexes``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.042183" elapsed="0.080120"/>
+<status status="PASS" start="2026-02-27T08:54:51.931290" elapsed="0.126981"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.122927" level="INFO">Typing text 'Ez egy teszt étel leírása.' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[3]/textarea'.</msg>
+<msg time="2026-02-27T08:54:52.058778" level="INFO">Typing text 'Ez egy teszt étel leírása.' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[3]/textarea'.</msg>
 <arg>${NEWMEAL_MEAL_DESCRIPTION_INPUT}</arg>
 <arg>${MEAL_DESC}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.122688" elapsed="0.110646"/>
+<status status="PASS" start="2026-02-27T08:54:52.058568" elapsed="0.109122"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.233934" level="INFO">Typing text 'Búzaliszt' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[1]/div/input'.</msg>
+<msg time="2026-02-27T08:54:52.168157" level="INFO">Typing text 'Búzaliszt' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[1]/div/input'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_ADD}</arg>
 <arg>${MEAL_ING_1}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.233654" elapsed="0.086720"/>
+<status status="PASS" start="2026-02-27T08:54:52.167932" elapsed="0.085923"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-27T08:54:52.254286" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div[1]/div[1]/div/div/div'.</msg>
+<arg>${NEWMEAL_TYPE_SELECT_1}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-27T08:54:52.254093" elapsed="0.056093"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.320857" level="INFO">Typing text '100' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[2]/input'.</msg>
+<msg time="2026-02-27T08:54:52.310814" level="INFO">Typing text '100' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[2]/input'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_AMOUNT}</arg>
 <arg>${MEAL_AMOUNT_1}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.320630" elapsed="0.057238"/>
+<status status="PASS" start="2026-02-27T08:54:52.310601" elapsed="0.060135"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.378388" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select'.</msg>
+<msg time="2026-02-27T08:54:52.371162" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.378203" elapsed="0.057227"/>
+<status status="PASS" start="2026-02-27T08:54:52.370972" elapsed="0.059888"/>
 </kw>
 <kw name="Select From List By Index" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.435920" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select' by index 0.</msg>
+<msg time="2026-02-27T08:54:52.431418" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select' by index 0.</msg>
 <arg>${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}</arg>
 <arg>0</arg>
 <doc>Selects options from selection list ``locator`` by ``indexes``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.435715" elapsed="0.033799"/>
+<status status="PASS" start="2026-02-27T08:54:52.431176" elapsed="0.038098"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.470088" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button'.</msg>
+<msg time="2026-02-27T08:54:52.469725" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button'.</msg>
 <arg>${MEAL_INGREDIENTS_ADD_BUTTON}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.469900" elapsed="0.050504"/>
+<status status="PASS" start="2026-02-27T08:54:52.469538" elapsed="0.074664"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-27T08:54:54.545154" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-27T08:54:52.544455" elapsed="2.000778"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.520819" level="INFO">Typing text 'Tojás' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[1]/div/input'.</msg>
+<msg time="2026-02-27T08:54:54.545738" level="INFO">Typing text 'Tojás' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[1]/div/input'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_ADD}</arg>
 <arg>${MEAL_ING_2}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.520616" elapsed="0.069637"/>
+<status status="PASS" start="2026-02-27T08:54:54.545544" elapsed="0.077806"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-27T08:54:54.624000" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div[1]/div[1]/div/div/div'.</msg>
+<arg>${NEWMEAL_TYPE_SELECT_2}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-27T08:54:54.623695" elapsed="0.051091"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.590672" level="INFO">Typing text '2' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[2]/input'.</msg>
+<msg time="2026-02-27T08:54:54.675218" level="INFO">Typing text '2' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[2]/input'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_AMOUNT}</arg>
 <arg>${MEAL_AMOUNT_2}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.590471" elapsed="0.048414"/>
+<status status="PASS" start="2026-02-27T08:54:54.675009" elapsed="0.050618"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.639284" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select'.</msg>
+<msg time="2026-02-27T08:54:54.726042" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.639101" elapsed="0.047741"/>
+<status status="PASS" start="2026-02-27T08:54:54.725853" elapsed="0.049232"/>
 </kw>
 <kw name="Select From List By Index" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.687240" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select' by index 4.</msg>
+<msg time="2026-02-27T08:54:54.775629" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select' by index 4.</msg>
 <arg>${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}</arg>
 <arg>4</arg>
 <doc>Selects options from selection list ``locator`` by ``indexes``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.687052" elapsed="0.064899"/>
+<status status="PASS" start="2026-02-27T08:54:54.775369" elapsed="0.064680"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.752378" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button'.</msg>
+<msg time="2026-02-27T08:54:54.840641" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button'.</msg>
 <arg>${MEAL_INGREDIENTS_ADD_BUTTON}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.752194" elapsed="0.060768"/>
+<status status="PASS" start="2026-02-27T08:54:54.840456" elapsed="0.045799"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-27T08:54:56.887472" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-27T08:54:54.886523" elapsed="2.001228"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.813405" level="INFO">Typing text 'Tej' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[1]/div/input'.</msg>
+<msg time="2026-02-27T08:54:56.889429" level="INFO">Typing text 'Tej' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[1]/div/input'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_ADD}</arg>
 <arg>${MEAL_ING_3}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.813204" elapsed="0.061837"/>
+<status status="PASS" start="2026-02-27T08:54:56.888650" elapsed="0.093354"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-27T08:54:56.982567" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div[1]/div[1]/div/div/div[2]'.</msg>
+<arg>${NEWMEAL_TYPE_SELECT_3}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-27T08:54:56.982304" elapsed="0.054830"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.875504" level="INFO">Typing text '200' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[2]/input'.</msg>
+<msg time="2026-02-27T08:54:57.037577" level="INFO">Typing text '200' into text field '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[2]/input'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_AMOUNT}</arg>
 <arg>${MEAL_AMOUNT_3}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.875254" elapsed="0.057231"/>
+<status status="PASS" start="2026-02-27T08:54:57.037352" elapsed="0.052212"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.933126" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select'.</msg>
+<msg time="2026-02-27T08:54:57.089995" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select'.</msg>
 <arg>${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.932926" elapsed="0.057111"/>
+<status status="PASS" start="2026-02-27T08:54:57.089803" elapsed="0.049953"/>
 </kw>
 <kw name="Select From List By Index" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:27.990458" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select' by index 2.</msg>
+<msg time="2026-02-27T08:54:57.140193" level="INFO">Selecting options from selection list '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[3]/select' by index 2.</msg>
 <arg>${NEWMEAL_INGREDIENTS_TYPE_OF_MESAURE}</arg>
 <arg>2</arg>
 <doc>Selects options from selection list ``locator`` by ``indexes``.</doc>
-<status status="PASS" start="2026-02-25T13:25:27.990261" elapsed="0.056692"/>
+<status status="PASS" start="2026-02-27T08:54:57.139987" elapsed="0.056456"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:28.047415" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button'.</msg>
+<msg time="2026-02-27T08:54:57.196908" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button'.</msg>
 <arg>${MEAL_INGREDIENTS_ADD_BUTTON}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:28.047236" elapsed="0.049828"/>
+<status status="PASS" start="2026-02-27T08:54:57.196724" elapsed="0.048826"/>
 </kw>
-<kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:28.097525" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[4]/div[2]/div/div/div[4]/button'.</msg>
-<arg>${NEWMEAL_INGREDIENTS_SAVE_BUTTON}</arg>
-<doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2026-02-25T13:25:28.097339" elapsed="0.038677"/>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2026-02-27T08:54:57.246286" level="INFO">Executing JavaScript:
+document.querySelector('.btn-save').scrollIntoView()
+Without any arguments.</msg>
+<arg>document.querySelector('.btn-save').scrollIntoView()</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="PASS" start="2026-02-27T08:54:57.245964" elapsed="0.003895"/>
 </kw>
 <kw name="Sleep" owner="BuiltIn">
-<msg time="2026-02-25T13:25:30.136906" level="INFO">Slept 2 seconds.</msg>
-<arg>2s</arg>
+<msg time="2026-02-27T08:55:02.250594" level="INFO">Slept 5 seconds.</msg>
+<arg>5s</arg>
 <doc>Pauses the test executed for the given time.</doc>
-<status status="PASS" start="2026-02-25T13:25:28.136226" elapsed="2.000784"/>
+<status status="PASS" start="2026-02-27T08:54:57.250051" elapsed="5.000871"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<msg time="2026-02-27T08:55:02.253058" level="INFO">Clicking element '//*[@id="app"]/main/div/div[4]/div/form/div[5]/button[2]'.</msg>
+<arg>${NEWMEAL_INGREDIENTS_SAVE_BUTTON}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="PASS" start="2026-02-27T08:55:02.252219" elapsed="0.061864"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-02-27T08:55:07.315161" level="INFO">Slept 5 seconds.</msg>
+<arg>5s</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<status status="PASS" start="2026-02-27T08:55:02.314484" elapsed="5.000757"/>
 </kw>
 <kw name="Capture Page Screenshot" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:30.235141" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-25.png"&gt;&lt;img src="selenium-screenshot-25.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2026-02-27T08:55:07.413467" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="sikeres_ujetel.png"&gt;&lt;img src="sikeres_ujetel.png" width="800px"&gt;&lt;/a&gt;</msg>
+<arg>sikeres_ujetel.png</arg>
 <doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
-<status status="PASS" start="2026-02-25T13:25:30.137369" elapsed="0.097852"/>
-</kw>
-<kw name="Capture Page Screenshot" owner="SeleniumLibrary">
-<msg time="2026-02-25T13:25:30.352157" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-26.png"&gt;&lt;img src="selenium-screenshot-26.png" width="800px"&gt;&lt;/a&gt;</msg>
-<doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
-<status status="PASS" start="2026-02-25T13:25:30.235504" elapsed="0.116729"/>
+<status status="PASS" start="2026-02-27T08:55:07.315563" elapsed="0.097996"/>
 </kw>
 <kw name="Close Browser" owner="SeleniumLibrary" type="TEARDOWN">
 <doc>Closes the current browser.</doc>
-<status status="PASS" start="2026-02-25T13:25:30.352610" elapsed="2.250948"/>
+<status status="PASS" start="2026-02-27T08:55:07.413903" elapsed="2.229754"/>
 </kw>
 <doc>Sikeres menükészítés még nem létező napra</doc>
-<status status="PASS" start="2026-02-25T13:25:12.417522" elapsed="20.187468"/>
+<status status="PASS" start="2026-02-27T08:54:37.141792" elapsed="32.502634"/>
 </test>
 <doc>Új étel létrehozása</doc>
-<status status="PASS" start="2026-02-25T13:25:12.242697" elapsed="20.365403"/>
+<status status="PASS" start="2026-02-27T08:54:36.948165" elapsed="32.699373"/>
 </suite>
 <statistics>
 <total>
@@ -274,5 +315,7 @@
 </suite>
 </statistics>
 <errors>
+<msg time="2026-02-27T08:54:37.140645" level="ERROR">Error in file 'C:\Users\FarkasDominik\Documents\GitHub\13_S1_1_vizsgaremek\Tesztelés\robot_tests\tests\ujetel.robot' on line 33: Setting variable '${NEWMEAL_ELEMENT}' failed: Variable '${MENUMAKER_SAVE_BUTTON}' not found.</msg>
+<msg time="2026-02-27T08:54:37.445562" level="WARN">Error sending stats to Plausible: error sending request for url (https://plausible.io/api/event)</msg>
 </errors>
 </robot>
