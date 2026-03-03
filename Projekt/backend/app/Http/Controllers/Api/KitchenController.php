@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+
 use Illuminate\Support\Facades\Validator;
 use App\Models\Meal;
 use App\Models\Ingredient;
 use App\Models\Allergen;
 use App\Enums\MealType;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use App\Models\MenuItem;
 
@@ -829,9 +830,12 @@ private function getAllergenIconUrl($iconPath)
     }
     
 
-    //Hozzávalók kezelése (ingredient.vue)
+  
 
-     public function getIngredientsList(Request $request)
+    /**
+     * Hozzávalók listájának lekérése paginációval
+     */
+    public function getIngredientsList(Request $request)
     {
         // Csak konyha és admin jogosultság
         $user = Auth::user();
@@ -841,7 +845,8 @@ private function getAllergenIconUrl($iconPath)
             ], Response::HTTP_FORBIDDEN);
         }
 
-        $query = Ingredient::query();
+        $perPage = $request->get('per_page', 25);
+        $query = Ingredient::with('allergens');
 
         // Szűrés típus szerint
         if ($request->has('type') && $request->type !== 'all') {
@@ -849,16 +854,14 @@ private function getAllergenIconUrl($iconPath)
         }
 
         // Szűrés elérhetőség szerint
-        if ($request->has('availability')) {
+        if ($request->has('availability') && $request->availability !== 'all') {
             $query->where('isAvailable', $request->availability === 'available');
         }
 
         // Keresés név szerint
-        if ($request->has('search')) {
+        if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('ingredientName', 'LIKE', "%{$search}%");
-            });
+            $query->where('ingredientName', 'LIKE', "%{$search}%");
         }
 
         // Rendezés
@@ -866,20 +869,20 @@ private function getAllergenIconUrl($iconPath)
         $sortOrder = $request->get('sort_order', 'asc');
         $query->orderBy($sortBy, $sortOrder);
 
-        $perPage = $request->get('per_page', 20);
+        // Pagináció
         $ingredients = $query->paginate($perPage);
 
         return response()->json([
+            'success' => true,
             'data' => $ingredients->items(),
-            'meta' => [
-                'current_page' => $ingredients->currentPage(),
-                'last_page' => $ingredients->lastPage(),
-                'per_page' => $ingredients->perPage(),
-                'total' => $ingredients->total(),
-            ]
+            'current_page' => $ingredients->currentPage(),
+            'last_page' => $ingredients->lastPage(),
+            'per_page' => $ingredients->perPage(),
+            'total' => $ingredients->total(),
+            'from' => $ingredients->firstItem(),
+            'to' => $ingredients->lastItem()
         ]);
     }
-
     /**
      * Új hozzávaló létrehozása
      */
@@ -1057,6 +1060,82 @@ private function getAllergenIconUrl($iconPath)
                 'message' => 'Hiba történt a tömeges frissítés során',
                 'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * Összes allergén lekérdezése
+     */
+    public function getAllAllergens()
+    {
+        try {
+            $allergens = Allergen::orderBy('allergenName')->get(['id', 'allergenName', 'icon']);
+            
+            return response()->json([
+                'success' => true,
+                'allergens' => $allergens
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get all allergens error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az allergének betöltésekor.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Összetevő allergénjeinek lekérdezése
+     */
+    public function getIngredientAllergens($id)
+    {
+        try {
+            $ingredient = Ingredient::with('allergens')->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'allergens' => $ingredient->allergens->map(function($allergen) {
+                    return [
+                        'id' => $allergen->id,
+                        'allergenName' => $allergen->allergenName,
+                        'icon' => $allergen->icon,
+                        'icon_url' => $this->getAllergenIconUrl($allergen->icon)
+                    ];
+                })
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az allergének betöltésekor.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Összetevő allergénjeinek frissítése
+     */
+    public function updateIngredientAllergens(Request $request, $id)
+    {
+        try {
+            $ingredient = Ingredient::findOrFail($id);
+            
+            $request->validate([
+                'allergen_ids' => 'array',
+                'allergen_ids.*' => 'exists:allergens,id'
+            ]);
+            
+            // Allergének szinkronizálása
+            $ingredient->allergens()->sync($request->allergen_ids ?? []);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Allergének sikeresen frissítve.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Update ingredient allergens error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az allergének frissítésekor.'
+            ], 500);
         }
     }
 

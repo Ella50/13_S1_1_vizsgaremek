@@ -175,7 +175,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/meals/{id}/ingredients', [KitchenController::class, 'updateMealIngredients']);
         Route::get('/ingredients/search', [KitchenController::class, 'searchIngredients']);
         Route::get('/ingredients', [KitchenController::class, 'getAllIngredients']);
-        
+        Route::get('/allergens', [KitchenController::class, 'getAllAllergens']);
+        Route::get('/ingredients/{id}/allergens', [KitchenController::class, 'getIngredientAllergens']);
+        Route::put('/ingredients/{id}/allergens', [KitchenController::class, 'updateIngredientAllergens']);
+
         Route::get('/categories', [KitchenController::class, 'getCategories']);
 
         // Konyhai rendelések összesítése

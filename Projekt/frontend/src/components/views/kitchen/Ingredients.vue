@@ -358,19 +358,56 @@
                           </div>
                         </div>
                       </div>
+                      <div class="form-section">
+  <h4>Allergének</h4>
+  <p class="section-description">Válaszd ki az összetevőhöz tartozó allergéneket</p>
+  
+  <div class="allergens-grid">
+    <div 
+      v-for="allergen in allergens" 
+      :key="allergen.id"
+      class="allergen-checkbox-item"
+      :class="{ selected: editForm.allergen_ids.includes(allergen.id) }"
+      @click="toggleAllergen(editForm, allergen.id)"
+    >
+      <input
+        type="checkbox"
+        :id="'edit-allergen-' + allergen.id"
+        :value="allergen.id"
+        v-model="editForm.allergen_ids"
+        class="allergen-checkbox"
+        @click.stop
+      />
+      <label :for="'edit-allergen-' + allergen.id" class="allergen-label" @click.stop>
+        <img 
+          v-if="allergen.icon_url" 
+          :src="allergen.icon_url" 
+          :alt="allergen.allergenName"
+          class="allergen-icon"
+        />
+        <span class="allergen-name">{{ allergen.allergenName }}</span>
+      </label>
+    </div>
+    
+    <div v-if="allergens.length === 0" class="no-allergens">
+      <p>Nincsenek allergének az adatbázisban.</p>
+    </div>
+  </div>
+</div>
 
                       <!-- Elérhetőség -->
                       <div class="form-section">
                         <div class="checkbox-group">
+                          <label for="isAvailable" class="checkbox-label">
+                            Elérhető a felhasználásra
+                          </label>
                           <input
                             type="checkbox"
                             id="isAvailable"
                             v-model="editForm.isAvailable"
                             class="checkbox-input"
                           />
-                          <label for="isAvailable" class="checkbox-label">
-                            Hozzávaló elérhető a felhasználásra
-                          </label>
+                          
                         </div>
                       </div>
                     </div>
@@ -400,9 +437,48 @@
           </template>
         </tbody>
       </table>
+            <!-- Pagination -->
+      <div v-if="ingredients.length > 0" class="pagination">
+        <button 
+          @click="changePage(currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="pagination-btn"
+        >
+          Előző
+        </button>
+        
+        <div class="pagination-info">
+          <span>
+            Oldal {{ currentPage }} / {{ lastPage }}
+          </span>
+          <span class="pagination-total">
+            (Összesen: {{ totalItems }} hozzávaló)
+          </span>
+        </div>
+        
+        <button 
+          @click="changePage(currentPage + 1)"
+          :disabled="currentPage === lastPage"
+          class="pagination-btn"
+        >
+          Következő
+        </button>
+      </div>
+
+      <!-- Items per page selector -->
+      <div v-if="ingredients.length > 0" class="per-page-selector">
+        <label>
+          Találatok oldalanként:
+          <select v-model="perPage" @change="changePerPage">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+      </div>
     </div>
 
-    <!-- Hozzávaló létrehozás modal -->
     <div v-if="showCreateModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -451,8 +527,6 @@
               <!-- Tápértékek -->
               <div class="form-section">
                 <h4>Tápértékek (100g-ra)</h4>
-
-                
                 <div class="form-row nutrition-grid">
                   <!-- Energia -->
                   <div class="form-group">
@@ -533,6 +607,44 @@
                 </div>
               </div>
 
+              <!-- Allergének kezelése -->
+            <div class="form-section">
+              <h4>Allergének</h4>
+              <p class="section-description">Válaszd ki az összetevőhöz tartozó allergéneket</p>
+              
+              <div class="allergens-grid">
+                <div 
+                  v-for="allergen in allergens" 
+                  :key="allergen.id"
+                  class="allergen-checkbox-item"
+                  :class="{ selected: newForm.allergen_ids.includes(allergen.id) }"
+                  @click="toggleAllergen(newForm, allergen.id)"
+                >
+                  <input
+                    type="checkbox"
+                    :id="'new-allergen-' + allergen.id"
+                    :value="allergen.id"
+                    v-model="newForm.allergen_ids"
+                    class="allergen-checkbox"
+                    @click.stop
+                  />
+                  <label :for="'new-allergen-' + allergen.id" class="allergen-label" @click.stop>
+                    <img 
+                      v-if="allergen.icon_url" 
+                      :src="allergen.icon_url" 
+                      :alt="allergen.allergenName"
+                      class="allergen-icon"
+                    />
+                    <span class="allergen-name">{{ allergen.allergenName }}</span>
+                  </label>
+                </div>
+                
+                <div v-if="allergens.length === 0" class="no-allergens">
+                  <p>Nincsenek allergének az adatbázisban.</p>
+                </div>
+              </div>
+            </div>
+
               <!-- Elérhetőség -->
               <div class="form-section">
                 <div class="checkbox-group">
@@ -545,7 +657,6 @@
                   <label for="newIsAvailable" class="checkbox-label">
                     Hozzávaló elérhető a felhasználásra
                   </label>
-
                 </div>
               </div>
             </div>
@@ -645,6 +756,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { debounce } from 'lodash'
+import AuthService from '../../../services/AuthService'
 
 // Reaktív állapotok
 const ingredients = ref([])
@@ -658,6 +770,15 @@ const ingredientToDelete = ref(null)
 const deleteError = ref('')
 const expandedIngredient = ref(null)
 
+const allergens = ref([])
+const selectedAllergens = ref([])
+
+const currentPage = ref(1)
+const lastPage = ref(1)
+const totalItems = ref(0)
+const perPage = ref(25)
+
+
 // Szűrők
 const filters = ref({
   search: '',
@@ -665,8 +786,6 @@ const filters = ref({
   availability: 'all',
   sort_by: 'ingredientName',
   sort_order: 'asc',
-  page: 1,
-  per_page: 20
 })
 
 // Szerkesztés form
@@ -680,7 +799,8 @@ const editForm = ref({
   sodium: null,
   sugar: null,
   fiber: null,
-  isAvailable: true
+  isAvailable: true,
+  allergen_ids: []
 })
 
 // Új hozzávaló form
@@ -694,7 +814,8 @@ const newForm = ref({
   sodium: null,
   sugar: null,
   fiber: null,
-  isAvailable: true
+  isAvailable: true,
+   allergen_ids: []
 })
 
 // Computed properties
@@ -705,22 +826,34 @@ const allSelected = computed(() => {
 
 // Debounced keresés
 const debouncedLoadIngredients = debounce(() => {
-  filters.value.page = 1
   loadIngredients()
 }, 500)
 
 // Életciklus
 onMounted(() => {
   loadIngredients()
+  loadAllergens()
 })
 
-// Függvények
+
+  // Allergének betöltése
+  async function loadAllergens() {
+    try {
+      const response = await AuthService.api.get('/kitchen/allergens')
+      allergens.value = response.data.allergens || []
+    } catch (error) {
+      console.error('Hiba az allergének betöltésekor:', error)
+    }
+  }
+
+
 async function loadIngredients() {
   loading.value = true
   try {
     const params = {
+      page: currentPage.value,
+      per_page: perPage.value,
       ...filters.value,
-      page: filters.value.page
     }
     
     // Távolítsuk el az 'all' értékeket és üres keresést
@@ -744,10 +877,16 @@ async function loadIngredients() {
       data = response.data
     }
     
-    if (data && data.data) {
-      ingredients.value = data.data
+    if (data && data.success) {
+      ingredients.value = data.data || []
+      currentPage.value = data.current_page || 1
+      lastPage.value = data.last_page || 1
+      totalItems.value = data.total || 0
     } else if (Array.isArray(data)) {
+      // Fallback régi formátumra
       ingredients.value = data
+      currentPage.value = 1
+      lastPage.value = 1
     } else {
       ingredients.value = []
     }
@@ -758,6 +897,20 @@ async function loadIngredients() {
   } finally {
     loading.value = false
   }
+}
+
+// Add page change function
+function changePage(page) {
+  if (page < 1 || page > lastPage.value) return
+  currentPage.value = page
+  loadIngredients()
+  window.scrollTo(0, 0)
+}
+
+// Add per page change function
+function changePerPage() {
+  currentPage.value = 1
+  loadIngredients()
 }
 
 function getTypeClass(type) {
@@ -774,13 +927,20 @@ function getTypeClass(type) {
   return classes[type] || 'type-other'
 }
 
+function toggleAllergen(form, allergenId) {
+  const index = form.allergen_ids.indexOf(allergenId)
+  if (index === -1) {
+    form.allergen_ids.push(allergenId)
+  } else {
+    form.allergen_ids.splice(index, 1)
+  }
+}
+
 function toggleEdit(ingredientId) {
   if (expandedIngredient.value === ingredientId) {
-    // Ha már nyitva van, bezárjuk
     expandedIngredient.value = null
     resetEditForm()
   } else {
-    // Ha másik van nyitva, azt bezárjuk és újat nyitunk
     const ingredient = ingredients.value.find(i => i.id === ingredientId)
     if (ingredient) {
       expandedIngredient.value = ingredientId
@@ -794,8 +954,10 @@ function toggleEdit(ingredientId) {
         sodium: ingredient.sodium || null,
         sugar: ingredient.sugar || null,
         fiber: ingredient.fiber || null,
-        isAvailable: Boolean(ingredient.isAvailable)
+        isAvailable: Boolean(ingredient.isAvailable),
+        allergen_ids: ingredient.allergens ? ingredient.allergens.map(a => a.id) : []
       }
+      selectedAllergens.value = editForm.value.allergen_ids
     }
   }
 }
@@ -816,7 +978,8 @@ function resetEditForm() {
     sodium: null,
     sugar: null,
     fiber: null,
-    isAvailable: true
+    isAvailable: true,
+    allergen_ids: []
   }
 }
 
@@ -836,7 +999,8 @@ function resetNewForm() {
     sodium: null,
     sugar: null,
     fiber: null,
-    isAvailable: true
+    isAvailable: true,
+     allergen_ids: []
   }
 }
 
@@ -852,7 +1016,14 @@ async function saveIngredient(ingredient) {
       }
     })
 
+    // Először az alapadatokat mentjük
     await axios.put(`/kitchen/ingredients/${ingredient.id}`, data)
+    
+    // Utána az allergéneket
+    await axios.put(`/kitchen/ingredients/${ingredient.id}/allergens`, {
+      allergen_ids: editForm.value.allergen_ids
+    })
+    
     await loadIngredients()
     
     expandedIngredient.value = null
@@ -879,19 +1050,27 @@ async function saveNewIngredient() {
   
   try {
     const data = { ...newForm.value }
-    // Távolítsuk el az üres értékeket
-    Object.keys(data).forEach(key => {
-      if (data[key] === null || data[key] === '') {
-        delete data[key]
-      }
-    })
-
-    await axios.post('/kitchen/ingredients', data)
+    
+    // Különválasztjuk az allergéneket
+    const allergenIds = [...data.allergen_ids]
+    delete data.allergen_ids
+    
+    // Alapadatok mentése
+    const response = await axios.post('/kitchen/ingredients', data)
+    
+    // Allergének mentése (ha vannak)
+    if (allergenIds.length > 0 && response.data.data?.id) {
+      await axios.put(`/kitchen/ingredients/${response.data.data.id}/allergens`, {
+        allergen_ids: allergenIds
+      })
+    }
+    
     await loadIngredients()
     
     showCreateModal.value = false
     resetNewForm()
     
+
   } catch (error) {
     console.error('Hiba a mentés során:', error)
     let errorMessage = 'Hiba történt a mentés során'
@@ -1531,7 +1710,7 @@ button{
 }
 
 .checkbox-group {
-  display: flex;
+
   flex-direction: column;
   gap: 0.5rem;
 }
@@ -1540,11 +1719,12 @@ button{
   width: 18px;
   height: 18px;
   margin-right: 0.5rem;
+  margin-left: 0.5rem;
+
 }
 
 .checkbox-label {
-  display: flex;
-  align-items: center;
+
   font-weight: 500;
   color: #476079;
   cursor: pointer;
@@ -1855,6 +2035,170 @@ button{
   .actions button {
     width: 100%;
     min-width: 32px;
+  }
+}
+/* Allergének rács */
+.allergens-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.allergen-checkbox-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.allergen-checkbox-item:hover {
+  border-color: #3498db;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.allergen-checkbox-item.selected {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.allergen-checkbox {
+  margin-right: 0.5rem;
+  width: 18px;
+  height: 18px;
+}
+
+.allergen-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  flex: 1;
+}
+
+.allergen-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.allergen-name {
+  font-size: 0.875rem;
+  color: #2c3e50;
+}
+
+.no-allergens {
+  grid-column: 1 / -1;
+  padding: 2rem;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #7f8c8d;
+}
+
+.section-description {
+  color: #7f8c8d;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem 0;
+}
+
+/* Reszponzív */
+@media (max-width: 768px) {
+  .allergens-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .allergen-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .allergen-name {
+    font-size: 0.8rem;
+  }
+}
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.pagination-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #999;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  color: #7f8c8d;
+  font-size: 0.875rem;
+}
+
+.pagination-total {
+  margin-left: 0.5rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Per page selector */
+.per-page-selector {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.per-page-selector label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #7f8c8d;
+  font-size: 0.875rem;
+}
+
+.per-page-selector select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.per-page-selector select:hover {
+  border-color: #999;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pagination {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .per-page-selector {
+    justify-content: center;
   }
 }
 </style>

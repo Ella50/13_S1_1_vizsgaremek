@@ -30,13 +30,13 @@ return new class extends Migration
             $table->timestamps();
         });
 
- 
+ /*
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
             $table->string('groupName')->unique();
             $table->timestamps();
         });
-
+*/
 
         Schema::create('rfidCards', function (Blueprint $table) {
             $table->id();

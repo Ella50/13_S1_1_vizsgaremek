@@ -15,7 +15,7 @@ class MealSeeder extends Seeder
                 'mealName' => 'Sajtos tészta',
                 'mealType' => MealType::FOETEL->value,
                 'description' => 'Tészta sajttal',
-                'picture' => '',
+                'picture' => 'meals/sajtosTeszta.jpg', //útvonal a storage/app/public/meals/ mappa',
                 'created_at' => now(),
                 'updated_at' => now()
             ],
@@ -24,7 +24,7 @@ class MealSeeder extends Seeder
                 'mealName' => 'Marhapörkölt',
                 'mealType' => MealType::FOETEL->value,
                 'description' => 'Marhából készült pöri',
-                'picture' => '',
+                'picture' => 'meals/marhaporkolt.webp',
                 'created_at' => now(),
                 'updated_at' => now()
             ],

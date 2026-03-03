@@ -62,7 +62,7 @@ return new class extends Migration
         $table->timestamps();
     });
 
-
+/*
     Schema::create('ratings', function (Blueprint $table) {
         $table->id();
         $table->foreignId('user_id')->constrained('users');
@@ -72,7 +72,7 @@ return new class extends Migration
         $table->unique(['user_id', 'order_id']);
         $table->timestamps();
     });
-
+*/
 
 
     }

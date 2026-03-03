@@ -22,7 +22,7 @@ class AdminController extends Controller
     public function getUsers(Request $request)
     {
         try {
-            $perPage = $request->get('per_page', 15);
+            $perPage = $request->get('per_page', 25);
             $search = $request->get('search', '');
             
             $query = User::query();
@@ -166,7 +166,7 @@ class AdminController extends Controller
     {
         try {
             $request->validate([
-                'userStatus' => 'required|in:active,inactive,suspended'
+                'userStatus' => 'required|in:Aktív,Inaktív,Felfüggesztett'
             ]);
             
             $user = User::findOrFail($id);
@@ -216,7 +216,7 @@ class AdminController extends Controller
         $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
-            'userStatus' => 'required|in:active,inactive,suspended'
+            'userStatus' => 'required|in:Aktív,Inaktív,Felfüggesztett'
         ]);
         
         try {
@@ -297,7 +297,7 @@ class AdminController extends Controller
                 'thirdName' => 'nullable|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $id,
                 'userType' => 'required|in:Tanuló,Tanár,Admin,Konyha,Dolgozó,Külsős',
-                'userStatus' => 'required|in:active,inactive,suspended',
+                'userStatus' => 'required|in:Aktív,Inaktív,Felfüggesztett',
                 'address' => 'nullable|string|max:500',
                 'hasDiscount' => 'boolean',
                 'county_id' => 'nullable|exists:counties,id',

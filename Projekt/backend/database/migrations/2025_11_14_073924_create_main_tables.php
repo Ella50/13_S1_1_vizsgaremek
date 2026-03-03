@@ -4,11 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-use App\Enums\UserType;
-use App\Enums\UserStatus;
-
-use App\Enums\MealType;
-use App\Enums\IngredientType;
 
 
 
@@ -44,7 +39,7 @@ return new class extends Migration
         $table->id();
         $table->string('ingredientName')->unique();
         //$table->enum('type', array_column(IngredientType::cases(), 'value'))->default('Egyéb');
-        $table->enum('ingredientType', ['Egyéb', 'Hús', 'Hal', 'Tejtermék', 'Zöldség', 'Gyümölcs', 'Fűszer'])->default('Egyéb');
+        $table->enum('ingredientType', ['Egyéb', 'Hús', 'Hal', 'Tejtermék', 'Zöldség', 'Gyümölcs', 'Fűszer', 'Tésztaféle', 'Kenyérféle'])->default('Egyéb');
         $table->integer('energy')->nullable();
         $table->integer('protein')->nullable();
         $table->integer('carbohydrate')->nullable();
@@ -65,19 +60,17 @@ return new class extends Migration
         $table->string('address')->nullable();
         $table->string('email')->unique();
         $table->string('password');
-        //$table->enum('userType', array_column(UserType::cases(), 'value'))->default('Tanuló');
-        $table->enum('userType', ['Tanuló', 'Külsős', 'Tanár', 'Dolgozó', 'Admin', 'Konyha'])->default('Tanuló');
+        $table->enum('userType', ['Tanuló', 'Tanár', 'Dolgozó', 'Admin', 'Konyha'])->default('Tanuló');
         $table->foreignId('rfidCard_id')->nullable()->constrained('rfidCards'); 
         $table->foreignId('class_id')->nullable()->constrained('classes');
-        $table->foreignId('group_id')->nullable()->constrained('groups'); 
-        //$table->enum('status', array_column(UserStatus::cases(), 'value'))->default('inactive');
-        $table->enum('userStatus', ['inactive', 'active', 'suspended'])->default('inactive');
+        //$table->foreignId('group_id')->nullable()->constrained('groups'); 
+        $table->enum('userStatus', ['Inaktív', 'Aktív', 'Felfüggesztett'])->default('Inaktív');
         $table->boolean('hasDiscount')->default(false);
         $table->boolean('hasDiabetes')->default(false);
         $table->timestamps();
 
     });
-
+/*
     Schema::create('schedules', function (Blueprint $table) {
         $table->id();
         $table->foreignId('class_id')->constrained('classes');
@@ -86,7 +79,7 @@ return new class extends Migration
         $table->date('to');
         $table->timestamps();
     });
-
+*/
     }
 
 
