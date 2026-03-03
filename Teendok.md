@@ -1,16 +1,21 @@
 ## Egyéb:
-- adminnak kérvények: cukorbeteg dokumentum (több allergén?) + kedvezmény dokumentum --> ehhez alter user table kell
+- adminnak kérvények: cukorbeteg dokumentum + (több allergén?) + kedvezmény dokumentum
 - számla (adminnak és usereknek is)
-- rating
+- rating???????
 - fizetés
 - class, group
-- étkeztetés időpont
+- étkeztetés időpont??????????
 - menüben legyen logo
+- ha vannak az ételeknél képek, akkor lehessen feltölteni képet az új étel hozzáadásánál
+- ha user felfüggesztve, akkor a kártya törlésre kerüljön
+
 
 
 ## Login.vue
 - jelszó elfelejtve
 
+## Users.vue
+- kártya törlés gomb
 
 ## Meals.vue
 - pontosabb tápérték számítás

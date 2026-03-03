@@ -45,7 +45,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'userType' => $request->userType,      
-            'userStatus' => 'inactive',
+            'userStatus' => 'Inaktív',
             'city_id' => $request->city_id, 
             'address' => $request->address, 
             'rfidCard_id' => null,
@@ -203,7 +203,7 @@ class AuthController extends Controller
             }
 
 
-            if ($user->userStatus !== 'active') {
+            if ($user->userStatus !== 'Aktív') {
                 Log::warning('Inaktív felhasználó', ['user_id' => $user->id]);
                 return response()->json([
                     'success' => false,

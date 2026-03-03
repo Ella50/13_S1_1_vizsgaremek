@@ -20,9 +20,9 @@
         
         <select v-model="filters.userStatus" @change="fetchUsers">
           <option value="">Összes státusz</option>
-          <option value="active">Aktív</option>
-          <option value="inactive">Inaktív</option>
-          <option value="suspended">Felfüggesztett</option>
+          <option value="Aktív">Aktív</option>
+          <option value="Inaktív">Inaktív</option>
+          <option value="Felfüggesztett">Felfüggesztett</option>
         </select>
       </div>
     </div>
@@ -78,9 +78,9 @@
               <div class="form-group">
                 <label>Státusz *</label>
                 <select v-model="editUser.userStatus" required>
-                  <option value="active">Aktív</option>
-                  <option value="inactive">Inaktív</option>
-                  <option value="suspended">Felfüggesztett</option>
+                  <option value="Aktív">Aktív</option>
+                  <option value="Inaktív">Inaktív</option>
+                  <option value="Felfüggesztett">Felfüggesztett</option>
                 </select>
               </div>
 
@@ -279,16 +279,16 @@
                 </button>
 
                 <button 
-                  v-if="user.userStatus === 'inactive'"
-                  @click="updateStatus(user.id, 'active')"
+                  v-if="user.userStatus === 'Inaktív'"
+                  @click="updateStatus(user.id, 'Aktív')"
                   class="btn-activate"
                   title="Aktiválás">
                   ✓
                 </button>
                 
                 <button 
-                  v-if="user.userStatus === 'active'"
-                  @click="updateStatus(user.id, 'inactive')"
+                  v-if="user.userStatus === 'Aktív'"
+                  @click="updateStatus(user.id, 'Inaktív')"
                   class="btn-deactivate"
                   title="Deaktiválás">
                   ❚❚
@@ -297,8 +297,8 @@
             </td>
             <td>
               <button 
-                v-if="user.userStatus !== 'suspended'"
-                @click="updateStatus(user.id, 'suspended')"
+                v-if="user.userStatus !== 'Felfüggesztett'"
+                @click="updateStatus(user.id, 'Felfüggesztett')"
                 class="btn-suspend"
                 title="Felfüggesztés">
                 Felfüggesztés
@@ -363,7 +363,7 @@ export default {
         thirdName: '',
         email: '',
         userType: 'Tanuló',
-        userStatus: 'active',
+        userStatus: 'Aktív',
         address: '',
         hasDiscount: false,
         rfid_uid: null,
@@ -527,7 +527,7 @@ export default {
         thirdName: userFromList.thirdName || '',
         email: userFromList.email || '',
         userType: userFromList.userType || 'Tanuló',
-        userStatus: userFromList.userStatus || 'active',
+        userStatus: userFromList.userStatus || 'Aktív',
         address: '', // Ezek nincsenek a listában
         hasDiscount: userFromList.hasDiscount || false,
       }
@@ -584,7 +584,7 @@ export default {
               thirdName: user.thirdName || '',
               email: user.email || '',
               userType: user.userType || 'Tanuló',
-              userStatus: user.userStatus || 'active',
+              userStatus: user.userStatus || 'Aktív',
               county_id: userData.county_id || this.editUser.county_id,
               city_id: userData.city_id || this.editUser.city_id,
               address: user.address || '',
@@ -610,7 +610,7 @@ export default {
             thirdName: '',
             email: '',
             userType: 'Tanuló',
-            userStatus: 'active',
+            userStatus: 'Aktív',
             address: '',
             hasDiscount: false,
           }
@@ -676,7 +676,7 @@ export default {
 },
 
     async updateStatus(userId, newUserStatus) {
-      if (!confirm(`Biztosan ${newUserStatus === 'active' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
+      if (!confirm(`Biztosan ${newUserStatus === 'Aktív' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
         return
       }
       
@@ -721,7 +721,7 @@ export default {
       try {
         await AuthService.api.post('/admin/users/bulk-status', {
           user_ids: this.selectedUsers,
-          userStatus: isAvailable ? 'active' : 'inactive'
+          userStatus: isAvailable ? 'Aktív' : 'Inaktív'
         })
         await this.fetchUsers()
         this.clearSelection()
@@ -944,17 +944,17 @@ export default {
   font-weight: 500;
 }
 
-.status-badge.active {
+.status-badge.Aktív {
   background: #d4edda;
   color: #155724;
 }
 
-.status-badge.inactive {
+.status-badge.Inaktív {
   background: #fff3cd;
   color: #856404;
 }
 
-.status-badge.suspended {
+.status-badge.Felfüggesztett {
   background: #f8d7da;
   color: #721c24;
 }

@@ -1311,7 +1311,7 @@ async loadAllIngredients() {
     // Mindenképpen a 'data' kulcs alatt vannak a hozzávalók
     this.allIngredients = response.data.data || [];
     
-    console.log(`✅ ${this.allIngredients.length} hozzávaló betöltve`);
+    console.log(`${this.allIngredients.length} hozzávaló betöltve`);
     
     // Debug: nézzük meg az első néhány hozzávalót
     if (this.allIngredients.length > 0) {

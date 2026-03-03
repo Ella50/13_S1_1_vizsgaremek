@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('originalName');
             $table->string('fileName');
             $table->string('filePath');
-            $table->string('mimeType'); // Pl. 'application/pdf'
-            $table->integer('fileSize'); // Fájlméret byte-ban
-            $table->enum('type', ['discount', 'diabetes'])->nullable();
+            $table->string('mimeType'); // pdf, docx, png
+            $table->integer('fileSize'); // byte-ban
+            $table->enum('documentType', ['Kedvezmény', 'Cukorbetegség'])->nullable();
             $table->timestamps();
     });
     }
