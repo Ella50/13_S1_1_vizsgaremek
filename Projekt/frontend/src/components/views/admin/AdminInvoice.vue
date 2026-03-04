@@ -177,33 +177,38 @@ function formatDate(dateStr) {
 const totalSum = computed(() => {
   const arr = Array.isArray(rows.value) ? rows.value : [];
   return arr.reduce((sum, i) => sum + Number(i.totalAmount || 0), 0);
+  
 });
 
 async function load() {
   loading.value = true;
   error.value = "";
   try {
-    // backend oldalon te döntöd el, hogy month paramot "YYYY-MM"-ként várod-e
-    const res = await adminFetchInvoices({ month: billingMonth.value });
-    rows.value = Array.isArray(res?.data) ? res.data : (res?.invoices ?? []);
+    const monthForFilter = billingMonth.value || null;
+
+  const res = await adminFetchInvoices({
+    month: billingMonth.value
+  });
+
+    rows.value = res?.invoices?.data ?? [];
+
   } catch (e) {
-    error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
+    error.value =
+      e?.response?.data?.message || "Hiba a számlák betöltésekor";
   } finally {
     loading.value = false;
   }
+  console.log("billingMonth:", billingMonth.value);
 }
 
 async function generate() {
-  generating.value = true;
-  error.value = "";
+  if (!billingMonth.value) return;
+
   try {
-    // FONTOS: a service stringet vár: adminGenerateInvoicesForMonth("2026-02")
     await adminGenerateInvoicesForMonth(billingMonth.value);
     await load();
   } catch (e) {
-    error.value = e?.response?.data?.message || "Hiba a számlák generálásakor";
-  } finally {
-    generating.value = false;
+    console.log(e.response?.data);
   }
 }
 
