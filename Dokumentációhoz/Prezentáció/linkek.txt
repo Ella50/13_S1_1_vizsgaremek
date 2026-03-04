@@ -10,3 +10,16 @@ https://infojegyzet.hu/webszerkesztes/zarodolgozatmintak/
 Prezentáció:
 https://youtu.be/AAVxq0WvIJU?si=fdMjgQV-V2niKMhS
 
+
+
+Ezek kellenek bele: 1 dián max 7 info
+cím (stílusban hasonló dia, dátum, VIzsgarmeke bemutató felisrttal)
+projekt bemutatása 
+funkciók
+része (backend, frontend, adatrbázis mit használunk?)
+külön backend, frontend, adatbázis
+reszponzivitás?
+tesztelés
+munkamegosztás
+további jövõbeli funkciók
+Köszönjük a figyelmet!

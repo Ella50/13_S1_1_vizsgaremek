@@ -7,6 +7,7 @@ use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class DocumentController extends Controller
 {
@@ -27,13 +28,14 @@ class DocumentController extends Controller
     ];
 
     /**
-     * Admin: Összes dokumentum listázása
+     * Admin: Összes dokumentum listázása (minden dokumentum, akár aktív, akár inaktív)
      */
     public function index()
     {
-        $documents = Document::with('user:id,firstName,lastName,email')->latest()->get();
+        $documents = Document::with('user:id,firstName,lastName,email')
+            ->latest()
+            ->get();
         
-        // Átalakítás angol típusokra a frontendnek
         foreach ($documents as $document) {
             $document->type = self::TYPE_MAPPING_REVERSE[$document->documentType] ?? $document->documentType;
             $document->formatted_size = $document->formattedSize;
@@ -46,16 +48,18 @@ class DocumentController extends Controller
     }
 
     /**
-     * Felhasználó saját dokumentumainak listázása
+     * Felhasználó saját dokumentumainak listázása (CSAK AKTÍV)
      */
     public function myDocuments()
     {
-        $documents = Auth::user()->documents()->latest()->get();
+        $documents = Document::where('user_id', Auth::id())
+            ->where('isActive', true)  // CSAK az aktívakat
+            ->latest()
+            ->get();
         
         foreach ($documents as $document) {
             $document->formatted_size = $document->formattedSize;
             $document->original_name = $document->originalName;
-            // Átalakítás angol típusra a frontendnek
             $document->type = self::TYPE_MAPPING_REVERSE[$document->documentType] ?? $document->documentType;
         }
         
@@ -72,13 +76,12 @@ class DocumentController extends Controller
         try {
             $request->validate([
                 'document' => 'required|file|mimes:pdf,doc,docx,jpg,png|max:5120',
-                'documentType' => 'required|in:discount,diabetes' // Angol értékeket várunk
+                'documentType' => 'required|in:discount,diabetes'
             ]);
 
-            // Átalakítás magyar értékre az adatbázisba
             $dbType = self::TYPE_MAPPING[$request->documentType];
 
-            \Log::info('Document upload started', [
+            Log::info('Document upload started', [
                 'user_id' => Auth::id(),
                 'documentType' => $request->documentType,
                 'dbType' => $dbType,
@@ -87,24 +90,11 @@ class DocumentController extends Controller
 
             $file = $request->file('document');
             
-            // Ellenőrizzük, hogy van-e már ilyen típusú dokumentum
-            $existingDocument = Document::where('user_id', Auth::id())
+            // Meglévő AKTÍV dokumentum inaktívvá tétele
+            Document::where('user_id', Auth::id())
                 ->where('documentType', $dbType)
-                ->first();
-            
-            // Ha van régi dokumentum, töröljük
-            if ($existingDocument) {
-                \Log::info('Deleting existing document', [
-                    'document_id' => $existingDocument->id,
-                    'type' => $existingDocument->documentType
-                ]);
-                
-                if (Storage::disk('public')->exists($existingDocument->filePath)) {
-                    Storage::disk('public')->delete($existingDocument->filePath);
-                }
-                
-                $existingDocument->delete();
-            }
+                ->where('isActive', true)
+                ->update(['isActive' => false]);
             
             // Eredeti fájlnév tisztítása
             $originalName = $file->getClientOriginalName();
@@ -121,9 +111,9 @@ class DocumentController extends Controller
                 throw new \Exception('Nem sikerült a fájl mentése');
             }
             
-            \Log::info('File stored', ['path' => $path]);
+            Log::info('File stored', ['path' => $path]);
 
-            // Dokumentum létrehozása az adatbázisban
+            // Új dokumentum létrehozása (alapból isActive = true)
             $document = Document::create([
                 'user_id' => Auth::id(),
                 'originalName' => $cleanOriginalName,
@@ -131,18 +121,15 @@ class DocumentController extends Controller
                 'filePath' => $path,
                 'mimeType' => $file->getMimeType(),
                 'fileSize' => $file->getSize(),
-                'documentType' => $dbType, // Magyar érték az adatbázisban
+                'documentType' => $dbType,
             ]);
 
-            \Log::info('Document created in DB', ['document_id' => $document->id]);
+            Log::info('Document created in DB', ['document_id' => $document->id]);
 
-            // Betöltjük a user kapcsolatot is a válaszhoz
             $document->load('user');
-            
-            // Formázott méret és angol típus hozzáadása
             $document->formatted_size = $document->formattedSize;
             $document->original_name = $document->originalName;
-            $document->type = $request->documentType; // Visszaadjuk az angol típust
+            $document->type = $request->documentType;
 
             return response()->json([
                 'message' => 'Fájl feltöltve',
@@ -150,10 +137,10 @@ class DocumentController extends Controller
             ], 201);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation error', ['errors' => $e->errors()]);
+            Log::error('Validation error', ['errors' => $e->errors()]);
             throw $e;
         } catch (\Exception $e) {
-            \Log::error('Upload error: ' . $e->getMessage());
+            Log::error('Upload error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Hiba történt a feltöltés során',
                 'error' => $e->getMessage()
@@ -209,7 +196,7 @@ class DocumentController extends Controller
     }
 
     /**
-     * Felhasználó saját dokumentumának törlése
+     * Felhasználó saját dokumentumának TÖRLÉSE (valójában inaktívvá tétel)
      */
     public function destroy(Document $document)
     {
@@ -218,22 +205,19 @@ class DocumentController extends Controller
                 return response()->json(['error' => 'Nincs jogosultságod ehhez a dokumentumhoz'], 403);
             }
 
-            if (Storage::disk('public')->exists($document->filePath)) {
-                Storage::disk('public')->delete($document->filePath);
-            }
+            // NEM TÖRÖLJÜK, csak inaktívvá tesszük
+            $document->update(['isActive' => false]);
 
-            $document->delete();
-
-            return response()->json(['message' => 'Dokumentum sikeresen törölve']);
+            return response()->json(['message' => 'Dokumentum eltávolítva a megjelenítésből']);
             
         } catch (\Exception $e) {
-            \Log::error('Error deleting document: ' . $e->getMessage());
-            return response()->json(['error' => 'Hiba történt a törlés során'], 500);
+            Log::error('Error deactivating document: ' . $e->getMessage());
+            return response()->json(['error' => 'Hiba történt'], 500);
         }
     }
 
     /**
-     * Admin: Bármilyen dokumentum törlése
+     * Admin: TELJES TÖRLÉS (fizikailag is)
      */
     public function adminDestroy(Document $document)
     {
@@ -242,25 +226,26 @@ class DocumentController extends Controller
                 Storage::disk('public')->delete($document->filePath);
             }
 
-            $document->delete();
+            $document->delete(); // Végleges törlés
 
-            return response()->json(['message' => 'Dokumentum sikeresen törölve']);
+            return response()->json(['message' => 'Dokumentum véglegesen törölve']);
             
         } catch (\Exception $e) {
-            \Log::error('Error admin deleting document: ' . $e->getMessage());
+            Log::error('Error admin deleting document: ' . $e->getMessage());
             return response()->json(['error' => 'Hiba történt a törlés során'], 500);
         }
     }
 
     /**
-     * Felhasználó dokumentumainak lekérése típus szerint
+     * Felhasználó dokumentumainak lekérése típus szerint (CSAK AKTÍV)
      */
     public function getByType($type)
     {
         $dbType = self::TYPE_MAPPING[$type] ?? $type;
         
-        $documents = Auth::user()->documents()
+        $documents = Document::where('user_id', Auth::id())
             ->where('documentType', $dbType)
+            ->where('isActive', true)  // CSAK az aktívakat
             ->latest()
             ->get();
 
