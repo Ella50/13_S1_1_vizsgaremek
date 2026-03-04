@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('fileSize'); // byte-ban
             $table->enum('documentType', ['Kedvezmény', 'Cukorbetegség'])->nullable();
             $table->boolean('isActive')->default(true);
+            $table->boolean('isAccepted')->default(false);
             $table->timestamps();
     });
     }

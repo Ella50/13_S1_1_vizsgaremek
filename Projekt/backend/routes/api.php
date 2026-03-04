@@ -88,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/documents', [DocumentController::class, 'store']);
         Route::get('/documents', [DocumentController::class, 'myDocuments']);
         Route::get('/documents/{document}/download', [DocumentController::class, 'download']);
-        Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);
+        Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);     //csak látszólagos törlés
 
 
         Route::get('/health', [UserHealthController::class, 'getUserHealthData']);
@@ -155,8 +155,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         //Dokuments
-        Route::get('/admin/documents', [DocumentController::class, 'index']);
-        Route::get('/admin/documents/{document}/download', [DocumentController::class, 'adminDownload']);
+        Route::get('/documents', [DocumentController::class, 'index']);
+        Route::get('/documents/{document}/download', [DocumentController::class, 'adminDownload']);
+        Route::delete('/documents/{document}/force', [DocumentController::class, 'adminDestroy']); // Végleges törlés
+        Route::post('/documents/{document}/accept', [DocumentController::class, 'accept']);
+        Route::post('/documents/{document}/reject', [DocumentController::class, 'reject']);
     });
     
     // Konyha

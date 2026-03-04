@@ -18,10 +18,12 @@ class Document extends Model
         'mimeType',
         'fileSize',
         'documentType',
-        'isActive'
+        'isActive',
+        'isAccepted'
     ];
 
     protected $casts = [
+        'isAccepted' => 'boolean',
         'isActive' => 'boolean',
         'fileSize' => 'integer',
         'created_at' => 'datetime',

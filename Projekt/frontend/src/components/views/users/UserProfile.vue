@@ -205,71 +205,86 @@
               <div class="card-body">
 
                 
-                <!-- Kedvezmény dokumentum -->
-<div class="document-section mb-4">
-  <h6 class="mb-3">
+                  <!-- Kedvezmény dokumentum -->
+  <div class="document-section mb-4">
+    <h6 class="mb-3">
 
-    Kedvezményre feljogosító dokumentum
-  </h6>
-  
-  <!-- Meglévő dokumentum megjelenítése -->
-  <div v-if="discountDocument" class="existing-document mb-3">
-    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-      <div class="d-flex align-items-center">
+      Kedvezményre feljogosító dokumentum
+    </h6>
+    
+    <!-- Meglévő dokumentum megjelenítése -->
+    <div v-if="discountDocument" class="existing-document mb-3">
+      <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+        <div class="d-flex align-items-center">
 
-        <div>
-          <div class="fw-bold">{{ discountDocument.original_name }}</div>
-          <small>
-            Feltöltve: {{ formatDate(discountDocument.created_at) }} 
-            ({{ discountDocument.formatted_size }})
-          </small>
+          <div>
+            <div class="fw-bold">{{ discountDocument.original_name }}</div>
+            <small>
+              Feltöltve: {{ formatDate(discountDocument.created_at) }} 
+              ({{ discountDocument.formatted_size }})
+            </small>
+            <div v-if="discountDocument.isAccepted" class="text-success mt-1">
+
+            <strong>Elfogadva</strong>
+          </div>
+          <div v-else-if="discountDocument.isActive" class="text-warning mt-1">
+
+            <strong>Jóváhagyásra vár</strong> - Az admin még nem bírálta el
+          </div>
+          <div v-else class="text-secondary mt-1">
+            <strong>Inaktív</strong> - El lett távolítva
+          </div>
+
+          </div>
+        </div>
+        <div class="btn-group">
+          <button v-if="!discountDocument.isAccepted && discountDocument.isActive" 
+                @click="downloadDocument(discountDocument)"
+                  class="btn-download" 
+                  title="Letöltés">
+                  ➜]
+          </button>
+          <button @click="confirmDelete(discountDocument)" 
+                  class="btn-delete" 
+                  title="Törlés">
+                  🗑️
+          </button>
         </div>
       </div>
-      <div class="btn-group">
-        <button @click="downloadDocument(discountDocument)" 
-                class="btn-download" 
-                title="Letöltés">
-                ➜]
-        </button>
-        <button @click="confirmDelete(discountDocument)" 
-                class="btn-delete" 
-                title="Törlés">
-                🗑️
+    </div>
+    
+    <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
+    <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
+      Még nincs feltöltve dokumentum
+    </div>
+    
+    <!-- Feltöltő űrlap - mindig látszik -->
+    <form v-if="!discountDocument?.isAccepted" @submit.prevent="uploadDocument('discount')" class="upload-form">
+      <div class="input-group">
+        <input type="file" 
+              ref="discountFileInput"
+              @change="handleFileChange('discount', $event)" 
+              class="form-control"
+              :accept="allowedFileTypes"
+              :disabled="isUploading.discount">
+        <button type="submit" 
+                class="btn btn-success"
+                :disabled="!selectedFiles.discount || isUploading.discount">
+          <span v-if="isUploading.discount" class="spinner-border spinner-border-sm me-1"></span>
+          {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
         </button>
       </div>
-    </div>
+
+    </form>
+      <div v-else-if="discountDocument?.isAccepted" class="alert alert-success mt-2">
+      
+        <strong>Dokumentum elfogadva!</strong> A kedvezményed érvényes. Már nem szükséges új dokumentumot feltöltened.
+      </div>
   </div>
-  
-  <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
-  <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
 
-    Még nincs feltöltve dokumentum
-  </div>
-  
-  <!-- Feltöltő űrlap - mindig látszik -->
-  <form @submit.prevent="uploadDocument('discount')" class="upload-form">
-    <div class="input-group">
-      <input type="file" 
-             ref="discountFileInput"
-             @change="handleFileChange('discount', $event)" 
-             class="form-control"
-             :accept="allowedFileTypes"
-             :disabled="isUploading.discount">
-      <button type="submit" 
-              class="btn btn-success"
-              :disabled="!selectedFiles.discount || isUploading.discount">
-        <span v-if="isUploading.discount" class="spinner-border spinner-border-sm me-1"></span>
-        {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
-      </button>
-    </div>
-
-  </form>
-</div>
-
-<!-- Cukorbetegség dokumentum -->
+  <!-- Cukorbetegség dokumentum -->
 <div class="document-section">
   <h6 class="mb-3">
-  
     Cukorbetegséget igazoló dokumentum
   </h6>
   
@@ -277,37 +292,51 @@
   <div v-if="diabetesDocument" class="existing-document mb-3">
     <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
       <div class="d-flex align-items-center">
-  
         <div>
-          <div class="fw-bold">{{ diabetesDocument.original_name }}</div>
+          <div class="fw-bold">{{ diabetesDocument.fileName }}</div>
           <small>
             Feltöltve: {{ formatDate(diabetesDocument.created_at) }} 
             ({{ diabetesDocument.formatted_size }})
           </small>
+          <!-- Státusz jelzés -->
+          <div v-if="diabetesDocument.isAccepted" class="text-success mt-1">
+
+            <strong>Elfogadva</strong>
+          </div>
+          <div v-else-if="diabetesDocument.isActive" class="text-warning mt-1">
+    
+            <strong>Jóváhagyásra vár</strong> - Az admin még nem bírálta el
+          </div>
+          <div v-else class="text-secondary mt-1">
+    
+            <strong>Inaktív</strong> - El lett távolítva
+          </div>
         </div>
       </div>
       <div class="btn-group">
         <button @click="downloadDocument(diabetesDocument)" 
                 class="btn-download" 
                 title="Letöltés">
-                ➜]
+          ➜]
         </button>
-        <button @click="confirmDelete(discountDocument)" 
+        <!-- Törlés gomb csak akkor, ha NINCS elfogadva -->
+        <button v-if="!diabetesDocument.isAccepted && diabetesDocument.isActive" 
+                @click="confirmDelete(diabetesDocument)" 
                 class="btn-delete" 
                 title="Törlés">
-                🗑️
+          🗑️
         </button>
       </div>
     </div>
   </div>
   
+  <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
   <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
-
     Még nincs feltöltve dokumentum
   </div>
   
-  <!-- Feltöltő űrlap - mindig látszik -->
-  <form @submit.prevent="uploadDocument('diabetes')" class="upload-form">
+  <!-- Feltöltő űrlap - csak akkor, ha nincs elfogadott dokumentum -->
+  <form v-if="!diabetesDocument?.isAccepted" @submit.prevent="uploadDocument('diabetes')" class="upload-form">
     <div class="input-group">
       <input type="file" 
              ref="diabetesFileInput"
@@ -319,16 +348,20 @@
               class="btn btn-success"
               :disabled="!selectedFiles.diabetes || isUploading.diabetes">
         <span v-if="isUploading.diabetes" class="spinner-border spinner-border-sm me-1"></span>
-
         {{ isUploading.diabetes ? 'Feltöltés...' : 'Feltöltés' }}
       </button>
     </div>
     <!-- Mutasd a kiválasztott fájl nevét -->
     <small v-if="selectedFiles.diabetes" class="text-success mt-1 d-block">
-
       Kiválasztva: {{ selectedFiles.diabetes.name }}
     </small>
   </form>
+  
+  <!-- Ha van elfogadott dokumentum, mutasd az üzenetet -->
+  <div v-else-if="diabetesDocument?.isAccepted" class="alert alert-success mt-2">
+  
+    <strong>Dokumentum elfogadva!</strong> A cukorbetegséged igazolva van. Már nem szükséges új dokumentumot feltöltened.
+  </div>
 </div>
 
                 <!-- Sikeres feltöltés üzenet -->
@@ -440,6 +473,17 @@ export default {
     createdAt() {
       if (!this.user?.created_at) return '';
       return new Date(this.user.created_at).toLocaleDateString('hu-HU');
+    },
+
+    canUploadDiscount() {
+      const discountDoc = this.discountDocument;
+      // Ha nincs dokumentum, vagy van de nincs elfogadva, akkor lehet feltölteni
+      return !discountDoc || (!discountDoc.isAccepted && discountDoc.isActive);
+    },
+    
+    canUploadDiabetes() {
+      const diabetesDoc = this.diabetesDocument;
+      return !diabetesDoc || (!diabetesDoc.isAccepted && diabetesDoc.isActive);
     }
   },
   
@@ -463,67 +507,65 @@ async created() {
 async loadDocuments() {
   try {
     const response = await axios.get('/user/documents');
-    console.log('Documents loaded (raw):', response.data);
+    console.log('Documents loaded:', response.data);
     
     let data = response.data;
     
-    // BOM eltavolítas
+    // BOM kezelés
     if (typeof data === 'string') {
-
       if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
-   
         data = data.slice(1);
       }
-      
       try {
         data = JSON.parse(data);
-        console.log('Parsed JSON:', data);
       } catch (parseError) {
         console.error('JSON parse error:', parseError);
-
       }
     }
     
     let loadedDocs = [];
     
-    // Most már a data egy objektum
     if (data && typeof data === 'object') {
       if (data.documents && Array.isArray(data.documents)) {
         loadedDocs = data.documents;
-        console.log('Found documents in data.documents:', loadedDocs);
       } else if (Array.isArray(data)) {
         loadedDocs = data;
-        console.log('Found documents as array:', loadedDocs);
       }
     }
-    
-    console.log('Loaded docs before mapping:', loadedDocs);
     
     this.documents = loadedDocs.map(doc => ({
       id: doc.id,
       type: doc.type,
-      original_name: doc.original_name || doc.originalName,
+      fileName: doc.fileName || doc.fileName,
       created_at: doc.created_at,
       formatted_size: doc.formatted_size || doc.formattedSize,
       filePath: doc.filePath,
       fileName: doc.fileName,
-      mimeType: doc.mimeType
+      mimeType: doc.mimeType,
+      isActive: doc.isActive,
+      isAccepted: doc.isAccepted || false 
     }));
     
     console.log('Processed documents:', this.documents);
-    console.log('Discount document found:', this.discountDocument);
-    console.log('Diabetes document found:', this.diabetesDocument);
     
   } catch (error) {
     console.error('Error loading documents:', error);
   }
 },
+
     
     // Fájl kiválasztás kezelése
     handleFileChange(type, event) {
       this.selectedFiles[type] = event.target.files[0];
       this.clearUploadMessages();
     },
+
+    getFileIcon(mimeType) {
+  if (mimeType?.includes('pdf')) return 'fas fa-file-pdf text-danger';
+  if (mimeType?.includes('word') || mimeType?.includes('doc')) return 'fas fa-file-word text-primary';
+  if (mimeType?.includes('image')) return 'fas fa-file-image text-success';
+  return 'fas fa-file text-secondary';
+},
     
     async uploadDocument(type) {
   const file = this.selectedFiles[type];
@@ -625,7 +667,7 @@ async loadDocuments() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', fileDoc.original_name);
+      link.setAttribute('download', fileDoc.fileName);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -638,21 +680,27 @@ async loadDocuments() {
   },
       
     // Dokumentum törlés megerősítés
-    confirmDelete(document) {
-      const typeText = document.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
-      
-      if (confirm(`Biztosan törölni szeretnéd ezt a ${typeText} dokumentumot?`)) {
-        this.deleteDocument(document);
-      }
-    },
+  confirmDelete(doc) {
+    // Ha elfogadott, ne lehessen törölni
+    if (doc.isAccepted) {
+      this.showUploadError('Elfogadott dokumentumot nem törölhetsz!');
+      return;
+    }
+    
+    const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
+    
+    if (confirm(`Biztosan törölni szeretnéd ezt a ${typeText} dokumentumot?`)) {
+      this.deleteDocument(doc);
+    }
+  },
     
     // Dokumentum törlése
-    async deleteDocument(document) {
+    async deleteDocument(doc) {
   try {
-    await axios.delete(`/user/documents/${document.id}`);
+    await axios.delete(`/user/documents/${doc.id}`);
     
     // User oldalon eltűnik a dokumentum
-    this.documents = this.documents.filter(doc => doc.id !== document.id);
+    this.documents = this.documents.filter(d => d.id !== doc.id);
     
     this.uploadSuccess = 'Dokumentum eltávolítva!';
     setTimeout(() => {
@@ -1226,14 +1274,16 @@ dd {
   min-width: 50px;
   min-height: 30px;
   background: #78aacc;
-  border-radius: 10px 0px 0px 10px;
+  border-radius: 10px;
+  margin: 3px;
 }
 
 .btn-delete{
   min-width: 50px;
   min-height: 30px;
   background: #eebec2;
-  border-radius: 0px 10px 10px 0px;
+  border-radius: 10px;
+    margin: 3px;
 
 }
 

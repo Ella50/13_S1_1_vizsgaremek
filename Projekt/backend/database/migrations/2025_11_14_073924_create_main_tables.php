@@ -20,7 +20,6 @@ return new class extends Migration
         $table->string('mealName');
         $table->enum('mealType', ['Leves', 'Főétel', 'Egyéb']);
         $table->text('description')->nullable();
-        $table->string('picture', 1024)->nullable();
         $table->timestamps();
     });
 
