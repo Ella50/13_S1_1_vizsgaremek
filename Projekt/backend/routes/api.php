@@ -86,11 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);
         Route::post('/documents', [DocumentController::class, 'store']);
-         Route::get('/documents', [DocumentController::class, 'myDocuments']);
-        Route::get('/documents/{document}/download', [DocumentController::class, 'download']) //User sajátját tölti le
-        ->middleware('can:view,document');
-        Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])
-        ->middleware('can:delete,document');
+        Route::get('/documents', [DocumentController::class, 'myDocuments']);
+        Route::get('/documents/{document}/download', [DocumentController::class, 'download']);
+        Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);
 
 
         Route::get('/health', [UserHealthController::class, 'getUserHealthData']);

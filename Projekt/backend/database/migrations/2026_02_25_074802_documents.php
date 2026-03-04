@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('mimeType'); // pdf, docx, png
             $table->integer('fileSize'); // byte-ban
             $table->enum('documentType', ['Kedvezmény', 'Cukorbetegség'])->nullable();
+            $table->boolean('isActive')->default(true);
             $table->timestamps();
     });
     }

@@ -208,7 +208,7 @@
                 <!-- Kedvezmény dokumentum -->
 <div class="document-section mb-4">
   <h6 class="mb-3">
-    <i class="fas fa-tag me-2"></i>
+
     Kedvezményre feljogosító dokumentum
   </h6>
   
@@ -216,10 +216,10 @@
   <div v-if="discountDocument" class="existing-document mb-3">
     <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
       <div class="d-flex align-items-center">
-        <i class="fas fa-file-pdf text-danger me-2 fs-4"></i>
+
         <div>
           <div class="fw-bold">{{ discountDocument.original_name }}</div>
-          <small class="text-muted">
+          <small>
             Feltöltve: {{ formatDate(discountDocument.created_at) }} 
             ({{ discountDocument.formatted_size }})
           </small>
@@ -227,14 +227,14 @@
       </div>
       <div class="btn-group">
         <button @click="downloadDocument(discountDocument)" 
-                class="btn btn-sm btn-outline-primary" 
+                class="btn-download" 
                 title="Letöltés">
-          <i class="fas fa-download"></i>
+                ➜]
         </button>
         <button @click="confirmDelete(discountDocument)" 
-                class="btn btn-sm btn-outline-danger" 
+                class="btn-delete" 
                 title="Törlés">
-          <i class="fas fa-trash"></i>
+                🗑️
         </button>
       </div>
     </div>
@@ -242,8 +242,8 @@
   
   <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
   <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
-    <i class="fas fa-cloud-upload-alt me-2"></i>
-    Még nincs feltöltve kedvezmény dokumentum
+
+    Még nincs feltöltve dokumentum
   </div>
   
   <!-- Feltöltő űrlap - mindig látszik -->
@@ -259,22 +259,17 @@
               class="btn btn-success"
               :disabled="!selectedFiles.discount || isUploading.discount">
         <span v-if="isUploading.discount" class="spinner-border spinner-border-sm me-1"></span>
-        <i v-else class="fas fa-upload me-1"></i>
         {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
       </button>
     </div>
-    <!-- Mutasd a kiválasztott fájl nevét -->
-    <small v-if="selectedFiles.discount" class="text-success mt-1 d-block">
-      <i class="fas fa-check-circle me-1"></i>
-      Kiválasztva: {{ selectedFiles.discount.name }}
-    </small>
+
   </form>
 </div>
 
 <!-- Cukorbetegség dokumentum -->
 <div class="document-section">
   <h6 class="mb-3">
-    <i class="fas fa-heartbeat me-2 text-danger"></i>
+  
     Cukorbetegséget igazoló dokumentum
   </h6>
   
@@ -282,10 +277,10 @@
   <div v-if="diabetesDocument" class="existing-document mb-3">
     <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
       <div class="d-flex align-items-center">
-        <i class="fas fa-file-pdf text-danger me-2 fs-4"></i>
+  
         <div>
           <div class="fw-bold">{{ diabetesDocument.original_name }}</div>
-          <small class="text-muted">
+          <small>
             Feltöltve: {{ formatDate(diabetesDocument.created_at) }} 
             ({{ diabetesDocument.formatted_size }})
           </small>
@@ -293,23 +288,22 @@
       </div>
       <div class="btn-group">
         <button @click="downloadDocument(diabetesDocument)" 
-                class="btn btn-sm btn-outline-primary" 
+                class="btn-download" 
                 title="Letöltés">
-          <i class="fas fa-download"></i>
+                ➜]
         </button>
-        <button @click="confirmDelete(diabetesDocument)" 
-                class="btn btn-sm btn-outline-danger" 
+        <button @click="confirmDelete(discountDocument)" 
+                class="btn-delete" 
                 title="Törlés">
-          <i class="fas fa-trash"></i>
+                🗑️
         </button>
       </div>
     </div>
   </div>
   
-  <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
   <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
-    <i class="fas fa-cloud-upload-alt me-2"></i>
-    Még nincs feltöltve cukorbetegség dokumentum
+
+    Még nincs feltöltve dokumentum
   </div>
   
   <!-- Feltöltő űrlap - mindig látszik -->
@@ -325,13 +319,13 @@
               class="btn btn-success"
               :disabled="!selectedFiles.diabetes || isUploading.diabetes">
         <span v-if="isUploading.diabetes" class="spinner-border spinner-border-sm me-1"></span>
-        <i v-else class="fas fa-upload me-1"></i>
+
         {{ isUploading.diabetes ? 'Feltöltés...' : 'Feltöltés' }}
       </button>
     </div>
     <!-- Mutasd a kiválasztott fájl nevét -->
     <small v-if="selectedFiles.diabetes" class="text-success mt-1 d-block">
-      <i class="fas fa-check-circle me-1"></i>
+
       Kiválasztva: {{ selectedFiles.diabetes.name }}
     </small>
   </form>
@@ -340,7 +334,6 @@
                 <!-- Sikeres feltöltés üzenet -->
                 <transition name="fade">
                   <div v-if="uploadSuccess" class="alert alert-success mt-3">
-                    <i class="fas fa-check-circle me-2"></i>
                     {{ uploadSuccess }}
                   </div>
                 </transition>
@@ -348,7 +341,6 @@
                 <!-- Hibaüzenet -->
                 <transition name="fade">
                   <div v-if="uploadError" class="alert alert-danger mt-3">
-                    <i class="fas fa-exclamation-circle me-2"></i>
                     {{ uploadError }}
                   </div>
                 </transition>
@@ -458,6 +450,16 @@ async created() {
   
   methods: {
 
+  formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('hu-HU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  },
+
 async loadDocuments() {
   try {
     const response = await axios.get('/user/documents');
@@ -465,12 +467,11 @@ async loadDocuments() {
     
     let data = response.data;
     
-    // Ha string, akkor eltávolítjuk a BOM karaktert
+    // BOM eltavolítas
     if (typeof data === 'string') {
-      console.log('Response is string, removing BOM...');
-      // BOM karakter eltávolítása (első karakter ha ﻿)
+
       if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
-        console.log('BOM detected and removed');
+   
         data = data.slice(1);
       }
       
@@ -479,7 +480,7 @@ async loadDocuments() {
         console.log('Parsed JSON:', data);
       } catch (parseError) {
         console.error('JSON parse error:', parseError);
-        console.error('Raw data (first 100 chars):', data.substring(0, 100));
+
       }
     }
     
@@ -615,28 +616,27 @@ async loadDocuments() {
 },
     
     // Dokumentum letöltése
-    async downloadDocument(document) {
-      try {
-        const response = await axios.get(`/user/documents/${document.id}/download`, {
-          responseType: 'blob'
-        });
-        
-        // Blob letöltése
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', document.original_name);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-        
-      } catch (error) {
-        console.error('Download error:', error);
-        this.showUploadError('Hiba történt a letöltés során.');
-      }
-    },
-    
+    async downloadDocument(fileDoc) {
+    try {
+      const response = await axios.get(`/user/documents/${fileDoc.id}/download`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileDoc.original_name);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      this.showUploadError('Hiba történt a letöltés során.');
+    }
+  },
+      
     // Dokumentum törlés megerősítés
     confirmDelete(document) {
       const typeText = document.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
@@ -651,11 +651,10 @@ async loadDocuments() {
   try {
     await axios.delete(`/user/documents/${document.id}`);
     
-    // Dokumentum eltávolítása a listából
+    // User oldalon eltűnik a dokumentum
     this.documents = this.documents.filter(doc => doc.id !== document.id);
     
-    // Sikeres törlés üzenet
-    this.uploadSuccess = 'Dokumentum sikeresen törölve!';
+    this.uploadSuccess = 'Dokumentum eltávolítva!';
     setTimeout(() => {
       this.uploadSuccess = '';
     }, 3000);
@@ -683,7 +682,7 @@ async loadDocuments() {
 
     // Helper function to get allergen icon URL
 getAllergenIconUrl(iconPath) {
-      console.log('Meals.vue - iconPath:', iconPath);
+ 
   if (!iconPath) {
     return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
   }
@@ -701,15 +700,9 @@ getAllergenIconUrl(iconPath) {
     `${baseUrl}/${cleanPath.split('/').pop()}`
   ];
 
-  // Debug információk
-  console.log('Allergen icon debug:', {
-    originalPath: iconPath,
-    cleanPath: cleanPath,
-    tryingPaths: pathsToTry
-  });
 
-  // Visszaadjuk az elsőt, vagy lehetővé tesszük a váltást
-  return pathsToTry[1]; // Próbáld a public/images útvonalat
+
+  return pathsToTry[1]; // public/images útvonal
 },
 
 
@@ -729,7 +722,7 @@ handleImageError(event) {
   }
 },
     
-    // Load user data
+ 
 
 async loadUserData() {
   this.isLoading = true;
@@ -740,14 +733,12 @@ async loadUserData() {
 
     console.log('User response:', userResponse.data);
     
-    // Ha string, akkor először eltávolítjuk a BOM karaktert, majd parse-oljuk
+    //BOM
     let responseData = userResponse.data;
     if (typeof responseData === 'string') {
-      console.log('Response is string, removing BOM and parsing JSON...');
-      
-      // BOM karakter eltávolítása (első karakter ha ﻿)
+
       if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-        console.log('BOM detected and removed');
+
         responseData = responseData.slice(1);
       }
       
@@ -761,7 +752,7 @@ async loadUserData() {
       }
     }
     
-    // A válaszban a user a 'user' mezőben van
+
     let userData = null;
     
     if (responseData.user) {
@@ -777,20 +768,20 @@ async loadUserData() {
     
     this.user = userData;
     
-    // Ha a user object helyes, akkor töltsük fel a formot
+    
     if (this.user) {
       console.log('User data loaded:', {
         firstName: this.user.firstName,
         lastName: this.user.lastName,
         email: this.user.email,
         city_id: this.user.city_id,
-        city: this.user.city // Itt jön a város adat
+        city: this.user.city
       });
       
-      // Összeállítjuk a város megjelenítését
+  
       let cityDisplay = '';
       if (this.user.city) {
-        // Ha van zipCode és cityName
+
         const zipCode = this.user.city.zipCode || '';
         const cityName = this.user.city.cityName || '';
         cityDisplay = zipCode ? `${zipCode} ${cityName}`.trim() : cityName;
@@ -802,7 +793,7 @@ async loadUserData() {
         thirdName: this.user.thirdName || '',
         email: this.user.email || '',
         address: this.user.address || '',
-        city: cityDisplay // Ezt használd a template-ben
+        city: cityDisplay
       };
     } else {
       console.error('User object is null or undefined');
@@ -824,28 +815,26 @@ async loadUserData() {
     
 
 
-// Load health data
-// Load health data
 async loadHealthData() {
   try {
     const response = await axios.get('/user/health');
     
     console.log('Health data response:', response.data);
     
-    // Ha string, akkor először eltávolítjuk a BOM karaktert, majd parse-oljuk
+    //BOM
     let responseData = response.data;
     if (typeof responseData === 'string') {
-      console.log('Health response is string, removing BOM and parsing JSON...');
       
-      // BOM karakter eltávolítása (első karakter ha ﻿)
+      
+     
       if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-        console.log('BOM detected and removed');
+  
         responseData = responseData.slice(1);
       }
       
       try {
         responseData = JSON.parse(responseData);
-        console.log('Parsed health data:', responseData);
+   
       } catch (parseError) {
         console.error('Health data JSON parse error:', parseError);
         console.error('Raw health response (first 100 chars):', responseData.substring(0, 100));
@@ -875,7 +864,7 @@ async loadHealthData() {
     this.userAllergens = userAllergens;
     this.hasDiabetes = hasDiabetes;
     
-    console.log('User allergens after load:', this.userAllergens);
+ 
     
   } catch (error) {
     console.error('Error loading health data:', error);
@@ -883,19 +872,16 @@ async loadHealthData() {
   }
 },
 
-// Load available allergens
 async loadAvailableAllergens() {
   try {
     const response = await axios.get('/allergens');
     
-    console.log('Allergens API response:', response.data);
-    
-    // Ha string, akkor először eltávolítjuk a BOM karaktert, majd parse-oljuk
+   
+
     let responseData = response.data;
     if (typeof responseData === 'string') {
-      console.log('Allergens response is string, removing BOM and parsing JSON...');
+
       
-      // BOM karakter eltávolítása (első karakter ha ﻿)
       if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
         console.log('BOM detected and removed');
         responseData = responseData.slice(1);
@@ -924,10 +910,7 @@ async loadAvailableAllergens() {
       }
     }
     
-    console.log('All allergens (processed):', allAllergens);
-    console.log('User allergens (current):', this.userAllergens);
-    
-    // User allergen ID-k gyűjtése
+ 
     const userAllergenIds = [];
     for (let i = 0; i < this.userAllergens.length; i++) {
       if (this.userAllergens[i] && this.userAllergens[i].id) {
@@ -935,7 +918,7 @@ async loadAvailableAllergens() {
       }
     }
     
-    console.log('User allergen IDs:', userAllergenIds);
+
     
     // Szűrés
     this.availableAllergens = [];
@@ -956,8 +939,6 @@ async loadAvailableAllergens() {
 
 
 
-    // Update profile
-
 async updateProfile() {
   this.clearMessage();
   
@@ -966,10 +947,10 @@ async updateProfile() {
     
     console.log('Update profile response:', response.data);
     
-    // Ugyanazt a logikát használd, mint a loadUserData-ban
+
     this.user = response.data.data || response.data.user || response.data;
     
-    // Frissítsd a profile formot is
+
     this.profileForm = {
       firstName: this.user.firstName || '',
       lastName: this.user.lastName || '',
@@ -978,7 +959,7 @@ async updateProfile() {
       address: this.user.address || ''
     };
     
-    // Töltsd újra az egészségügyi adatokat is
+
     await this.loadHealthData();
     await this.loadAvailableAllergens();
     
@@ -1055,8 +1036,6 @@ async addAllergen() {
     this.showMessage('Allergén sikeresen hozzáadva!', 'success');
     
   } catch (error) {
-    console.error('Error adding allergen:', error);
-    console.error('Error response:', error.response?.data);
     
     let errorMessage = 'Hiba történt az allergén hozzáadása során.';
     if (error.response?.data?.message) {
@@ -1242,4 +1221,21 @@ dd {
 .upload-button{
   width: 30%;
 }
+
+.btn-download{
+  min-width: 50px;
+  min-height: 30px;
+  background: #78aacc;
+  border-radius: 10px 0px 0px 10px;
+}
+
+.btn-delete{
+  min-width: 50px;
+  min-height: 30px;
+  background: #eebec2;
+  border-radius: 0px 10px 10px 0px;
+
+}
+
+
 </style>

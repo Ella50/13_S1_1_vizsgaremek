@@ -17,10 +17,12 @@ class Document extends Model
         'filePath',
         'mimeType',
         'fileSize',
-        'documentType'
+        'documentType',
+        'isActive'
     ];
 
     protected $casts = [
+        'isActive' => 'boolean',
         'fileSize' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
@@ -34,7 +36,7 @@ class Document extends Model
  
     public function getUrlAttribute()
     {
-        return Storage::disk('public')->url($this->filePath); 
+        return Storage::disk('public')->path($this->filePath);
     }
 
 
@@ -48,5 +50,10 @@ class Document extends Model
         }
         
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('isActive', true);
     }
 }
