@@ -379,9 +379,9 @@
         @click.stop
       />
       <label :for="'edit-allergen-' + allergen.id" class="allergen-label" @click.stop>
-        <img 
+       <img 
           v-if="allergen.icon_url" 
-          :src="allergen.icon_url" 
+          :src="getAllergenIconUrl(allergen.icon)" 
           :alt="allergen.allergenName"
           class="allergen-icon"
         />
@@ -631,7 +631,7 @@
                   <label :for="'new-allergen-' + allergen.id" class="allergen-label" @click.stop>
                     <img 
                       v-if="allergen.icon_url" 
-                      :src="allergen.icon_url" 
+                      :src="getAllergenIconUrl(allergen.icon)" 
                       :alt="allergen.allergenName"
                       class="allergen-icon"
                     />
@@ -1043,6 +1043,18 @@ async function saveIngredient(ingredient) {
   } finally {
     saving.value = false
   }
+}
+
+function getAllergenIconUrl(iconPath) {
+  if (!iconPath) {
+    return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
+  }
+  
+  const cleanPath = iconPath.replace(/^\//, '');
+  const baseUrl = 'http://localhost:8000';
+  
+ 
+  return `${baseUrl}/images/allergens/${cleanPath.split('/').pop()}`;
 }
 
 async function saveNewIngredient() {

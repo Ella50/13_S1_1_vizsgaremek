@@ -185,8 +185,6 @@
                   <dt class="col-sm-4">Osztály:</dt>
                   <dd class="col-sm-8">{{ className || '-' }}</dd>
                   
-                  <dt class="col-sm-4">Csoport:</dt>
-                  <dd class="col-sm-8">{{ groupName || '-' }}</dd>
                   
                   <dt class="col-sm-4">Regisztráció dátuma:</dt>
                   <dd class="col-sm-8">{{ createdAt }}</dd>
@@ -208,113 +206,136 @@
 
                 
                 <!-- Kedvezmény dokumentum -->
-                <div class="document-section mb-4">
-                  <h6 class="mb-3">
-                    <i class="fas fa-tag me-2"></i>
-                    Kedvezményre feljogosító dokumentum
-                  </h6>
-                  
-                  <!-- Meglévő dokumentum megjelenítése -->
-                  <div v-if="discountDocument" class="existing-document mb-3">
-                    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                      <div class="d-flex align-items-center">
-                        <i class="fas fa-file-pdf text-danger me-2 fs-4"></i>
-                        <div>
-                          <div class="fw-bold">{{ discountDocument.original_name }}</div>
-                          <small class="text-muted">
-                            Feltöltve: {{ formatDate(discountDocument.created_at) }} 
-                            ({{ discountDocument.formatted_size }})
-                          </small>
-                        </div>
-                      </div>
-                      <div class="btn-group">
-                        <button @click="downloadDocument(discountDocument)" 
-                                class="btn btn-sm btn-outline-primary" 
-                                title="Letöltés">
-                          <i class="fas fa-download"></i>
-                        </button>
-                        <button @click="confirmDelete(discountDocument)" 
-                                class="btn btn-sm btn-delete" 
-                                title="Törlés">
-                                TÖRLÉS
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Feltöltő űrlap -->
-                  <form @submit.prevent="uploadDocument('discount')" class="upload-form">
-                    <div class="input-group">
-                      <input type="file" 
-                             @change="handleFileChange('discount', $event)" 
-                             class="form-control"
-                             :accept="allowedFileTypes"
-                             :disabled="isUploading.discount">
-                      <button type="submit" 
-                              class="btn btn-success upload-button"
-                              :disabled="!selectedFiles.discount || isUploading.discount">
-                        <span v-if="isUploading.discount" class="spinner-border spinner-border-sm me-1"></span>
-     
-                        {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
-                      </button>
-                    </div>
+<div class="document-section mb-4">
+  <h6 class="mb-3">
+    <i class="fas fa-tag me-2"></i>
+    Kedvezményre feljogosító dokumentum
+  </h6>
+  
+  <!-- Meglévő dokumentum megjelenítése -->
+  <div v-if="discountDocument" class="existing-document mb-3">
+    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-file-pdf text-danger me-2 fs-4"></i>
+        <div>
+          <div class="fw-bold">{{ discountDocument.original_name }}</div>
+          <small class="text-muted">
+            Feltöltve: {{ formatDate(discountDocument.created_at) }} 
+            ({{ discountDocument.formatted_size }})
+          </small>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button @click="downloadDocument(discountDocument)" 
+                class="btn btn-sm btn-outline-primary" 
+                title="Letöltés">
+          <i class="fas fa-download"></i>
+        </button>
+        <button @click="confirmDelete(discountDocument)" 
+                class="btn btn-sm btn-outline-danger" 
+                title="Törlés">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
+  <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
+    <i class="fas fa-cloud-upload-alt me-2"></i>
+    Még nincs feltöltve kedvezmény dokumentum
+  </div>
+  
+  <!-- Feltöltő űrlap - mindig látszik -->
+  <form @submit.prevent="uploadDocument('discount')" class="upload-form">
+    <div class="input-group">
+      <input type="file" 
+             ref="discountFileInput"
+             @change="handleFileChange('discount', $event)" 
+             class="form-control"
+             :accept="allowedFileTypes"
+             :disabled="isUploading.discount">
+      <button type="submit" 
+              class="btn btn-success"
+              :disabled="!selectedFiles.discount || isUploading.discount">
+        <span v-if="isUploading.discount" class="spinner-border spinner-border-sm me-1"></span>
+        <i v-else class="fas fa-upload me-1"></i>
+        {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
+      </button>
+    </div>
+    <!-- Mutasd a kiválasztott fájl nevét -->
+    <small v-if="selectedFiles.discount" class="text-success mt-1 d-block">
+      <i class="fas fa-check-circle me-1"></i>
+      Kiválasztva: {{ selectedFiles.discount.name }}
+    </small>
+  </form>
+</div>
 
-                  </form>
-                </div>
-
-                <!-- Cukorbetegség dokumentum -->
-                <div class="document-section">
-                  <h6 class="mb-3">
-                    <i class="fas fa-heartbeat me-2 text-danger"></i>
-                    Cukorbetegséget igazoló dokumentum
-                  </h6>
-                  
-                  <!-- Meglévő dokumentum megjelenítése -->
-                  <div v-if="diabetesDocument" class="existing-document mb-3">
-                    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                      <div class="d-flex align-items-center">
-                        <i class="fas fa-file-pdf text-danger me-2 fs-4"></i>
-                        <div>
-                          <div class="fw-bold">{{ diabetesDocument.original_name }}</div>
-                          <small class="text-muted">
-                            Feltöltve: {{ formatDate(diabetesDocument.created_at) }} 
-                            ({{ diabetesDocument.formatted_size }})
-                          </small>
-                        </div>
-                      </div>
-                      <div class="btn-group">
-                        <button @click="downloadDocument(diabetesDocument)" 
-                                class="btn btn-sm btn-outline-primary" 
-                                title="Letöltés">
-                          <i class="fas fa-download"></i>
-                        </button>
-                        <button @click="confirmDelete(diabetesDocument)" 
-                                class="btn btn-sm btn-outline-danger" 
-                                title="Törlés">
-                          <i class="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Feltöltő űrlap -->
-                  <form @submit.prevent="uploadDocument('diabetes')" class="upload-form">
-                    <div class="input-group">
-                      <input type="file" 
-                             @change="handleFileChange('diabetes', $event)" 
-                             class="form-control"
-                             :accept="allowedFileTypes"
-                             :disabled="isUploading.diabetes">
-                      <button type="submit" 
-                              class="btn btn-success upload-button" 
-                              :disabled="!selectedFiles.diabetes || isUploading.diabetes">
-                        <span v-if="isUploading.diabetes" class="spinner-border spinner-border-sm me-1"></span>
-                        <i v-else class="fas fa-upload me-1"></i>
-                        {{ isUploading.diabetes ? 'Feltöltés...' : 'Feltöltés' }}
-                      </button>
-                    </div>
-                  </form>
-                </div>
+<!-- Cukorbetegség dokumentum -->
+<div class="document-section">
+  <h6 class="mb-3">
+    <i class="fas fa-heartbeat me-2 text-danger"></i>
+    Cukorbetegséget igazoló dokumentum
+  </h6>
+  
+  <!-- Meglévő dokumentum megjelenítése -->
+  <div v-if="diabetesDocument" class="existing-document mb-3">
+    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-file-pdf text-danger me-2 fs-4"></i>
+        <div>
+          <div class="fw-bold">{{ diabetesDocument.original_name }}</div>
+          <small class="text-muted">
+            Feltöltve: {{ formatDate(diabetesDocument.created_at) }} 
+            ({{ diabetesDocument.formatted_size }})
+          </small>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button @click="downloadDocument(diabetesDocument)" 
+                class="btn btn-sm btn-outline-primary" 
+                title="Letöltés">
+          <i class="fas fa-download"></i>
+        </button>
+        <button @click="confirmDelete(diabetesDocument)" 
+                class="btn btn-sm btn-outline-danger" 
+                title="Törlés">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
+  <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
+    <i class="fas fa-cloud-upload-alt me-2"></i>
+    Még nincs feltöltve cukorbetegség dokumentum
+  </div>
+  
+  <!-- Feltöltő űrlap - mindig látszik -->
+  <form @submit.prevent="uploadDocument('diabetes')" class="upload-form">
+    <div class="input-group">
+      <input type="file" 
+             ref="diabetesFileInput"
+             @change="handleFileChange('diabetes', $event)" 
+             class="form-control"
+             :accept="allowedFileTypes"
+             :disabled="isUploading.diabetes">
+      <button type="submit" 
+              class="btn btn-success"
+              :disabled="!selectedFiles.diabetes || isUploading.diabetes">
+        <span v-if="isUploading.diabetes" class="spinner-border spinner-border-sm me-1"></span>
+        <i v-else class="fas fa-upload me-1"></i>
+        {{ isUploading.diabetes ? 'Feltöltés...' : 'Feltöltés' }}
+      </button>
+    </div>
+    <!-- Mutasd a kiválasztott fájl nevét -->
+    <small v-if="selectedFiles.diabetes" class="text-success mt-1 d-block">
+      <i class="fas fa-check-circle me-1"></i>
+      Kiválasztva: {{ selectedFiles.diabetes.name }}
+    </small>
+  </form>
+</div>
 
                 <!-- Sikeres feltöltés üzenet -->
                 <transition name="fade">
@@ -406,12 +427,13 @@ export default {
   computed: {
 
     discountDocument() {
-      return this.documents.find(doc => doc.type === 'discount');
+      return this.documents.find(doc => doc.type === 'discount'); 
     },
-    
+      
     diabetesDocument() {
-      return this.documents.find(doc => doc.type === 'diabetes');
+      return this.documents.find(doc => doc.type === 'diabetes'); 
     },
+
 
     userType() {
       return this.user?.userType || 'Ismeretlen';
@@ -422,9 +444,7 @@ export default {
     className() {
       return this.user?.studentClass?.className || '';
     },
-    groupName() {
-      return this.user?.group?.groupName || '';
-    },
+
     createdAt() {
       if (!this.user?.created_at) return '';
       return new Date(this.user.created_at).toLocaleDateString('hu-HU');
@@ -438,23 +458,65 @@ async created() {
   
   methods: {
 
- async loadDocuments() {
-      try {
-        const response = await axios.get('/user/documents');
-        console.log('Documents loaded:', response.data);
-        
-        // Kezeld a választ (lehet, hogy a dokumentumok a response.data.documents-ban vannak)
-        if (response.data.documents) {
-          this.documents = response.data.documents;
-        } else if (Array.isArray(response.data)) {
-          this.documents = response.data;
-        }
-        
-      } catch (error) {
-        console.error('Error loading documents:', error);
-        // Ne mutass hibát, mert lehet, hogy még nincs dokumentum
+async loadDocuments() {
+  try {
+    const response = await axios.get('/user/documents');
+    console.log('Documents loaded (raw):', response.data);
+    
+    let data = response.data;
+    
+    // Ha string, akkor eltávolítjuk a BOM karaktert
+    if (typeof data === 'string') {
+      console.log('Response is string, removing BOM...');
+      // BOM karakter eltávolítása (első karakter ha ﻿)
+      if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
+        console.log('BOM detected and removed');
+        data = data.slice(1);
       }
-    },
+      
+      try {
+        data = JSON.parse(data);
+        console.log('Parsed JSON:', data);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Raw data (first 100 chars):', data.substring(0, 100));
+      }
+    }
+    
+    let loadedDocs = [];
+    
+    // Most már a data egy objektum
+    if (data && typeof data === 'object') {
+      if (data.documents && Array.isArray(data.documents)) {
+        loadedDocs = data.documents;
+        console.log('Found documents in data.documents:', loadedDocs);
+      } else if (Array.isArray(data)) {
+        loadedDocs = data;
+        console.log('Found documents as array:', loadedDocs);
+      }
+    }
+    
+    console.log('Loaded docs before mapping:', loadedDocs);
+    
+    this.documents = loadedDocs.map(doc => ({
+      id: doc.id,
+      type: doc.type,
+      original_name: doc.original_name || doc.originalName,
+      created_at: doc.created_at,
+      formatted_size: doc.formatted_size || doc.formattedSize,
+      filePath: doc.filePath,
+      fileName: doc.fileName,
+      mimeType: doc.mimeType
+    }));
+    
+    console.log('Processed documents:', this.documents);
+    console.log('Discount document found:', this.discountDocument);
+    console.log('Diabetes document found:', this.diabetesDocument);
+    
+  } catch (error) {
+    console.error('Error loading documents:', error);
+  }
+},
     
     // Fájl kiválasztás kezelése
     handleFileChange(type, event) {
@@ -462,72 +524,95 @@ async created() {
       this.clearUploadMessages();
     },
     
-    // Dokumentum feltöltése
     async uploadDocument(type) {
-      const file = this.selectedFiles[type];
-      if (!file) {
-        this.showUploadError('Válassz ki egy fájlt!');
-        return;
-      }
-      
-      // Fájl méret ellenőrzés (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.showUploadError('A fájl mérete nem lehet nagyobb 5MB-nál!');
-        return;
-      }
-      
-      this.isUploading[type] = true;
-      this.clearUploadMessages();
-      
-      const formData = new FormData();
-      formData.append('document', file);
-      formData.append('type', type);
+  const file = this.selectedFiles[type];
+  if (!file) {
+    this.showUploadError('Válassz ki egy fájlt!');
+    return;
+  }
+  
+  // Fájl méret ellenőrzés (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    this.showUploadError('A fájl mérete nem lehet nagyobb 5MB-nál!');
+    return;
+  }
+  
+  this.isUploading[type] = true;
+  this.clearUploadMessages();
+  
+  const formData = new FormData();
+  formData.append('document', file);
+  formData.append('documentType', type);
+  
+  // DEBUG: FormData tartalom ellenőrzése
+  console.log('=== FELTÖLTÉS ELLENŐRZÉS ===');
+  console.log('Típus:', type);
+  console.log('Fájl:', {
+    name: file.name,
+    size: file.size,
+    docuemntType: file.documentType
+  });
+  
+  // FormData tartalom kiírása
+  for (let pair of formData.entries()) {
+    console.log(pair[0] + ': ' + (pair[0] === 'document' ? '[FÁJL]' : pair[1]));
+  }
 
-      try {
-        const response = await axios.post('/user/documents', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        
-        console.log('Upload success:', response.data);
-        
-        // Dokumentumok újratöltése
-        await this.loadDocuments();
-        
-        // Fájl kiválasztás alaphelyzetbe állítása
-        this.selectedFiles[type] = null;
-        // File input alaphelyzetbe állítása
-        const fileInput = document.querySelector(`input[type="file"][data-type="${type}"]`);
-        if (fileInput) fileInput.value = '';
-        
-        // Sikeres üzenet
-        this.uploadSuccess = type === 'discount' 
-          ? 'Kedvezmény dokumentum sikeresen feltöltve!' 
-          : 'Cukorbetegség dokumentum sikeresen feltöltve!';
-        
-        // Automatikus eltüntetés 3 másodperc után
-        setTimeout(() => {
-          this.uploadSuccess = '';
-        }, 3000);
-        
-      } catch (error) {
-        console.error('Upload error:', error);
-        
-        let errorMessage = 'Hiba történt a feltöltés során.';
-        
-        if (error.response?.data?.errors?.document) {
-          errorMessage = error.response.data.errors.document[0];
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        }
-        
-        this.showUploadError(errorMessage);
-        
-      } finally {
-        this.isUploading[type] = false;
+  try {
+    const response = await axios.post('/user/documents', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-    },
+    });
+    
+    console.log('Sikeres válasz:', response.data);
+    
+    // Dokumentumok újratöltése
+    await this.loadDocuments();
+    
+    // Fájl kiválasztás alaphelyzetbe állítása
+    this.selectedFiles[type] = null;
+    const fileInput = document.querySelector(`input[type="file"][data-type="${type}"]`);
+    if (fileInput) fileInput.value = '';
+    
+    this.uploadSuccess = type === 'discount' 
+      ? 'Kedvezmény dokumentum sikeresen feltöltve!' 
+      : 'Cukorbetegség dokumentum sikeresen feltöltve!';
+    
+    setTimeout(() => {
+      this.uploadSuccess = '';
+    }, 3000);
+    
+  } catch (error) {
+    console.error('=== HIBA RÉSZLETEK ===');
+    console.error('Status:', error.response?.status);
+    console.error('Status text:', error.response?.statusText);
+    console.error('Response data:', error.response?.data);
+    console.error('Response headers:', error.response?.headers);
+    
+    let errorMessage = 'Hiba történt a feltöltés során.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data?.errors) {
+      // Validációs hibák esetén
+      const errors = error.response.data.errors;
+      const errorMessages = [];
+      
+      for (let field in errors) {
+        errorMessages.push(`${field}: ${errors[field].join(', ')}`);
+      }
+      
+      errorMessage = errorMessages.join(' | ');
+      console.error('Validációs hibák:', errors);
+    }
+    
+    this.showUploadError(errorMessage);
+    
+  } finally {
+    this.isUploading[type] = false;
+  }
+},
     
     // Dokumentum letöltése
     async downloadDocument(document) {
@@ -563,34 +648,23 @@ async created() {
     
     // Dokumentum törlése
     async deleteDocument(document) {
-      try {
-        await axios.delete(`/user/documents/${document.id}`);
-        
-        // Dokumentumok újratöltése
-        await this.loadDocuments();
-        
-        // Sikeres törlés üzenet
-        this.uploadSuccess = 'Dokumentum sikeresen törölve!';
-        setTimeout(() => {
-          this.uploadSuccess = '';
-        }, 3000);
-        
-      } catch (error) {
-        console.error('Delete error:', error);
-        this.showUploadError('Hiba történt a törlés során.');
-      }
-    },
+  try {
+    await axios.delete(`/user/documents/${document.id}`);
     
-    // Dátum formázás
-    formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('hu-HU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    },
+    // Dokumentum eltávolítása a listából
+    this.documents = this.documents.filter(doc => doc.id !== document.id);
+    
+    // Sikeres törlés üzenet
+    this.uploadSuccess = 'Dokumentum sikeresen törölve!';
+    setTimeout(() => {
+      this.uploadSuccess = '';
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Delete error:', error);
+    this.showUploadError('Hiba történt a törlés során.');
+  }
+},
     
     // Üzenetek törlése
     clearUploadMessages() {

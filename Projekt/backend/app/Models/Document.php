@@ -17,7 +17,7 @@ class Document extends Model
         'filePath',
         'mimeType',
         'fileSize',
-        'type'
+        'documentType'
     ];
 
     protected $casts = [

@@ -1,11 +1,9 @@
 ## Egyéb:
 - adminnak kérvények: cukorbeteg dokumentum + (több allergén?) + kedvezmény dokumentum
 - számla (adminnak és usereknek is)
-- rating???????
 - fizetés
 - class, group
-- étkeztetés időpont??????????
-- menüben legyen logo
+- menüben legyen logo, hamburger menü
 - ha vannak az ételeknél képek, akkor lehessen feltölteni képet az új étel hozzáadásánál
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 
@@ -39,6 +37,7 @@
 - jelszó változtatás
 - kedvezményes vagy normál ár
 - cukorbeteg-e disabled -> kérvényezés az adminnak
+- lakcím változtatás
 
 
 ## TodayMenu.vue
