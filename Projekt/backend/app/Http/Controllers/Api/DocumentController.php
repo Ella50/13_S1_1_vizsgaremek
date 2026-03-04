@@ -71,7 +71,7 @@ class DocumentController extends Controller
     /**
      * Dokumentum feltöltése
      */
-    public function store(Request $request)
+     public function store(Request $request)
     {
         try {
             $request->validate([
@@ -81,11 +81,22 @@ class DocumentController extends Controller
 
             $dbType = self::TYPE_MAPPING[$request->documentType];
 
+            // Ellenőrizzük, hogy van-e már elfogadott dokumentum ilyen típusból
+            $acceptedDocument = Document::where('user_id', Auth::id())
+                ->where('documentType', $dbType)
+                ->where('isAccepted', true)
+                ->exists();
+
+            if ($acceptedDocument) {
+                return response()->json([
+                    'message' => 'Már van elfogadott dokumentumod, nem tölthetsz fel újat!'
+                ], 403);
+            }
+
             Log::info('Document upload started', [
                 'user_id' => Auth::id(),
                 'documentType' => $request->documentType,
-                'dbType' => $dbType,
-                'file_exists' => $request->hasFile('document')
+                'dbType' => $dbType
             ]);
 
             $file = $request->file('document');
@@ -110,10 +121,8 @@ class DocumentController extends Controller
             if (!$path) {
                 throw new \Exception('Nem sikerült a fájl mentése');
             }
-            
-            Log::info('File stored', ['path' => $path]);
 
-            // Új dokumentum létrehozása (alapból isActive = true)
+            // Új dokumentum létrehozása (isActive = true, isAccepted = false)
             $document = Document::create([
                 'user_id' => Auth::id(),
                 'originalName' => $cleanOriginalName,
@@ -122,17 +131,18 @@ class DocumentController extends Controller
                 'mimeType' => $file->getMimeType(),
                 'fileSize' => $file->getSize(),
                 'documentType' => $dbType,
+                'isActive' => true,
+                'isAccepted' => false
             ]);
-
-            Log::info('Document created in DB', ['document_id' => $document->id]);
 
             $document->load('user');
             $document->formatted_size = $document->formattedSize;
             $document->original_name = $document->originalName;
             $document->type = $request->documentType;
+            $document->can_upload = true; // Még nincs elfogadva, lehet feltölteni
 
             return response()->json([
-                'message' => 'Fájl feltöltve',
+                'message' => 'Fájl feltöltve, admin jóváhagyásra vár',
                 'document' => $document
             ], 201);
             
@@ -145,6 +155,57 @@ class DocumentController extends Controller
                 'message' => 'Hiba történt a feltöltés során',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+     /**
+     * Admin: Dokumentum elfogadása
+     */
+    public function accept(Document $document)
+    {
+        try {
+            // Az összes többi dokumentumot inaktívvá tesszük ugyanannál a típusnál
+            Document::where('user_id', $document->user_id)
+                ->where('documentType', $document->documentType)
+                ->where('id', '!=', $document->id)
+                ->update(['isActive' => false]);
+
+            // Az elfogadott dokumentumot aktívvá és elfogadottá tesszük
+            $document->update([
+                'isActive' => true,
+                'isAccepted' => true
+            ]);
+
+            return response()->json([
+                'message' => 'Dokumentum elfogadva',
+                'document' => $document
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error accepting document: ' . $e->getMessage());
+            return response()->json(['error' => 'Hiba történt'], 500);
+        }
+    }
+
+    /**
+     * Admin: Dokumentum elutasítása
+     */
+    public function reject(Document $document)
+    {
+        try {
+            $document->update([
+                'isActive' => false,
+                'isAccepted' => false
+            ]);
+
+            return response()->json([
+                'message' => 'Dokumentum elutasítva',
+                'document' => $document
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error rejecting document: ' . $e->getMessage());
+            return response()->json(['error' => 'Hiba történt'], 500);
         }
     }
 
