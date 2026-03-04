@@ -61,4 +61,6 @@
     Robotframework használat: python -m robot --outputdir results tests\bejelentkezes.robot
 )
 
-
+## Domi
+-Price id a seederben
+-számlázás(date? 2026-03, de az adatb-ben 2026-03-01 a billingMonth)

@@ -30,8 +30,11 @@ export async function adminFetchInvoice(id) {
   return res.data;
 }
 
-export async function adminGenerateInvoicesForMonth(month /* YYYY-MM */) {
-  const res = await api.post("/admin/invoices/generate-month", { month });
+export async function adminGenerateInvoicesForMonth(month) {
+  const res = await api.post(
+    "/admin/invoices/generate-month",
+    { month }
+  );
   return res.data;
 }
 
