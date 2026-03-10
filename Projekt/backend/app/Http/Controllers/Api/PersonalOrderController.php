@@ -363,7 +363,7 @@ private function checkAllergensForMenu($menuItem, $user)
         $validator = Validator::make($request->all(), [
             'date' => 'required|date',
             'menuitems_id' => 'required|exists:menuItems,id',
-            'selectedOption' => 'required|in:A,B,soup,other'
+            'selectedOption' => 'required|in:A,B'
         ]);
         
         if ($validator->fails()) {
@@ -548,33 +548,48 @@ private function checkAllergensForMenu($menuItem, $user)
         $endDate = date('Y-m-t', strtotime($startDate));
         
         $availableDates = MenuItem::whereBetween('day', [$startDate, $endDate])
+            ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
             ->orderBy('day')
             ->get()
             ->map(function($menuItem) use ($user) {
-                $hasOrder = Order::where('user_id', $user->id)
-                    ->where('menuItems_id', $menuItem->id)
-                    ->where('orderStatus', 'Rendelve')
-                    ->exists();
-                    
+                // Bármilyen státuszú rendelés lekérése (nem csak 'Rendelve')
                 $order = Order::where('user_id', $user->id)
                     ->where('menuItems_id', $menuItem->id)
-                    ->where('orderStatus', 'Rendelve')
                     ->first();
-                    
+                
+                $hasOrder = !is_null($order);
+                $allergenWarnings = $this->checkAllergensForMenu($menuItem, $user);
+                
+                // Alapértelmezett értékek
+                $orderStatus = null;
+                $selectedOption = null;
+                $orderId = null;
+                $cancelledAt = null;
+                
+                if ($order) {
+                    $orderId = $order->id;
+                    $orderStatus = $order->orderStatus; // 'Rendelve', 'Lemondva', 'Fizetve'
+                    $selectedOption = $order->selectedOption;
+                    $cancelledAt = $order->cancelledAt;
+                }
+                
                 return [
                     'date' => $menuItem->day->format('Y-m-d'),
                     'display_date' => $menuItem->day->format('Y. m. d.'),
                     'day_name' => $menuItem->day->translatedFormat('l'),
                     'has_order' => $hasOrder,
                     'menu_item_id' => $menuItem->id,
-                    'order_id' => $order ? $order->id : null,
-                    'selected_option' => $order ? $order->selectedOption : null,
+                    'order_id' => $orderId,
+                    'order_status' => $orderStatus,
+                    'selected_option' => $selectedOption,
+                    'cancelled_at' => $cancelledAt,
                     'menu' => [
                         'soup' => $menuItem->soupMeal,
                         'optionA' => $menuItem->optionAMeal,
                         'optionB' => $menuItem->optionBMeal,
                         'other' => $menuItem->otherMeal
-                    ]
+                    ],
+                    'allergen_warnings' => $allergenWarnings,
                 ];
             });
             
@@ -597,6 +612,113 @@ private function checkAllergensForMenu($menuItem, $user)
     }
 }
 
+/**
+ * Lemondott rendelés újraaktiválása (státusz visszaállítása 'Rendelve'-re)
+ */
+
+public function reactivateOrder(Request $request, $id)
+{
+    $user = Auth::user();
+    
+    try {
+        $order = Order::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+            
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A rendelés nem található.'
+            ], 404);
+        }
+        
+        // Csak lemondott rendelést lehet újraaktiválni
+        if ($order->orderStatus !== 'Lemondva') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Csak lemondott rendelés aktiválható újra. Jelenlegi státusz: ' . $order->orderStatus
+            ], 400);
+        }
+        
+        // Ellenőrizzük, hogy még lehet-e rendelni erre a napra
+        $menuItem = MenuItem::find($order->menuItems_id);
+        if (!$menuItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A menü nem található.'
+            ], 404);
+        }
+        
+        if (!$this->canOrderForDate($menuItem->day)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A rendelési határidő lejárt erre a napra.'
+            ], 400);
+        }
+        
+        // Opció validálása
+        $validator = Validator::make($request->all(), [
+            'selectedOption' => 'required|in:A,B'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Érvénytelen adatok',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Ellenőrizzük, hogy nincs-e másik aktív rendelés ugyanarra a napra
+        $existingActiveOrder = Order::where('user_id', $user->id)
+            ->where('menuItems_id', $order->menuItems_id)
+            ->where('orderStatus', 'Rendelve')
+            ->where('id', '!=', $id)
+            ->first();
+            
+        if ($existingActiveOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Már van aktív rendelése erre a napra.'
+            ], 409);
+        }
+        
+        // Rendelés újraaktiválása
+        $order->orderStatus = 'Rendelve';
+        $order->selectedOption = $request->selectedOption;
+        $order->cancelledAt = null; // Lemondás időpontjának törlése
+        $order->save();
+        
+        Log::info('Rendelés újraaktiválva', [
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'date' => $order->orderDate,
+            'selectedOption' => $request->selectedOption
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Rendelés sikeresen újraaktiválva!',
+            'data' => $order->load(['menuItem' => function($q) {
+                $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
+            }, 'price'])
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Rendelés újraaktiválási hiba', [
+            'error' => $e->getMessage(),
+            'user_id' => $user->id,
+            'order_id' => $id,
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt a rendelés újraaktiválása során.',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
 /**
  * Elérhető hónapok listája
  */
@@ -750,7 +872,57 @@ public function updateOption(Request $request, $orderId)
 /**
  * Rendelés lemondása
  */
+/**
+ * Rendelés lemondása (destroy alias a cancel-re)
+ * Ez biztosítja, hogy a /user/personal-orders/{order} DELETE hívás is a cancel-t használja
+ */
 public function destroy($id)
+{
+    return $this->cancel($id);
+}
+/**
+ * Ellenőrzi, hogy a rendelés lemondható-e még
+ * Lemondási határidő: a rendelés napján 8:00-ig
+ */
+private function canCancelOrder($order)
+{
+    try {
+        $orderDate = \Carbon\Carbon::parse($order->orderDate);
+        $now = now();
+        
+        // Ha már le van mondva, nem lehet újra lemondani
+        if ($order->orderStatus !== 'Rendelve') {
+            return false;
+        }
+        
+        // Lemondási határidő: a rendelés napján 8:00
+        $deadline = $orderDate->copy()->setTime(8, 0, 0);
+        
+        // Ha a mai nap a rendelés napja, és még nem múlt el 8:00
+        if ($now->toDateString() === $orderDate->toDateString()) {
+            return $now <= $deadline;
+        }
+        
+        // Ha a rendelés napja a jövőben van, bármikor lemondható (8:00-ig aznap)
+        if ($orderDate->isFuture()) {
+            return true;
+        }
+        
+        // Ha a rendelés napja már elmúlt, nem lehet lemondani
+        return false;
+        
+    } catch (\Exception $e) {
+        Log::error('Lemondhatóság ellenőrzése hiba', [
+            'error' => $e->getMessage(),
+            'order_id' => $order->id
+        ]);
+        return false;
+    }
+}
+/**
+ * Rendelés lemondása
+ */
+public function cancel($id)
 {
     $user = Auth::user();
     
@@ -766,47 +938,54 @@ public function destroy($id)
             ], 404);
         }
         
-    
+        // Csak aktív rendelést lehet lemondani
         if ($order->orderStatus !== 'Rendelve') {
             return response()->json([
                 'success' => false,
-                'message' => 'Csak aktív rendelés lemondható.'
+                'message' => 'Csak aktív rendelés lemondható. Jelenlegi státusz: ' . $order->orderStatus
             ], 400);
         }
         
-        
+        // Lemondási határidő ellenőrzése (aznap 8:00-ig)
         if (!$this->canCancelOrder($order)) {
             $orderDate = \Carbon\Carbon::parse($order->orderDate);
             $deadline = $orderDate->copy()->setTime(8, 0, 0);
             
             return response()->json([
                 'success' => false,
-                'message' => 'A lemondási határidő lejárt. Lemondhatóság: ' . $deadline->format('H:i') . '-ig.',
+                'message' => 'A lemondási határidő lejárt. Lemondás csak aznap 8:00-ig lehetséges.',
                 'deadline' => $deadline->format('Y-m-d H:i:s')
             ], 400);
         }
         
-      
+        // Rendelés lemondása - csak státusz módosítás és cancelled_at beállítása
         $order->orderStatus = 'Lemondva';
+        $order->cancelledAt = now(); // timestamp beállítása
         $order->save();
         
-        Log::info('Rendelés lemondva', [
+        Log::info('Rendelés sikeresen lemondva', [
             'order_id' => $order->id,
             'user_id' => $user->id,
-            'date' => $order->orderDate
+            'date' => $order->orderDate,
+            'cancelled_at' => $order->cancelledAt
         ]);
         
         return response()->json([
             'success' => true,
             'message' => 'Rendelés sikeresen lemondva!',
-            'data' => $order
+            'data' => [
+                'id' => $order->id,
+                'orderStatus' => $order->orderStatus,
+                'cancelledAt' => $order->cancelledAt
+            ]
         ]);
         
     } catch (\Exception $e) {
         Log::error('Rendelés lemondása hiba', [
             'error' => $e->getMessage(),
             'user_id' => $user->id,
-            'order_id' => $id
+            'order_id' => $id,
+            'trace' => $e->getTraceAsString()
         ]);
         
         return response()->json([
@@ -814,28 +993,6 @@ public function destroy($id)
             'message' => 'Hiba történt a rendelés lemondása során.',
             'error' => config('app.debug') ? $e->getMessage() : null
         ], 500);
-    }
-}
-
-public function cancel($id)
-{
-    return $this->destroy($id);
-}
-
-private function canCancelOrder($order)
-{
-    try {
-        $orderDate = \Carbon\Carbon::parse($order->orderDate);
-        $deadline = $orderDate->copy()->setTime(8, 0, 0); // aznap 8:00-ig
-        
-
-        return now() <= $deadline;
-    } catch (\Exception $e) {
-        Log::error('Lemondhatóság ellenőrzése hiba', [
-            'error' => $e->getMessage(),
-            'order_id' => $order->id
-        ]);
-        return false;
     }
 }
 
