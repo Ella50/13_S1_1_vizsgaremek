@@ -21,13 +21,13 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
-            'thirdName' => 'nullable|string|max:255', // HIÁNYZOTT!
+            'thirdName' => 'nullable|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'userType' => 'required|in:Tanuló,Tanár,Dolgozó',
-            'county_id' => 'required|exists:counties,id', // HIÁNYZOTT!
-            'city_id' => 'required|exists:cities,id', // HIÁNYZOTT!
-            'address' => 'required|string|max:500', // HIÁNYZOTT!
+            'county_id' => 'required|exists:counties,id', 
+            'city_id' => 'required|exists:cities,id', 
+            'address' => 'required|string|max:500', 
         ]);
 
         if ($validator->fails()) {
