@@ -152,7 +152,8 @@ class AdminInvoiceController extends Controller
                 'paymentMethod' => $invoice->paymentMethod,
                 'user' => [
                     'id' => $invoice->user?->id,
-                    'name' => $invoice->user?->name ?? null,
+                    'firstName' => $invoice->user?->firstName ?? null,
+                    'lastName' => $invoice->user?->lastName ?? null,
                     'email' => $invoice->user?->email ?? null,
                 ],
                 'orders' => $orders,

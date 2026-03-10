@@ -43,7 +43,7 @@
             <tr v-for="inv in rows" :key="inv.id">
               <td>
                 <div class="u">
-                  <div class="uname">{{ inv.user?.name || inv.userName || "—" }}</div>
+                  <div class="uname">{{ inv.user?.firstName +" "+inv.user?.lastName || inv.firstName || "—" }}</div>
                   <div class="muted">{{ inv.user?.email || inv.userEmail || "" }}</div>
                 </div>
               </td>
@@ -55,10 +55,11 @@
               </td>
               <td>{{ formatDate(inv.dueDate) }}</td>
               <td class="actions">
-                <button @click="open(inv.id)">Megtekintés</button>
-                <button @click="pdf(inv)">PDF</button>
+                <button @click="open(inv.id)" style="background-color: aqua;">Megtekintés</button>
+                <button @click="pdf(inv)" style="background-color: blue;">PDF</button>
                 <button
                   class="ok"
+                  style="background-color: lightgreen;"
                   v-if="inv.invoiceStatus !== 'Fizetve'"
                   @click="markPaid(inv)"
                   :disabled="payingId === inv.id"
@@ -184,21 +185,46 @@ async function load() {
   loading.value = true;
   error.value = "";
   try {
-    const monthForFilter = billingMonth.value || null;
-
-  const res = await adminFetchInvoices({
-    month: billingMonth.value
-  });
-
-    rows.value = res?.invoices?.data ?? [];
-
+    const response = await adminFetchInvoices({
+      month: billingMonth.value
+    });
+    
+    console.log("Teljes response:", response);
+    
+    let invoiceData = [];
+    
+    // Ha string, távolítsuk el a BOM karaktert és parse-oljuk
+    if (typeof response === 'string') {
+      try {
+        // BOM karakter eltávolítása
+        const cleanJson = response.replace(/^\uFEFF/, '');
+        const parsed = JSON.parse(cleanJson);
+        console.log("Parse-olt adat:", parsed);
+        
+        if (parsed?.invoices?.data) {
+          invoiceData = parsed.invoices.data;
+        }
+      } catch (e) {
+        console.error("Hiba a JSON parse során:", e);
+      }
+    }
+    // Ha már objektum
+    else if (response && typeof response === 'object') {
+      if (response.invoices?.data) {
+        invoiceData = response.invoices.data;
+      }
+    }
+    
+    rows.value = invoiceData;
+    console.log("Beállított rows:", rows.value);
+    console.log("rows hossza:", rows.value.length);
+    
   } catch (e) {
-    error.value =
-      e?.response?.data?.message || "Hiba a számlák betöltésekor";
+    error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
+    console.error("Hiba:", e);
   } finally {
     loading.value = false;
   }
-  console.log("billingMonth:", billingMonth.value);
 }
 
 async function generate() {
@@ -264,6 +290,11 @@ load();
 watch(billingMonth, () => {
   load();
 });
+
+watch(rows, (newRows) => {
+  console.log("rows frissült, hossza:", newRows?.length);
+  console.log("Első elem:", newRows[0]);
+}, { immediate: true, deep: true });
 </script>
 
 <style scoped>

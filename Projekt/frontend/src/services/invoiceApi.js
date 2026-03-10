@@ -20,11 +20,24 @@ export async function fetchInvoices() {
   return data;
 }
 
-export async function adminFetchInvoices(params = {}) {
-  const res = await api.get("/admin/invoices", { params });
-  return res.data;
+export async function adminFetchInvoices(params) {
+  try {
+    const response = await api.get('/admin/invoices', { params });
+    console.log("TELJES RESPONSE:", response);
+    console.log("RESPONSE.DATA:", response.data);
+    
+    // Ha string, távolítsuk el a BOM karaktert és parse-oljuk
+    if (typeof response.data === 'string') {
+      // BOM karakter eltávolítása
+      const cleanJson = response.data.replace(/^\uFEFF/, '');
+      return JSON.parse(cleanJson);
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Hiba az adminFetchInvoices-ben:", error);
+    throw error;
+  }
 }
-
 export async function adminFetchInvoice(id) {
   const res = await api.get(`/admin/invoices/${id}`);
   return res.data;
