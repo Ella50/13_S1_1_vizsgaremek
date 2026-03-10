@@ -115,7 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/{order}/update-option', [PersonalOrderController::class, 'updateOption']);
             Route::delete('/{order}', [PersonalOrderController::class, 'destroy']); // Ez a destroy
             Route::delete('/{order}/cancel', [PersonalOrderController::class, 'cancel']); // Ez az alias
-            Route::post('/{order}/reorder', [PersonalOrderController::class, 'reorder']);
+            Route::post('/{id}/reactivate', [PersonalOrderController::class, 'reactivateOrder']);
 
         });
 

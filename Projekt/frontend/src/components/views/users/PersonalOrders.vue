@@ -103,7 +103,7 @@
 
             <!-- Leves -->
             <td class="meal-cell">
-              <div class="meal-name">
+              <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'Leves') }">
                 {{ date.menu.soup?.mealName || 'Nincs leves' }}
                 <span 
                   v-if="hasAllergenWarning(date, 'Leves')"
@@ -117,7 +117,7 @@
 
             <!-- A opció -->
             <td class="meal-cell">
-              <div class="meal-name">
+              <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'A opció') }">
                 {{ date.menu.optionA?.mealName || 'Nincs A opció' }}
                 <span 
                   v-if="hasAllergenWarning(date, 'A opció')"
@@ -134,7 +134,7 @@
 
             <!-- B opció -->
             <td class="meal-cell">
-              <div class="meal-name">
+              <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'B opció') }">
                 {{ date.menu.optionB?.mealName || 'Nincs B opció' }}
                 <span 
                   v-if="hasAllergenWarning(date, 'B opció')"
@@ -199,7 +199,7 @@
               </span>
             </td>
 
-            <!-- Művelet -->
+            <!-- Művelet cella - a reorder részt kicseréljük -->
             <td class="action-cell">
               <div class="actions-inner">
                 <!-- Aktív rendelés -->
@@ -213,10 +213,10 @@
                     ✎
                   </button>
                   <button 
-                    v-if="canModifyOrder(date.date)"
+                    v-if="canCancelOrder(date.date)"
                     @click="cancelOrder(date.order_id)"
                     class="action-btn cancel"
-                    :title="'Lemondás (határidő: ' + getDeadlineInfo(date.date) + ')'"
+                    :title="'Lemondás (határidő: ' + getCancelDeadlineInfo(date.date) + ')'"
                   >
                     ✗
                   </button>
@@ -225,21 +225,7 @@
                   </span>
                 </template>
                 
-                <!-- Lemondott rendelés -->
-                <template v-else-if="date.order_status === 'Lemondva'">
-                  <button 
-                    v-if="canModifyOrder(date.date)"
-                    @click="reorderDate(date)"
-                    class="action-btn reorder"
-                    :title="'Újrarendelés (határidő: ' + getDeadlineInfo(date.date) + ')'"
-                  >
-                    ↻
-                  </button>
-                  <span v-else class="disabled-action">Lejárt</span>
-                </template>
-                
-                <!-- Nincs rendelés -->
-                <template v-else-if="!date.has_order">
+                <template v-else>
                   <button 
                     v-if="canModifyOrder(date.date)"
                     @click="placeOrder(date)"
@@ -250,11 +236,6 @@
                     Rendelés
                   </button>
                   <span v-else class="disabled-action">Lejárt</span>
-                </template>
-                
-                <!-- Egyéb eset -->
-                <template v-else>
-                  <span class="disabled-action">-</span>
                 </template>
               </div>
             </td>
@@ -272,15 +253,15 @@
     <div class="info-footer">
       <div class="info-item">
         <span class="info-icon">⏰</span>
-        <span>Rendelés/módosítás/lemondás: előző munkanap 10:00-ig</span>
+        <span>Rendelés/módosítás: előző munkanap 10:00-ig | Lemondás: aznap 8:00-ig</span>
       </div>
       <div class="info-item">
         <span class="info-icon">⚠️</span>
-        <span>Allergén figyelmeztetés</span>
+        <span>Allergén figyelmeztetés (piros szöveg)</span>
       </div>
       <div v-if="userInfo?.hasDiabetes" class="info-item">
         <span class="info-icon">🩺</span>
-        <span>Cukorbeteg mód: automatikusan cukormentes opció</span>
+        <span>Cukorbeteg mód: automatikusan A opció</span>
       </div>
     </div>
   </div>
@@ -297,7 +278,6 @@ export default {
       userInfo: null,
       loading: true,
       error: null,
-      orders: [],
       availableDates: [],
       selectedMonth: null,
       showMonthPicker: false,
@@ -306,12 +286,10 @@ export default {
   },
   
   computed: {
-
     availableMonths() {
       const months = []
       const currentYear = new Date().getFullYear()
       
-
       const now = new Date()
       const startYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
       
@@ -401,19 +379,12 @@ export default {
       this.error = null
       
       try {
-
         const response = await AuthService.api.get(
           `/user/personal-orders/month/${this.selectedMonth.year}/${this.selectedMonth.month}`
         )
         
         if (response.data?.success) {
           this.availableDates = response.data.data || []
-        }
-        
-
-        const ordersResponse = await AuthService.api.get('/user/personal-orders')
-        if (ordersResponse.data?.success) {
-          this.orders = ordersResponse.data.data?.orders || []
         }
       } catch (err) {
         console.error('Hiba a rendelések betöltésekor:', err)
@@ -423,7 +394,6 @@ export default {
       }
     },
     
-
     previousMonth() {
       if (!this.canGoToPreviousMonth) return
       const index = this.availableMonths.findIndex(
@@ -452,7 +422,7 @@ export default {
              this.selectedMonth?.month === month.month
     },
     
-
+    // Dátum formázás
     getDayNumber(dateString) {
       return new Date(dateString).getDate()
     },
@@ -474,33 +444,38 @@ export default {
       const today = new Date().toISOString().split('T')[0]
       return dateString === today
     },
-
-    async modifyOrder(date) {
-      const newOption = date.selected_option === 'A' ? 'B' : 'A'
-      await this.changeOrderOption(date, newOption)
-    },
     
-  
+    // Határidők
     canModifyOrder(dateString) {
       const orderDate = new Date(dateString)
       const now = new Date()
       
-
+      // Előző nap 10:00
       const deadline = new Date(orderDate)
-      deadline.setDate(deadline.getDate() - 1) // előző nap
-      deadline.setHours(10, 0, 0, 0) // 10:00
+      deadline.setDate(deadline.getDate() - 1)
+      deadline.setHours(10, 0, 0, 0)
       
-
+      // Hétfő esetén péntek 10:00
       if (orderDate.getDay() === 1) { // Hétfő
-        deadline.setDate(orderDate.getDate() - 3) // Péntek
-      } else if (orderDate.getDay() === 0) { 
+        deadline.setDate(orderDate.getDate() - 3)
+      } else if (orderDate.getDay() === 0) { // Vasárnap
         deadline.setDate(orderDate.getDate() - 2) // Péntek
       }
       
       return now <= deadline
     },
     
-
+    canCancelOrder(dateString) {
+      const orderDate = new Date(dateString)
+      const now = new Date()
+      
+      // Aznap 8:00
+      const deadline = new Date(orderDate)
+      deadline.setHours(8, 0, 0, 0)
+      
+      return now <= deadline
+    },
+    
     canShowOption(date, option) {
       if (option === 'A') return !!date.menu.optionA
       if (option === 'B') return !!date.menu.optionB
@@ -508,11 +483,9 @@ export default {
     },
     
     isOptionSelected(date, option) {
-
       if (date.has_order) {
         return date.selected_option === option
       }
-
       return this.tempSelections[date.date] === option
     },
     
@@ -520,42 +493,37 @@ export default {
       // Cukorbetegek nem kattinthatnak
       if (this.userInfo?.hasDiabetes) return true
       
- 
+      // Ha nincs rendelés és lejárt a határidő, vagy van rendelés és nem módosítható
       if (!date.has_order && !this.canModifyOrder(date.date)) return true
-      
-    
       if (date.has_order && !this.canModifyOrder(date.date)) return true
       
       return false
     },
     
     handleOptionClick(date, option) {
-
       if (date.has_order) {
         if (date.order_status === 'Rendelve' && this.canModifyOrder(date.date)) {
           this.changeOrderOption(date, option)
         }
-      } 
-
-      else {
+      } else {
         if (this.canModifyOrder(date.date)) {
           this.selectOptionForNewOrder(date, option)
         }
       }
     },
     
-    canPlaceOrder(date) {
-
-      if (this.userInfo?.hasDiabetes) return true
-      return !!this.tempSelections[date.date]
-    },
+  canPlaceOrder(date) {
+    // Cukorbetegeknek automatikusan mehet
+    if (this.userInfo?.hasDiabetes) return true
+    // Normál felhasználóknak kell opció választás
+    return !!this.tempSelections[date.date]
+  },
     
     getDiabeticChoice(date) {
-
       return 'A'
     },
     
-
+    // Allergén figyelmeztetések
     hasAllergenWarning(date, mealType) {
       return date.allergen_warnings?.some(w => w.meal === mealType) || false
     },
@@ -571,62 +539,91 @@ export default {
       const deadline = new Date(date)
       deadline.setDate(deadline.getDate() - 1)
       
-      if (date.getDay() === 1) { // Hétfő
+      if (date.getDay() === 1) {
         deadline.setDate(date.getDate() - 3)
       }
       
       return deadline.toLocaleDateString('hu-HU') + ' 10:00'
     },
     
-
+    getCancelDeadlineInfo(dateString) {
+      const date = new Date(dateString)
+      const deadline = new Date(date)
+      deadline.setHours(8, 0, 0, 0)
+      return deadline.toLocaleDateString('hu-HU') + ' 8:00'
+    },
+    
     selectOptionForNewOrder(date, option) {
       this.tempSelections[date.date] = option
     },
     
     async placeOrder(date) {
-      let selectedOption = this.tempSelections[date.date]
-      
-      // Cukorbetegeknek automatikus
-      if (this.userInfo?.hasDiabetes) {
-        selectedOption = 'A'
-      }
-      
-      if (!selectedOption) {
-        alert('Kérlek válassz opciót!')
-        return
-      }
-      
-      if (!this.canModifyOrder(date.date)) {
-        alert('A rendelési határidő lejárt!')
-        return
-      }
-      
-      if (!confirm(`Biztosan rendelni szeretnéd a ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`)) {
-        return
-      }
-      
-      try {
-        const response = await AuthService.api.post('/user/personal-orders', {
-          date: date.date,
-          menuitems_id: date.menu_item_id,
-          selectedOption
-        })
-        
-        if (response.data?.success) {
-          alert('Rendelés sikeresen leadva!')
-          delete this.tempSelections[date.date]
-          await this.loadOrders()
-        }
-      } catch (err) {
-        console.error('Rendelési hiba:', err)
-        alert(err.response?.data?.message || 'Hiba történt a rendelés során')
-      }
-    },
+  let selectedOption = this.tempSelections[date.date]
+  
+  // Cukorbetegeknek automatikus
+  if (this.userInfo?.hasDiabetes) {
+    selectedOption = 'A'
+  }
+  
+  if (!selectedOption) {
+    alert('Kérlek válassz opciót!')
+    return
+  }
+  
+  if (!this.canModifyOrder(date.date)) {
+    alert('A rendelési határidő lejárt!')
+    return
+  }
+  
+  if (!confirm(`Biztosan rendelni szeretnéd a ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`)) {
+    return
+  }
+  
+  try {
+    let response
+    
+    console.log('Rendelési adatok:', {
+      has_order: date.has_order,
+      order_status: date.order_status,
+      order_id: date.order_id,
+      selectedOption
+    })
+    
+    // Ha van már lemondott rendelés erre a napra, akkor újraaktiváljuk
+    if (date.has_order && date.order_status === 'Lemondva' && date.order_id) {
+      console.log('Lemondott rendelés újraaktiválása:', date.order_id)
+      response = await AuthService.api.post(`/user/personal-orders/${date.order_id}/reactivate`, {
+        selectedOption
+      })
+    } else {
+      console.log('Új rendelés létrehozása')
+      response = await AuthService.api.post('/user/personal-orders', {
+        date: date.date,
+        menuitems_id: date.menu_item_id,
+        selectedOption
+      })
+    }
+    
+    console.log('Válasz:', response.data)
+    
+    if (response.data?.success) {
+      alert('Rendelés sikeresen leadva!')
+      delete this.tempSelections[date.date]
+      await this.loadOrders()
+    } else {
+      alert(response.data?.message || 'Ismeretlen hiba történt')
+    }
+  } catch (err) {
+    console.error('Rendelési hiba:', err)
+    console.error('Hiba részletei:', err.response?.data)
+    alert(err.response?.data?.message || 'Hiba történt a rendelés során')
+  }
+},
     
     async changeOrderOption(date, newOption) {
-      const order = this.getOrderForDate(date.date)
+      if (!date.has_order || !date.order_id) return
       
-      if (!order || order.selectedOption === newOption) return
+      if (date.selected_option === newOption) return
       
       if (!this.canModifyOrder(date.date)) {
         alert('A módosítási határidő lejárt!')
@@ -638,7 +635,7 @@ export default {
       }
       
       try {
-        const response = await AuthService.api.patch(`/user/personal-orders/${order.id}/update-option`, {
+        const response = await AuthService.api.patch(`/user/personal-orders/${date.order_id}/update-option`, {
           selectedOption: newOption
         })
         
@@ -653,30 +650,34 @@ export default {
     },
     
     async cancelOrder(orderId) {
-      const date = this.availableDates.find(d => d.order_id === orderId)
-      if (!date) return
-      
-      if (!this.canModifyOrder(date.date)) {
-        alert('A lemondási határidő lejárt!')
-        return
+  const date = this.availableDates.find(d => d.order_id === orderId)
+  if (!date) return
+  
+  if (!this.canCancelOrder(date.date)) {
+    alert('A lemondási határidő lejárt! (aznap 8:00-ig lehet lemondani)')
+    return
+  }
+  
+  if (!confirm('Biztosan le szeretnéd mondani ezt a rendelést?')) {
+    return
+  }
+  
+  try {
+    const response = await AuthService.api.delete(`/user/personal-orders/${orderId}/cancel`)
+    
+    if (response.data?.success) {
+      alert('Rendelés sikeresen lemondva!')
+      // Ideiglenes választás törlése erre a napra, ha lenne
+      if (this.tempSelections[date.date]) {
+        delete this.tempSelections[date.date]
       }
-      
-      if (!confirm('Biztosan le szeretnéd mondani ezt a rendelést?')) {
-        return
-      }
-      
-      try {
-        const response = await AuthService.api.delete(`/user/personal-orders/${orderId}/cancel`)
-        
-        if (response.data?.success) {
-          alert('Rendelés sikeresen lemondva!')
-          await this.loadOrders()
-        }
-      } catch (err) {
-        console.error('Lemondási hiba:', err)
-        alert(err.response?.data?.message || 'Hiba történt a lemondás során')
-      }
-    },
+      await this.loadOrders()
+    }
+  } catch (err) {
+    console.error('Lemondási hiba:', err)
+    alert(err.response?.data?.message || 'Hiba történt a lemondás során')
+  }
+},
     
     async reorderDate(date) {
       if (!this.canModifyOrder(date.date)) {
@@ -684,8 +685,7 @@ export default {
         return
       }
       
-      const order = this.getOrderForDate(date.date)
-      const selectedOption = order?.selected_option || 'A'
+      const selectedOption = date.selected_option || 'A'
       
       if (!confirm(`Biztosan újra szeretnéd rendelni a ${selectedOption} opciót?`)) {
         return
@@ -704,10 +704,6 @@ export default {
         console.error('Újrarendelési hiba:', err)
         alert(err.response?.data?.message || 'Hiba történt az újrarendelés során')
       }
-    },
-
-    getOrderForDate(dateString) {
-      return this.orders.find(o => o.orderDate === dateString)
     },
     
     getStatusClass(date) {
@@ -739,7 +735,6 @@ export default {
 }
 </script>
 
-
 <style scoped>
 .personal-orders {
   max-width: 1400px;
@@ -768,7 +763,6 @@ export default {
   gap: 1rem;
   align-items: center;
 }
-
 
 .month-selector {
   display: flex;
@@ -1012,6 +1006,12 @@ export default {
   line-height: 1.4;
 }
 
+/* Allergén figyelmeztetés piros szöveg */
+.meal-name.allergen-meal {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
 .meal-price {
   font-size: 0.85rem;
   color: #27ae60;
@@ -1019,7 +1019,7 @@ export default {
   margin-top: 0.25rem;
 }
 
-/* Allergén figyelmeztetés */
+/* Allergén ikon */
 .allergen-warning {
   display: inline-flex;
   align-items: center;

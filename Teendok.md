@@ -1,10 +1,9 @@
 ## Egyéb:
-- adminnak kérvények: cukorbeteg dokumentum + (több allergén?) + kedvezmény dokumentum
+- több allergén kérvény????????
 - számla (adminnak és usereknek is)
-- fizetés
-- class, group
+- class???
 - menüben legyen logo, hamburger menü
-- ha vannak az ételeknél képek, akkor lehessen feltölteni képet az új étel hozzáadásánál
+- ha vannak az ételeknél képek, akkor lehessen feltölteni képet az új étel hozzáadásánál - NEM LESZNEK
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 
 
@@ -17,7 +16,6 @@
 
 ## Meals.vue
 - pontosabb tápérték számítás
-- több étel seeder-rel -> hiányos allergének, hozzávalók
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
 
 
