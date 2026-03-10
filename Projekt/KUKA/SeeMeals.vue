@@ -249,7 +249,7 @@
 </template>
 
 <script>
-import AuthService from '../../../services/authService'
+import AuthService from '../frontend/src/services/authService'
 
 export default {
   data() {
