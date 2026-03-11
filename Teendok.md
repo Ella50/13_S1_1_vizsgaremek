@@ -6,6 +6,9 @@
 - custom alert
 - új hozzávalónál nem menti az allergént
 
+- reszponziv, formazas mindenhol
+- pagináció
+
 
 ## Login.vue
 - jelszó elfelejtve
@@ -29,8 +32,6 @@
 
 ## Userprofil.vue
 - jelszó változtatás
-- kedvezményes vagy normál ár
-- cukorbeteg-e disabled -> kérvényezés az adminnak
 - lakcím változtatás
 
 
@@ -39,10 +40,7 @@
 
 
 ## PersonalOrders.vue
-- nincs még kész
-- cukormentes opció az A-ból
-- lemondás, rendelés, módosítás
-- figyelmeztetés allergénre (amilye van a felhasználónak) (pirossal írva az étel neve)
+- 
 
 
 

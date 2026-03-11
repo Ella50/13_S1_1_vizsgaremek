@@ -83,12 +83,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function () {
         Route::get('/me', [UserController::class, 'me']); //alapból AuthCotroller volt 
         Route::get('/profile', [UserController::class, 'profile']);
+
+        Route::get('/counties', [UserController::class, 'getCounties']);
+        Route::get('/cities/{county_id}', [UserController::class, 'getCitiesByCounty']);
+        Route::get('/cities/search', [UserController::class, 'searchCities']);
+
         Route::put('/update', [UserController::class, 'updateProfile']);
         Route::put('/password', [UserController::class, 'changePassword']);
         Route::post('/documents', [DocumentController::class, 'store']);
         Route::get('/documents', [DocumentController::class, 'myDocuments']);
         Route::get('/documents/{document}/download', [DocumentController::class, 'download']);
         Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);     //csak látszólagos törlés
+
+
 
 
         Route::get('/health', [UserHealthController::class, 'getUserHealthData']);
