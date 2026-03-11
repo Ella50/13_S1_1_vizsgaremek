@@ -1,6 +1,6 @@
 <template>
-    <AuthLayout title="Elfelejtett jelszó">
-        <div class="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+    <AuthLayout>
+        <div >
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Jelszó visszaállítása</h2>
             
             <!-- Sikeres üzenet -->
@@ -104,7 +104,7 @@ export default {
             try {
                 console.log('📧 Jelszó reset kérelem:', this.form.email)
                 
-                const response = await axios.post('/api/reset-password', {
+                const response = await axios.post('/forgot-password', { 
                     email: this.form.email
                 }, {
                     headers: {

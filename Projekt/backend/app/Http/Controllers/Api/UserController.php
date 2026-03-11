@@ -438,25 +438,46 @@ class UserController extends Controller
     }
 
 
-    /*public function changePassword(Request $request)
+ public function changePassword(Request $request)
     {
         try {
-            $request->validate([
-                'current_password' => 'required',
-                'new_password' => 'required|min:8|confirmed',
+            $validator = Validator::make($request->all(), [
+                'current_password' => 'required|string',
+                'new_password' => 'required|string|min:8|confirmed',
+            ], [
+                'current_password.required' => 'A jelenlegi jelszó megadása kötelező',
+                'new_password.required' => 'Az új jelszó megadása kötelező',
+                'new_password.min' => 'Az új jelszónak legalább 8 karakter hosszúnak kell lennie',
+                'new_password.confirmed' => 'Az új jelszó megerősítése nem egyezik',
             ]);
-            
-            $user = $request->user();
-            
-            if (!Hash::check($request->current_password, $user->password)) {
+
+            if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'A jelenlegi jelszó helytelen'
+                    'message' => 'Validációs hiba',
+                    'errors' => $validator->errors()
                 ], 422);
             }
             
+            $user = $request->user();
+            
+            // Ellenőrizzük, hogy a megadott jelenlegi jelszó helyes-e
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A jelenlegi jelszó helytelen',
+                    'errors' => [
+                        'current_password' => ['A megadott jelenlegi jelszó helytelen']
+                    ]
+                ], 422);
+            }
+            
+            // Új jelszó beállítása
             $user->password = Hash::make($request->new_password);
             $user->save();
+            
+            // Opcionális: kijelentkeztetés minden más eszközről (kivéve a jelenlegit)
+            // Auth::logoutOtherDevices($request->new_password);
             
             return response()->json([
                 'success' => true,
@@ -466,9 +487,9 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hiba történt'
+                'message' => 'Hiba történt a jelszó megváltoztatása során: ' . $e->getMessage()
             ], 500);
         }
-    }*/
+    }
 
 }

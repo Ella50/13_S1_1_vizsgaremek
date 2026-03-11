@@ -6,8 +6,6 @@ import Users from '../components/views/admin/Users.vue'
 import TodayMenu from '../components/views/menu/TodayMenu.vue'
 import WeeklyMenu from '../components/views/menu/WeeklyMenu.vue'
 import Meals from '../components/views/kitchen/Meals.vue'
-import ResetPassword from '../components/auth/ResetPassword.vue'
-import PasswordResetForm from '../components/auth/PasswordResetForm.vue'
 import MenuMaker from '../components/views/kitchen/MenuMaker.vue'
 import Ingredients from '../components/views/kitchen/Ingredients.vue'
 import LunchTime from '../components/views/kitchen/LunchTime.vue'
@@ -16,7 +14,10 @@ import UserProfile from '../components/views/users/UserProfile.vue'
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
 import AdminInvoice from '../components/views/admin/AdminInvoice.vue'
 import Documents from '../components/views/admin/Documents.vue'
+import ResetPassword from '../components/auth/ResetPassword.vue'
+import NewPasswordForm from '../components/auth/NewPasswordForm.vue'
 
+import asd from '../components/auth/asd.vue'
 
 //import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
 
@@ -39,18 +40,18 @@ const routes = [
         component: Register,
         meta: { requiresAuth: false }
     },
-   /* {
-        path: '/forgotpassword',
-        name: 'forgotpassword',
+    {
+        path: '/resetpassword',
+        name: 'resetpassword',
         component: ResetPassword,
-        meta: { guestOnly: true }
+        meta: { requiresAuth: false  }
     },
     {
-        path: '/resetpassword/:token?',
-        name: 'resetpassword',
-        component: PasswordResetForm,
-        meta: { guestOnly: true }
-    },*/
+        path: '/newpasswordform',
+        name: 'newpasswordform',
+        component: NewPasswordForm,
+        meta: { requiresAuth: false }
+    },
     {
         path: '/dashboard',
         name: 'dashboard',
@@ -137,6 +138,13 @@ const routes = [
         component: Documents,
         meta: { requiresAuth: true }
     },
+    {
+        path: '/asd',
+        name: 'asd',
+        component: asd,
+        meta: { requiresAuth: false }
+    },
+
 
     
 ]
