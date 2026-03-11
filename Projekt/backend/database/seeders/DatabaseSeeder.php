@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
             IngredientAllergenSeeder::class,
             MenuItemSeeder::class,
             PriceSeeder::class,
-            OrderSeeder::class,
+            //OrderSeeder::class,
             UserHealthSeeder::class,
         ]);
 

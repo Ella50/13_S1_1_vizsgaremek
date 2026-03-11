@@ -10,7 +10,7 @@ class OrderSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ellenőrizzük, hogy létezik-e a user id=2
+
         $userExists = DB::table('users')->where('id', 2)->exists();
         
         $pricesCount = DB::table('prices')->count();
@@ -20,7 +20,6 @@ class OrderSeeder extends Seeder
         
         // Különböző dátumok a rendelésekhez
         $dates = [
-            $now->copy()->subDays(3)->format('Y-m-d'), // 3 napja
             $now->copy()->subDays(1)->format('Y-m-d'), // tegnap
             $now->copy()->format('Y-m-d'),            // ma
             $now->copy()->addDays(1)->format('Y-m-d'), // holnap
@@ -32,15 +31,15 @@ class OrderSeeder extends Seeder
         $menuItems = DB::table('menuitems')->take(3)->get();
         
         if ($menuItems->isEmpty()) {
-            $this->command->error('Nincsenek MenuItem-ek!');
+            $this->command->error('Nincsenek MenuItemek');
             return;
         }
         
 
-        $price = DB::table('prices')->first();
+        $price = DB::table('prices')->skip(2)->first();
         
         if (!$price) {
-            $this->command->error('Nincsenek árak!');
+            $this->command->error('Nincsenek árak');
             return;
         }
         
@@ -83,8 +82,7 @@ class OrderSeeder extends Seeder
             // Mai nap: mindig Rendelve
             return 'Rendelve';
         } else {
-            // Jövőbeli dátumok: 70% eséllyel Rendelve
-            return rand(0, 9) < 7 ? 'Rendelve' : 'Lemondva';
+            return 'Rendelve' ;
         }
     }
     
