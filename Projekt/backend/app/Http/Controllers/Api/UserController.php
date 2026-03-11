@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use App\Models\City;
+use App\Models\County;
 
 class UserController extends Controller
 {
@@ -38,11 +40,8 @@ class UserController extends Controller
         $user = $request->user();
         
         $validator = Validator::make($request->all(), [
-            'firstName' => 'sometimes|string|max:255',
-            'lastName' => 'sometimes|string|max:255',
-            'thirdName' => 'sometimes|nullable|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
             'address' => 'sometimes|nullable|string|max:255',
+            'city_id' => 'sometimes|nullable|exists:cities,id'
         ]);
 
         if ($validator->fails()) {
@@ -54,7 +53,7 @@ class UserController extends Controller
         }
 
         try {
-            $user->update($request->only(['firstName', 'lastName', 'thirdName', 'email', 'address']));
+            $user->update($request->only(['address', 'city_id']));
             
             $user->load(['city', 'studentClass', 'group', 'rfidCard']);
 
@@ -351,6 +350,93 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+
+    /**
+     * Megyék lekérése (bejelentkezett felhasználóknak)
+     */
+    public function getCounties()
+    {
+        try {
+            $counties = County::orderBy('countyName')->get(['id', 'countyName']);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $counties
+            ]);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a megyék betöltése során'
+            ], 500);
+        }
+    }
+
+    /**
+     * Városok lekérése megye alapján (bejelentkezett felhasználóknak)
+     */
+    public function getCitiesByCounty($county_id)
+    {
+        try {
+            if (!is_numeric($county_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Érvénytelen megye azonosító'
+                ], 400);
+            }
+            
+            $cities = City::where('county_id', $county_id)
+                ->orderBy('cityName')
+                ->get(['id', 'cityName', 'zipCode', 'county_id']); // county_id hozzáadva
+            
+            return response()->json([
+                'success' => true,
+                'data' => $cities
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a városok betöltése során'
+            ], 500);
+        }
+    }
+
+    /**
+     * Városok keresése (bejelentkezett felhasználóknak)
+     */
+    public function searchCities(Request $request)
+    {
+        try {
+            $search = $request->get('search', '');
+            
+            $query = City::with('county');
+            
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('cityName', 'LIKE', "%{$search}%")
+                    ->orWhere('zipCode', 'LIKE', "%{$search}%")
+                    ->orWhereHas('county', function($q2) use ($search) {
+                        $q2->where('countyName', 'LIKE', "%{$search}%");
+                    });
+                });
+            }
+            
+            $cities = $query->orderBy('cityName')->limit(50)->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $cities
+            ]);
+        } catch (\Exception $e) {
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a városok keresése során'
+            ], 500);
+        }
+    }
+
 
     /*public function changePassword(Request $request)
     {

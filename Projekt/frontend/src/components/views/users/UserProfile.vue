@@ -37,40 +37,66 @@
                 <h5 class="mb-0">Személyes adatok</h5>
               </div>
               <div class="card-body">
-                <form @submit.prevent="updateProfile">
+
                   <div class="mb-3">
                     <label class="form-label">Vezetéknév*</label>
-                    <input type="text" v-model="profileForm.firstName" class="form-control" disabled="">
+                    <input type="text" v-model="profileForm.firstName" class="form-control" required disabled>
                   </div>
                   
                   <div class="mb-3">
                     <label class="form-label">Keresztnév*</label>
-                    
-                    <input type="text" v-model="profileForm.lastName" class="form-control" disabled="">
+                    <input type="text" v-model="profileForm.lastName" class="form-control" required disabled>
                   </div>
                   
                   <div class="mb-3">
                     <label class="form-label">Középső név</label>
-                    <input type="text" v-model="profileForm.thirdName" class="form-control" disabled="">
+                    <input type="text" v-model="profileForm.thirdName" class="form-control" disabled>
                   </div>
                   
                   <div class="mb-3">
                     <label class="form-label">Email cím *</label>
-                    <input type="email" v-model="profileForm.email" class="form-control" disabled="">
+                    <input type="email" v-model="profileForm.email" class="form-control" required disabled>
+                  </div>
+                <form @submit.prevent="updateProfile">
+                  <!-- Megye kiválasztása -->
+                  <div class="mb-3">
+                    <label class="form-label">Megye *</label>
+                    <select v-model="selectedCountyId" @change="onCountyChange" class="form-select" required>
+                      <option value="">Válassz megyét...</option>
+                      <option v-for="county in counties" :key="county.id" :value="county.id">
+                        {{ county.countyName }}
+                      </option>
+                    </select>
                   </div>
 
-                  
-                  
+                  <!-- Város kiválasztása -->
                   <div class="mb-3">
-                    <label class="form-label">Irányítószám, város</label>
-                    <input type="text" v-model="profileForm.city" class="form-control" disabled="">
+                    <label class="form-label">Város *</label>
+                    <select 
+                      v-model="selectedCityId" 
+                      @change="onCityChange" 
+                      class="form-select" 
+                      :disabled="!selectedCountyId || isLoadingCities" 
+                      required
+                    >
+                      <option value="">
+                        {{ isLoadingCities ? 'Városok betöltése...' : 'Válassz várost...' }}
+                      </option>
+                      <option v-for="city in cities" :key="city.id" :value="city.id">
+                        {{ city.zipCode }} {{ city.cityName }}
+                      </option>
+                    </select>
                   </div>
 
                   <div class="mb-3">
                     <label class="form-label">Cím</label>
-                    <input type="text" v-model="profileForm.address" class="form-control" disabled="">
+                    <input type="text" v-model="profileForm.address" class="form-control">
                   </div>
                   
+                  <button type="submit" class="btn btn-primary" :disabled="isUpdating">
+                    <span v-if="isUpdating" class="spinner-border spinner-border-sm me-1"></span>
+                    {{ isUpdating ? 'Mentés...' : 'Cím mentése' }}
+                  </button>
                 </form>
               </div>
             </div>
@@ -395,15 +421,19 @@ export default {
   data() {
     return {
       user: null,
-      
+
+      counties: [],
+      cities: [], 
+      selectedCountyId: null, 
+      selectedCityId: null, 
+      isLoadingCities: false,
 
       profileForm: {
         firstName: '',
         lastName: '',
         thirdName: '',
         email: '',
-        zipCode: '',
-        city: '',
+        city_id: null,
         address: ''
       },
       
@@ -507,7 +537,7 @@ async created() {
 async loadDocuments() {
   try {
     const response = await axios.get('/user/documents');
-    console.log('Documents loaded:', response.data);
+
     
     let data = response.data;
     
@@ -546,7 +576,7 @@ async loadDocuments() {
       isAccepted: doc.isAccepted || false 
     }));
     
-    console.log('Processed documents:', this.documents);
+
     
   } catch (error) {
     console.error('Error loading documents:', error);
@@ -587,14 +617,7 @@ async loadDocuments() {
   formData.append('document', file);
   formData.append('documentType', type);
   
-  // DEBUG: FormData tartalom ellenőrzése
-  console.log('=== FELTÖLTÉS ELLENŐRZÉS ===');
-  console.log('Típus:', type);
-  console.log('Fájl:', {
-    name: file.name,
-    size: file.size,
-    docuemntType: file.documentType
-  });
+ 
   
   // FormData tartalom kiírása
   for (let pair of formData.entries()) {
@@ -771,7 +794,6 @@ handleImageError(event) {
 },
     
  
-
 async loadUserData() {
   this.isLoading = true;
   this.error = '';
@@ -779,61 +801,36 @@ async loadUserData() {
   try {
     const userResponse = await axios.get('/user/me');
 
-    console.log('User response:', userResponse.data);
     
-    //BOM
+    // BOM kezelés
     let responseData = userResponse.data;
     if (typeof responseData === 'string') {
-
       if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-
         responseData = responseData.slice(1);
       }
       
       try {
         responseData = JSON.parse(responseData);
-        console.log('Parsed response:', responseData);
+
       } catch (parseError) {
         console.error('JSON parse error:', parseError);
-        console.error('Raw response (first 100 chars):', responseData.substring(0, 100));
         throw new Error('A válasz nem érvényes JSON formátumú');
       }
     }
     
-
+    // Felhasználói adatok kinyerése
     let userData = null;
-    
     if (responseData.user) {
       userData = responseData.user;
-      console.log('Using responseData.user');
     } else if (responseData.data) {
       userData = responseData.data;
-      console.log('Using responseData.data');
     } else {
       userData = responseData;
-      console.log('Using responseData directly');
     }
     
     this.user = userData;
     
-    
     if (this.user) {
-      console.log('User data loaded:', {
-        firstName: this.user.firstName,
-        lastName: this.user.lastName,
-        email: this.user.email,
-        city_id: this.user.city_id,
-        city: this.user.city
-      });
-      
-  
-      let cityDisplay = '';
-      if (this.user.city) {
-
-        const zipCode = this.user.city.zipCode || '';
-        const cityName = this.user.city.cityName || '';
-        cityDisplay = zipCode ? `${zipCode} ${cityName}`.trim() : cityName;
-      }
       
       this.profileForm = {
         firstName: this.user.firstName || '',
@@ -841,17 +838,44 @@ async loadUserData() {
         thirdName: this.user.thirdName || '',
         email: this.user.email || '',
         address: this.user.address || '',
-        city: cityDisplay
+        city_id: this.user.city_id || null
       };
-    } else {
-      console.error('User object is null or undefined');
+      
+    
+      await this.loadCounties();
+      
+      if (this.user.city_id) {
+  
+        this.selectedCityId = this.user.city_id;
+        
+        if (this.user.city && this.user.city.county_id) {
+          this.selectedCountyId = this.user.city.county_id;
+          await this.loadCities(this.selectedCountyId);
+        } else {
+
+          try {
+
+            if (this.user.city && this.user.city.county_id) {
+              this.selectedCountyId = this.user.city.county_id;
+              await this.loadCities(this.selectedCountyId);
+            } else {
+              console.warn('No county_id found for city:', this.user.city_id);
+            }
+          } catch (cityError) {
+            console.error('Error loading city details:', cityError);
+          }
+        }
+      }
     }
     
-    // Load health data
+    // Egészségügyi adatok betöltése
     await this.loadHealthData();
     
-    // Load available allergens
+    // Elérhető allergének betöltése
     await this.loadAvailableAllergens();
+    
+    // Dokumentumok betöltése
+    await this.loadDocuments();
     
   } catch (error) {
     console.error('Error loading user data:', error);
@@ -861,13 +885,88 @@ async loadUserData() {
   }
 },
     
+// Megyék betöltése
+async loadCounties() {
+  try {
+    const response = await axios.get('/user/counties');
+    
+    let responseData = response.data;
+    if (typeof responseData === 'string') {
+      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+        responseData = responseData.slice(1);
+      }
+      try {
+        responseData = JSON.parse(responseData);
+      } catch (parseError) {
+        console.error('Counties JSON parse error:', parseError);
+      }
+    }
+    
+    if (responseData.data && Array.isArray(responseData.data)) {
+      this.counties = responseData.data;
+    } else if (Array.isArray(responseData)) {
+      this.counties = responseData;
+    }
+    
+    
+  } catch (error) {
+    console.error('Error loading counties:', error);
+  }
+},
 
+// Városok betöltése megye alapján
+async loadCities(countyId) {
+  if (!countyId) {
+    this.cities = [];
+    return;
+  }
+  
+  this.isLoadingCities = true;
+  
+  try {
+    const response = await axios.get(`/user/cities/${countyId}`);
+    
+    let responseData = response.data;
+    if (typeof responseData === 'string') {
+      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+        responseData = responseData.slice(1);
+      }
+      try {
+        responseData = JSON.parse(responseData);
+      } catch (parseError) {
+        console.error('Cities JSON parse error:', parseError);
+      }
+    }
+    
+    if (responseData.data && Array.isArray(responseData.data)) {
+      this.cities = responseData.data;
+    } else if (Array.isArray(responseData)) {
+      this.cities = responseData;
+    }
+    
+  } catch (error) {
+    console.error('Error loading cities:', error);
+    this.cities = [];
+  } finally {
+    this.isLoadingCities = false;
+  }
+},
+
+// Megye változásának kezelése
+async onCountyChange() {
+  this.selectedCityId = null;
+  this.profileForm.city_id = null;
+  await this.loadCities(this.selectedCountyId);
+},
+
+// Város változásának kezelése
+onCityChange() {
+  this.profileForm.city_id = this.selectedCityId;
+},
 
 async loadHealthData() {
   try {
     const response = await axios.get('/user/health');
-    
-    console.log('Health data response:', response.data);
     
     //BOM
     let responseData = response.data;
@@ -931,13 +1030,12 @@ async loadAvailableAllergens() {
 
       
       if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-        console.log('BOM detected and removed');
         responseData = responseData.slice(1);
       }
       
       try {
         responseData = JSON.parse(responseData);
-        console.log('Parsed allergens:', responseData);
+
       } catch (parseError) {
         console.error('Allergens JSON parse error:', parseError);
         console.error('Raw allergens response (first 100 chars):', responseData.substring(0, 100));
@@ -976,9 +1074,7 @@ async loadAvailableAllergens() {
         this.availableAllergens.push(allergen);
       }
     }
-    
-    console.log('Available allergens after filtering:', this.availableAllergens);
-    
+
   } catch (error) {
     console.error('Error loading allergens:', error);
     this.availableAllergens = [];
@@ -989,27 +1085,33 @@ async loadAvailableAllergens() {
 
 async updateProfile() {
   this.clearMessage();
+  this.isUpdating = true;
   
   try {
+
     const response = await axios.put('/user/update', this.profileForm);
-    
-    console.log('Update profile response:', response.data);
-    
 
     this.user = response.data.data || response.data.user || response.data;
     
-
+    // Profile form frissítése
     this.profileForm = {
       firstName: this.user.firstName || '',
       lastName: this.user.lastName || '',
       thirdName: this.user.thirdName || '',
       email: this.user.email || '',
-      address: this.user.address || ''
+      address: this.user.address || '',
+      city_id: this.user.city_id || null
     };
     
-
-    await this.loadHealthData();
-    await this.loadAvailableAllergens();
+    // Ha a város megváltozott, frissítsük a kiválasztott értékeket
+    if (this.user.city_id) {
+      this.selectedCityId = this.user.city_id;
+      
+      // Ha a city objektum tartalmazza a county_id-t
+      if (this.user.city && this.user.city.county_id) {
+        this.selectedCountyId = this.user.city.county_id;
+      }
+    }
     
     this.showMessage('Profiladatok sikeresen frissítve!', 'success');
     
@@ -1024,6 +1126,7 @@ async updateProfile() {
     }
   } finally {
     this.isUpdating = false;
+    window.location.reload();
   }
 },
     
