@@ -951,7 +951,67 @@ async loadCities(countyId) {
     this.isLoadingCities = false;
   }
 },
-
+async changePassword() {
+    // Ellenőrizzük, hogy az új jelszó és a megerősítés egyezik-e
+    if (this.passwordForm.new_password !== this.passwordForm.new_password_confirmation) {
+      this.showMessage('Az új jelszavak nem egyeznek!', 'error');
+      return;
+    }
+    
+    // Jelszó hossz ellenőrzés
+    if (this.passwordForm.new_password.length < 8) {
+      this.showMessage('Az új jelszónak legalább 8 karakter hosszúnak kell lennie!', 'error');
+      return;
+    }
+    
+    this.isChangingPassword = true;
+    this.clearMessage();
+    
+    try {
+      const response = await axios.post('/user/auth/change-password', {
+        current_password: this.passwordForm.current_password,
+        new_password: this.passwordForm.new_password,
+        new_password_confirmation: this.passwordForm.new_password_confirmation
+      });
+      
+      // Sikeres válasz esetén
+      this.showMessage(response.data.message || 'Jelszó sikeresen megváltoztatva!', 'success');
+      
+      // Űrlap alaphelyzetbe állítása
+      this.passwordForm = {
+        current_password: '',
+        new_password: '',
+        new_password_confirmation: ''
+      };
+      
+    } catch (error) {
+      console.error('Error changing password:', error);
+      
+      // Hibaüzenetek megjelenítése
+      if (error.response?.data?.errors) {
+        // Validációs hibák esetén
+        const errorMessages = [];
+        const errors = error.response.data.errors;
+        
+        for (let field in errors) {
+          if (Array.isArray(errors[field])) {
+            errorMessages.push(...errors[field]);
+          } else {
+            errorMessages.push(errors[field]);
+          }
+        }
+        
+        this.showMessage(errorMessages.join(', '), 'error');
+      } else if (error.response?.data?.message) {
+        // Általános hibaüzenet
+        this.showMessage(error.response.data.message, 'error');
+      } else {
+        this.showMessage('Hiba történt a jelszó módosítása során. Kérlek próbáld újra később.', 'error');
+      }
+    } finally {
+      this.isChangingPassword = false;
+    }
+  },
 // Megye változásának kezelése
 async onCountyChange() {
   this.selectedCityId = null;
@@ -1141,9 +1201,10 @@ async updateProfile() {
       this.clearMessage();
       
       try {
-        await axios.post('/auth/change-password', this.passwordForm);
+        await axios.post('/user/auth/change-password', this.passwordForm);
         
         this.showMessage('Jelszó sikeresen megváltoztatva!', 'success');
+        window.alert('Jelszó sikeresen megváltoztatva!');
         
         // Reset form
         this.passwordForm = {
@@ -1160,6 +1221,7 @@ async updateProfile() {
           this.showMessage(errors.join(', '), 'error');
         } else {
           this.showMessage(error.response?.data?.message || 'Hiba történt a jelszó módosítása során.', 'error');
+          alert(error.response?.data?.message || 'Hiba történt a jelszó módosítása során.');
         }
       } finally {
         this.isChangingPassword = false;

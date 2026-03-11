@@ -5,6 +5,7 @@
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
 - új hozzávalónál nem menti az allergént
+- footerek
 
 - reszponziv, formazas mindenhol
 - pagináció
@@ -31,8 +32,7 @@
 
 
 ## Userprofil.vue
-- jelszó változtatás
-- lakcím változtatás
+-frontend
 
 
 ## TodayMenu.vue

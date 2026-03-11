@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\KitchenController;
-use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Api\PersonalOrderController;
 use App\Http\Controllers\Api\OrdersController;
@@ -15,7 +15,6 @@ use App\Http\Controllers\LunchTimeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Api\UserHealthController;
 use App\Http\Controllers\Api\DocumentController;
-use App\Models\User;
 use App\Http\Controllers\AdminInvoiceController;
 
 // Publikus utvonalak
@@ -30,10 +29,10 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/allergens', [UserHealthController::class, 'getAllergens']);
 
-Route::post('/reset-password', [PasswordResetController::class, 'sendResetLinkEmail']);
-Route::post('/reset-password/confirm', [PasswordResetController::class, 'reset']);
+Route::post('/forgot-password', [ResetPasswordController::class, 'sendResetLink']);
+Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 // Opcionális tokenellenőrzés???
-Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
+//Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 
 
 //Menü utvonalak (nem a sanctumba van ezért publikusak??)
@@ -83,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function () {
         Route::get('/me', [UserController::class, 'me']); //alapból AuthCotroller volt 
         Route::get('/profile', [UserController::class, 'profile']);
+        Route::post('/auth/change-password', [UserController::class, 'changePassword']);
 
         Route::get('/counties', [UserController::class, 'getCounties']);
         Route::get('/cities/{county_id}', [UserController::class, 'getCitiesByCounty']);
