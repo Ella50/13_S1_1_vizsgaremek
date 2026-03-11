@@ -445,36 +445,56 @@ export default {
       return dateString === today
     },
     
-    // Határidők
-    canModifyOrder(dateString) {
-      const orderDate = new Date(dateString)
-      const now = new Date()
-      
-      // Előző nap 10:00
-      const deadline = new Date(orderDate)
-      deadline.setDate(deadline.getDate() - 1)
-      deadline.setHours(10, 0, 0, 0)
-      
-      // Hétfő esetén péntek 10:00
-      if (orderDate.getDay() === 1) { // Hétfő
-        deadline.setDate(orderDate.getDate() - 3)
-      } else if (orderDate.getDay() === 0) { // Vasárnap
-        deadline.setDate(orderDate.getDate() - 2) // Péntek
-      }
-      
-      return now <= deadline
-    },
-    
-    canCancelOrder(dateString) {
-      const orderDate = new Date(dateString)
-      const now = new Date()
-      
-      // Aznap 8:00
-      const deadline = new Date(orderDate)
-      deadline.setHours(8, 0, 0, 0)
-      
-      return now <= deadline
-    },
+canModifyOrder(dateString) {
+  const orderDate = new Date(dateString)
+  const now = new Date()
+  
+  // Előző munkanap 10:00
+  let deadline = this.getPreviousWorkingDay(orderDate)
+  deadline.setHours(10, 0, 0, 0)
+  
+  return now <= deadline
+},
+
+canCancelOrder(dateString) {
+  return this.canModifyOrder(dateString)
+},
+
+getPreviousWorkingDay(date) {
+  const result = new Date(date)
+  const dayOfWeek = date.getDay() // 0 = vasárnap, 1 = hétfő, ..., 6 = szombat
+  
+  if (dayOfWeek === 1) { // Hétfő
+    // Péntek (3 nappal korábban)
+    result.setDate(date.getDate() - 3)
+  } else if (dayOfWeek === 0) { // Vasárnap
+    // Péntek (2 nappal korábban)
+    result.setDate(date.getDate() - 2)
+  } else { // Kedd - Szombat
+    // Előző nap
+    result.setDate(date.getDate() - 1)
+  }
+  
+  return result
+},
+
+getDeadlineInfo(dateString) {
+  const date = new Date(dateString)
+  const deadline = this.getPreviousWorkingDay(date)
+  deadline.setHours(10, 0, 0, 0)
+  
+  return deadline.toLocaleDateString('hu-HU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }) + ' óra'
+},
+
+getCancelDeadlineInfo(dateString) {
+  return this.getDeadlineInfo(dateString)
+},
     
     canShowOption(date, option) {
       if (option === 'A') return !!date.menu.optionA
@@ -483,9 +503,11 @@ export default {
     },
     
     isOptionSelected(date, option) {
-      if (date.has_order) {
+      // Aktív rendelésnél a kiválasztott opciót mutatjuk
+      if (date.order_status === 'Rendelve') {
         return date.selected_option === option
       }
+      // Lemondott vagy nincs rendelés: ideiglenes választást mutatjuk
       return this.tempSelections[date.date] === option
     },
     
@@ -493,25 +515,26 @@ export default {
       // Cukorbetegek nem kattinthatnak
       if (this.userInfo?.hasDiabetes) return true
       
-      // Ha nincs rendelés és lejárt a határidő, vagy van rendelés és nem módosítható
-      if (!date.has_order && !this.canModifyOrder(date.date)) return true
-      if (date.has_order && !this.canModifyOrder(date.date)) return true
+      // Ha van aktív rendelés és nem módosítható, akkor tiltott
+      if (date.order_status === 'Rendelve' && !this.canModifyOrder(date.date)) return true
+      
+      // Ha nincs rendelés (vagy le van mondva) és lejárt a határidő, akkor tiltott
+      if ((!date.has_order || date.order_status === 'Lemondva') && !this.canModifyOrder(date.date)) return true
       
       return false
     },
     
     handleOptionClick(date, option) {
-      if (date.has_order) {
+        // Ha van aktív rendelés és módosítható
         if (date.order_status === 'Rendelve' && this.canModifyOrder(date.date)) {
           this.changeOrderOption(date, option)
-        }
-      } else {
-        if (this.canModifyOrder(date.date)) {
+        } 
+        // Ha nincs rendelés VAGY le van mondva, és módosítható
+        else if ((!date.has_order || date.order_status === 'Lemondva') && this.canModifyOrder(date.date)) {
           this.selectOptionForNewOrder(date, option)
         }
-      }
     },
-    
+      
   canPlaceOrder(date) {
     // Cukorbetegeknek automatikusan mehet
     if (this.userInfo?.hasDiabetes) return true
@@ -715,7 +738,7 @@ export default {
     
     getStatusText(date) {
       if (date.order_status === 'Rendelve') return 'Rendelve'
-      if (date.order_status === 'Lemondva') return 'Lemondva'
+      if (date.order_status === 'Lemondva') return 'Rendelhető'
       if (!this.canModifyOrder(date.date)) return 'Lejárt'
       return 'Rendelhető'
     },
@@ -1134,10 +1157,10 @@ export default {
   border: 1px solid #c3e6cb;
 }
 
-.status-badge.cancelled {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+.status-badge.cancelled { /*le lett mondva, de még rendelhető*/
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
 }
 
 .status-badge.deadline-passed {
@@ -1146,7 +1169,7 @@ export default {
   border: 1px solid #ffeeba;
 }
 
-.status-badge.available {
+.status-badge.available { /*rendelhető*/
   background: #d1ecf1;
   color: #0c5460;
   border: 1px solid #bee5eb;

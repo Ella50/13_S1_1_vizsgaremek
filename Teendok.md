@@ -1,11 +1,10 @@
 ## Egyéb:
-- több allergén kérvény????????
 - számla (adminnak és usereknek is)
-- class???
 - menüben legyen logo, hamburger menü
 - ha vannak az ételeknél képek, akkor lehessen feltölteni képet az új étel hozzáadásánál - NEM LESZNEK
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
-
+- custom alert
+- új hozzávalónál nem menti az allergént
 
 
 ## Login.vue
@@ -18,9 +17,6 @@
 - pontosabb tápérték számítás
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
 
-
-## Ingredient.vue
-- amikor hozzáadunk egy összetevőt a listához, akkor az allergénjeit is be lehessen állítani
 
 
 ## Orders.vue
