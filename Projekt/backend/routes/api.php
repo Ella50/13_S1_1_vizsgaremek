@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\UserHealthController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\AdminInvoiceController;
 
+use Illuminate\Support\Facades\Mail;
+
 // Publikus utvonalak
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/counties', [AuthController::class, 'getCounties']);
@@ -29,8 +31,28 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/allergens', [UserHealthController::class, 'getAllergens']);
 
-Route::post('/forgot-password', [ResetPasswordController::class, 'sendResetLink']);
+Route::post('/forgot-password', [App\Http\Controllers\Api\ResetPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
+
+Route::get('/test-mail', function() {
+    try {
+        Mail::raw('Ez egy teszt email a Mailtrap beállítások ellenőrzésére!', function($message) {
+            $message->to('test@example.com')
+                    ->subject('Teszt email');
+        });
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Email elküldve! Nézd meg a Mailtrap Inbox-odban.'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
 // Opcionális tokenellenőrzés???
 //Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
 

@@ -1,95 +1,52 @@
-
 <template>
-    <AuthLayout>
-        <div>
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Új jelszó beállítása</h2>
-            
-            <!-- Sikeres üzenet -->
-            <div v-if="successMessage" class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-                ✅ {{ successMessage }}
-            </div>
-            
-            <!-- Hiba üzenet -->
-            <div v-if="error" class="mb-4 p-4 bg-red-100 text-red-700 rounded">
-                ❌ {{ error }}
-            </div>
-            
-            <!-- Jelszó változtató form -->
-            <div v-if="!successMessage">
-                <p class="mb-4 text-gray-600">
-                    Adj meg egy új jelszót a fiókodhoz.
-                </p>
-                
-                <form @submit.prevent="handleResetPassword">
-                    <input type="hidden" v-model="form.token">
-                    <input type="hidden" v-model="form.email">
-                    
-                    <div class="mb-4">
-                        <label for="password" class="block text-gray-700 mb-2">Új jelszó</label>
-                        <input
-                            id="password"
-                            v-model="form.password"
-                            type="password"
-                            required
-                            minlength="8"
-                            class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Új jelszó"
-                            :disabled="loading"
-                        >
-                        <p class="text-sm text-gray-500 mt-1">Minimum 8 karakter</p>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="password_confirmation" class="block text-gray-700 mb-2">Jelszó megerősítése</label>
-                        <input
-                            id="password_confirmation"
-                            v-model="form.password_confirmation"
-                            type="password"
-                            required
-                            minlength="8"
-                            class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Jelszó megerősítése"
-                            :disabled="loading"
-                        >
-                    </div>
-                    
-                    <button
-                        type="submit"
-                        :disabled="loading || !isFormValid"
-                        class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <span v-if="loading">Feldolgozás...</span>
-                        <span v-else>Jelszó megváltoztatása</span>
-                    </button>
-                </form>
-                
-                <div class="mt-4 text-center">
-                    <router-link to="/login" class="text-blue-600 hover:underline">
-                        Vissza a bejelentkezéshez
-                    </router-link>
-                </div>
-            </div>
-            
-            <!-- Sikeres visszaállítás után -->
-            <div v-else class="text-center py-4">
-                <router-link 
-                    to="/login" 
-                    class="inline-block bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 transition"
-                >
-                    Tovább a bejelentkezéshez
-                </router-link>
-            </div>
+    <div class="container">
+        <h2>Új jelszó beállítása</h2>
+        
+        <div v-if="successMessage" class="success">
+            ✅ {{ successMessage }}
         </div>
-    </AuthLayout>
+        
+        <div v-if="error" class="error">
+            ❌ {{ error }}
+        </div>
+        
+        <form @submit.prevent="handleResetPassword">
+            <input type="hidden" v-model="form.token">
+            <input type="hidden" v-model="form.email">
+            
+            <div class="form-group">
+                <label>Új jelszó</label>
+                <input 
+                    type="password" 
+                    v-model="form.password" 
+                    required 
+                    minlength="8"
+                    class="form-control"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label>Jelszó megerősítése</label>
+                <input 
+                    type="password" 
+                    v-model="form.password_confirmation" 
+                    required 
+                    minlength="8"
+                    class="form-control"
+                >
+            </div>
+            
+            <button type="submit" :disabled="loading" class="btn-primary">
+                {{ loading ? 'Feldolgozás...' : 'Jelszó megváltoztatása' }}
+            </button>
+        </form>
+    </div>
 </template>
 
 <script>
-import AuthLayout from './AuthLayout.vue'
-import axios from '../../axios'
+import axios from 'axios'
 
 export default {
-    name: 'ResetPasswordForm',
-    components: { AuthLayout },
     props: {
         token: {
             type: String,
@@ -113,15 +70,15 @@ export default {
             successMessage: ''
         }
     },
-    computed: {
-        isFormValid() {
-            return this.form.password.length >= 8 && 
-                   this.form.password === this.form.password_confirmation
-        }
-    },
+    
     methods: {
         async handleResetPassword() {
-            // Validáció
+            // 1. Először validáljunk frontenden
+            if (!this.form.password || !this.form.password_confirmation) {
+                this.error = 'Minden mező kitöltése kötelező!'
+                return
+            }
+            
             if (this.form.password !== this.form.password_confirmation) {
                 this.error = 'A jelszavak nem egyeznek!'
                 return
@@ -136,51 +93,54 @@ export default {
             this.error = ''
             
             try {
-                console.log('🔑 Jelszó visszaállítás:', this.form.email)
+                console.log('Küldött adatok:', this.form)
                 
-                const response = await axios.post('/reset-password', this.form, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
+                const response = await axios.post('/reset-password', {
+                    token: this.form.token,
+                    email: this.form.email,
+                    password: this.form.password,
+                    password_confirmation: this.form.password_confirmation
                 })
                 
-                console.log('✅ Backend válasz:', response.data)
+                console.log('Válasz:', response.data)
                 
-                if (response.data.success) {
-                    this.successMessage = response.data.message
-                    
-                    // Űrlap ürítése
-                    this.form.password = ''
-                    this.form.password_confirmation = ''
+                // BOM kezelés
+                let data = response.data
+                if (typeof data === 'string') {
+                    if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
+                        data = data.slice(1)
+                        data = JSON.parse(data)
+                    }
+                }
+                
+                if (data.success) {
+                    this.successMessage = data.message
+                    // 3 másodperc múlva átirányítás
+                    setTimeout(() => {
+                        window.location.href = '/login'
+                    }, 3000)
                 } else {
-                    this.error = response.data.message || 'Ismeretlen hiba'
+                    this.error = data.message || 'Hiba történt'
                 }
                 
             } catch (err) {
-                console.error('❌ Hiba:', err)
+                console.error('Reset password error:', err)
                 
-                if (err.response) {
-                    const status = err.response.status
-                    const data = err.response.data
-                    
-                    if (status === 422) {
-                        // Validációs hiba
-                        if (data.errors) {
-                            const firstError = Object.values(data.errors)[0]
-                            this.error = Array.isArray(firstError) ? firstError[0] : firstError
-                        } else {
-                            this.error = data.message || 'Érvénytelen adatok'
+                // Validációs hibák részletes megjelenítése
+                if (err.response?.status === 422) {
+                    const errors = err.response.data.errors
+                    if (errors) {
+                        // Összegyűjtjük az összes hibaüzenetet
+                        const errorMessages = []
+                        for (let field in errors) {
+                            errorMessages.push(errors[field][0])
                         }
-                    } else if (status === 400) {
-                        this.error = data.message || 'Érvénytelen token vagy email'
+                        this.error = errorMessages.join(', ')
                     } else {
-                        this.error = data.message || `Hiba történt (${status})`
+                        this.error = err.response.data.message || 'Validációs hiba'
                     }
-                } else if (err.request) {
-                    this.error = 'Nincs kapcsolat a szerverrel. Kérjük, próbáld újra később.'
                 } else {
-                    this.error = 'Váratlan hiba történt.'
+                    this.error = err.response?.data?.message || 'Hálózati hiba'
                 }
             } finally {
                 this.loading = false
@@ -189,3 +149,83 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover {
+    background: #45a049;
+}
+
+.btn-primary:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+.error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #ffcdd2;
+}
+
+.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #c8e6c9;
+}
+</style>

@@ -14,10 +14,10 @@ import UserProfile from '../components/views/users/UserProfile.vue'
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
 import AdminInvoice from '../components/views/admin/AdminInvoice.vue'
 import Documents from '../components/views/admin/Documents.vue'
+
 import ResetPassword from '../components/auth/ResetPassword.vue'
 import NewPasswordForm from '../components/auth/NewPasswordForm.vue'
 
-import asd from '../components/auth/asd.vue'
 
 //import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
 
@@ -139,12 +139,22 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
-        path: '/asd',
-        name: 'asd',
-        component: asd,
+        path: '/resetpassword',
+        name: 'resetpassword',
+        component: ResetPassword,
         meta: { requiresAuth: false }
     },
+    {
 
+        path: '/reset-password/:token',
+        name: 'newpasswordform', 
+        component: NewPasswordForm,
+        props: (route) => ({
+            token: route.params.token,
+            email: route.query.email
+        }),
+        meta: { requiresAuth: false }
+    },
 
     
 ]
