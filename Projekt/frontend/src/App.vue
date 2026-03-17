@@ -3,6 +3,7 @@
     <Navigation v-if="showNavigation" />
     <main :class="{ 'with-nav': showNavigation }">
       <router-view />
+      <AppAlert />
     </main>
   </div>
 </template>
@@ -11,6 +12,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Navigation from './components/Navigation.vue'
+import AppAlert from "@/components/auth/AppAlert.vue";
 
 export default {
   components: { Navigation },

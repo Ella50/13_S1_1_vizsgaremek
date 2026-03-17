@@ -2,7 +2,6 @@
 <html>
 <head>
 <meta charset="utf-8">
-
 <style>
 body{
     font-family: DejaVu Sans, sans-serif;
@@ -31,12 +30,9 @@ body{
     float:right;
 }
 
-.section{
-    margin-bottom:30px;
-}
-
 .invoice-info{
     width:100%;
+    margin-bottom:30px;
 }
 
 .invoice-info td{
@@ -47,18 +43,25 @@ body{
 table.items{
     width:100%;
     border-collapse:collapse;
-    margin-top:20px;
+    margin:30px 0;
 }
 
 .items th{
     background:#eee;
     border:1px solid #ccc;
-    padding:8px;
+    padding:12px;
+    text-align:center;
 }
 
 .items td{
     border:1px solid #ccc;
-    padding:8px;
+    padding:12px;
+    text-align:right;
+}
+
+.items td:first-child{
+    text-align:center;
+    font-weight:bold;
 }
 
 .right{
@@ -66,16 +69,15 @@ table.items{
 }
 
 .summary{
-    width:40%;
-    margin-left:auto;
+    width:100%;
     margin-top:20px;
 }
 
 .summary td{
-    padding:6px;
+    padding:8px;
 }
 
-.summary .total{
+.total-row{
     border-top:2px solid #000;
     font-weight:bold;
 }
@@ -85,129 +87,110 @@ table.items{
 }
 </style>
 </head>
-
 <body>
 
 <table class="header">
 <tr>
 <td>
-
-<strong>YOUR COMPANY</strong><br>
-Cím: 1234 Város, Utca 1.<br>
-Email: info@ceg.hu<br>
-Telefon: +36 30 123 4567
-
+<strong>Kiskunfélegyházi Szent Benedek PG Két Tanítási Nyelvű Technikum és Kollégium</strong><br>
+Cím: 6100 Kiskunfélegyháza, Kossuth Lajos utca 24.<br>
+Email: info@szbi-pg.hu<br>
+Telefon: +36 30 123 4567<br>
+Adószám: 12345678-1-23
 </td>
-
 <td style="text-align:right;">
-<div class="logo">LOGO</div>
+<div>
+    <img src="{{ public_path('backend/public/images/eMenza.png') }}" alt="eMenza">
+</div>
 </td>
 </tr>
 </table>
 
 <table class="invoice-info">
 <tr>
-
 <td width="50%">
-<strong>BILL TO</strong><br>
-
-{{ $invoice->user->firstName ?? '' }}
-{{ $invoice->user->lastName ?? '' }}<br>
-
+<strong>VEVŐ</strong><br>
+{{ $invoice->user->firstName ?? '' }} {{ $invoice->user->lastName ?? '' }}<br>
 {{ $invoice->user->address ?? '' }}
-
 </td>
-
 <td width="50%" class="right">
-
-<strong>INVOICE</strong><br>
-
-Invoice No: {{ $invoice->invoiceNumber }}<br>
-
-Issue Date:
-{{ \Carbon\Carbon::parse($invoice->issueDate)->format('Y-m-d') }}<br>
-
-Due Date:
-{{ \Carbon\Carbon::parse($invoice->dueDate)->format('Y-m-d') }}
-
+<strong>ÖSSZESÍTŐ SZÁMLA</strong><br>
+Számlaszám: {{ $invoice->invoiceNumber }}<br>
+Keltezés: {{ \Carbon\Carbon::parse($invoice->issueDate)->format('Y-m-d') }}<br>
+Teljesítés időszaka: {{ \Carbon\Carbon::parse($invoice->billingMonth)->format('Y. F') }}<br>
+Fizetési határidő: {{ \Carbon\Carbon::parse($invoice->dueDate)->format('Y-m-d') }}
 </td>
-
 </tr>
 </table>
+
+@php
+    $totalQuantity = $invoice->orders->count();
+    // Az első rendelés egységára (feltételezve hogy minden nap ugyanannyi)
+    $unitPrice = (float)($invoice->orders->first()->price->amount ?? 0);
+    
+    $netTotal = $unitPrice * $totalQuantity;
+    $vatTotal = $netTotal * 0.27;
+    $grossTotal = $netTotal + $vatTotal;
+@endphp
 
 <table class="items">
 <thead>
 <tr>
-<th>Description</th>
-<th>Quantity</th>
-<th>Unit Price</th>
-<th>Amount</th>
+<th>Mennyiség</th>
+<th>Nettó egységár</th>
+<th>Nettó összesen</th>
+<th>ÁFA (27%)</th>
+<th>Bruttó összesen</th>
 </tr>
 </thead>
-
 <tbody>
-
-@foreach($invoice->orders as $o)
-
 <tr>
-
-<td>
-{{ \Carbon\Carbon::parse($o->orderDate)->format('Y-m-d') }}
-- {{ $o->selectedOption }}
-</td>
-
-<td class="right">1</td>
-
-<td class="right">
-{{ number_format((float)($o->price->amount ?? 0),0,","," ") }} Ft
-</td>
-
-<td class="right">
-{{ number_format((float)($o->price->amount ?? 0),0,","," ") }} Ft
-</td>
-
+<td>{{ $totalQuantity }} db</td>
+<td>{{ number_format($unitPrice, 0, ',', ' ') }} Ft</td>
+<td>{{ number_format($netTotal, 0, ',', ' ') }} Ft</td>
+<td>{{ number_format($vatTotal, 0, ',', ' ') }} Ft</td>
+<td>{{ number_format($grossTotal, 0, ',', ' ') }} Ft</td>
 </tr>
-
-@endforeach
-
 </tbody>
 </table>
 
 <table class="summary">
-
 <tr>
-<td>Subtotal</td>
-<td class="right">
-{{ number_format((float)$invoice->totalAmount,0,","," ") }} Ft
-</td>
+<td width="70%"></td>
+<td width="30%"></td>
 </tr>
-
 <tr>
-<td>VAT</td>
-<td class="right">0 Ft</td>
+<td>Nettó összesen:</td>
+<td class="right">{{ number_format($netTotal, 0, ',', ' ') }} Ft</td>
 </tr>
-
-<tr class="total">
-<td>Total</td>
-<td class="right">
-{{ number_format((float)$invoice->totalAmount,0,","," ") }} Ft
-</td>
+<tr>
+<td>ÁFA (27%):</td>
+<td class="right">{{ number_format($vatTotal, 0, ',', ' ') }} Ft</td>
 </tr>
-
+<tr class="total-row">
+<td>Bruttó végösszeg:</td>
+<td class="right">{{ number_format($grossTotal, 0, ',', ' ') }} Ft</td>
+</tr>
 </table>
 
 <div class="footer">
+<strong>FIZETÉSI MÓD</strong><br>
+{{ $invoice->paymentMethod ?? 'Banki átutalás' }}<br>
+Fizetendő: {{ number_format($grossTotal, 0, ',', ' ') }} Ft
 
-<strong>PAY BY BANK TRANSFER</strong><br>
-Bank: OTP Bank<br>
-Számlaszám: 12345678-12345678<br>
+<br><br>
+
+<strong>BANKSZÁMLA</strong><br>
+OTP Bank: 12345678-12345678<br>
 Közlemény: {{ $invoice->invoiceNumber }}
 
 <br><br>
 
-<strong>TERMS</strong><br>
-Fizetési határidőn belül kérjük rendezni.
-
+<small>
+Összesítő számla a {{ \Carbon\Carbon::parse($invoice->billingMonth)->format('Y. F') }} havi menürendelésekről.<br>
+Összes rendelés: {{ $totalQuantity }} db<br>
+A számla ÁFA tartalmát 27% mértékkel számítottuk.
+</small>
 </div>
 
 </body>
