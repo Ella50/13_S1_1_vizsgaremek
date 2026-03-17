@@ -117,6 +117,7 @@ class UserSeeder extends Seeder
         ]);
 
 
+
         // KONYHA
         User::create([
             'firstName' => 'Farkas',
@@ -130,6 +131,24 @@ class UserSeeder extends Seeder
             'thirdName' => null,
             'rfidCard_id' => null,
             'class_id' => null,
+            //'group_id' => null,
+            'hasDiscount' => false,
+            'hasDiabetes' => false
+        ]);
+
+
+        User::create([
+            'firstName' => 'A',
+            'lastName' => 'A',
+            'email' => 'atkari.ariella@diak.szbi-pg.hu',
+            'password' => Hash::make('12345678'),
+            'userType' => 'Tanuló',
+            'userStatus' => 'Aktív',
+            'city_id' => 8,
+            'address' => 'A utca 26.',
+            'thirdName' => null,
+            'rfidCard_id' => null,
+            'class_id' => 3,
             //'group_id' => null,
             'hasDiscount' => false,
             'hasDiabetes' => false

@@ -69,7 +69,7 @@
 
 <script>
 import AuthLayout from './AuthLayout.vue'
-import axios from '../../axios'
+import axios from 'axios'
 
 export default {
     components: { AuthLayout },
@@ -86,81 +86,42 @@ export default {
     },
     methods: {
         async handleResetPassword() {
-            // Validáció
-            if (!this.form.email) {
-                this.error = 'Kérjük, add meg az email címed!'
-                return
-            }
-            
-            if (!this.form.email.includes('@')) {
-                this.error = 'Érvényes email címet adj meg!'
-                return
-            }
-            
-            this.loading = true
-            this.error = ''
-            this.successMessage = ''
-
-            try {
-                console.log('📧 Jelszó reset kérelem:', this.form.email)
-                
-                const response = await axios.post('/forgot-password', { 
-                    email: this.form.email
-                }, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                })
-                
-                console.log('✅ Backend válasz:', response.data)
-                
-                if (response.data.success) {
-                    this.successMessage = response.data.message
-                    this.emailSent = true
-                    
-                    // Email ürítése
-                    this.form.email = ''
-                } else {
-                    this.error = response.data.message || 'Ismeretlen hiba'
-                }
-                
-            } catch (err) {
-                console.error('❌ Hiba:', err)
-                
-                if (err.response) {
-                    const status = err.response.status
-                    const data = err.response.data
-                    
-                    if (status === 422) {
-                        // Validációs hiba
-                        if (data.errors && data.errors.email) {
-                            this.error = data.errors.email[0]
-                        } else {
-                            this.error = data.message || 'Érvénytelen email cím'
-                        }
-                    } else if (status === 404) {
-                        this.error = 'Nem található ilyen email cím a rendszerünkben.'
-                    } else if (status === 500) {
-                        this.error = 'Szerver hiba. Kérjük, próbáld újra később.'
-                    } else {
-                        this.error = data.message || `Hiba (${status})`
-                    }
-                } else if (err.request) {
-                    this.error = 'Nincs kapcsolat a szerverrel.'
-                } else {
-                    this.error = 'Váratlan hiba történt.'
-                }
-            } finally {
-                this.loading = false
-            }
-        },
+    if (!this.form.email) {
+        this.error = 'Kérjük, add meg az email címed!'
+        return
+    }
+    
+    this.loading = true
+    this.error = ''
+    
+    try {
+        const response = await axios.post('/forgot-password', { 
+            email: this.form.email
+        })
         
-        resetForm() {
-            this.emailSent = false
-            this.error = ''
-            this.successMessage = ''
+        // BOM kezelés
+        let data = response.data
+        if (typeof data === 'string') {
+            if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
+                data = data.slice(1)
+                data = JSON.parse(data)
+            }
         }
+        
+        if (data.success) {
+            this.successMessage = data.message
+            this.emailSent = true
+        } else {
+            this.error = data.message || 'Ismeretlen hiba'
+        }
+        
+    } catch (err) {
+        console.error('Hiba:', err)
+        this.error = err.response?.data?.message || 'Hálózati hiba'
+    } finally {
+        this.loading = false
+    }
+}
     }
 }
 </script>

@@ -1,12 +1,11 @@
 ## Egyéb:
-- számla (adminnak és usereknek is)
 - menüben legyen logo, hamburger menü
 - ha vannak az ételeknél képek, akkor lehessen feltölteni képet az új étel hozzáadásánál - NEM LESZNEK
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
 - új hozzávalónál nem menti az allergént
 - footerek
-
+- admin kedvezmény és cukorbetegség megadása
 - reszponziv, formazas mindenhol
 - pagináció
 

@@ -121,6 +121,12 @@
                   <span>Kedvezményes</span>
                 </label>
               </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input v-model="editUser.hasDiabetes" type="checkbox">
+                  <span>Cukorbeteg</span>
+                </label>
+              </div>
             </div>
 
             <!--Kártyaolvasó-->
@@ -366,6 +372,7 @@ export default {
         userStatus: 'Aktív',
         address: '',
         hasDiscount: false,
+        hasDiabetes: false,
         rfid_uid: null,
         rfidCard: null,
       },
@@ -530,6 +537,8 @@ export default {
         userStatus: userFromList.userStatus || 'Aktív',
         address: '', // Ezek nincsenek a listában
         hasDiscount: userFromList.hasDiscount || false,
+        hasDiabetes: userFromList.hasDiabetes || false,
+
       }
     }
 
@@ -544,7 +553,8 @@ export default {
         address: userData.address || this.editUser.address,
         thirdName: userData.thirdName || this.editUser.thirdName,
         hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
-        county_id: userData.city?.county?.id || null, // <-- Itt változik!
+        hasDiabetes: userData.hasDiabetes || this.editUser.hasDiabetes,
+        county_id: userData.city?.county?.id || null, 
         city_id: userData.city_id || this.editUser.city_id
       }
       
@@ -589,6 +599,7 @@ export default {
               city_id: userData.city_id || this.editUser.city_id,
               address: user.address || '',
               hasDiscount: user.hasDiscount || false,
+              hasDiabetes: user.hasDiabetes || false,
               rfidCard: user.rfidCard || null,
               rfid_uid: user.rfidCard?.cardNumber || null,
 
@@ -613,6 +624,7 @@ export default {
             userStatus: 'Aktív',
             address: '',
             hasDiscount: false,
+            hasDiabetes: false,
           }
         },
     
@@ -633,7 +645,8 @@ export default {
       userStatus: this.editUser.userStatus,
       address: this.editUser.address,
       hasDiscount: this.editUser.hasDiscount,
-      city_id: this.editUser.city_id // <-- Csak city_id-t küldjük
+      hasDiabetes: this.editUser.hasDiabetes,
+      city_id: this.editUser.city_id
     }
     
     console.log('DEBUG: Sending update to /admin/users/' + this.editUser.id)
