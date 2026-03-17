@@ -173,7 +173,7 @@ export default {
   font-size: 1rem;
 }
 
-button {
+.btn_auth {
   width: 100%;
   padding: 0.9rem;
   background: #1fa317;
@@ -185,7 +185,7 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+.btn_auth:disabled {
   background: #8f8f8f;
   cursor: not-allowed;
 }

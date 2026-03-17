@@ -66,7 +66,7 @@
         </select>
       </div>
 
-      <button type="submit" :disabled="loading">
+      <button class="btn_auth" type="submit" :disabled="loading">
         {{ loading ? 'Regisztrálás...' : 'Regisztrálás' }}
       </button>
 
