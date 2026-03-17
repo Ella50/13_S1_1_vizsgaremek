@@ -6,7 +6,7 @@
     <form @submit.prevent="handleLogin" class="login-form">
       <input type="email" v-model="form.email" placeholder="Email" required>
       <input type="password" v-model="form.password" placeholder="Jelszó" required> 
-      <button type="submit" :disabled="loading">{{ loading ? 'Bejelentkezés...' : 'Bejelentkezés' }}</button>
+      <button class="btn_auth" type="submit" :disabled="loading">{{ loading ? 'Bejelentkezés...' : 'Bejelentkezés' }}</button>
 
         <a class="forgot" href="/resetpassword">Elfelejtette a jelszavát?</a>
 

@@ -1,11 +1,8 @@
 ## Egyéb:
 - menüben legyen logo, hamburger menü
-- ha vannak az ételeknél képek, akkor lehessen feltölteni képet az új étel hozzáadásánál - NEM LESZNEK
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
-- új hozzávalónál nem menti az allergént
 - footerek
-- admin kedvezmény és cukorbetegség megadása
 - reszponziv, formazas mindenhol
 - pagináció
 
@@ -21,6 +18,8 @@
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
 
 
+## Ingredients.vue
+- nem meni az allergént ha új hozzávalót töltök fel
 
 ## Orders.vue
 - a cukormentes rendelések összessége is meg legyen jelenítve (A opcióból készül a ckormentes opció) + a táblázatban is
@@ -31,7 +30,7 @@
 
 
 ## Userprofil.vue
--frontend
+- frontend
 
 
 ## TodayMenu.vue
