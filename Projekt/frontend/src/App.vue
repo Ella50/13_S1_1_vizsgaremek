@@ -4,6 +4,7 @@
     <main :class="{ 'with-nav': showNavigation }">
       <router-view />
       <AppAlert />
+      <AppConfirm />
     </main>
   </div>
 </template>
@@ -13,9 +14,14 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Navigation from './components/Navigation.vue'
 import AppAlert from "@/components/auth/AppAlert.vue";
+import AppConfirm from "@/components/auth/AppConfirm.vue";
 
 export default {
-  components: { Navigation },
+  components: { 
+    Navigation,
+    AppAlert,
+    AppConfirm
+  },
   
   setup() {
     const route = useRoute()
