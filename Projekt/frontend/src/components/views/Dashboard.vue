@@ -24,7 +24,7 @@
           <h3>Számlák</h3>
         </router-link>
         <router-link to="/personal-orders" class="link-card">
-          <h3>Rendeleim</h3>
+          <h3>Rendeléseim</h3>
         </router-link>
         <router-link to="/kitchen/orders" class="link-card">
           <h3>Rendelések</h3>

@@ -3,12 +3,11 @@
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
 - footerek
-- reszponziv, formazas mindenhol
-- pagináció
-
-
-## Login.vue
-- jelszó elfelejtve
+- footer túl nagy telefonos nézetben
+- reszponziv, formazas mindenhol, telefonos nézet
+- személyes számlák!!!!!!!!!!!!!!!!!!!!!!
+- elfelejtett jelszó állításnál a frontend szétcsúszva és a navbar ne legyen ott
+- GOMBOK MINDENHOL
 
 ## Users.vue
 - kártya törlés gomb
@@ -19,26 +18,31 @@
 
 
 ## Ingredients.vue
-- nem meni az allergént ha új hozzávalót töltök fel
+- nem menti az allergént ha új hozzávalót töltök fel
 
 ## Orders.vue
 - a cukormentes rendelések összessége is meg legyen jelenítve (A opcióból készül a ckormentes opció) + a táblázatban is
 
 
 ## MenuMaker.vue
-- frontend üres 
+- frontend üres
+- kicsi káosz
 
 
 ## Userprofil.vue
 - frontend
+- gombok
 
 
 ## TodayMenu.vue
 - frontend
+- backend (nem tölti be)
 
 
 ## PersonalOrders.vue
-- 
+- frontend
+- reszponzív legyen
+- külön telefonos reszponzivitás??
 
 
 

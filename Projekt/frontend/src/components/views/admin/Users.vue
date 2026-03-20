@@ -965,9 +965,28 @@ export default {
 
 .btn-suspend {
   background: #f8d7da;
-  color: #721c24;
+  color: #a1656b;
   border-radius: 8px;
+
+  transition: all 0.2s;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  width: 10%;
+  min-width: 130px;
+  font-weight: bolder;
+
 }
+
+.btn-suspend:hover{
+  background: #f0a9af;
+  color: #522a2e;
+  border-radius: 8px;
+  transition: all 0.2s;
+
+
+}
+
 
 
 .pagination {

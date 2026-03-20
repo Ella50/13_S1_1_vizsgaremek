@@ -6,6 +6,7 @@
       <AppAlert />
       <AppConfirm />
     </main>
+    <Footer v-if="showNavigation" />
   </div>
 </template>
 
@@ -14,11 +15,13 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Navigation from './components/Navigation.vue'
 import AppAlert from "@/components/auth/AppAlert.vue";
+import Footer from './components/layout/Footer.vue';
 import AppConfirm from "@/components/auth/AppConfirm.vue";
 
 export default {
   components: { 
     Navigation,
+    Footer
     AppAlert,
     AppConfirm
   },
@@ -27,7 +30,7 @@ export default {
     const route = useRoute()
     
     const showNavigation = computed(() => {
-      return !['/login', '/register'].includes(route.path)
+      return !['/login', '/register', '/resert-password', '/resetpassword', 'forgot-password'].includes(route.path)
     })
     
     return { showNavigation }
