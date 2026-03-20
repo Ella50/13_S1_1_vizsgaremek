@@ -342,8 +342,8 @@
 <script>
 import { computed } from 'vue';
 import AuthService from '../../../services/authService'
-
-
+import { addAlert } from '../../auth/AppAlert.vue'
+import { showConfirm   } from '../../auth/AppConfirm.vue' 
 
 export default {
   
@@ -382,7 +382,7 @@ export default {
       saving: false,
 
       showRfidModal: false,
-      rfidState: 'waiting', // waiting | success | busy | error
+      rfidState: 'waiting',
       rfidErrorMessage: '',
       lastUid: '',
       rfidPollTimer: null,
@@ -401,14 +401,12 @@ export default {
     }
   },
   
-  
   mounted() {
     this.fetchUsers()
     this.loadCounties()
   },
   
   methods: {
-
 
     async fetchUsers() {
       this.loading = true
@@ -427,31 +425,20 @@ export default {
           }
         })
 
-        console.log('Fetching users with params:', params)
-
         const response = await AuthService.api.get('/admin/users', { params })
-        console.log('Raw API response:', response.data)
         
-        // BOM ELTÁVOLÍTÁS
         let responseData = response.data
         
         if (typeof responseData === 'string') {
-          console.log('Response is string, cleaning BOM...')
           responseData = responseData.replace(/^\uFEFF/, '')
           responseData = JSON.parse(responseData)
-        }
-
-        else if (typeof responseData === 'object') {
-          console.log('Response is object, checking for BOM in stringified version...')
+        } else if (typeof responseData === 'object') {
           const jsonString = JSON.stringify(responseData)
           if (jsonString.charCodeAt(0) === 0xFEFF) {
-            console.log('BOM found in object, cleaning...')
             const cleanString = jsonString.replace(/^\uFEFF/, '')
             responseData = JSON.parse(cleanString)
           }
         }
-        
-        console.log('Cleaned response data:', responseData)
         
         if (responseData.success && responseData.data) {
           this.users = responseData
@@ -460,8 +447,7 @@ export default {
         }
         
       } catch (error) {
-        console.error('Felhasználók betöltése sikertelen:', error)
-        this.error = error.response?.data?.message || 'php artisan serve - Hiba történt a felhasználók betöltése során'
+        this.error = error.response?.data?.message || 'Hiba történt a felhasználók betöltése során'
       } finally {
         this.loading = false
       }
@@ -474,18 +460,10 @@ export default {
         if (response.data.success) {
           this.counties = response.data.data;
         } else {
-          console.error('API error:', response.data.message);
- 
+          console.error(response.data.message);
         }
       } catch (error) {
-        console.error('Counties betöltése failed:', error);
-        
-        // Hiba? 
-        if (error.response) {
-          console.error('Response status:', error.response.status);
-          console.error('Response data:', error.response.data);
-        }
-        
+        console.error(error);
       }
     },
 
@@ -503,197 +481,163 @@ export default {
           this.citiesForCounty = response.data.data;
           
           if (this.editUser.city_id) {
-            const cityExists = this.citiesForCounty.some(city => city.id == this.editUser.city_id);
-            if (!cityExists) {
-              this.editUser.city_id = null;
-            }
+            const exists = this.citiesForCounty.some(city => city.id == this.editUser.city_id);
+            if (!exists) this.editUser.city_id = null;
           }
         } else {
-          console.error('Cities API error:', response.data.message);
           this.citiesForCounty = [];
         }
       } catch (error) {
-        console.error('Cities betöltése failed:', error);
         this.citiesForCounty = [];
       }
     },
 
-
     async openEditModal(userId) {
-  this.showEditModal = true
-  this.editLoading = true
-  this.citiesForCounty = []
-  
-  try {
-    // Először csak az alapadatok
-    const userFromList = this.users.data.find(u => u.id == userId)
-    
-    if (userFromList) {
-      this.editUser = {
-        id: userFromList.id,
-        firstName: userFromList.firstName || '',
-        lastName: userFromList.lastName || '',
-        thirdName: userFromList.thirdName || '',
-        email: userFromList.email || '',
-        userType: userFromList.userType || 'Tanuló',
-        userStatus: userFromList.userStatus || 'Aktív',
-        address: '', // Ezek nincsenek a listában
-        hasDiscount: userFromList.hasDiscount || false,
-        hasDiabetes: userFromList.hasDiabetes || false,
-
-      }
-    }
-
-    // Teljes adatok betöltése
-    const response = await AuthService.api.get(`/admin/users/${userId}`)
-    
-    if (response.data.success) {
-      const userData = response.data.data
+      this.showEditModal = true
+      this.editLoading = true
+      this.citiesForCounty = []
       
-      this.editUser = {
-        ...this.editUser,
-        address: userData.address || this.editUser.address,
-        thirdName: userData.thirdName || this.editUser.thirdName,
-        hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
-        hasDiabetes: userData.hasDiabetes || this.editUser.hasDiabetes,
-        county_id: userData.city?.county?.id || null, 
-        city_id: userData.city_id || this.editUser.city_id
-      }
-      
-      if (this.editUser.county_id) {
-        await this.loadCitiesForCounty()
-      }
-      console.log('Full user data loaded successfully')
-    }
-  } 
-  catch (error) {
-    console.error('Failed to load full user details:', error.message)
-    console.log('Using basic data from list')
-    
-    if (!this.editUser.id) {
-      alert('Felhasználó nem található')
-      this.closeEditModal()
-      return
-    }
-  } 
-  finally {
-    this.editLoading = false
-  }
-},
-    //Segédfüggvény
-    fallbackToLocalData(userId) {
-          console.log('DEBUG: Falling back to local data for user ID:', userId)
-          console.log('DEBUG: Available users:', this.users.data)
-          
-          const user = this.users.data.find(u => u.id == userId)
-          
-          if (user) {
-            console.log('DEBUG: Found user in local data:', user)
-            this.editUser = {
-              id: user.id,
-              firstName: user.firstName || '',
-              lastName: user.lastName || '',
-              thirdName: user.thirdName || '',
-              email: user.email || '',
-              userType: user.userType || 'Tanuló',
-              userStatus: user.userStatus || 'Aktív',
-              county_id: userData.county_id || this.editUser.county_id,
-              city_id: userData.city_id || this.editUser.city_id,
-              address: user.address || '',
-              hasDiscount: user.hasDiscount || false,
-              hasDiabetes: user.hasDiabetes || false,
-              rfidCard: user.rfidCard || null,
-              rfid_uid: user.rfidCard?.cardNumber || null,
-
-            }
-          } else {
-            console.error('DEBUG: User not found in local data either')
-            alert('Felhasználó nem található')
-            this.closeEditModal()
-          }
-      },
+      try {
+        const userFromList = this.users.data.find(u => u.id == userId)
         
-        closeEditModal() {
-          this.showEditModal = false
-          this.citiesForCounty = [] 
+        if (userFromList) {
           this.editUser = {
-            id: null,
-            firstName: '',
-            lastName: '',
-            thirdName: '',
-            email: '',
-            userType: 'Tanuló',
-            userStatus: 'Aktív',
+            id: userFromList.id,
+            firstName: userFromList.firstName || '',
+            lastName: userFromList.lastName || '',
+            thirdName: userFromList.thirdName || '',
+            email: userFromList.email || '',
+            userType: userFromList.userType || 'Tanuló',
+            userStatus: userFromList.userStatus || 'Aktív',
             address: '',
-            hasDiscount: false,
-            hasDiabetes: false,
+            hasDiscount: userFromList.hasDiscount || false,
+            hasDiabetes: userFromList.hasDiabetes || false,
           }
-        },
-    
-    async saveUserChanges() {
-  if (!confirm('Biztosan menti a módosításokat?')) {
-    return
-  }
-  
-  this.saving = true
-  
-  try {
-    const updateData = {
-      firstName: this.editUser.firstName,
-      lastName: this.editUser.lastName,
-      thirdName: this.editUser.thirdName,
-      email: this.editUser.email,
-      userType: this.editUser.userType,
-      userStatus: this.editUser.userStatus,
-      address: this.editUser.address,
-      hasDiscount: this.editUser.hasDiscount,
-      hasDiabetes: this.editUser.hasDiabetes,
-      city_id: this.editUser.city_id
-    }
-    
-    console.log('DEBUG: Sending update to /admin/users/' + this.editUser.id)
-    console.log('DEBUG: Update data:', updateData)
-    
-    const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
-    
-    console.log('DEBUG: Update response:', response.data)
-    
-    if (response.data.success) {
-      // Frissítjük a listában is
-      const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
-      if (userIndex !== -1) {
-        Object.keys(updateData).forEach(key => {
-          if (updateData[key] !== undefined) {
-            this.users.data[userIndex][key] = updateData[key]
-          }
-        })
-      }
-      
-      alert('Felhasználó sikeresen frissítve!')
-      this.closeEditModal()
-    } else {
-      alert(response.data.message || 'Ismeretlen hiba történt')
-    }
-  } catch (error) {
-    console.error('DEBUG: Update failed:', error)
+        }
 
-    if (error.response?.data?.errors) {
-      const errors = Object.values(error.response.data.errors).flat()
-      alert('Validációs hibák:\n' + errors.join('\n'))
-    } else if (error.response?.data?.message) {
-      alert('Hiba: ' + error.response.data.message)
-    } else {
-      alert('Hiba történt a mentés során')
-    }
-  } finally {
-    this.saving = false
-  }
-},
+        const response = await AuthService.api.get(`/admin/users/${userId}`)
+        
+        if (response.data.success) {
+          const userData = response.data.data
+          
+          this.editUser = {
+            ...this.editUser,
+            address: userData.address || this.editUser.address,
+            thirdName: userData.thirdName || this.editUser.thirdName,
+            hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
+            hasDiabetes: userData.hasDiabetes || this.editUser.hasDiabetes,
+            county_id: userData.city?.county?.id || null, 
+            city_id: userData.city_id || this.editUser.city_id
+          }
+          
+          if (this.editUser.county_id) {
+            await this.loadCitiesForCounty()
+          }
+        }
+      } 
+      catch (error) {
+        if (!this.editUser.id) {
+          addAlert({
+            message: 'Felhasználó nem található',
+            type: 'error'
+          })
+          this.closeEditModal()
+        }
+      } 
+      finally {
+        this.editLoading = false
+      }
+    },
+
+    closeEditModal() {
+      this.closeRfidModal()
+      this.showEditModal = false
+      this.citiesForCounty = []
+      this.editUser = {
+        id: null,
+        firstName: '',
+        lastName: '',
+        thirdName: '',
+        email: '',
+        userType: 'Tanuló',
+        userStatus: 'Aktív',
+        address: '',
+        hasDiscount: false,
+        hasDiabetes: false,
+      }
+    },
+
+    async saveUserChanges() {
+      const confirmed = await showConfirm({
+        message: 'Biztosan menti a változtatásokat?'
+      })
+
+      if (!confirmed) return
+  
+      this.saving = true
+      
+      try {
+        const updateData = {
+          firstName: this.editUser.firstName,
+          lastName: this.editUser.lastName,
+          thirdName: this.editUser.thirdName,
+          email: this.editUser.email,
+          userType: this.editUser.userType,
+          userStatus: this.editUser.userStatus,
+          address: this.editUser.address,
+          hasDiscount: this.editUser.hasDiscount,
+          hasDiabetes: this.editUser.hasDiabetes,
+          city_id: this.editUser.city_id
+        }
+        
+        const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
+        
+        if (response.data.success) {
+          const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
+          if (userIndex !== -1) {
+            Object.keys(updateData).forEach(key => {
+              this.users.data[userIndex][key] = updateData[key]
+            })
+          }
+          
+          addAlert({
+            message: 'Felhasználó sikeresen frissítve!',
+            type: 'success'
+          })
+
+          this.closeEditModal()
+        } else {
+          addAlert({
+            message: response.data.message || 'Ismeretlen hiba történt',
+            type: 'error'
+          })
+        }
+      } catch (error) {
+
+        if (error.response?.data?.errors) {
+          const errors = Object.values(error.response.data.errors).flat()
+          addAlert({
+            title: 'Validációs hibák',
+            message: errors.join(', '),
+            type: 'error'
+          })
+        } else {
+          addAlert({
+            message: error.response?.data?.message || 'Hiba történt a mentés során',
+            type: 'error'
+          })
+        }
+      } finally {
+        this.saving = false
+      }
+    },
 
     async updateStatus(userId, newUserStatus) {
-      if (!confirm(`Biztosan ${newUserStatus === 'Aktív' ? 'aktiválod' : 'deaktiválod'} a felhasználót?`)) {
-        return
-      }
+      const confirmed = await showConfirm({
+        message: 'Biztos?'
+      })
+
+      if (!confirmed) return
       
       try {
         await AuthService.api.put(`/admin/users/${userId}/status`, {
@@ -705,20 +649,26 @@ export default {
           this.users.data[userIndex].userStatus = newUserStatus
         }
         
-        alert(`Felhasználó státusza sikeresen frissítve: ${newUserStatus}`)
+        addAlert({
+          message: `Felhasználó státusza frissítve: ${newUserStatus}`,
+          type: 'success'
+        })
+
       } catch (error) {
-        console.error('Státusz frissítés sikertelen:', error)
-        alert(error.response?.data?.message || 'Hiba történt a státusz frissítése során')
+        addAlert({
+          message: error.response?.data?.message || 'Hiba történt a státusz frissítése során',
+          type: 'error'
+        })
       }
     },
-    
+
     changePage(page) {
       if (page < 1 || page > this.users.last_page) return
       this.currentPage = page
       this.fetchUsers()
       window.scrollTo(0, 0)
     },
-    
+
     formatDate(dateString) {
       if (!dateString) return ''
       const date = new Date(dateString)
@@ -728,10 +678,11 @@ export default {
     async bulkUpdateAvailability(isAvailable) {
       if (this.selectedUsers.length === 0) return
       
-      const action = isAvailable ? 'elérhetővé' : 'nem elérhetővé'
-      if (!confirm(`${this.selectedUsers.length} felhasználó ${action} tétele?`)) {
-        return
-      }
+      const confirmed = await showConfirm({
+        message: 'Biztos?'
+      })
+
+      if (!confirmed) return
       
       try {
         await AuthService.api.post('/admin/users/bulk-status', {
@@ -742,8 +693,10 @@ export default {
         this.clearSelection()
         
       } catch (error) {
-        console.error('Hiba a tömeges frissítés során:', error)
-        alert('Hiba történt a tömeges frissítés során')
+        addAlert({
+          message: 'Hiba történt a tömeges frissítés során',
+          type: 'error'
+        })
       }
     },
 
@@ -798,7 +751,7 @@ export default {
 
         if (!res.data?.success) return;
 
-        const scan = res.data.data; // null vagy {uid, scanned_at}
+        const scan = res.data.data;
         if (!scan?.uid) return;
 
         this.rfidSince = scan.scanned_at || new Date().toISOString();
@@ -806,7 +759,7 @@ export default {
 
       } catch (e) {
         this.rfidState = 'error';
-        this.rfidErrorMessage = e.response?.data?.message || 'Nem sikerült lekérni az RFID beolvasást.';
+        this.rfidErrorMessage = e.response?.data?.message || 'Nem sikerült lekérni az RFID-t.';
         this.stopRfidPolling();
       }
     },
@@ -819,9 +772,8 @@ export default {
           this.lastUid = uid;
           this.rfidState = 'success';
 
-          // UI frissítés
           this.editUser.rfid_uid = uid;
-          this.editUser.rfidCard = { cardNumber: uid, id: res.data.data?.rfidCard_id || null };
+          this.editUser.rfidCard = { cardNumber: uid };
 
           this.stopRfidPolling();
           return;
@@ -844,18 +796,10 @@ export default {
         }
         this.stopRfidPolling();
       }
-    },
-
-
-
-    closeEditModal() {
-      this.closeRfidModal(); // <- ezt add hozzá
-      this.showEditModal = false
-    },
+    }
   }
 }
 </script>
-
 <style scoped>
 .admin-users {
   padding: 2rem;

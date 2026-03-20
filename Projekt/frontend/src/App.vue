@@ -4,7 +4,7 @@
     <main :class="{ 'with-nav': showNavigation }">
       <router-view />
       <AppAlert />
-
+      <AppConfirm />
     </main>
     <Footer v-if="showNavigation" />
   </div>
@@ -16,13 +16,15 @@ import { useRoute } from 'vue-router'
 import Navigation from './components/Navigation.vue'
 import AppAlert from "@/components/auth/AppAlert.vue";
 import Footer from './components/layout/Footer.vue';
+import AppConfirm from "@/components/auth/AppConfirm.vue";
 
 export default {
   components: { 
     Navigation,
-    //AppAlert,
     Footer
-   },
+    AppAlert,
+    AppConfirm
+  },
   
   setup() {
     const route = useRoute()
