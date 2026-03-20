@@ -30,7 +30,7 @@
       <div class="card-body">
         <div class="row">
           <!-- Leves összesítés -->
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="meal-summary-card">
               <div class="meal-icon" id="leves-opcio">
                 <span>Leves</span>
@@ -46,7 +46,7 @@
           </div>
           
           <!-- A opció összesítés -->
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="meal-summary-card">
               <div class="meal-icon" id="A-opcio">
                 <span>A</span>
@@ -62,7 +62,7 @@
           </div>
           
           <!-- B opció összesítés -->
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="meal-summary-card">
               <div class="meal-icon" id="B-opcio">
                 <span>B</span>
@@ -76,8 +76,26 @@
               </div>
             </div>
           </div>
+
+
+
+        <!-- Cukormentes összesítés -->
+          <div class="col-md-3">
+            <div class="meal-summary-card">
+              <div class="meal-icon" id="B-opcio">
+                <span>CM</span>
+              </div>
+              <div class="meal-info">
+                <p class="meal-name">{{ dailyMealSummary.option_b.name || 'Nincs adat' }}</p>
+                <div class="meal-count">
+                  <span class="count-number">{{ dailyMealSummary.option_b.count || 0 }}</span>
+                  <span class="count-label">db rendelés</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        
+ 
         <!-- Összegző táblázat -->
         <div class="summary-table mt-4">
           <h5><i class="fas fa-chart-pie"></i> Részletes eloszlás</h5>

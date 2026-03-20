@@ -8,7 +8,7 @@
         </router-link>
         
         <div class="nav-links">
-          <router-link to="/dashboard">Főoldal</router-link>
+          <!--<router-link to="/dashboard">Főoldal</router-link>-->
           
           <!-- Admin -->
           <template v-if="AuthService.isAdmin()">
@@ -40,6 +40,8 @@
           <router-link to="/menu/week">Heti menü</router-link>
           <router-link to="/kitchen/meals">Ételek</router-link>
           <router-link to="/profile">Profil</router-link>
+          <router-link to="/personal-orders">Rendelések</router-link>
+          <router-link to="/personal-invoices">Számlák</router-link>
         </div>
         
         <button 
@@ -47,13 +49,12 @@
           class="logout-btn"
           :disabled="loggingOut"
         >
-          <span v-if="loggingOut">Kijelentkezés</span>
+          <span v-if="loggingOut">Kijelentkezés...</span>
           <span v-else>Kijelentkezés</span>
         </button>
       </template>
       
       <template v-else>
-        <router-link to="/" class="logo">🍽️ Étterem</router-link>
         <div class="nav-links">
           <router-link to="/login">Bejelentkezés</router-link>
           <router-link to="/register" class="register-btn">Regisztráció</router-link>
@@ -61,16 +62,16 @@
       </template>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
+    <!-- Telefonos navigáció -->
     <div class="mobile-bottom-nav" v-if="AuthService.isAuthenticated()">
-      <router-link to="/dashboard" class="mobile-nav-item" :class="{ active: $route.path === '/dashboard' }">
+      <!-- <router-link to="/dashboard" class="mobile-nav-item" :class="{ active: $route.path === '/dashboard' }">
         <span class="icon">🏠</span>
         <span class="label">Főoldal</span>
-      </router-link>
+      </router-link>-->
 
       <router-link to="/menu/today" class="mobile-nav-item" :class="{ active: $route.path.includes('/menu') }">
         <span class="icon">📋</span>
-        <span class="label">Menü</span>
+        <span class="label">Mai menü</span>
       </router-link>
 
 
@@ -136,9 +137,12 @@
             <!-- Általános szekció -->
             <div class="action-section">
               <div class="section-title">Általános</div>
-              <button v-if="AuthService.canViewMenu()" @click="navigateTo('/menu/today')">📅 Mai menü</button>
+              <!--<button v-if="AuthService.canViewMenu()" @click="navigateTo('/menu/today')">📅 Mai menü</button>-->
               <button @click="navigateTo('/menu/week')">📆 Heti menü</button>
               <button @click="navigateTo('/kitchen/meals')">🍲 Ételek</button>
+              <button @click="navigateTo('/personal-orders')">👤 Rendelések</button>
+              <button @click="navigateTo('/personal-invoices')">👤 Számlák</button>
+
             </div>
 
             <!-- Kijelentkezés -->

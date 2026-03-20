@@ -4,7 +4,9 @@
     <main :class="{ 'with-nav': showNavigation }">
       <router-view />
       <AppAlert />
+
     </main>
+    <Footer v-if="showNavigation" />
   </div>
 </template>
 
@@ -13,15 +15,20 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Navigation from './components/Navigation.vue'
 import AppAlert from "@/components/auth/AppAlert.vue";
+import Footer from './components/layout/Footer.vue';
 
 export default {
-  components: { Navigation },
+  components: { 
+    Navigation,
+    //AppAlert,
+    Footer
+   },
   
   setup() {
     const route = useRoute()
     
     const showNavigation = computed(() => {
-      return !['/login', '/register'].includes(route.path)
+      return !['/login', '/register', '/resert-password', '/resetpassword', 'forgot-password'].includes(route.path)
     })
     
     return { showNavigation }
