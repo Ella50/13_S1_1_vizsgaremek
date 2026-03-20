@@ -320,10 +320,164 @@ resetMealsOnly() {
 
 <style scoped>
 
-button{
-  width: 20%;
+.menu-maker {
+  padding: 2rem; 
+  max-width:1400px;
+  margin:0 auto;
+
+  /* 🔥 CSAK KEZDŐKÉPERNYŐ KÖZÉP */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  text-align: center;
 }
 
+.menu-maker h1 {
+  margin-bottom: 2rem;
+}
+
+/* GOMBOK KÖZÉPRE */
+.actions { 
+  display: flex; 
+  gap: 1rem; 
+  justify-content: center;
+}
+
+.actions button{
+  background-color: var(--zold);
+  width: auto;
+  padding: 0.7rem 1.5rem;
+}
+
+/* 🔥 MODAL OVERLAY (EZ MARAD) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 🔥 MODAL VISSZAÁLLÍTVA */
+.modal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  margin: auto;
+
+  position: relative !important;
+  z-index: 1001;
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible !important;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* STEP 2 */
+.step-2{
+  padding: 0 1.5rem;
+}
+
+/* TÍPUS GOMBOK */
+.meal-types {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 1.5rem 1rem;
+}
+
+.meal-types button {
+  flex: 1;
+  padding: 1.5rem 1rem;
+}
+
+/* LISTA */
+.meals-scroll {
+  max-height: calc(90vh - 300px);
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+/* ELEM */
+.meal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.4rem;
+  background: #f6f6f6;
+  border-radius: 6px;
+}
+
+/* NÉV */
+.meal-name {
+  padding-left: 0.5rem;
+  font-weight: 500;
+}
+
+/* GOMB */
+.meal-btn {
+  width: 10rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background: green;
+  color: white;
+  font-size: 1.1rem;
+}
+
+/* KERESŐ */
+.meal-search {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 1rem 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* FOOTER */
+.modal-footer {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #ddd;
+
+  display: block;
+}
+
+/* KIVÁLASZTOTT */
+.selected-meals-fixed {
+  position: sticky;
+  bottom: 70px;
+  background: #fafafa;
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid #ddd;
+}
+
+/* GOMBOK */
+button{
+  width: 20%;
+  padding: 0.5rem 1rem;
+}
+
+button.active { 
+  background: #3498db; 
+  color: white; 
+}
+
+.secondary { 
+  background: #eee; 
+}
+
+/* DRAG */
 .sortable { list-style: none; padding: 0; }
 .sortable li {
   display: flex;
@@ -337,128 +491,5 @@ button{
   cursor: grab;
 }
 .sortable li:active { cursor: grabbing; }
-
-.menu-maker {
-  padding: 2rem; 
-  max-width:1400px;
-  margin:0 auto;
-}
-
-.actions { display: flex; gap: 1rem; margin-bottom: 2rem; }
-button { padding: 0.5rem 1rem; }
-button.active { background: #3498db; color: white; }
-.secondary { background: #eee; }
-
-.actions button{
-  background-color: var(--zold);
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  position: relative !important;
-  z-index: 1001;
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible !important;
-  /*display: block !important;*/
-
-  display: flex;
-  flex-direction: column;
-}
-
-.step-2{
-  padding: 0 1.5rem;
-}
-
-.modal-footer {
-  
-  position: sticky;
-  bottom: 0;
-  background: #fff;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #ddd;
-  display: block;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-
-
-.meal-types {
-  display: flex;
-  gap: 0.5rem;
-  margin: 1rem 1.5rem 1rem;
-}
-
-.meal-types button {
-  flex: 1;
-  padding: 1.5rem 1rem;
-}
-
-.meals {
-  margin: 0 1.5rem;
-}
-
-.meal-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.4rem;
-  background: #f6f6f6;
-  border-radius: 6px;
-}
-
-.meal-name {
-  padding-left: 0.5rem;
-  font-weight: 500;
-}
-
-.meal-btn {
-  width: 10rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  background: green;
-  color: white;
-  font-size: 1.1rem;
-}
-
-.meals-scroll {
-  max-height: calc(90vh - 300px);
-  overflow-y: auto;
-  margin-bottom: 1rem;
-}
-
-.meal-search {
-  width: 100%;
-  padding: 0.5rem;
-  margin: 1rem 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-.selected-meals-fixed {
-  position: sticky;
-  bottom: 70px;
-  background: #fafafa;
-  padding: 0.75rem 1.5rem;
-  border-top: 1px solid #ddd;
-}
-
-
 
 </style>
