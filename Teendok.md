@@ -8,6 +8,8 @@
 - személyes számlák!!!!!!!!!!!!!!!!!!!!!!
 - elfelejtett jelszó állításnál a frontend szétcsúszva és a navbar ne legyen ott
 - GOMBOK MINDENHOL
+- TELEFONOS NÉZET MINDELHOL (pl. meals.vue tápértékek)
+
 
 ## Users.vue
 - kártya törlés gomb

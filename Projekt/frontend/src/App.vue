@@ -21,7 +21,7 @@ import AppConfirm from "@/components/auth/AppConfirm.vue";
 export default {
   components: { 
     Navigation,
-    Footer
+    Footer,
     AppAlert,
     AppConfirm
   },
