@@ -757,6 +757,8 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { debounce } from 'lodash'
 import AuthService from '../../../services/AuthService'
+import { addAlert } from '../../auth/AppAlert.vue'
+import { showConfirm } from '../../auth/AppConfirm.vue'
 
 // Reaktív állapotok
 const ingredients = ref([])
@@ -843,6 +845,10 @@ onMounted(() => {
       allergens.value = response.data.allergens || []
     } catch (error) {
       console.error('Hiba az allergének betöltésekor:', error)
+      addAlert({
+        message: 'Hiba az allergének betöltésekor',
+        type: 'error'
+      })
     }
   }
 
@@ -893,6 +899,10 @@ async function loadIngredients() {
     
   } catch (error) {
     console.error('Hiba a hozzávalók betöltésekor:', error)
+    addAlert({
+      message: 'Hiba a hozzávalók betöltésekor',
+      type: 'error'
+    })
     ingredients.value = []
   } finally {
     loading.value = false
@@ -1029,6 +1039,11 @@ async function saveIngredient(ingredient) {
     expandedIngredient.value = null
     resetEditForm()
     
+    addAlert({
+      message: 'Hozzávaló sikeresen frissítve!',
+      type: 'success'
+    })
+    
   } catch (error) {
     console.error('Hiba a mentés során:', error)
     let errorMessage = 'Hiba történt a mentés során'
@@ -1039,7 +1054,10 @@ async function saveIngredient(ingredient) {
       errorMessage = Object.values(error.response.data.errors).flat().join(', ')
     }
     
-    alert(errorMessage)
+    addAlert({
+      message: errorMessage,
+      type: 'error'
+    })
   } finally {
     saving.value = false
   }
@@ -1082,6 +1100,10 @@ async function saveNewIngredient() {
     showCreateModal.value = false
     resetNewForm()
     
+    addAlert({
+      message: 'Új hozzávaló sikeresen létrehozva!',
+      type: 'success'
+    })
 
   } catch (error) {
     console.error('Hiba a mentés során:', error)
@@ -1093,7 +1115,10 @@ async function saveNewIngredient() {
       errorMessage = Object.values(error.response.data.errors).flat().join(', ')
     }
     
-    alert(errorMessage)
+    addAlert({
+      message: errorMessage,
+      type: 'error'
+    })
   } finally {
     saving.value = false
   }
@@ -1116,7 +1141,10 @@ function confirmDelete(ingredient) {
           await loadIngredients()
           showDeleteModal.value = false
           ingredientToDelete.value = null
-          alert('Hozzávaló sikeresen törölve!')
+          addAlert({
+            message: 'Hozzávaló sikeresen törölve!',
+            type: 'success'
+          })
         } else {
           deleteError.value = response.data.message || 'Ismeretlen hiba történt'
         }
@@ -1146,24 +1174,40 @@ function confirmDelete(ingredient) {
     }
 
 async function toggleAvailability(ingredient) {
+  const confirmed = await showConfirm({
+    message: `Biztosan ${ingredient.isAvailable ? 'nem elérhetővé' : 'elérhetővé'} szeretnéd tenni ezt a hozzávalót?`
+  })
+  
+  if (!confirmed) return
+
   try {
     await axios.put(`/kitchen/ingredients/${ingredient.id}`, {
       isAvailable: !ingredient.isAvailable
     })
     await loadIngredients()
     
+    addAlert({
+      message: `Hozzávaló ${!ingredient.isAvailable ? 'elérhetővé' : 'nem elérhetővé'} téve!`,
+      type: 'success'
+    })
+    
   } catch (error) {
     console.error('Hiba az állapot változtatás során:', error)
-    alert('Hiba történt az állapot változtatása során')
+    addAlert({
+      message: 'Hiba történt az állapot változtatása során',
+      type: 'error'
+    })
   }
 }
 
 async function bulkUpdateAvailability(isAvailable) {
   if (selectedIngredients.value.length === 0) return
   
-  if (!confirm(`${selectedIngredients.value.length} hozzávaló ${isAvailable ? 'elérhetővé' : 'nem elérhetővé'} tétele?`)) {
-    return
-  }
+  const confirmed = await showConfirm({
+    message: `${selectedIngredients.value.length} hozzávaló ${isAvailable ? 'elérhetővé' : 'nem elérhetővé'} tétele?`
+  })
+  
+  if (!confirmed) return
   
   try {
     await axios.post('/kitchen/ingredients/bulk-availability', {
@@ -1173,9 +1217,17 @@ async function bulkUpdateAvailability(isAvailable) {
     await loadIngredients()
     clearSelection()
     
+    addAlert({
+      message: `${selectedIngredients.value.length} hozzávaló sikeresen ${isAvailable ? 'elérhetővé' : 'nem elérhetővé'} téve!`,
+      type: 'success'
+    })
+    
   } catch (error) {
     console.error('Hiba a tömeges frissítés során:', error)
-    alert('Hiba történt a tömeges frissítés során')
+    addAlert({
+      message: 'Hiba történt a tömeges frissítés során',
+      type: 'error'
+    })
   }
 }
 

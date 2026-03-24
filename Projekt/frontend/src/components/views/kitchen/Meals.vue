@@ -724,6 +724,8 @@
 
 <script>
 import AuthService from '../../../services/authService'
+import { addAlert } from '../../auth/AppAlert.vue'
+import { showConfirm } from '../../auth/AppConfirm.vue'
 
 export default {
   data() {
@@ -844,6 +846,10 @@ export default {
   } catch (error) {
     console.error('Ételek betöltése sikertelen:', error)
     this.error = error.response?.data?.message || 'Hiba történt az ételek betöltésekor'
+    addAlert({
+      message: this.error,
+      type: 'error'
+    })
     
     if (error.response?.status === 401) {
       AuthService.clearAuth()
@@ -897,11 +903,19 @@ export default {
           
         } else {
           this.ingredientsError = response.data.message || 'Nem sikerült betölteni az összetevőket'
+          addAlert({
+            message: this.ingredientsError,
+            type: 'error'
+          })
         }
         
       } catch (error) {
         console.error('Összetevők betöltése sikertelen:', error)
         this.ingredientsError = 'Nem sikerült betölteni az összetevőket'
+        addAlert({
+          message: this.ingredientsError,
+          type: 'error'
+        })
       } finally {
         this.loadingIngredients = false
       }
@@ -1095,7 +1109,10 @@ export default {
       });
       
       if (!mealResponse.data.success) {
-        alert(mealResponse.data.message);
+        addAlert({
+          message: mealResponse.data.message || 'Hiba történt',
+          type: 'error'
+        });
         this.savingMeal = false;
         return;
       }
@@ -1139,14 +1156,19 @@ export default {
         }
       }, 500);
       
-      this.$toast?.success('Étel sikeresen hozzáadva' + 
-        (this.editIngredientsList.length > 0 ? ` (${this.editIngredientsList.length} összetevővel)` : ''));
+      addAlert({
+        message: 'Étel sikeresen hozzáadva' + (this.editIngredientsList.length > 0 ? ` (${this.editIngredientsList.length} összetevővel)` : ''),
+        type: 'success'
+      });
       
       this.closeModal();
       
     } catch (error) {
       console.error('Étel mentése sikertelen:', error);
-      alert(error.response?.data?.message || 'Hiba történt a mentés során');
+      addAlert({
+        message: error.response?.data?.message || 'Hiba történt a mentés során',
+        type: 'error'
+      });
     } finally {
       this.savingMeal = false;
     }
@@ -1213,7 +1235,10 @@ async loadAllergensForNewMeal(mealId) {
         
         if (!mealResponse.data.success) {
           console.error('Meal save failed:', mealResponse.data)
-          alert(mealResponse.data.message || 'Hiba történt az étel mentése során')
+          addAlert({
+            message: mealResponse.data.message || 'Hiba történt az étel mentése során',
+            type: 'error'
+          })
           return
         }
         
@@ -1244,7 +1269,10 @@ async loadAllergensForNewMeal(mealId) {
         // Küldés előtti ellenőrzés
         if (ingredientsData.length === 0) {
           console.log('No ingredients to save, skipping...')
-          this.$toast?.success('Étel sikeresen mentve (nincsenek összetevők)')
+          addAlert({
+            message: 'Étel sikeresen mentve (nincsenek összetevők)',
+            type: 'success'
+          })
           this.closeModal()
           await this.fetchMeals()
           return
@@ -1260,12 +1288,18 @@ async loadAllergensForNewMeal(mealId) {
         
         if (ingredientsResponse.data.success) {
           console.log('Ingredients saved successfully')
-          this.$toast?.success('Étel és összetevők sikeresen mentve')
+          addAlert({
+            message: 'Étel és összetevők sikeresen mentve',
+            type: 'success'
+          })
           this.closeModal()
           await this.fetchMeals()
         } else {
           console.error('Ingredients save failed:', ingredientsResponse.data)
-          alert('Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message)
+          addAlert({
+            message: 'Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message,
+            type: 'warning'
+          })
         }
         
       } catch (error) {
@@ -1276,14 +1310,26 @@ async loadAllergensForNewMeal(mealId) {
         if (error.response) {
           if (error.response.data?.errors) {
             const validationErrors = Object.values(error.response.data.errors).flat().join('\n')
-            alert(`Validációs hibák:\n${validationErrors}`)
+            addAlert({
+              message: `Validációs hibák: ${validationErrors}`,
+              type: 'error'
+            })
           } else if (error.response.data?.message) {
-            alert(`Szerver hiba: ${error.response.data.message}`)
+            addAlert({
+              message: `Szerver hiba: ${error.response.data.message}`,
+              type: 'error'
+            })
           }
         } else if (error.request) {
-          alert('Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!')
+          addAlert({
+            message: 'Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!',
+            type: 'error'
+          })
         } else {
-          alert(error.message || 'Ismeretlen hiba történt a mentés során')
+          addAlert({
+            message: error.message || 'Ismeretlen hiba történt a mentés során',
+            type: 'error'
+          })
         }
         
       } finally {
@@ -1320,7 +1366,10 @@ async loadAllIngredients() {
     
   } catch (error) {
     console.error('Error loading ingredients:', error);
-    
+    addAlert({
+      message: 'Hiba a hozzávalók betöltésekor',
+      type: 'error'
+    });
   }
   
   console.log('Total ingredients available for search:', this.allIngredients.length);
@@ -1358,7 +1407,10 @@ async loadAllIngredients() {
       )
       
       if (alreadyExists) {
-        alert('Ez a hozzávaló már hozzá van adva')
+        addAlert({
+          message: 'Ez a hozzávaló már hozzá van adva',
+          type: 'warning'
+        })
         return
       }
       
@@ -1380,8 +1432,12 @@ async loadAllIngredients() {
       this.searchResults = []
     },
 
-    removeIngredientFromList(index) {
-      if (confirm('Biztosan eltávolítod ezt a hozzávalót?')) {
+    async removeIngredientFromList(index) {
+      const confirmed = await showConfirm({
+        message: 'Biztosan eltávolítod ezt a hozzávalót?'
+      })
+      
+      if (confirmed) {
         this.editIngredientsList.splice(index, 1)
       }
     },
@@ -1432,22 +1488,33 @@ async loadAllIngredients() {
     async deleteMeal(mealId) {
       if (!mealId) return
       
-      if (!confirm('Biztosan törölni szeretné ezt az ételt?')) {
-        return
-      }
+      const confirmed = await showConfirm({
+        message: 'Biztosan törölni szeretnéd ezt az ételt?'
+      })
+      
+      if (!confirmed) return
       
       try {
         const response = await AuthService.api.delete(`/kitchen/meals/${mealId}`)
         
         if (response.data.success) {
           this.meals = this.meals.filter(meal => meal.id !== mealId)
-          this.$toast?.success('Étel sikeresen törölve')
+          addAlert({
+            message: 'Étel sikeresen törölve',
+            type: 'success'
+          })
         } else {
-          alert(response.data.message)
+          addAlert({
+            message: response.data.message || 'Hiba történt',
+            type: 'error'
+          })
         }
       } catch (error) {
         console.error('Étel törlése sikertelen:', error)
-        alert(error.response?.data?.message || 'Az étel a menün szerepel, hiba történt a törlés során')
+        addAlert({
+          message: error.response?.data?.message || 'Az étel a menün szerepel, hiba történt a törlés során',
+          type: 'error'
+        })
       }
     },
     
@@ -1571,8 +1638,6 @@ async loadAllIngredients() {
   }
 }
 </script>
-
-
 
 <style scoped>
 .meals-management{

@@ -236,10 +236,19 @@
 
 <script>
 import axios from 'axios';
+import AppAlert from '../../auth/AppAlert.vue'
+import AppConfirm from '../../auth/AppConfirm.vue'
+import { addAlert } from '../../auth/AppAlert.vue'
+import { showConfirm as originalShowConfirm } from '../../auth/AppConfirm.vue'
 
 export default {
   name: 'Orders',
-
+  
+  components: {
+    AppAlert,
+    AppConfirm
+  },
+  
   data() {
     return {
       viewMode: 'daily',
@@ -247,18 +256,15 @@ export default {
       selectedWeek: this.getCurrentWeek(),
       selectedMonth: new Date().toISOString().slice(0, 7),
 
-      
       orders: [],
       loading: false,
       monthlyLoading: false,
       
-      // Pagination
       currentPage: 1,
       totalPages: 1,
       pageSize: 25,
       totalItems: 0,
       
-      // Stats
       stats: {
         totalOrders: 0,
         activeOrders: 0,
@@ -266,14 +272,15 @@ export default {
         totalRevenue: 0
       },
       
-      // Selected order for details
       selectedOrder: null,
-      
-      // API base URL
       apiBaseUrl: '/kitchen/orders',
-
-      // Napi összesítés
       dailyMealSummary: null,
+      
+      // Confirm komponens állapotai
+      confirmVisible: false,
+      confirmMessage: '',
+      confirmTitle: '',
+      confirmResolver: null
     };
   },
   
@@ -334,19 +341,44 @@ export default {
       this.currentPage = 1;
       this.loadOrders();
     },
-    
   },
   
   methods: {
+    // Saját showConfirm függvény, ami a komponens állapotait használja
+    showConfirm({ message, title = "" }) {
+      this.confirmMessage = message;
+      this.confirmTitle = title;
+      this.confirmVisible = true;
+      
+      return new Promise((resolve) => {
+        this.confirmResolver = resolve;
+      });
+    },
+    
+    confirmOk() {
+      this.confirmVisible = false;
+      if (this.confirmResolver) {
+        this.confirmResolver(true);
+        this.confirmResolver = null;
+      }
+    },
+    
+    confirmCancel() {
+      this.confirmVisible = false;
+      if (this.confirmResolver) {
+        this.confirmResolver(false);
+        this.confirmResolver = null;
+      }
+    },
+    
     async loadOrders() {
       this.loading = true;
-      this.dailyMealSummary = null; // Reset daily summary
+      this.dailyMealSummary = null;
       
       try {
         let url = '';
         let params = {};
         
-        // URL készítése viewMode alapján
         switch (this.viewMode) {
           case 'daily':
             url = `${this.apiBaseUrl}/date/${this.selectedDate}`;
@@ -373,10 +405,6 @@ export default {
             url = this.apiBaseUrl;
         }
         
-
-        
-        console.log('API hívás:', { url, params });
-        
         const token = localStorage.getItem('token') || this.getAuthToken();
         const response = await axios.get(url, { 
           params,
@@ -386,9 +414,6 @@ export default {
           }
         });
         
-        console.log('API válasz:', response.data);
-        
-        // JSON feldolgozás
         let responseData = response.data;
         if (typeof responseData === 'string') {
           responseData = responseData.replace(/^\uFEFF/, '');
@@ -401,62 +426,56 @@ export default {
         }
         
         if (responseData.success === true) {
-          console.log('✅ API sikeres választ adott');
-          
           const data = responseData.data || responseData;
           
-          // Adatok feldolgozása
           this.orders = data.orders || [];
           this.totalItems = this.orders.length;
           this.totalPages = 1;
           
-          // Napi nézet esetén összesítés mentése
           if (this.viewMode === 'daily') {
             if (data.meal_summary) {
               this.dailyMealSummary = data.meal_summary;
-              console.log('Napi étel összesítés:', this.dailyMealSummary);
             } else if (data.summary) {
-              // Ha nincs meal_summary, de van summary, akkor hozzunk létre egyet
               this.createDailyMealSummaryFromData(data);
             }
             
-            // Stats frissítése
             if (data.summary) {
               this.updateStatsFromResponse(data.summary);
             }
           }
           
-          console.log(`✅ Rendelések betöltve: ${this.orders.length} db`);
-          
         } else {
-          console.error('❌ API nem adott vissza success=true-t', responseData);
           this.orders = [];
           this.totalItems = 0;
           this.totalPages = 1;
+          addAlert({
+            message: responseData.message || 'Hiba történt a rendelések betöltésekor',
+            type: 'error'
+          });
         }
         
       } catch (error) {
-        console.error('❌ Hiba a rendelések betöltésekor:', error);
-        console.error('Error details:', error.response?.data);
+        console.error('Hiba a rendelések betöltésekor:', error);
         this.orders = [];
         this.totalItems = 0;
         this.totalPages = 1;
+        addAlert({
+          message: error.response?.data?.message || 'Hiba történt a rendelések betöltésekor',
+          type: 'error'
+        });
       } finally {
         this.loading = false;
       }
     },
     
-    // Napi összesítés létrehozása a rendelések alapján
     createDailyMealSummaryFromData(data) {
       if (!this.orders || this.orders.length === 0) {
         this.dailyMealSummary = null;
         return;
       }
       
-      // Aktív rendelések
       const activeOrders = this.orders.filter(order => order.orderStatus === 'Rendelve');
       
-      // Csoportosítás opció szerint
       const ordersByOption = {
         'A': activeOrders.filter(o => o.selectedOption === 'A'),
         'B': activeOrders.filter(o => o.selectedOption === 'B'),
@@ -514,7 +533,6 @@ export default {
       };
     },
     
-    // Statisztikák frissítése
     updateStatsFromResponse(summary) {
       this.stats = {
         totalOrders: summary.total_orders || summary.total || 0,
@@ -524,19 +542,22 @@ export default {
       };
     },
     
-    // ViewMode változás kezelése
     viewModeChanged() {
-      this.dailyMealSummary = null; // Reset daily summary when view mode changes
+      this.dailyMealSummary = null;
       this.loadOrders();
     },
     
-    // Order actions
     viewOrderDetails(order) {
       this.selectedOrder = order;
     },
     
     async cancelOrder(order) {
-      if (!confirm('Biztosan lemondja ezt a rendelést?')) return;
+      const confirmed = await this.showConfirm({
+        title: 'Rendelés lemondása',
+        message: 'Biztosan lemondja ezt a rendelést?'
+      });
+      
+      if (!confirmed) return;
       
       try {
         const token = localStorage.getItem('token') || this.getAuthToken();
@@ -548,31 +569,49 @@ export default {
         });
         
         if (response.data.success) {
-          alert('Rendelés sikeresen lemondva');
-          this.loadOrders(); // Újratöltjük a listát
+          addAlert({
+            message: 'Rendelés sikeresen lemondva',
+            type: 'success'
+          });
+          this.loadOrders();
+        } else {
+          addAlert({
+            message: response.data.message || 'Hiba a rendelés lemondásakor',
+            type: 'error'
+          });
         }
       } catch (error) {
         console.error('Hiba a rendelés lemondásakor:', error);
-        alert('Hiba a rendelés lemondásakor');
+        addAlert({
+          message: error.response?.data?.message || 'Hiba a rendelés lemondásakor',
+          type: 'error'
+        });
       }
     },
     
     async restoreOrder(order) {
-      if (!confirm('Biztosan visszaállítja ezt a rendelést?')) return;
+      const confirmed = await this.showConfirm({
+        title: 'Rendelés visszaállítása',
+        message: 'Biztosan visszaállítja ezt a rendelést?'
+      });
+      
+      if (!confirmed) return;
       
       try {
-        const token = localStorage.getItem('token') || this.getAuthToken();
-        // Itt egy PUT kérést kellene küldeni a státusz változtatásához
-        // Mivel most nincs ilyen endpoint, csak helyileg módosítjuk
         order.orderStatus = 'Rendelve';
-        alert('Rendelés helyileg visszaállítva');
+        addAlert({
+          message: 'Rendelés helyileg visszaállítva',
+          type: 'success'
+        });
       } catch (error) {
         console.error('Hiba a rendelés visszaállításakor:', error);
-        alert('Hiba a rendelés visszaállításakor');
+        addAlert({
+          message: 'Hiba a rendelés visszaállításakor',
+          type: 'error'
+        });
       }
     },
     
-    // Helper methods
     getPercentage(count, total) {
       if (!total || total === 0) return '0.0';
       return ((count / total) * 100).toFixed(1);
@@ -637,7 +676,6 @@ export default {
              '';
     },
     
-    // Date helpers
     getCurrentWeek() {
       const now = new Date();
       const oneJan = new Date(now.getFullYear(), 0, 1);
