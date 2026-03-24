@@ -10,10 +10,11 @@
             <li><router-link to="/menu/week" class="footer-link">Heti menü</router-link></li>
             <li><router-link to="/kitchen/meals" class="footer-link">Ételek</router-link></li>
             <li><router-link to="/profile" class="footer-link">Profil</router-link></li>
-            <li><router-link to="/personal-orders" class="footer-link">Rendeléseim</router-link></li>
-            <li><router-link to="/personal-invoices" class="footer-link">Számláim</router-link></li>
+            <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" to="/personal-orders" class="footer-link">Rendeléseim</router-link></li>
+            <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()"  to="/personal-invoices" class="footer-link">Számláim</router-link></li>
             
-            <!-- Admin linkek - csak adminoknak -->
+
+            <!--
             <template v-if="AuthService && AuthService.isAdmin()">
               <li class="footer-section-divider"><span>Admin</span></li>
               <li><router-link to="/admin/users" class="footer-link">Felhasználók kezelése</router-link></li>
@@ -21,14 +22,15 @@
               <li><router-link to="/admin/documents" class="footer-link">Dokumentumok</router-link></li>
             </template>
             
-            <!-- Konyha linkek - csak konyhásoknak -->
+   
             <template v-if="AuthService && AuthService.isKitchen()">
               <li class="footer-section-divider"><span>Konyha</span></li>
               <li><router-link to="/kitchen/ingredients" class="footer-link">Hozzávalók</router-link></li>
               <li><router-link to="/kitchen/menu-maker" class="footer-link">Menük készítése</router-link></li>
               <li><router-link to="/kitchen/orders" class="footer-link">Rendelések kezelése</router-link></li>
               <li><router-link to="/kitchen/lunchtime" class="footer-link">Ebédeltetés</router-link></li>
-            </template>
+            </template>-->
+
             
             <!-- Nem authentikált felhasználóknak -->
             <template v-if="!AuthService || !AuthService.isAuthenticated()">

@@ -36,12 +36,13 @@
           </template>
 
           <!-- Közös linkek -->
+
           <router-link v-if="AuthService.canViewMenu()" to="/menu/today">Mai menü</router-link>
           <router-link to="/menu/week">Heti menü</router-link>
           <router-link to="/kitchen/meals">Ételek</router-link>
           <router-link to="/profile">Profil</router-link>
-          <router-link to="/personal-orders">Rendelések</router-link>
-          <router-link to="/personal-invoices">Számlák</router-link>
+          <router-link v-if="!AuthService.isKitchen() && !AuthService.isAdmin()" to="/personal-orders">Rendelések</router-link>
+          <router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" to="/personal-invoices">Számlák</router-link>
         </div>
         
         <button 
@@ -70,23 +71,23 @@
       </router-link>-->
 
       <router-link to="/menu/today" class="mobile-nav-item" :class="{ active: $route.path.includes('/menu') }">
-        <span class="icon">📋</span>
+        <span class="icon">𓌉◯𓇋</span>
         <span class="label">Mai menü</span>
       </router-link>
 
 
       <router-link to="/kitchen/meals" class="mobile-nav-item" :class="{ active: $route.path === '/kitchen/meals' }">
-        <span class="icon">🍲</span>
+        <span class="icon">☷</span>
         <span class="label">Ételek</span>
       </router-link>
 
       <router-link to="/profile" class="mobile-nav-item" :class="{ active: $route.path === '/profile' }">
-        <span class="icon">👤</span>
+        <span class="icon">⚙︎</span>
         <span class="label">Profil</span>
       </router-link>
 
       <div class="mobile-nav-item" @click="openActionSheet">
-        <span class="icon">➕</span>
+        <span class="icon">☰</span>
         <span class="label">Több</span>
       </div>
 
@@ -117,9 +118,9 @@
             <template v-if="AuthService.isAdmin()">
               <div class="action-section">
                 <div class="section-title">Admin</div>
-                <button @click="navigateTo('/admin/users')">👥 Felhasználók</button>
-                <button @click="navigateTo('/admin/invoices')">💰 Számlák</button>
-                <button @click="navigateTo('/admin/documents')">📄 Dokumentumok</button>
+                <button @click="navigateTo('/admin/users')">Felhasználók</button>
+                <button @click="navigateTo('/admin/invoices')">Számlák</button>
+                <button @click="navigateTo('/admin/documents')">Dokumentumok</button>
               </div>
             </template>
 
@@ -127,23 +128,39 @@
             <template v-if="AuthService.isKitchen()">
               <div class="action-section">
                 <div class="section-title">Konyha</div>
-                <button @click="navigateTo('/kitchen/ingredients')">🥕 Hozzávalók</button>
-                <button @click="navigateTo('/kitchen/menu-maker')">📝 Menük</button>
-                <button @click="navigateTo('/kitchen/orders')">📦 Rendelések</button>
-                <button @click="navigateTo('/kitchen/lunchtime')">🍽️ Ebédeltetés</button>
+                <button @click="navigateTo('/kitchen/ingredients')">Hozzávalók</button>
+                <button @click="navigateTo('/kitchen/menu-maker')">Menük</button>
+                <button @click="navigateTo('/kitchen/orders')">Rendelések</button>
+                <button @click="navigateTo('/kitchen/lunchtime')">Ebédeltetés</button>
               </div>
             </template>
 
-            <!-- Általános szekció -->
-            <div class="action-section">
-              <div class="section-title">Általános</div>
-              <!--<button v-if="AuthService.canViewMenu()" @click="navigateTo('/menu/today')">📅 Mai menü</button>-->
-              <button @click="navigateTo('/menu/week')">📆 Heti menü</button>
-              <button @click="navigateTo('/kitchen/meals')">🍲 Ételek</button>
-              <button @click="navigateTo('/personal-orders')">👤 Rendelések</button>
-              <button @click="navigateTo('/personal-invoices')">👤 Számlák</button>
 
-            </div>
+            <!-- Általános szekció -->
+      
+              <div class="action-section">
+                <div class="section-title">Általános</div>
+                <!--<button v-if="AuthService.canViewMenu()" @click="navigateTo('/menu/today')">📅 Mai menü</button>-->
+                <button @click="navigateTo('/menu/week')">Heti menü</button>
+                <button @click="navigateTo('/kitchen/meals')">Ételek</button>
+                <button 
+                  v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" 
+                  @click="navigateTo('/personal-orders')"
+                >
+                  Rendelések
+                </button>
+                <button 
+                  v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" 
+                  @click="navigateTo('/personal-invoices')"
+                >
+                Számlák
+                </button>
+
+              </div>
+  
+
+
+            
 
             <!-- Kijelentkezés -->
             <div class="action-section">
@@ -444,6 +461,15 @@ nav {
   color: #888;
   cursor: pointer;
   padding: 0.5rem;
+  text-align: right;
+
+}
+
+.close-sheet:hover {
+  color: #ca1616;
+  background: transparent !important;
+  border: none;
+
 }
 
 .action-section {

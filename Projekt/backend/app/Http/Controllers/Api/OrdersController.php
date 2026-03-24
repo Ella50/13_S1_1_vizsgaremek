@@ -97,10 +97,10 @@ class OrdersController extends Controller
             return $this->unauthorized();
         }
         
-        // Aznapi rendelések
+        // Aznapi rendelések (felhasználó adatokkal együtt)
         $orders = Order::whereDate('orderDate', $date)
             ->with([
-                'user:id,userType',
+                'user:id,userType,hasDiabetes', // added hasDiabetes
                 'menuItem' => function($q) {
                     $q->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal']);
                 },
@@ -113,10 +113,10 @@ class OrdersController extends Controller
             ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
             ->first();
             
-        // **ÚJ: Ételenkénti összesítés**
+        // **MÓDOSÍTVA: Ételenkénti összesítés cukorbeteg adatokkal**
         $mealSummary = $this->getMealSummary($orders, $menu);
         
-        // Részeletes összesítés
+        // Részletes összesítés
         $detailedSummary = $this->getDetailedSummary($orders);
         
         return $this->success([
@@ -124,10 +124,11 @@ class OrdersController extends Controller
             'menu' => $menu,
             'orders' => $orders,
             'summary' => $detailedSummary,
-            'meal_summary' => $mealSummary, // Ételenkénti összesítés
+            'meal_summary' => $mealSummary,
             'total_count' => $orders->count(),
         ]);
     }
+
 
     private function getMealSummary($orders, $menu)
     {
@@ -144,6 +145,11 @@ class OrdersController extends Controller
             ],
             'option_b' => [
                 'name' => $menu && $menu->optionBMeal ? $menu->optionBMeal->mealName : 'Nincs megadva',
+                'count' => 0,
+                'orders' => []
+            ],
+            'diabetic' => [ // ÚJ: cukorbeteg összesítés
+                'name' => $menu && $menu->optionAMeal ? $menu->optionAMeal->mealName : 'Cukormentes menü',
                 'count' => 0,
                 'orders' => []
             ],
@@ -167,8 +173,15 @@ class OrdersController extends Controller
             // Főételek az opció alapján
             switch ($order->selectedOption) {
                 case 'A':
-                    $summary['option_a']['count']++;
-                    $summary['option_a']['orders'][] = $order->id;
+                     if ($order->user && $order->user->hasDiabetes) {
+                        // Cukorbeteg -> diabetic kategóriába
+                        $summary['diabetic']['count']++;
+                        $summary['diabetic']['orders'][] = $order->id;
+                    } else {
+                        // Nem cukorbeteg -> option_a kategóriába
+                        $summary['option_a']['count']++;
+                        $summary['option_a']['orders'][] = $order->id;
+                    }
                     break;
                     
                 case 'B':
@@ -193,8 +206,14 @@ class OrdersController extends Controller
             'B' => $summary['option_b']['count'],
             'soup' => $orders->where('selectedOption', 'soup')->count(),
             'other' => $summary['other']['count'],
+            'diabetic' => $summary['diabetic']['count'], // ÚJ
             'total_soup' => $summary['soup']['count']
         ];
+        
+        // Cukorbeteg százalék számítása
+        $summary['diabetic']['percentage'] = $summary['option_a']['count'] > 0 
+            ? round(($summary['diabetic']['count'] / $summary['option_a']['count']) * 100, 1)
+            : 0;
         
         return $summary;
     }
@@ -202,7 +221,7 @@ class OrdersController extends Controller
     /**
      * Mai rendelések összesítése
      */
-    public function getTodaySummary()
+     public function getTodaySummary()
     {
         $user = Auth::user();
         if (!in_array($user->userType, ['Konyha', 'Admin'])) {
@@ -213,7 +232,7 @@ class OrdersController extends Controller
         
         $orders = Order::whereDate('orderDate', $today)
             ->where('orderStatus', 'Rendelve')
-            ->with(['user:id', 'price'])
+            ->with(['user:id,hasDiabetes', 'price']) // added hasDiabetes
             ->get();
             
         $menu = MenuItem::whereDate('day', $today)
@@ -222,6 +241,11 @@ class OrdersController extends Controller
             
         $summary = $this->getDetailedSummary($orders);
         
+        // Cukorbeteg rendelések száma
+        $diabeticCount = $orders->filter(function($order) {
+            return $order->selectedOption === 'A' && $order->user && $order->user->hasDiabetes;
+        })->count();
+        
         return $this->success([
             'date' => $today,
             'menu' => $menu,
@@ -229,6 +253,10 @@ class OrdersController extends Controller
             'summary' => $summary,
             'total_orders' => $orders->count(),
             'by_option' => $orders->groupBy('selectedOption')->map->count(),
+            'diabetic_count' => $diabeticCount, // ÚJ
+            'diabetic_percentage' => $orders->where('selectedOption', 'A')->count() > 0 
+                ? round(($diabeticCount / $orders->where('selectedOption', 'A')->count()) * 100, 1)
+                : 0
         ]);
     }
     
@@ -244,9 +272,12 @@ class OrdersController extends Controller
         
         $orders = Order::whereDate('orderDate', $date)
             ->where('orderStatus', 'Rendelve')
-            ->with(['menuItem' => function($q) {
-                $q->with(['soupMeal.ingredients', 'optionAMeal.ingredients', 'optionBMeal.ingredients']);
-            }])
+            ->with([
+                'user:id,hasDiabetes', // added hasDiabetes
+                'menuItem' => function($q) {
+                    $q->with(['soupMeal.ingredients', 'optionAMeal.ingredients', 'optionBMeal.ingredients']);
+                }
+            ])
             ->get();
             
         // Ételek számlálása
@@ -258,8 +289,16 @@ class OrdersController extends Controller
         
         $ingredientRequirements = [];
         
+        // Cukorbeteg rendelések számlálása
+        $diabeticCount = 0;
+        
         foreach ($orders as $order) {
             if (!$order->menuItem) continue;
+            
+            // Cukorbeteg rendelés számolása
+            if ($order->selectedOption === 'A' && $order->user && $order->user->hasDiabetes) {
+                $diabeticCount++;
+            }
             
             // Leves
             if ($order->menuItem->soup && $order->menuItem->soupMeal) {
@@ -298,6 +337,10 @@ class OrdersController extends Controller
         return $this->success([
             'date' => $date,
             'total_orders' => $orders->count(),
+            'diabetic_count' => $diabeticCount, // ÚJ
+            'diabetic_percentage' => $orders->where('selectedOption', 'A')->count() > 0 
+                ? round(($diabeticCount / $orders->where('selectedOption', 'A')->count()) * 100, 1)
+                : 0,
             'meal_counts' => $mealCounts,
             'ingredient_requirements' => array_values($ingredientRequirements),
             'summary_by_option' => [
