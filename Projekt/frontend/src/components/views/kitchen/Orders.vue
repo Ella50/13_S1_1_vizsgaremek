@@ -82,13 +82,13 @@
         <!-- Cukormentes összesítés -->
           <div class="col-md-3">
             <div class="meal-summary-card">
-              <div class="meal-icon" id="B-opcio">
-                <span>CM</span>
+              <div class="meal-icon" id="diabetic-opcio">
+                <span class="diabetic-note">Cukor<br>mentes</span>
               </div>
               <div class="meal-info">
-                <p class="meal-name">{{ dailyMealSummary.option_b.name || 'Nincs adat' }}</p>
+                <p class="meal-name">{{ dailyMealSummary.diabetic.name || 'Nincs adat' }}</p>
                 <div class="meal-count">
-                  <span class="count-number">{{ dailyMealSummary.option_b.count || 0 }}</span>
+                  <span class="count-number">{{ dailyMealSummary.diabetic.count || 0 }}</span>
                   <span class="count-label">db rendelés</span>
                 </div>
               </div>
@@ -98,7 +98,7 @@
  
         <!-- Összegző táblázat -->
         <div class="summary-table mt-4">
-          <h5><i class="fas fa-chart-pie"></i> Részletes eloszlás</h5>
+          <h5><i class="fas fa-chart-pie"></i> Részletek</h5>
           <div class="table-responsive">
             <table class="table table-sm table-bordered">
               <thead>
@@ -115,6 +115,17 @@
                   <td>{{ dailyMealSummary.soup.name || 'Nincs adat' }}</td>
                   <td>{{ dailyMealSummary.soup.count || 0 }}</td>
                   <td>{{ getPercentage(dailyMealSummary.soup.count, dailyMealSummary.total_by_option.total_soup) }}%</td>
+                </tr>
+                <tr class="diabetic-row">
+                  <td><strong>Cukormentes (A opcióból)</strong></td>
+                  <td>
+                    {{ dailyMealSummary.diabetic.name || 'Cukormentes menü' }}
+                    <span class="badge bg-info ms-2">cukormentes</span>
+                  </td>
+                  <td>
+                    <strong class="text-info">{{ dailyMealSummary.diabetic.count || 0 }}</strong>
+                  </td>
+                  <td>{{ getPercentage(dailyMealSummary.diabetic.count, dailyMealSummary.total_by_option.total_soup) }}%</td>
                 </tr>
                 <tr>
                   <td><strong>A opció</strong></td>
@@ -142,6 +153,21 @@
               </tbody>
             </table>
           </div>
+
+          <div class="diabetic-summary mt-3 p-3 bg-light rounded" v-if="dailyMealSummary.diabetic.count > 0">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-apple-alt text-info me-3 fa-2x"></i>
+              <div>
+                <h6 class="mb-1">Cukorbeteg rendelések összesítése</h6>
+                <p class="mb-0 text-muted small">
+                  {{ dailyMealSummary.diabetic.count }} db cukorbeteg rendelés az A opcióból
+                  (összes A opció: {{ dailyMealSummary.option_a.count }} db, 
+                  ebből cukorbeteg: {{ ((dailyMealSummary.diabetic.count / dailyMealSummary.option_a.count) * 100).toFixed(1) }}%)
+                </p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -438,6 +464,9 @@ export default {
         'other': activeOrders.filter(o => o.selectedOption === 'other')
       };
       
+      // Cukorbeteg rendelések (A opció + hasDiabetes === true)
+      const diabeticOrders = ordersByOption['A'].filter(order => order.user && order.user.hasDiabetes === true);
+      
       // Menü információk megszerzése
       let menu = null;
       if (data.menu) {
@@ -461,6 +490,14 @@ export default {
           'name': menu?.optionBMeal?.mealName || 'B opció',
           'count': ordersByOption['B'].length,
           'orders': ordersByOption['B'].map(o => o.id)
+        },
+        'diabetic': {
+          'name': menu?.optionAMeal?.mealName || 'Cukormentes menü',
+          'count': diabeticOrders.length,
+          'orders': diabeticOrders.map(o => o.id),
+          'percentage': ordersByOption['A'].length > 0 
+            ? ((diabeticOrders.length / ordersByOption['A'].length) * 100).toFixed(1) 
+            : 0
         },
         'other': {
           'name': menu?.otherMeal?.mealName || 'Egyéb',
@@ -703,10 +740,9 @@ export default {
 }
 
 .meal-icon {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: #007bff;
   color: white;
   display: flex;
   align-items: center;
@@ -882,6 +918,57 @@ export default {
   
   .table-responsive {
     font-size: 0.9rem;
+  }
+}
+
+
+.diabetic-card {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdef5 100%);
+  border-left: 4px solid #17a2b8;
+}
+
+#diabetic-opcio {
+  background: #17a2b8;
+}
+
+.meal-summary-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  height: 100%;
+  transition: transform 0.3s;
+}
+
+.diabetic-card .count-number {
+  color: #17a2b8;
+}
+
+.diabetic-note {
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.diabetic-row {
+  background-color: #e3f2fd;
+}
+
+
+
+.diabetic-summary {
+  border-left: 4px solid #17a2b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .diabetic-card .meal-info {
+    text-align: center;
+  }
+  
+  .diabetic-note {
+    text-align: center;
   }
 }
 </style>
