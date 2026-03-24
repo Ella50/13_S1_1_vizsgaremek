@@ -370,7 +370,6 @@ resetMealsOnly() {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  margin: auto;
 
   position: relative !important;
   z-index: 1001;
