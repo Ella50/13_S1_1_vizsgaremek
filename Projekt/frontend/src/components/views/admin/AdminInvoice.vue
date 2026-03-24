@@ -69,7 +69,7 @@
               <td>{{ inv.invoiceNumber }}</td>
               <td>{{ formatMonth(inv.billingMonth) }}</td>
               <td>
-                <strong>{{ formatFt(inv.totalAmount) }}</strong>
+                <strong>{{ formatFt(Math.round(inv.totalAmount * 1.27)) }}</strong>
               </td>
               <td>
                 <span class="badge" :data-status="inv.invoiceStatus">
@@ -244,8 +244,12 @@ function formatDate(dateStr) {
 
 const totalSum = computed(() => {
   const arr = Array.isArray(rows.value) ? rows.value : [];
-  return arr.reduce((sum, i) => sum + Number(i.totalAmount || 0), 0);
-  
+
+  return arr.reduce((sum, i) => {
+    const net = Number(i.totalAmount || 0);
+    const gross = net * 1.27; // Nettó → Bruttó
+    return sum + gross;
+  }, 0);
 });
 
 async function load() {

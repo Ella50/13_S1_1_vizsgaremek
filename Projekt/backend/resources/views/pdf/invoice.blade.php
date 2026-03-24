@@ -1,5 +1,15 @@
 <!doctype html>
 <html>
+
+@php
+    \Carbon\Carbon::setLocale('hu');
+    setlocale(LC_TIME, 'hu_HU.UTF-8');
+
+    $path = public_path('images/eMenza.png');
+    $logo = base64_encode(file_get_contents($path));
+
+@endphp
+
 <head>
 <meta charset="utf-8">
 <style>
@@ -100,7 +110,7 @@ Adószám: 12345678-1-23
 </td>
 <td style="text-align:right;">
 <div>
-    <img src="{{ public_path('backend/public/images/eMenza.png') }}" alt="eMenza">
+    <img src="{{ public_path('images/eMenza.png') }}" />
 </div>
 </td>
 </tr>
@@ -117,7 +127,7 @@ Adószám: 12345678-1-23
 <strong>ÖSSZESÍTŐ SZÁMLA</strong><br>
 Számlaszám: {{ $invoice->invoiceNumber }}<br>
 Keltezés: {{ \Carbon\Carbon::parse($invoice->issueDate)->format('Y-m-d') }}<br>
-Teljesítés időszaka: {{ \Carbon\Carbon::parse($invoice->billingMonth)->format('Y. F') }}<br>
+Teljesítés időszaka: {{ \Carbon\Carbon::parse($invoice->billingMonth)->translatedFormat('Y. F') }}<br>
 Fizetési határidő: {{ \Carbon\Carbon::parse($invoice->dueDate)->format('Y-m-d') }}
 </td>
 </tr>
@@ -125,7 +135,6 @@ Fizetési határidő: {{ \Carbon\Carbon::parse($invoice->dueDate)->format('Y-m-d
 
 @php
     $totalQuantity = $invoice->orders->count();
-    // Az első rendelés egységára (feltételezve hogy minden nap ugyanannyi)
     $unitPrice = (float)($invoice->orders->first()->price->amount ?? 0);
     
     $netTotal = $unitPrice * $totalQuantity;
@@ -187,7 +196,7 @@ Közlemény: {{ $invoice->invoiceNumber }}
 <br><br>
 
 <small>
-Összesítő számla a {{ \Carbon\Carbon::parse($invoice->billingMonth)->format('Y. F') }} havi menürendelésekről.<br>
+Összesítő számla a {{ \Carbon\Carbon::parse($invoice->billingMonth)->translatedFormat('Y. F') }} havi menürendelésekről.<br>
 Összes rendelés: {{ $totalQuantity }} db<br>
 A számla ÁFA tartalmát 27% mértékkel számítottuk.
 </small>
