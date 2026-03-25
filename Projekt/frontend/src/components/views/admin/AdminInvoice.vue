@@ -1,109 +1,107 @@
 <template>
-  <div class="wrap">
-    <div class="head">
-      <h1>Számlák (Admin)</h1>
+  <div class="admin-invoices">
+    <div class="content-card">
+      <div class="card-header">
+        <h1 class="title">Számlák kezelése</h1>
 
-      <div class="toolbar">
-        <label class="field">
-          <span>Hónap</span>
-          <input type="month" v-model="billingMonth" />
-        </label>
+        <div class="header-controls">
+          <div class="search-box">
+            <input 
+              type="text" 
+              v-model="searchQuery" 
+              placeholder="Keresés név vagy email alapján..."
+              class="search-input"
+              @input="onSearchInput"
+            >
+            <span class="search-icon">🔍</span>
+          </div>
 
-        <button 
-          class="primary" 
-          :disabled="generating || !billingMonth" 
-          @click="generate"
-        >
-          {{ generating ? "Generálás..." : "Számlák generálása" }}
-        </button>
-      </div>
-    </div>
+          <div class="toolbar">
+            <div class="form-group">
+              <input type="month" v-model="billingMonth" class="form-control" />
+            </div>
 
-    <div v-if="loading">
-      Betöltés...
-    </div>
-    
-    <div v-else-if="error" class="error">
-      {{ error }}
-    </div>
-
-    <div v-else>
-      <div class="summary" v-if="rows.length">
-        <div>
-          <strong>{{ rows.length }}</strong> számla
-        </div>
-        <div>
-          <strong>{{ formatFt(totalSum) }}</strong> összesen
+            <button 
+              class="btn-primary" 
+              :disabled="generating || !billingMonth" 
+              @click="generate"
+            >
+              {{ generating ? "Generálás..." : "Számlák generálása" }}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div v-if="rows.length === 0" class="empty">
-        Nincs találat erre a hónapra.
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Betöltés...</p>
       </div>
 
-      <div v-else class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Felhasználó</th>
-              <th>Számlaszám</th>
-              <th>Hónap</th>
-              <th>Összeg</th>
-              <th>Státusz</th>
-              <th>Határidő</th>
-              <th>Műveletek</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="inv in rows" :key="inv.id">
-              <td>
-                <div class="u">
-                  <div class="uname">
-                    {{ inv.user?.firstName + " " + inv.user?.lastName || inv.firstName || "—" }}
+      <div v-else-if="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <div v-else>
+        <div v-if="rows.length === 0" class="empty-state">
+          Nincs találat erre a hónapra.
+        </div>
+
+        <div v-else class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Felhasználó</th>
+                <th>Számlaszám</th>
+                <th>Hónap</th>
+                <th>Összeg</th>
+                <th>Státusz</th>
+                <th>Határidő</th>
+                <th>Műveletek</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="inv in rows" :key="inv.id">
+                <td>
+                  <div class="user-info">
+                    <div class="user-name">
+                      {{ inv.user?.firstName + " " + inv.user?.lastName || inv.firstName || "—" }}
+                    </div>
+                    <div class="user-email">
+                      {{ inv.user?.email || inv.userEmail || "" }}
+                    </div>
                   </div>
-                  <div class="muted">
-                    {{ inv.user?.email || inv.userEmail || "" }}
+                </td>
+                <td>{{ inv.invoiceNumber }}</td>
+                <td>{{ formatMonth(inv.billingMonth) }}</td>
+                <td class="amount">{{ formatFt(Math.round(inv.totalAmount * 1.27)) }}</td>
+                <td>
+                  <span class="status-badge" :class="getStatusClass(inv.invoiceStatus)">
+                    {{ inv.invoiceStatus }}
+                  </span>
+                </td>
+                <td>{{ formatDate(inv.dueDate) }}</td>
+                <td class="actions-cell">
+                  <div class="actions-group">
+                    <button class="btn-action btn-view" @click="open(inv.id)">
+                      Megtekintés
+                    </button>
+                    <button class="btn-action btn-pdf" @click="pdf(inv)">
+                      PDF
+                    </button>
+                    <button
+                      class="btn-action btn-paid"
+                      v-if="inv.invoiceStatus !== 'Fizetve'"
+                      @click="markPaid(inv)"
+                      :disabled="payingId === inv.id"
+                    >
+                      {{ payingId === inv.id ? "Mentés..." : "Fizetve" }}
+                    </button>
                   </div>
-                </div>
-              </td>
-              <td>{{ inv.invoiceNumber }}</td>
-              <td>{{ formatMonth(inv.billingMonth) }}</td>
-              <td>
-                <strong>{{ formatFt(Math.round(inv.totalAmount * 1.27)) }}</strong>
-              </td>
-              <td>
-                <span class="badge" :data-status="inv.invoiceStatus">
-                  {{ inv.invoiceStatus }}
-                </span>
-              </td>
-              <td>{{ formatDate(inv.dueDate) }}</td>
-              <td class="actions">
-                <button 
-                  class="view-btn" 
-                  @click="open(inv.id)"
-                >
-                  Megtekintés
-                </button>
-                
-                <button 
-                  class="pdf-btn" 
-                  @click="pdf(inv)"
-                >
-                  PDF
-                </button>
-                
-                <button
-                  class="paid-btn"
-                  v-if="inv.invoiceStatus !== 'Fizetve'"
-                  @click="markPaid(inv)"
-                  :disabled="payingId === inv.id"
-                >
-                  {{ payingId === inv.id ? "Mentés..." : "Fizetve" }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- MODAL -->
@@ -111,88 +109,80 @@
         <div class="modal">
           <div class="modal-header">
             <h2>{{ selected.invoiceNumber }}</h2>
-            <button class="close-btn" @click="close">
-              ×
-            </button>
+            <button class="modal-close" @click="close">×</button>
           </div>
 
-          <div class="meta">
-            <div>
-              Felhasználó: 
-              <strong>{{ selected.user?.firstName + " " + selected.user?.lastName || selected.userName || "—" }}</strong>
+          <div class="modal-body">
+            <div class="invoice-meta">
+              <div class="meta-row">
+                <span class="meta-label">Felhasználó:</span>
+                <span class="meta-value">{{ selected.user?.firstName + " " + selected.user?.lastName || selected.userName || "—" }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Hónap:</span>
+                <span class="meta-value">{{ formatMonth(selected.billingMonth) }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Összeg:</span>
+                <span class="meta-value">{{ formatFt(selected.totalAmount) }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Státusz:</span>
+                <span class="meta-value">
+                  <span class="status-badge" :class="getStatusClass(selected.invoiceStatus)">
+                    {{ selected.invoiceStatus }}
+                  </span>
+                </span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Határidő:</span>
+                <span class="meta-value">{{ formatDate(selected.dueDate) }}</span>
+              </div>
             </div>
-            <div>
-              Hónap: 
-              <strong>{{ formatMonth(selected.billingMonth) }}</strong>
-            </div>
-            <div>
-              Összeg: 
-              <strong>{{ formatFt(selected.totalAmount) }}</strong>
-            </div>
-            <div>
-              Státusz: 
-              <strong>{{ selected.invoiceStatus }}</strong>
-            </div>
-            <div>
-              Határidő: 
-              <strong>{{ formatDate(selected.dueDate) }}</strong>
-            </div>
-            
-            <div class="meta-actions">
-              <button 
-                class="pdf-btn" 
-                @click="pdf(selected)"
-              >
-                Letöltés PDF-ben
+
+            <div class="modal-actions">
+              <button class="btn-modal btn-modal-pdf" @click="pdf(selected)">
+                PDF letöltés
               </button>
-              
               <button
-                class="paid-btn"
+                class="btn-modal btn-modal-paid"
                 v-if="selected.invoiceStatus !== 'Fizetve'"
                 @click="markPaid(selected)"
                 :disabled="payingId === selected.id"
               >
-                {{ payingId === selected.id ? "Mentés..." : "Fizetve" }}
+                {{ payingId === selected.id ? "Mentés..." : " Fizetve" }}
               </button>
+            </div>
+
+            <h3 class="section-title">Tételek</h3>
+
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Dátum</th>
+                    <th>Opció</th>
+                    <th>Ár</th>
+                    <th>Státusz</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="o in (selected.orders || [])" :key="o.id">
+                    <td>{{ formatDate(o.orderDate) }}</td>
+                    <td>{{ o.selectedOption }}</td>
+                    <td class="amount">{{ formatFt(o.amount) }}</td>
+                    <td>{{ o.orderStatus }}</td>
+                  </tr>
+                  <tr v-if="!selected.orders || selected.orders.length === 0">
+                    <td colspan="4" class="empty-row">Nincs tétel.</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <h3>Tételek</h3>
-          
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Dátum</th>
-                  <th>Opció</th>
-                  <th>Ár</th>
-                  <th>Státusz</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="o in (selected.orders || [])" :key="o.id">
-                  <td>{{ formatDate(o.orderDate) }}</td>
-                  <td>{{ o.selectedOption }}</td>
-                  <td>{{ formatFt(o.amount) }}</td>
-                  <td>{{ o.orderStatus }}</td>
-                </tr>
-                
-                <tr v-if="!selected.orders || selected.orders.length === 0">
-                  <td colspan="5" class="muted">
-                    Nincs tétel.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
           <div class="modal-footer">
-            <button 
-              class="close-btn" 
-              @click="close"
-            >
-              Bezárás
-            </button>
+            <button class="btn-modal btn-modal-close" @click="close">Bezárás</button>
           </div>
         </div>
       </div>
@@ -201,16 +191,13 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onBeforeUnmount } from "vue";
 import {
   adminFetchInvoices,
   adminFetchInvoice,
   adminGenerateInvoicesForMonth,
   adminMarkInvoicePaid,
-  downloadInvoicePdf
 } from "@/services/invoiceApi";
-
-import api from "@/services/api";
 
 const loading = ref(false);
 const generating = ref(false);
@@ -220,7 +207,31 @@ const rows = ref([]);
 const selected = ref(null);
 const payingId = ref(null);
 
-const billingMonth = ref(""); // YYYY-MM
+const billingMonth = ref("");
+
+const searchQuery = ref("");
+const searchTimeout = ref(null);
+
+// Görgetés tiltásának kezelése
+watch(selected, (newVal) => {
+  if (newVal) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+});
+
+// Komponens bezárásakor görgetés visszaállítása
+onBeforeUnmount(() => {
+  document.body.style.overflow = '';
+});
+
+function onSearchInput() {
+  if (searchTimeout.value) clearTimeout(searchTimeout.value);
+  searchTimeout.value = setTimeout(() => {
+    load();
+  }, 300);
+}
 
 function formatFt(n) {
   const x = Number(n || 0);
@@ -242,12 +253,21 @@ function formatDate(dateStr) {
   return `${y}-${m}-${day}`;
 }
 
+function getStatusClass(status) {
+  const classes = {
+    'Fizetve': 'status-paid',
+    'Generálva': 'status-generated',
+    'Függőben lévő': 'status-pending',
+    'Lejárt': 'status-expired'
+  };
+  return classes[status] || 'status-default';
+}
+
 const totalSum = computed(() => {
   const arr = Array.isArray(rows.value) ? rows.value : [];
-
   return arr.reduce((sum, i) => {
     const net = Number(i.totalAmount || 0);
-    const gross = net * 1.27; // Nettó → Bruttó
+    const gross = net * 1.27;
     return sum + gross;
   }, 0);
 });
@@ -257,42 +277,32 @@ async function load() {
   error.value = "";
   try {
     const response = await adminFetchInvoices({
-      month: billingMonth.value
+      month: billingMonth.value,
+      search: searchQuery.value
     });
-    
-    console.log("Teljes response:", response);
-    
+
     let invoiceData = [];
-    
-    // Ha string, távolítsuk el a BOM karaktert és parse-oljuk
+
     if (typeof response === 'string') {
       try {
-        // BOM karakter eltávolítása
         const cleanJson = response.replace(/^\uFEFF/, '');
         const parsed = JSON.parse(cleanJson);
-        console.log("Parse-olt adat:", parsed);
-        
         if (parsed?.invoices?.data) {
           invoiceData = parsed.invoices.data;
         }
       } catch (e) {
-        console.error("Hiba a JSON parse során:", e);
+        console.error("JSON parse error:", e);
       }
-    }
-    // Ha már objektum
-    else if (response && typeof response === 'object') {
+    } else if (response && typeof response === 'object') {
       if (response.invoices?.data) {
         invoiceData = response.invoices.data;
       }
     }
-    
+
     rows.value = invoiceData;
-    console.log("Beállított rows:", rows.value);
-    console.log("rows hossza:", rows.value.length);
-    
   } catch (e) {
     error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
-    console.error("Hiba:", e);
+    console.error(e);
   } finally {
     loading.value = false;
   }
@@ -300,64 +310,52 @@ async function load() {
 
 async function generate() {
   if (!billingMonth.value) return;
-
+  generating.value = true;
   try {
     await adminGenerateInvoicesForMonth(billingMonth.value);
     await load();
   } catch (e) {
     console.log(e.response?.data);
+  } finally {
+    generating.value = false;
   }
 }
 
 async function open(id) {
-  console.log('Opening invoice with ID:', id);
   error.value = "";
-  
   try {
     const response = await adminFetchInvoice(id);
-    console.log('Raw API response:', response);
-    
     let invoiceData = null;
-    
-    // Ha string, távolítsuk el a BOM karaktert és parse-oljuk
+
     if (typeof response === 'string') {
       try {
-        // BOM karakter eltávolítása
         const cleanJson = response.replace(/^\uFEFF/, '');
         const parsed = JSON.parse(cleanJson);
-        console.log('Parse-olt adat:', parsed);
-        
         if (parsed?.invoice) {
           invoiceData = parsed.invoice;
         } else if (parsed?.data?.invoice) {
           invoiceData = parsed.data.invoice;
         }
       } catch (e) {
-        console.error('Hiba a JSON parse során:', e);
+        console.error('JSON parse error:', e);
       }
-    }
-    // Ha már objektum
-    else if (response && typeof response === 'object') {
+    } else if (response && typeof response === 'object') {
       if (response.invoice) {
         invoiceData = response.invoice;
       } else if (response.data?.invoice) {
         invoiceData = response.data.invoice;
-      } else if (response.id) { // Ha maga a response a számla
+      } else if (response.id) {
         invoiceData = response;
       }
     }
-    
+
     if (!invoiceData) {
-      console.error('Nem sikerült kinyerni a számla adatokat:', response);
       error.value = "Hibás adatformátum";
       return;
     }
-    
-    console.log('Beállított invoice adat:', invoiceData);
+
     selected.value = invoiceData;
-    
   } catch (e) {
-    console.error('Hiba a számla betöltésekor:', e);
     error.value = e?.response?.data?.message || e?.message || "Hiba a számla betöltésekor";
   }
 }
@@ -368,22 +366,12 @@ function close() {
 
 async function pdf(inv) {
   try {
-    console.log('PDF letöltés indítása, ID:', inv.id);
-    const filename = `${inv.invoiceNumber || 'szamla'}.pdf`;
-    
-    // Token lekérése - próbáljuk ki mindkét lehetséges nevet
     const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
-    
     if (!token) {
-      console.error('Nincs token a localStorage-ban!');
-      console.log('Elérhető localStorage kulcsok:', Object.keys(localStorage));
       error.value = 'Nincs bejelentkezve - hiányzik a token';
       return;
     }
-    
-    console.log('Token megtalálva, hossza:', token.length);
-    
-    // Közvetlen fetch hívás
+
     const response = await fetch(`http://localhost:8000/api/admin/invoices/${inv.id}/pdf`, {
       method: 'GET',
       headers: {
@@ -391,62 +379,35 @@ async function pdf(inv) {
         'Accept': 'application/pdf'
       }
     });
-    
-    console.log('Válasz státusz:', response.status);
-    console.log('Válasz headerek:', Object.fromEntries(response.headers.entries()));
-    
+
     if (response.status === 401) {
       error.value = 'Nincs jogosultság (401) - jelentkezz be újra';
       return;
     }
-    
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Hiba válasz:', errorText);
-      error.value = `Hiba: ${response.status} - ${errorText}`;
+      error.value = `Hiba: ${response.status}`;
       return;
     }
-    
-    // Ellenőrizzük a content-type-ot
+
     const contentType = response.headers.get('content-type');
-    console.log('Content-Type:', contentType);
-    
     if (contentType && contentType.includes('application/json')) {
-      // JSON hibát kaptunk
       const errorData = await response.json();
-      console.error('Szerver hiba:', errorData);
       error.value = errorData.message || 'Hiba a PDF letöltésekor';
       return;
     }
-    
-    // Blob létrehozása és letöltés
+
     const blob = await response.blob();
-    console.log('Blob mérete:', blob.size, 'típusa:', blob.type);
-    
-    if (blob.size < 100) {
-      // Lehet, hogy hibaüzenet
-      const text = await blob.text();
-      console.warn('Kis méretű blob tartalma:', text);
-      if (text.includes('error') || text.includes('hiba')) {
-        error.value = text;
-        return;
-      }
-    }
-    
-    // Letöltés
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename;
+    link.download = `${inv.invoiceNumber || 'szamla'}.pdf`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
-    
-    console.log('PDF letöltés sikeres');
-    
   } catch (e) {
-    console.error('PDF letöltési hiba részletesen:', e);
+    console.error('PDF download error:', e);
     error.value = e.message || "Hiba a PDF letöltésekor";
   }
 }
@@ -481,335 +442,579 @@ load();
 watch(billingMonth, () => {
   load();
 });
-
-watch(rows, (newRows) => {
-  console.log("rows frissült, hossza:", newRows?.length);
-  console.log("Első elem:", newRows[0]);
-}, { immediate: true, deep: true });
-
-watch(selected, (newVal) => {
-  console.log('selected változott:', newVal);
-  if (newVal) {
-    console.log('Modal megnyitva, ID:', newVal.id);
-  }
-}, { deep: true, immediate: true });
 </script>
 
 <style scoped>
-.wrap {
-  max-width: 1200px;
+.admin-invoices {
+  padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
-  position: relative;
-  z-index: 1;
+  min-height: calc(100vh - 200px);
 }
 
-.error {
-  color: #b00020;
-  background: #ffe7ea;
-  padding: 12px;
-  border-radius: 10px;
-  margin: 12px 0;
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
 }
 
-.head {
+.card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: #8a1212;
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
 .toolbar {
   display: flex;
-  gap: 10px;
-  align-items: end;
+  gap: 1rem;
+  align-items: flex-end;
   flex-wrap: wrap;
 }
 
-.field {
-  display: grid;
-  gap: 6px;
-  font-size: 13px;
-  color: #444;
-}
-
-.field input {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 8px 10px;
-  background: #fff;
-}
-
-.summary {
+.form-group {
   display: flex;
-  gap: 16px;
-  margin: 10px 0 14px;
-  color: #333;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.empty {
-  padding: 14px;
-  border: 1px dashed #ddd;
-  border-radius: 12px;
-  color: #666;
-}
-
-.table-wrap {
-  overflow: auto;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  background: #fff;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 10px;
-  text-align: left;
-  white-space: nowrap;
-}
-
-th {
-  background: #fafafa;
-  font-weight: 700;
-  font-size: 13px;
-  color: #333;
-}
-
-.u .uname {
-  font-weight: 700;
-}
-
-.muted {
-  color: #666;
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-button {
-  padding: 8px 10px;
-  border-radius: 10px;
+.form-control {
+  padding: 0.5rem 0.75rem;
   border: 1px solid #ddd;
-  background: #fff;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
+}
+
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background: #1fa317;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+  height: fit-content;
 }
 
-button:hover {
-  background: #f5f5f5;
+.btn-primary:hover:not(:disabled) {
+  background: #158a0f;
 }
 
-button.primary {
-  border-color: #cfe8d8;
-  background: #e9f7ef;
-}
-
-button.primary:hover {
-  background: #dcf3e7;
-}
-
-button:disabled {
-  opacity: .6;
+.btn-primary:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Speciális gomb színek */
-.view-btn {
-  background-color: aqua !important;
-  border-color: #00cccc !important;
-  color: black !important;
+.loading-state {
+  text-align: center;
+  padding: 3rem;
 }
 
-.view-btn:hover {
-  background-color: #00ffff !important;
-}
-
-.pdf-btn {
-  background-color: blue !important;
-  border-color: #0000cc !important;
-  color: white !important;
-}
-
-.pdf-btn:hover {
-  background-color: #0000ff !important;
-}
-
-.paid-btn {
-  background-color: lightgreen !important;
-  border-color: #90ee90 !important;
-  color: black !important;
-}
-
-.paid-btn:hover {
-  background-color: #98fb98 !important;
-}
-
-.close-btn {
-  background-color: red !important;
-  border-color: #cc0000 !important;
-  color: white !important;
-  font-weight: bold !important;
-}
-
-.close-btn:hover {
-  background-color: #ff3333 !important;
-}
-
-/* Modal bezáró gomb speciális */
-.modal-header .close-btn {
-  font-size: 22px;
+.spinner {
   width: 40px;
   height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  background: #f9f9f9;
   border-radius: 12px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table th {
+  background: #f0a24a;
+  color: #7b2c2c;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.data-table tr:hover {
+  background: #fef9ef;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.user-email {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.amount {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.status-paid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-generated {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-expired {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-default {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.actions-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-action {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-view {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.btn-view:hover {
+  background: #bbdef5;
+}
+
+.btn-pdf {
+  background: #e8eaf6;
+  color: #3f51b5;
+}
+
+.btn-pdf:hover {
+  background: #c5cae9;
+}
+
+.btn-paid {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-paid:hover:not(:disabled) {
+  background: #c8e6c9;
+}
+
+.btn-paid:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Badge stílusok */
-.badge {
-  display: inline-flex;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid #ddd;
-  font-size: 12px;
-}
-
-.badge[data-status="Fizetve"] {
-  border-color: #bfe7c8;
-  background: #e9f7ef;
-}
-
-.badge[data-status="Generálva"] {
-  border-color: #e6e6e6;
-  background: #f7f7f7;
-}
-
-.badge[data-status="Függőben lévő"] {
-  border-color: #ffe0b2;
-  background: #fff3e0;
-}
-
-.badge[data-status="Lejárt"] {
-  border-color: #ffcdd2;
-  background: #ffebee;
-}
-
-/* MODAL STÍLUSOK */
-.modal-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(0, 0, 0, 0.6) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 16px !important;
-  z-index: 999999 !important;
+  padding: 1rem;
+  z-index: 1000;
 }
 
 .modal {
-  background: white !important;
-  width: 90% !important;
-  max-width: 1000px !important;
-  max-height: 90vh !important;
-  overflow: auto !important;
-  padding: 20px !important;
-  border-radius: 14px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex !important;
   position: relative !important;
-  display: block !important;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  background: #fff7e6;
 }
 
 .modal-header h2 {
   margin: 0;
+  font-size: 1.25rem;
+  color: #8a1212;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
   font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+  padding: 0 0.5rem;
+  transition: color 0.2s;
 }
 
-.meta {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin: 10px 0 16px;
-  align-items: center;
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
+.modal-close:hover {
+  color: #8a1212;
 }
 
-.meta-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #eee;
   display: flex;
   justify-content: flex-end;
-  padding-top: 16px;
-  margin-top: 16px;
-  border-top: 1px solid #eee;
+  background: #fafafa;
 }
 
-.modal h3 {
-  margin: 20px 0 10px;
-  font-size: 1.2rem;
+.invoice-meta {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-/* Reszponzív stílusok */
+.meta-row {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.meta-row:last-child {
+  border-bottom: none;
+}
+
+.meta-label {
+  width: 100px;
+  font-weight: 500;
+  color: #666;
+}
+
+.meta-value {
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-modal {
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-modal-pdf {
+  background: #e8eaf6;
+  color: #3f51b5;
+}
+
+.btn-modal-pdf:hover {
+  background: #c5cae9;
+  transform: translateY(-1px);
+}
+
+.btn-modal-paid {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-modal-paid:hover:not(:disabled) {
+  background: #c8e6c9;
+  transform: translateY(-1px);
+}
+
+.btn-modal-paid:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-modal-close {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-modal-close:hover {
+  background: #dee2e6;
+  transform: translateY(-1px);
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0a24a;
+}
+
+.empty-row {
+  text-align: center;
+  color: #888;
+  padding: 2rem !important;
+}
+
+/* Search box styles */
+.search-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 250px;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.6rem;
+  font-size: 0.85rem;
+  color: #888;
+  pointer-events: none;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .wrap {
-    padding: 16px;
+  .admin-invoices {
+    padding: 1rem;
   }
-  
-  .head {
-    flex-direction: column;
-    align-items: stretch;
+
+  .content-card {
+    padding: 1rem;
   }
-  
-  .toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .meta {
+
+  .card-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
-  .meta-actions {
-    margin-left: 0;
+
+  .header-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
     width: 100%;
   }
-  
-  .actions {
-    flex-direction: column;
+
+  .search-input {
+    width: 100%;
   }
-  
+
+  .toolbar {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  .form-control {
+    width: 100%;
+  }
+
+  .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .actions-group {
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
   .modal {
     width: 95%;
-    padding: 16px;
+    margin: 1rem;
+  }
+
+  .meta-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .meta-label {
+    width: auto;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-modal {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+  }
+
+  .btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .search-input {
+    padding: 0.4rem 0.6rem 0.4rem 1.8rem;
+    font-size: 0.8rem;
+  }
+
+  .search-icon {
+    left: 0.5rem;
+    font-size: 0.75rem;
   }
 }
 </style>

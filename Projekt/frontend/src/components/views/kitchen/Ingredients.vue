@@ -1,28 +1,22 @@
 <template>
   <div class="ingredients">
-    <div class="header">
-      <h1>Hozzávalók kezelése</h1>
+    <div class="content-card">
+      <div class="card-header">
+        <h1 class="title">Hozzávalók kezelése</h1>
+        
+        <div class="header-controls">
+          <div class="search-box">
+            <input 
+              type="text"
+              v-model="filters.search"
+              @input="onSearchInput"
+              placeholder="Keresés név vagy típus alapján..."
+              class="search-input"
+            >
+            <span class="search-icon">🔍</span>
+          </div>
 
-      <button @click="openCreateModal" class="btn-add">
-          + Új hozzávaló
-      </button>
-    </div>
-
-    
-      <div class="header-actions">
-        <!-- Keresés -->
-        <div class="search-container">
-          <input 
-            type="text"
-            v-model="filters.search"
-            @input="debouncedLoadIngredients"
-            placeholder="Keresés"
-          />
-        </div>
-
-        <!-- Típus szűrő -->
-        <div class="filter-container">
-          <select v-model="filters.type" @change="loadIngredients">
+          <select v-model="filters.type" @change="loadIngredients" class="filter-select">
             <option value="all">Összes típus</option>
             <option value="Egyéb">Egyéb</option>
             <option value="Hús">Hús</option>
@@ -32,35 +26,17 @@
             <option value="Gyümölcs">Gyümölcs</option>
             <option value="Fűszer">Fűszer</option>
           </select>
-        </div>
 
-        <!-- Elérhetőség szűrő -->
-        <div class="filter-container">
-          <select v-model="filters.availability" @change="loadIngredients">
+          <select v-model="filters.availability" @change="loadIngredients" class="filter-select">
             <option value="all">Összes állapot</option>
             <option value="available">Elérhető</option>
             <option value="unavailable">Nem elérhető</option>
           </select>
-        </div>
 
-        <!-- Rendezés 
-        <div class="sort-container">
-          <select v-model="filters.sort_by" @change="loadIngredients">
-            <option value="ingredientName">Név</option>
-            <option value="ingredientType">Típus</option>
-            <option value="energy">Energia</option>
-            <option value="created_at">Létrehozás dátuma</option>
-          </select>
-          <button 
-            @click="toggleSortOrder"
-            class="sort-btn"
-            :title="filters.sort_order === 'asc' ? 'Növekvő' : 'Csökkenő'"
-          >
-            {{ filters.sort_order === 'asc' ? '↑' : '↓' }}
+          <button @click="openCreateModal" class="btn-primary">
+            + Új hozzávaló
           </button>
-        </div>-->
-
-
+        </div>
       </div>
 
       <!-- Tömeges műveletek -->
@@ -68,449 +44,233 @@
         <div class="bulk-header">
           <span class="selected-count">{{ selectedIngredients.length }} hozzávaló kiválasztva</span>
           <div class="bulk-buttons">
-            <button
-              @click="bulkUpdateAvailability(true)"
-              class="btn-bulk btn-bulk-available"
-            >
+            <button @click="bulkUpdateAvailability(true)" class="btn-bulk btn-bulk-available">
               Elérhetővé tesz
             </button>
-            <button
-              @click="bulkUpdateAvailability(false)"
-              class="btn-bulk btn-bulk-unavailable"
-            >
+            <button @click="bulkUpdateAvailability(false)" class="btn-bulk btn-bulk-unavailable">
               Nem elérhetővé tesz
             </button>
-            <button
-              @click="clearSelection"
-              class="btn-bulk btn-bulk-clear"
-            >
+            <button @click="clearSelection" class="btn-bulk btn-bulk-clear">
               Kijelölés törlése
             </button>
           </div>
         </div>
       </div>
 
+      <!-- Betöltés állapota -->
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Hozzávalók betöltése...</p>
+      </div>
 
-    <!-- Betöltés állapota -->
-    <div v-if="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Hozzávalók betöltése...</p>
-    </div>
+      <!-- Üres állapot -->
+      <div v-else-if="!loading && ingredients.length === 0" class="empty-state">
+        <p>Nincsenek hozzávalók</p>
+        <button @click="openCreateModal" class="btn-primary">
+          + Új hozzávaló létrehozása
+        </button>
+      </div>
 
-    <!-- Üres állapot -->
-    <div v-else-if="!loading && ingredients.length === 0" class="empty-state">
-      <h3>Nincsenek hozzávalók</h3>
-      <button
-        @click="openCreateModal"
-        class="btn-add-empty"
-      >
-        <span>+</span>Új hozzávaló létrehozása
-      </button>
-    </div>
-
-    <!-- Hozzávalók táblázata -->
-    <div v-else>
-      <table class="ingredients-table">
-        <thead>
-          <tr>
-            <th class="checkbox-col">
-              <input
-                type="checkbox"
-                :checked="allSelected"
-                @change="toggleSelectAll"
-                class="select-all"
-              />
-            </th>
-            <th>Név</th>
-            <th>Típus</th>
-            <th>Tápértékek (100g)</th>
-            <th>Állapot</th>
-            <th class="actions-col">Műveletek</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="ingredient in ingredients" :key="ingredient.id">
-            <!-- Fő sor -->
-            <tr>
-              <!-- Kijelölés -->
-              <td class="checkbox-col">
-                <input
-                  type="checkbox"
-                  :value="ingredient.id"
-                  v-model="selectedIngredients"
-                  class="select-item"
-                />
-              </td>
-
-              <!-- Név -->
-              <td>
-                <div class="ingredient-name">
-                  <div class="name">{{ ingredient.ingredientName }}</div>
-                </div>
-              </td>
-
-              <!-- Típus -->
-              <td>
-                <span class="type-badge" :class="getTypeClass(ingredient.ingredientType)">
-                  {{ ingredient.ingredientType }}
-                </span>
-              </td>
-
-              <!-- Tápértékek -->
-              <td>
-                <div class="nutrition-info">
-                  <div v-if="ingredient.energy" class="nutrition-item">
-                    <span class="label">Energia:</span>
-                    <span class="value">{{ ingredient.energy }} kcal</span>
-                  </div>
-                  <div v-if="ingredient.protein" class="nutrition-item">
-                    <span class="label">Fehérje:</span>
-                    <span class="value">{{ ingredient.protein }}g</span>
-                  </div>
-                  <div v-if="ingredient.carbohydrate" class="nutrition-item">
-                    <span class="label">Szénhidrát:</span>
-                    <span class="value">{{ ingredient.carbohydrate }}g</span>
-                  </div>
-                  <div v-if="ingredient.fat" class="nutrition-item">
-                    <span class="label">Zsír:</span>
-                    <span class="value">{{ ingredient.fat }}g</span>
-                  </div>
-                  <div v-if="!ingredient.energy && !ingredient.protein && !ingredient.carbohydrate && !ingredient.fat" 
-                       class="no-nutrition">
-                    Nincs megadva
-                  </div>
-                </div>
-              </td>
-
-              <!-- Állapot -->
-              <td>
-                <span class="status-badge" :class="ingredient.isAvailable ? 'available' : 'unavailable'">
-                  <span class="status-dot" :class="ingredient.isAvailable ? 'available' : 'unavailable'"></span>
-                  {{ ingredient.isAvailable ? 'Elérhető' : 'Nem elérhető' }}
-                </span>
-              </td>
-
-              <!-- Műveletek -->
-              <td class="actions">
-                <div class="actions-inner">
-                  <!-- Szerkesztés gomb -->
-                  <button
-                    @click="toggleEdit(ingredient.id)"
-                    class="btn-edit"
-                    :title="expandedIngredient === ingredient.id ? 'Bezárás' : 'Szerkesztés'"
-                  >
-                    <span v-if="expandedIngredient === ingredient.id">↑</span>
-                    <span v-else>✎</span>
-                  </button>
-
-                  <!-- Elérhetőség váltó gomb -->
-                  <button
-                    @click="toggleAvailability(ingredient)"
-                    :class="ingredient.isAvailable ? 'btn-deactivate' : 'btn-activate'"
-                    :title="ingredient.isAvailable ? 'Nem elérhetővé tesz' : 'Elérhetővé tesz'"
-                  >
-                    <span v-if="ingredient.isAvailable" alt="Nem elérhetővé tesz">❚❚</span>
-                    <span v-else alt="Elérhetővé tesz">✓</span>
-                  </button>
-
-                  <!-- Törlés gomb -->
-                  <button
-                    @click="confirmDelete(ingredient)"
-                    class="btn-delete"
-                    title="Törlés"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Lenyíló szerkesztő rész -->
-            <tr v-if="expandedIngredient === ingredient.id" class="edit-row">
-              <td colspan="6">
-                <div class="edit-container">
-                  <div class="edit-header">
-                    <h3>
-                      Hozzávaló szerkesztése
-                    </h3>
-                    <p>
-                      Módosítsd a(z) {{ ingredient.ingredientName }} hozzávaló adatait
-                    </p>
-                  </div>
+      <!-- Hozzávalók táblázata -->
+      <div v-else>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="checkbox-col">
+                  <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" class="select-all">
+                </th>
+                <th>Név</th>
+                <th>Típus</th>
+                <th>Állapot</th>
+                <th class="actions-col">Műveletek</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="ingredient in ingredients" :key="ingredient.id">
+                <tr>
+                  <td class="checkbox-col">
+                    <input type="checkbox" :value="ingredient.id" v-model="selectedIngredients" class="select-item">
+                  </td>
+                  <td class="ingredient-name">{{ ingredient.ingredientName }}</td>
+                  <td>
+                    <span class="type-badge" :class="getTypeClass(ingredient.ingredientType)">
+                      {{ ingredient.ingredientType }}
+                    </span>
+                  </td>
                   
-                  <form @submit.prevent="saveIngredient(ingredient)">
-                    <div class="form-grid">
-                      <!-- Alap információk -->
-                      <div class="form-section">
-                        <h4>Alap információk</h4>
-                        <div class="form-row">
-                          <!-- Név -->
-                          <div class="form-group">
-                            <label>Hozzávaló neve *</label>
-                            <input
-                              type="text"
-                              v-model="editForm.ingredientName"
-                              required
-                              placeholder="Pl.: Paradicsom"
-                            />
-                          </div>
-
-                          <!-- Típus -->
-                          <div class="form-group">
-                            <label>Típus *</label>
-                            <select
-                              v-model="editForm.ingredientType"
-                              required
-                            >
-                              <option value="Egyéb">Egyéb</option>
-                              <option value="Hús">Hús</option>
-                              <option value="Hal">Hal</option>
-                              <option value="Tejtermék">Tejtermék</option>
-                              <option value="Zöldség">Zöldség</option>
-                              <option value="Gyümölcs">Gyümölcs</option>
-                              <option value="Fűszer">Fűszer</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Tápértékek -->
-                      <div class="form-section">
-                        <h4>Tápértékek (100g-ra)</h4>
-
-                        
-                        <div class="form-row nutrition-grid">
-                          <!-- Energia -->
-                          <div class="form-group">
-                            <label>Energia (kcal)</label>
-                            <input
-                              type="number"
-                              v-model.number="editForm.energy"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-
-                          <!-- Fehérje -->
-                          <div class="form-group">
-                            <label>Fehérje (g)</label>
-                            <input
-                              type="number"
-                              v-model.number="editForm.protein"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-
-                          <!-- Szénhidrát -->
-                          <div class="form-group">
-                            <label>Szénhidrát (g)</label>
-                            <input
-                              type="number"
-                              v-model.number="editForm.carbohydrate"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-
-                          <!-- Zsír -->
-                          <div class="form-group">
-                            <label>Zsír (g)</label>
-                            <input
-                              type="number"
-                              v-model.number="editForm.fat"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-
-                          <!-- Cukor -->
-                          <div class="form-group">
-                            <label>Cukor (g)</label>
-                            <input
-                              type="number"
-                              v-model.number="editForm.sugar"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-
-                          <!-- Rost -->
-                          <div class="form-group">
-                            <label>Rost (g)</label>
-                            <input
-                              type="number"
-                              v-model.number="editForm.fiber"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-
-                          <!-- Nátrium -->
-                          <div class="form-group">
-                            <label>Nátrium (mg)</label>
-                            <input
-                              type="number"
-                              v-model.number="editForm.sodium"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div class="form-section">
-  <h4>Allergének</h4>
-  <p class="section-description">Válaszd ki az összetevőhöz tartozó allergéneket</p>
-  
-  <div class="allergens-grid">
-    <div 
-      v-for="allergen in allergens" 
-      :key="allergen.id"
-      class="allergen-checkbox-item"
-      :class="{ selected: editForm.allergen_ids.includes(allergen.id) }"
-      @click="toggleAllergen(editForm, allergen.id)"
-    >
-      <input
-        type="checkbox"
-        :id="'edit-allergen-' + allergen.id"
-        :value="allergen.id"
-        v-model="editForm.allergen_ids"
-        class="allergen-checkbox"
-        @click.stop
-      />
-      <label :for="'edit-allergen-' + allergen.id" class="allergen-label" @click.stop>
-       <img 
-          v-if="allergen.icon_url" 
-          :src="getAllergenIconUrl(allergen.icon)" 
-          :alt="allergen.allergenName"
-          class="allergen-icon"
-        />
-        <span class="allergen-name">{{ allergen.allergenName }}</span>
-      </label>
-    </div>
-    
-    <div v-if="allergens.length === 0" class="no-allergens">
-      <p>Nincsenek allergének az adatbázisban.</p>
-    </div>
-  </div>
-</div>
-
-                      <!-- Elérhetőség -->
-                      <div class="form-section">
-                        <div class="checkbox-group">
-                          <label for="isAvailable" class="checkbox-label">
-                            Elérhető a felhasználásra
-                          </label>
-                          <input
-                            type="checkbox"
-                            id="isAvailable"
-                            v-model="editForm.isAvailable"
-                            class="checkbox-input"
-                          />
-                          
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Művelet gombok -->
-                    <div class="form-actions">
-                      <button
-                        type="button"
-                        @click="cancelEdit"
-                        class="btn-cancel"
-                      >
-                        Mégse
+                  <td>
+                    <span class="status-badge" :class="ingredient.isAvailable ? 'status-active' : 'status-inactive'">
+                      {{ ingredient.isAvailable ? 'Elérhető' : 'Nem elérhető' }}
+                    </span>
+                  </td>
+                  <td class="actions-cell">
+                    <div class="actions-group">
+                      <button @click="toggleEdit(ingredient.id)" class="btn-icon btn-edit" :title="expandedIngredient === ingredient.id ? 'Bezárás' : 'Szerkesztés'">
+                        <span v-if="expandedIngredient === ingredient.id">↑</span>
+                        <span v-else>✎</span>
                       </button>
-                      <button
-                        type="submit"
-                        :disabled="saving"
-                        class="btn-save"
-                      >
-                        <span v-if="saving">Mentés...</span>
-                        <span v-else>Mentés</span>
+                      <button @click="toggleAvailability(ingredient)" :class="ingredient.isAvailable ? 'btn-icon btn-deactivate' : 'btn-icon btn-activate'" :title="ingredient.isAvailable ? 'Nem elérhetővé tesz' : 'Elérhetővé tesz'">
+                        <span v-if="ingredient.isAvailable">❚❚</span>
+                        <span v-else>✓</span>
+                      </button>
+                      <button @click="confirmDelete(ingredient)" class="btn-icon btn-delete" title="Törlés">
+                        🗑️
                       </button>
                     </div>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-            <!-- Pagination -->
-      <div v-if="ingredients.length > 0" class="pagination">
-        <button 
-          @click="changePage(currentPage - 1)"
-          :disabled="currentPage === 1"
-          class="pagination-btn"
-        >
-          Előző
-        </button>
-        
-        <div class="pagination-info">
-          <span>
-            Oldal {{ currentPage }} / {{ lastPage }}
-          </span>
-          <span class="pagination-total">
-            (Összesen: {{ totalItems }} hozzávaló)
-          </span>
+                  </td>
+                </tr>
+
+                <!-- Lenyíló szerkesztő rész -->
+                <tr v-if="expandedIngredient === ingredient.id" class="edit-row">
+                  <td colspan="6">
+                    <div class="edit-container">
+                      <div class="edit-header">
+                        <h3>Hozzávaló szerkesztése</h3>
+                        <p>Módosítsd a(z) {{ ingredient.ingredientName }} hozzávaló adatait</p>
+                      </div>
+                      
+                      <form @submit.prevent="saveIngredient(ingredient)">
+                        <div class="form-grid">
+                          <!-- Alap információk -->
+                          <div class="form-section">
+                            <h4>Alap információk</h4>
+                            <div class="form-row">
+                              <div class="form-group">
+                                <label>Hozzávaló neve *</label>
+                                <input type="text" v-model="editForm.ingredientName" required placeholder="Pl.: Paradicsom">
+                              </div>
+                              <div class="form-group">
+                                <label>Típus *</label>
+                                <select v-model="editForm.ingredientType" required>
+                                  <option value="Egyéb">Egyéb</option>
+                                  <option value="Hús">Hús</option>
+                                  <option value="Hal">Hal</option>
+                                  <option value="Tejtermék">Tejtermék</option>
+                                  <option value="Zöldség">Zöldség</option>
+                                  <option value="Gyümölcs">Gyümölcs</option>
+                                  <option value="Fűszer">Fűszer</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Tápértékek -->
+                          <div class="form-section">
+                            <h4>Tápértékek (100g-ra)</h4>
+                            <div class="form-row nutrition-grid">
+                              <div class="form-group">
+                                <label>Energia (kcal)</label>
+                                <input type="number" v-model.number="editForm.energy" min="0" step="1">
+                              </div>
+                              <div class="form-group">
+                                <label>Fehérje (g)</label>
+                                <input type="number" v-model.number="editForm.protein" min="0" step="1">
+                              </div>
+                              <div class="form-group">
+                                <label>Szénhidrát (g)</label>
+                                <input type="number" v-model.number="editForm.carbohydrate" min="0" step="1">
+                              </div>
+                              <div class="form-group">
+                                <label>Zsír (g)</label>
+                                <input type="number" v-model.number="editForm.fat" min="0" step="1">
+                              </div>
+                              <div class="form-group">
+                                <label>Cukor (g)</label>
+                                <input type="number" v-model.number="editForm.sugar" min="0" step="1">
+                              </div>
+                              <div class="form-group">
+                                <label>Rost (g)</label>
+                                <input type="number" v-model.number="editForm.fiber" min="0" step="1">
+                              </div>
+                              <div class="form-group">
+                                <label>Nátrium (mg)</label>
+                                <input type="number" v-model.number="editForm.sodium" min="0" step="1">
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Allergének -->
+                          <div class="form-section">
+                            <h4>Allergének</h4>
+                            <p class="section-description">Válaszd ki az összetevőhöz tartozó allergéneket</p>
+                            <div class="allergens-grid">
+                              <div v-for="allergen in allergens" :key="allergen.id" class="allergen-item" :class="{ selected: editForm.allergen_ids.includes(allergen.id) }" @click="toggleAllergen(editForm, allergen.id)">
+                                <input type="checkbox" :id="'edit-allergen-' + allergen.id" :value="allergen.id" v-model="editForm.allergen_ids" class="allergen-checkbox" @click.stop>
+                                <label :for="'edit-allergen-' + allergen.id" class="allergen-label" @click.stop>
+                                  <img v-if="allergen.icon_url" :src="getAllergenIconUrl(allergen.icon)" :alt="allergen.allergenName" class="allergen-icon">
+                                  <span class="allergen-name">{{ allergen.allergenName }}</span>
+                                </label>
+                              </div>
+                              <div v-if="allergens.length === 0" class="no-allergens">Nincsenek allergének az adatbázisban.</div>
+                            </div>
+                          </div>
+
+                          <!-- Elérhetőség -->
+                          <div class="form-section">
+                            <label class="checkbox-label">
+                              <input type="checkbox" v-model="editForm.isAvailable">
+                              <span>Elérhető a felhasználásra</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div class="form-actions">
+                          <button type="button" @click="cancelEdit" class="btn-cancel">Mégse</button>
+                          <button type="submit" :disabled="saving" class="btn-save">
+                            {{ saving ? "Mentés..." : "Mentés" }}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
-        
-        <button 
-          @click="changePage(currentPage + 1)"
-          :disabled="currentPage === lastPage"
-          class="pagination-btn"
-        >
-          Következő
-        </button>
-      </div>
 
-      <!-- Items per page selector -->
-      <div v-if="ingredients.length > 0" class="per-page-selector">
-        <label>
-          Találatok oldalanként:
-          <select v-model="perPage" @change="changePerPage">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-        </label>
+        <!-- Pagination -->
+        <div v-if="ingredients.length > 0" class="pagination">
+          <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="btn-pagination">Előző</button>
+          <span class="pagination-info">{{ currentPage }} / {{ lastPage }} oldal (Összesen: {{ totalItems }} hozzávaló)</span>
+          <button @click="changePage(currentPage + 1)" :disabled="currentPage === lastPage" class="btn-pagination">Következő</button>
+        </div>
+
+        <div v-if="ingredients.length > 0" class="per-page-selector">
+          <label>Találatok oldalanként:
+            <select v-model="perPage" @change="changePerPage">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+        </div>
       </div>
     </div>
 
-    <div v-if="showCreateModal" class="modal-overlay">
+    <!-- Új hozzávaló modal -->
+    <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
       <div class="modal">
         <div class="modal-header">
           <h2>Új hozzávaló</h2>
-          <button @click="showCreateModal = false" class="btn-close">×</button>
+          <button @click="closeCreateModal" class="modal-close">×</button>
         </div>
         
         <div class="modal-body">
           <form @submit.prevent="saveNewIngredient">
             <div class="form-grid">
-              <!-- Alap információk -->
               <div class="form-section">
                 <h4>Alap információk</h4>
                 <div class="form-row">
-                  <!-- Név -->
                   <div class="form-group">
                     <label>Hozzávaló neve *</label>
-                    <input
-                      type="text"
-                      v-model="newForm.ingredientName"
-                      required
-                      placeholder="Pl.: Paradicsom"
-                    />
+                    <input type="text" v-model="newForm.ingredientName" required placeholder="Pl.: Paradicsom">
                   </div>
-
-                  <!-- Típus -->
                   <div class="form-group">
                     <label>Típus *</label>
-                    <select
-                      v-model="newForm.ingredientType"
-                      required
-                    >
+                    <select v-model="newForm.ingredientType" required>
                       <option value="">Válassz típust...</option>
                       <option value="Egyéb">Egyéb</option>
                       <option value="Hús">Hús</option>
@@ -524,160 +284,45 @@
                 </div>
               </div>
 
-              <!-- Tápértékek -->
               <div class="form-section">
                 <h4>Tápértékek (100g-ra)</h4>
                 <div class="form-row nutrition-grid">
-                  <!-- Energia -->
-                  <div class="form-group">
-                    <label>Energia (kcal)</label>
-                    <input
-                      type="number"
-                      v-model.number="newForm.energy"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
-
-                  <!-- Fehérje -->
-                  <div class="form-group">
-                    <label>Fehérje (g)</label>
-                    <input
-                      type="number"
-                      v-model.number="newForm.protein"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
-
-                  <!-- Szénhidrát -->
-                  <div class="form-group">
-                    <label>Szénhidrát (g)</label>
-                    <input
-                      type="number"
-                      v-model.number="newForm.carbohydrate"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
-
-                  <!-- Zsír -->
-                  <div class="form-group">
-                    <label>Zsír (g)</label>
-                    <input
-                      type="number"
-                      v-model.number="newForm.fat"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
-
-                  <!-- Cukor -->
-                  <div class="form-group">
-                    <label>Cukor (g)</label>
-                    <input
-                      type="number"
-                      v-model.number="newForm.sugar"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
-
-                  <!-- Rost -->
-                  <div class="form-group">
-                    <label>Rost (g)</label>
-                    <input
-                      type="number"
-                      v-model.number="newForm.fiber"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
-
-                  <!-- Nátrium -->
-                  <div class="form-group">
-                    <label>Nátrium (mg)</label>
-                    <input
-                      type="number"
-                      v-model.number="newForm.sodium"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
+                  <div class="form-group"><label>Energia (kcal)</label><input type="number" v-model.number="newForm.energy" min="0" step="1"></div>
+                  <div class="form-group"><label>Fehérje (g)</label><input type="number" v-model.number="newForm.protein" min="0" step="1"></div>
+                  <div class="form-group"><label>Szénhidrát (g)</label><input type="number" v-model.number="newForm.carbohydrate" min="0" step="1"></div>
+                  <div class="form-group"><label>Zsír (g)</label><input type="number" v-model.number="newForm.fat" min="0" step="1"></div>
+                  <div class="form-group"><label>Cukor (g)</label><input type="number" v-model.number="newForm.sugar" min="0" step="1"></div>
+                  <div class="form-group"><label>Rost (g)</label><input type="number" v-model.number="newForm.fiber" min="0" step="1"></div>
+                  <div class="form-group"><label>Nátrium (mg)</label><input type="number" v-model.number="newForm.sodium" min="0" step="1"></div>
                 </div>
               </div>
 
-              <!-- Allergének kezelése -->
-            <div class="form-section">
-              <h4>Allergének</h4>
-              <p class="section-description">Válaszd ki az összetevőhöz tartozó allergéneket</p>
-              
-              <div class="allergens-grid">
-                <div 
-                  v-for="allergen in allergens" 
-                  :key="allergen.id"
-                  class="allergen-checkbox-item"
-                  :class="{ selected: newForm.allergen_ids.includes(allergen.id) }"
-                  @click="toggleAllergen(newForm, allergen.id)"
-                >
-                  <input
-                    type="checkbox"
-                    :id="'new-allergen-' + allergen.id"
-                    :value="allergen.id"
-                    v-model="newForm.allergen_ids"
-                    class="allergen-checkbox"
-                    @click.stop
-                  />
-                  <label :for="'new-allergen-' + allergen.id" class="allergen-label" @click.stop>
-                    <img 
-                      v-if="allergen.icon_url" 
-                      :src="getAllergenIconUrl(allergen.icon)" 
-                      :alt="allergen.allergenName"
-                      class="allergen-icon"
-                    />
-                    <span class="allergen-name">{{ allergen.allergenName }}</span>
-                  </label>
-                </div>
-                
-                <div v-if="allergens.length === 0" class="no-allergens">
-                  <p>Nincsenek allergének az adatbázisban.</p>
-                </div>
-              </div>
-            </div>
-
-              <!-- Elérhetőség -->
               <div class="form-section">
-                <div class="checkbox-group">
-                  <input
-                    type="checkbox"
-                    id="newIsAvailable"
-                    v-model="newForm.isAvailable"
-                    class="checkbox-input"
-                  />
-                  <label for="newIsAvailable" class="checkbox-label">
-                    Hozzávaló elérhető a felhasználásra
-                  </label>
+                <h4>Allergének</h4>
+                <p class="section-description">Válaszd ki az összetevőhöz tartozó allergéneket</p>
+                <div class="allergens-grid">
+                  <div v-for="allergen in allergens" :key="allergen.id" class="allergen-item" :class="{ selected: newForm.allergen_ids.includes(allergen.id) }" @click="toggleAllergen(newForm, allergen.id)">
+                    <input type="checkbox" :id="'new-allergen-' + allergen.id" :value="allergen.id" v-model="newForm.allergen_ids" class="allergen-checkbox" @click.stop>
+                    <label :for="'new-allergen-' + allergen.id" class="allergen-label" @click.stop>
+                      <img v-if="allergen.icon_url" :src="getAllergenIconUrl(allergen.icon)" :alt="allergen.allergenName" class="allergen-icon">
+                      <span class="allergen-name">{{ allergen.allergenName }}</span>
+                    </label>
+                  </div>
+                  <div v-if="allergens.length === 0" class="no-allergens">Nincsenek allergének az adatbázisban.</div>
                 </div>
+              </div>
+
+              <div class="form-section">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="newForm.isAvailable">
+                  <span>Hozzávaló elérhető a felhasználásra</span>
+                </label>
               </div>
             </div>
 
-            <!-- Művelet gombok -->
             <div class="modal-footer">
-              <button
-                type="button"
-                @click="showCreateModal = false"
-                class="btn-cancel"
-              >
-                Mégse
-              </button>
-              <button
-                type="submit"
-                :disabled="saving"
-                class="btn-save"
-              >
-                <span v-if="saving">Mentés...</span>
-                <span v-else>Létrehozás</span>
-              </button>
+              <button type="button" @click="closeCreateModal" class="btn-cancel">Mégse</button>
+              <button type="submit" :disabled="saving" class="btn-save">{{ saving ? "Mentés..." : "Létrehozás" }}</button>
             </div>
           </form>
         </div>
@@ -685,75 +330,49 @@
     </div>
 
     <!-- Törlés megerősítés modal -->
-    <div v-if="showDeleteModal" class="modal-overlay delete-modal">
-        <div class="modal modal-sm">
-          <div class="modal-header">
-            <h2>Hozzávaló törlése</h2>
-            <button @click="showDeleteModal = false" class="btn-close">×</button>
-          </div>
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+      <div class="modal modal-small">
+        <div class="modal-header">
+          <h2>Hozzávaló törlése</h2>
+          <button @click="closeDeleteModal" class="modal-close">×</button>
+        </div>
+        
+        <div class="modal-body text-center">
+          <div class="delete-icon">⚠️</div>
+          <h3 class="delete-title">Biztosan törölni szeretnéd?</h3>
+          <p class="delete-message">A(z) <strong>{{ ingredientToDelete?.ingredientName }}</strong> hozzávalót nem lehet visszaállítani.</p>
           
-          <div class="modal-body text-center">
-            <div class="delete-icon">
-              <span>⚠️</span>
-            </div>
-            
-            <h3 class="delete-title">Biztosan törölni szeretnéd?</h3>
-            <p class="delete-message">
-              A(z) <strong>{{ ingredientToDelete?.ingredientName }}</strong> 
-              hozzávalót nem lehet visszaállítani.
-            </p>
-            
-            <!-- Konfliktus hiba üzenet -->
-            <div v-if="deleteError" class="error-message-container">
-              <div class="error-icon">❌</div>
-              <div class="error-content">
-                <p class="error-title">Nem törölhető!</p>
-                <p class="error-message">{{ deleteError }}</p>
-                <div v-if="deleteError.includes('használatban') || deleteError.includes('ételekben')" 
-                    class="error-suggestions">
-                  <p><strong>Lehetséges megoldások:</strong></p>
-                  <ul>
-                    <li>Először távolítsd el ebből az összetevőből az összes ételt</li>
-                    <li>Vagy módosítsd az összetevő nevét és jelöld "Nem elérhető"-nek</li>
-                    <li>Vagy töröld azokat az ételeket, amelyek ezt az összetevőt tartalmazzák</li>
-                  </ul>
-                </div>
+          <div v-if="deleteError" class="error-message-container">
+            <div class="error-icon">❌</div>
+            <div class="error-content">
+              <p class="error-title">Nem törölhető!</p>
+              <p class="error-message">{{ deleteError }}</p>
+              <div v-if="deleteError.includes('használatban') || deleteError.includes('ételekben')" class="error-suggestions">
+                <p><strong>Lehetséges megoldások:</strong></p>
+                <ul>
+                  <li>Először távolítsd el ebből az összetevőből az összes ételt</li>
+                  <li>Vagy módosítsd az összetevő nevét és jelöld "Nem elérhető"-nek</li>
+                  <li>Vagy töröld azokat az ételeket, amelyek ezt az összetevőt tartalmazzák</li>
+                </ul>
               </div>
             </div>
+          </div>
 
-            <div class="modal-footer">
-              <button
-                @click="showDeleteModal = false"
-                class="btn-cancel"
-              >
-                Mégse
-              </button>
-              <button
-                @click="deleteIngredient"
-                :disabled="deleting"
-                class="btn-delete-confirm"
-                v-if="!deleteError || !deleteError.includes('használatban')"
-              >
-                <span v-if="deleting">Törlés...</span>
-                <span v-else>Törlés</span>
-              </button>
-              <button
-                @click="showDeleteModal = false"
-                class="btn-close-error"
-                v-if="deleteError && deleteError.includes('használatban')"
-              >
-                Bezárás
-              </button>
-            </div>
+          <div class="modal-footer">
+            <button @click="closeDeleteModal" class="btn-cancel">Mégse</button>
+            <button v-if="!deleteError || !deleteError.includes('használatban')" @click="deleteIngredient" :disabled="deleting" class="btn-delete-confirm">
+              {{ deleting ? "Törlés..." : "Törlés" }}
+            </button>
+            <button v-if="deleteError && deleteError.includes('használatban')" @click="closeDeleteModal" class="btn-close-error">Bezárás</button>
           </div>
         </div>
+      </div>
+    </div>
   </div>
-
-</div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import axios from 'axios'
 import { debounce } from 'lodash'
 import AuthService from '../../../services/AuthService'
@@ -773,21 +392,19 @@ const deleteError = ref('')
 const expandedIngredient = ref(null)
 
 const allergens = ref([])
-const selectedAllergens = ref([])
 
 const currentPage = ref(1)
 const lastPage = ref(1)
 const totalItems = ref(0)
 const perPage = ref(25)
 
+const searchTimeout = ref(null)
 
 // Szűrők
 const filters = ref({
   search: '',
   type: 'all',
   availability: 'all',
-  sort_by: 'ingredientName',
-  sort_order: 'asc',
 })
 
 // Szerkesztés form
@@ -817,7 +434,7 @@ const newForm = ref({
   sugar: null,
   fiber: null,
   isAvailable: true,
-   allergen_ids: []
+  allergen_ids: []
 })
 
 // Computed properties
@@ -826,10 +443,29 @@ const allSelected = computed(() => {
          ingredients.value.every(ingredient => selectedIngredients.value.includes(ingredient.id))
 })
 
-// Debounced keresés
-const debouncedLoadIngredients = debounce(() => {
-  loadIngredients()
-}, 500)
+// Görgetés tiltás kezelése modalokhoz
+watch(showCreateModal, (newVal) => {
+  if (newVal) document.body.style.overflow = 'hidden'
+  else document.body.style.overflow = ''
+})
+
+watch(showDeleteModal, (newVal) => {
+  if (newVal) document.body.style.overflow = 'hidden'
+  else if (!showCreateModal.value) document.body.style.overflow = ''
+})
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = ''
+  if (searchTimeout.value) clearTimeout(searchTimeout.value)
+})
+
+// Keresés debounce
+function onSearchInput() {
+  if (searchTimeout.value) clearTimeout(searchTimeout.value)
+  searchTimeout.value = setTimeout(() => {
+    loadIngredients()
+  }, 300)
+}
 
 // Életciklus
 onMounted(() => {
@@ -837,21 +473,14 @@ onMounted(() => {
   loadAllergens()
 })
 
-
-  // Allergének betöltése
-  async function loadAllergens() {
-    try {
-      const response = await AuthService.api.get('/kitchen/allergens')
-      allergens.value = response.data.allergens || []
-    } catch (error) {
-      console.error('Hiba az allergének betöltésekor:', error)
-      addAlert({
-        message: 'Hiba az allergének betöltésekor',
-        type: 'error'
-      })
-    }
+async function loadAllergens() {
+  try {
+    const response = await AuthService.api.get('/kitchen/allergens')
+    allergens.value = response.data.allergens || []
+  } catch (error) {
+    console.error('Hiba az allergének betöltésekor:', error)
   }
-
+}
 
 async function loadIngredients() {
   loading.value = true
@@ -862,14 +491,12 @@ async function loadIngredients() {
       ...filters.value,
     }
     
-    // Távolítsuk el az 'all' értékeket és üres keresést
     if (params.type === 'all') delete params.type
     if (params.availability === 'all') delete params.availability
     if (params.search === '') delete params.search
     
     const response = await axios.get('/kitchen/ingredients', { params })
     
-    // JSON parse ha szükséges
     let data
     if (typeof response.data === 'string') {
       try {
@@ -889,27 +516,19 @@ async function loadIngredients() {
       lastPage.value = data.last_page || 1
       totalItems.value = data.total || 0
     } else if (Array.isArray(data)) {
-      // Fallback régi formátumra
       ingredients.value = data
-      currentPage.value = 1
-      lastPage.value = 1
     } else {
       ingredients.value = []
     }
-    
   } catch (error) {
     console.error('Hiba a hozzávalók betöltésekor:', error)
-    addAlert({
-      message: 'Hiba a hozzávalók betöltésekor',
-      type: 'error'
-    })
+    addAlert({ message: 'Hiba a hozzávalók betöltésekor', type: 'error' })
     ingredients.value = []
   } finally {
     loading.value = false
   }
 }
 
-// Add page change function
 function changePage(page) {
   if (page < 1 || page > lastPage.value) return
   currentPage.value = page
@@ -917,7 +536,6 @@ function changePage(page) {
   window.scrollTo(0, 0)
 }
 
-// Add per page change function
 function changePerPage() {
   currentPage.value = 1
   loadIngredients()
@@ -933,17 +551,13 @@ function getTypeClass(type) {
     'Fűszer': 'type-spice',
     'Egyéb': 'type-other'
   }
-  
   return classes[type] || 'type-other'
 }
 
 function toggleAllergen(form, allergenId) {
   const index = form.allergen_ids.indexOf(allergenId)
-  if (index === -1) {
-    form.allergen_ids.push(allergenId)
-  } else {
-    form.allergen_ids.splice(index, 1)
-  }
+  if (index === -1) form.allergen_ids.push(allergenId)
+  else form.allergen_ids.splice(index, 1)
 }
 
 function toggleEdit(ingredientId) {
@@ -967,7 +581,6 @@ function toggleEdit(ingredientId) {
         isAvailable: Boolean(ingredient.isAvailable),
         allergen_ids: ingredient.allergens ? ingredient.allergens.map(a => a.id) : []
       }
-      selectedAllergens.value = editForm.value.allergen_ids
     }
   }
 }
@@ -998,6 +611,11 @@ function openCreateModal() {
   showCreateModal.value = true
 }
 
+function closeCreateModal() {
+  showCreateModal.value = false
+  resetNewForm()
+}
+
 function resetNewForm() {
   newForm.value = {
     ingredientName: '',
@@ -1010,8 +628,14 @@ function resetNewForm() {
     sugar: null,
     fiber: null,
     isAvailable: true,
-     allergen_ids: []
+    allergen_ids: []
   }
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  ingredientToDelete.value = null
+  deleteError.value = ''
 }
 
 async function saveIngredient(ingredient) {
@@ -1019,60 +643,34 @@ async function saveIngredient(ingredient) {
   
   try {
     const data = { ...editForm.value }
-    // Távolítsuk el az üres értékeket
     Object.keys(data).forEach(key => {
-      if (data[key] === null || data[key] === '') {
-        delete data[key]
-      }
+      if (data[key] === null || data[key] === '') delete data[key]
     })
 
-    // Először az alapadatokat mentjük
     await axios.put(`/kitchen/ingredients/${ingredient.id}`, data)
-    
-    // Utána az allergéneket
     await axios.put(`/kitchen/ingredients/${ingredient.id}/allergens`, {
       allergen_ids: editForm.value.allergen_ids
     })
     
     await loadIngredients()
-    
     expandedIngredient.value = null
     resetEditForm()
-    
-    addAlert({
-      message: 'Hozzávaló sikeresen frissítve!',
-      type: 'success'
-    })
-    
+    addAlert({ message: 'Hozzávaló sikeresen frissítve!', type: 'success' })
   } catch (error) {
     console.error('Hiba a mentés során:', error)
     let errorMessage = 'Hiba történt a mentés során'
-    
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message
-    } else if (error.response?.data?.errors) {
-      errorMessage = Object.values(error.response.data.errors).flat().join(', ')
-    }
-    
-    addAlert({
-      message: errorMessage,
-      type: 'error'
-    })
+    if (error.response?.data?.message) errorMessage = error.response.data.message
+    else if (error.response?.data?.errors) errorMessage = Object.values(error.response.data.errors).flat().join(', ')
+    addAlert({ message: errorMessage, type: 'error' })
   } finally {
     saving.value = false
   }
 }
 
 function getAllergenIconUrl(iconPath) {
-  if (!iconPath) {
-    return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
-  }
-  
-  const cleanPath = iconPath.replace(/^\//, '');
-  const baseUrl = 'http://localhost:8000';
-  
- 
-  return `${baseUrl}/images/allergens/${cleanPath.split('/').pop()}`;
+  if (!iconPath) return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓'
+  const cleanPath = iconPath.replace(/^\//, '')
+  return `http://localhost:8000/images/allergens/${cleanPath.split('/').pop()}`
 }
 
 async function saveNewIngredient() {
@@ -1080,15 +678,11 @@ async function saveNewIngredient() {
   
   try {
     const data = { ...newForm.value }
-    
-    // Különválasztjuk az allergéneket
     const allergenIds = [...data.allergen_ids]
     delete data.allergen_ids
     
-    // Alapadatok mentése
     const response = await axios.post('/kitchen/ingredients', data)
     
-    // Allergének mentése (ha vannak)
     if (allergenIds.length > 0 && response.data.data?.id) {
       await axios.put(`/kitchen/ingredients/${response.data.data.id}/allergens`, {
         allergen_ids: allergenIds
@@ -1096,29 +690,14 @@ async function saveNewIngredient() {
     }
     
     await loadIngredients()
-    
-    showCreateModal.value = false
-    resetNewForm()
-    
-    addAlert({
-      message: 'Új hozzávaló sikeresen létrehozva!',
-      type: 'success'
-    })
-
+    closeCreateModal()
+    addAlert({ message: 'Új hozzávaló sikeresen létrehozva!', type: 'success' })
   } catch (error) {
     console.error('Hiba a mentés során:', error)
     let errorMessage = 'Hiba történt a mentés során'
-    
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message
-    } else if (error.response?.data?.errors) {
-      errorMessage = Object.values(error.response.data.errors).flat().join(', ')
-    }
-    
-    addAlert({
-      message: errorMessage,
-      type: 'error'
-    })
+    if (error.response?.data?.message) errorMessage = error.response.data.message
+    else if (error.response?.data?.errors) errorMessage = Object.values(error.response.data.errors).flat().join(', ')
+    addAlert({ message: errorMessage, type: 'error' })
   } finally {
     saving.value = false
   }
@@ -1130,73 +709,50 @@ function confirmDelete(ingredient) {
   showDeleteModal.value = true
 }
 
-  async function deleteIngredient() {
-      deleting.value = true
-      deleteError.value = ''
-      
-      try {
-        const response = await axios.delete(`/kitchen/ingredients/${ingredientToDelete.value.id}`)
-        
-        if (response.data.success) {
-          await loadIngredients()
-          showDeleteModal.value = false
-          ingredientToDelete.value = null
-          addAlert({
-            message: 'Hozzávaló sikeresen törölve!',
-            type: 'success'
-          })
-        } else {
-          deleteError.value = response.data.message || 'Ismeretlen hiba történt'
-        }
-        
-      } catch (error) {
-        console.error('Hiba a törlés során:', error)
-        
-        if (error.response?.status === 409) {
-          // Conflict - a hozzávaló használatban van
-          const errorMessage = error.response.data?.message || 
-                              'Ez a hozzávaló nem törölhető, mert már használatban van ételekben.'
-          deleteError.value = errorMessage
-          
-          // Extra információ a felhasználónak
-          if (error.response.data?.used_in_meals) {
-            const mealCount = error.response.data.used_in_meals.length
-            deleteError.value += ` ${mealCount} ételben használják.`
-          }
-        } else if (error.response?.data?.message) {
-          deleteError.value = error.response.data.message
-        } else {
-          deleteError.value = 'Hiba történt a törlés során'
-        }
-      } finally {
-        deleting.value = false
-      }
+async function deleteIngredient() {
+  deleting.value = true
+  deleteError.value = ''
+  
+  try {
+    const response = await axios.delete(`/kitchen/ingredients/${ingredientToDelete.value.id}`)
+    
+    if (response.data.success) {
+      await loadIngredients()
+      closeDeleteModal()
+      addAlert({ message: 'Hozzávaló sikeresen törölve!', type: 'success' })
+    } else {
+      deleteError.value = response.data.message || 'Ismeretlen hiba történt'
     }
+  } catch (error) {
+    console.error('Hiba a törlés során:', error)
+    if (error.response?.status === 409) {
+      deleteError.value = error.response.data?.message || 'Ez a hozzávaló nem törölhető, mert már használatban van ételekben.'
+      if (error.response.data?.used_in_meals) {
+        deleteError.value += ` ${error.response.data.used_in_meals.length} ételben használják.`
+      }
+    } else if (error.response?.data?.message) {
+      deleteError.value = error.response.data.message
+    } else {
+      deleteError.value = 'Hiba történt a törlés során'
+    }
+  } finally {
+    deleting.value = false
+  }
+}
 
 async function toggleAvailability(ingredient) {
   const confirmed = await showConfirm({
     message: `Biztosan ${ingredient.isAvailable ? 'nem elérhetővé' : 'elérhetővé'} szeretnéd tenni ezt a hozzávalót?`
   })
-  
   if (!confirmed) return
 
   try {
-    await axios.put(`/kitchen/ingredients/${ingredient.id}`, {
-      isAvailable: !ingredient.isAvailable
-    })
+    await axios.put(`/kitchen/ingredients/${ingredient.id}`, { isAvailable: !ingredient.isAvailable })
     await loadIngredients()
-    
-    addAlert({
-      message: `Hozzávaló ${!ingredient.isAvailable ? 'elérhetővé' : 'nem elérhetővé'} téve!`,
-      type: 'success'
-    })
-    
+    addAlert({ message: `Hozzávaló ${!ingredient.isAvailable ? 'elérhetővé' : 'nem elérhetővé'} téve!`, type: 'success' })
   } catch (error) {
     console.error('Hiba az állapot változtatás során:', error)
-    addAlert({
-      message: 'Hiba történt az állapot változtatása során',
-      type: 'error'
-    })
+    addAlert({ message: 'Hiba történt az állapot változtatása során', type: 'error' })
   }
 }
 
@@ -1206,7 +762,6 @@ async function bulkUpdateAvailability(isAvailable) {
   const confirmed = await showConfirm({
     message: `${selectedIngredients.value.length} hozzávaló ${isAvailable ? 'elérhetővé' : 'nem elérhetővé'} tétele?`
   })
-  
   if (!confirmed) return
   
   try {
@@ -1216,36 +771,20 @@ async function bulkUpdateAvailability(isAvailable) {
     })
     await loadIngredients()
     clearSelection()
-    
-    addAlert({
-      message: `${selectedIngredients.value.length} hozzávaló sikeresen ${isAvailable ? 'elérhetővé' : 'nem elérhetővé'} téve!`,
-      type: 'success'
-    })
-    
+    addAlert({ message: `${selectedIngredients.value.length} hozzávaló sikeresen ${isAvailable ? 'elérhetővé' : 'nem elérhetővé'} téve!`, type: 'success' })
   } catch (error) {
     console.error('Hiba a tömeges frissítés során:', error)
-    addAlert({
-      message: 'Hiba történt a tömeges frissítés során',
-      type: 'error'
-    })
+    addAlert({ message: 'Hiba történt a tömeges frissítés során', type: 'error' })
   }
 }
 
 function toggleSelectAll() {
-  if (allSelected.value) {
-    selectedIngredients.value = []
-  } else {
-    selectedIngredients.value = ingredients.value.map(ingredient => ingredient.id)
-  }
+  if (allSelected.value) selectedIngredients.value = []
+  else selectedIngredients.value = ingredients.value.map(ingredient => ingredient.id)
 }
 
 function clearSelection() {
   selectedIngredients.value = []
-}
-
-function toggleSortOrder() {
-  filters.value.sort_order = filters.value.sort_order === 'asc' ? 'desc' : 'asc'
-  loadIngredients()
 }
 </script>
 
@@ -1255,101 +794,106 @@ function toggleSortOrder() {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: calc(100vh - 200px);
 }
 
-/* Fejléc */
-.header {
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+}
+
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-}
-
-.header h1 {
-  margin: 0;
-
-}
-
-
-
-.header-actions {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
 }
 
-.header-actions input,
-.header-actions select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+.title {
+  font-size: 1.75rem;
+  color: #8a1212;
+  margin: 0;
+  font-weight: 600;
 }
 
-.search-container {
-  flex: 1;
-  min-width: 300px;
-}
-
-.search-container input {
-  width: 100%;
-}
-
-.filter-container,
-.sort-container {
-  min-width: 150px;
-}
-
-.filter-container select {
-  width: 100%;
-}
-
-.sort-container {
+.header-controls {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.sort-btn {
-  padding: 0.5rem;
-  background: #f8f9fa;
+.search-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 250px;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.6rem;
+  font-size: 0.85rem;
+  color: #888;
+  pointer-events: none;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: white;
   cursor: pointer;
-  min-width: 40px;
 }
 
-.sort-btn:hover {
-  background: #e9ecef;
+.filter-select:focus {
+  outline: none;
+  border-color: #f0a24a;
 }
 
-button{
-  width: 20%;
-
-}
-
-.btn-add {
-  background: var(--zold);
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background: #1fa317;
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 8px;
   font-weight: 500;
-  min-width: 150px;
-  transition: background 0.3s ease;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.85rem;
 }
-.btn-add:hover {
-  background: #219653;
+
+.btn-primary:hover {
+  background: #158a0f;
 }
 
 /* Tömeges műveletek */
 .bulk-actions {
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1rem;
-  margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .bulk-header {
@@ -1374,42 +918,22 @@ button{
 .btn-bulk {
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
+  transition: all 0.2s;
 }
 
-.btn-bulk-available {
-  background: #d4edda;
-  color: #155724;
-}
-
-.btn-bulk-available:hover {
-  background: #c3e6cb;
-}
-
-.btn-bulk-unavailable {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.btn-bulk-unavailable:hover {
-  background: #ffeaa7;
-}
-
-.btn-bulk-clear {
-  background: #f8f9fa;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-}
-
-.btn-bulk-clear:hover {
-  background: #e9ecef;
-}
+.btn-bulk-available { background: #d4edda; color: #155724; }
+.btn-bulk-available:hover { background: #c3e6cb; }
+.btn-bulk-unavailable { background: #fff3cd; color: #856404; }
+.btn-bulk-unavailable:hover { background: #ffeaa7; }
+.btn-bulk-clear { background: #e9ecef; color: #6c757d; }
+.btn-bulk-clear:hover { background: #dee2e6; }
 
 /* Betöltés állapota */
-.loading {
+.loading-state {
   text-align: center;
   padding: 3rem;
 }
@@ -1417,11 +941,11 @@ button{
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--barack);
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem auto;
+  margin: 0 auto 1rem;
 }
 
 @keyframes spin {
@@ -1429,152 +953,80 @@ button{
   100% { transform: rotate(360deg); }
 }
 
-/* Üres állapot */
 .empty-state {
   text-align: center;
-  padding: 4rem 2rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-
-.empty-state h3 {
-  margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-  font-size: 1.5rem;
+  padding: 3rem;
+  color: #666;
+  background: #f9f9f9;
+  border-radius: 12px;
 }
 
 .empty-state p {
-  margin: 0 0 1.5rem 0;
-  color: #7f8c8d;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.btn-add-empty {
-  padding: 0.75rem 1.5rem;
-  background: #069642;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-add-empty:hover {
-  background: #058d3e;
+  margin-bottom: 1rem;
 }
 
 /* Táblázat */
-.ingredients-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 2rem;
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #eee;
 }
 
-.ingredients-table th {
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table th {
   background: #f0a24a;
   color: #7b2c2c;
-  text-align: center;
-  padding: 1rem;
-  font-weight: 500;
-  border-bottom: 2px solid #ffc875;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.data-table tr:hover {
+  background: #fef9ef;
 }
 
 .checkbox-col {
   width: 40px;
-}
-
-.actions-col {
-  width: 180px;
-}
-
-.ingredients-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-  vertical-align: top;
-}
-
-.ingredients-table tbody tr:hover {
-  background: #f8f9fa;
-}
-
-.checkbox-col {
   text-align: center;
 }
 
-.select-all,
-.select-item {
+.select-all, .select-item {
   width: 18px;
   height: 18px;
   cursor: pointer;
 }
 
-/* Hozzávaló név */
 .ingredient-name {
-  display: flex;
-  align-items: center;
-}
-
-.ingredient-name .name {
   font-weight: 500;
-  color: #2c3e50;
+  color: #333;
 }
 
-/* Típus badge */
 .type-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
   font-weight: 500;
 }
+.type-meat { background: #f8d7da; color: #721c24; }
+.type-fish { background: #d1ecf1; color: #0c5460; }
+.type-dairy { background: #fff3cd; color: #856404; }
+.type-vegetable { background: #d4edda; color: #155724; }
+.type-fruit { background: #e2d9f3; color: #4a3f69; }
+.type-spice { background: #f8d7da; color: #721c24; }
+.type-other { background: #e9ecef; color: #6c757d; }
 
-.type-meat {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.type-fish {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.type-dairy {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.type-vegetable {
-  background: #d4edda;
-  color: #155724;
-}
-
-.type-fruit {
-  background: #e2d9f3;
-  color: #4a3f69;
-}
-
-.type-spice {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.type-other {
-  background: #f8f9fa;
-  color: #6c757d;
-}
-
-/* Tápértékek */
 .nutrition-info {
   display: flex;
   flex-direction: column;
@@ -1584,110 +1036,59 @@ button{
 .nutrition-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
 }
 
-.nutrition-item .label {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.nutrition-item .value {
-  color: #2c3e50;
-  font-weight: 500;
-}
+.nutrition-item .label { color: #666; }
+.nutrition-item .value { font-weight: 500; color: #333; }
 
 .no-nutrition {
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   color: #adb5bd;
   font-style: italic;
 }
 
-/* Státusz badge */
 .status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
   font-weight: 500;
 }
+.status-active { background: #d4edda; color: #155724; }
+.status-inactive { background: #f8d7da; color: #721c24; }
 
-.status-badge.available {
-  background: #d4edda;
-  color: #155724;
+.actions-cell {
+  white-space: nowrap;
 }
 
-.status-badge.unavailable {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.status-dot.available {
-  background: #28a745;
-}
-
-.status-dot.unavailable {
-  background: #dc3545;
-}
-
-/* Műveletek */
-.actions {
-  text-align: center;
-}
-
-.actions-inner {
-  display: inline-flex;
+.actions-group {
+  display: flex;
   gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
 }
 
-.actions button {
+.btn-icon {
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 1rem;
-  display: flex;
+  transition: all 0.2s;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s;
 }
+.btn-edit { background: #e3f2fd; color: #1976d2; }
+.btn-edit:hover { background: #bbdef5; }
+.btn-activate { background: #e8f5e9; color: #2e7d32; }
+.btn-activate:hover { background: #c8e6c9; }
+.btn-deactivate { background: #fff3cd; color: #856404; }
+.btn-deactivate:hover { background: #ffeaa7; }
+.btn-delete { background: #ffebee; color: #c62828; }
+.btn-delete:hover { background: #ffcdd2; }
 
-.actions button:hover {
-  opacity: 0.8;
-}
-
-.btn-edit {
-  background: #a1bacc;
-  color: white;
-}
-
-.btn-activate {
-  background: #d4edda;
-  color: #155724;
-}
-
-.btn-deactivate {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.btn-delete {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-/* Lenyíló szerkesztő sor */
+/* Szerkesztő sor */
 .edit-row {
   background: #f8f9fa !important;
 }
@@ -1701,7 +1102,7 @@ button{
   padding: 1.5rem;
   background: white;
   border: 1px solid #dee2e6;
-  border-radius: 8px;
+  border-radius: 12px;
   margin: 0.5rem;
 }
 
@@ -1711,39 +1112,39 @@ button{
 
 .edit-header h3 {
   margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-  font-size: 1.25rem;
+  color: #8a1212;
+  font-size: 1.1rem;
 }
 
 .edit-header p {
   margin: 0;
-  color: #7f8c8d;
-  font-size: 0.875rem;
+  color: #888;
+  font-size: 0.8rem;
 }
 
-/* Form stílusok */
-.form-section {
-  margin-bottom: 1.5rem;
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .form-section h4 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1rem;
+  margin: 0 0 0.75rem 0;
+  color: #333;
+  font-size: 0.9rem;
   font-weight: 600;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
 }
-
-
 
 .form-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 .nutrition-grid {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .form-group {
@@ -1754,49 +1155,41 @@ button{
 
 .form-group label {
   font-weight: 500;
-  color: #476079;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
 }
 
 .form-group input,
 .form-group select {
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  transition: border-color 0.2s;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.checkbox-group {
-
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.checkbox-input {
-  width: 18px;
-  height: 18px;
-  margin-right: 0.5rem;
-  margin-left: 0.5rem;
-
+  border-color: #f0a24a;
 }
 
 .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: normal;
+  font-size: 0.85rem;
+}
 
-  font-weight: 500;
-  color: #476079;
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
 }
 
-
-
-/* Form művelet gombok */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -1806,38 +1199,132 @@ button{
   margin-top: 1rem;
 }
 
-.btn-cancel {
-  padding: 0.75rem 1.5rem;
-  background: #95a5a6;
-  color: white;
-  border: none;
-  border-radius: 4px;
+/* Allergének */
+.allergens-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.allergen-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
-  min-width: 100px;
+  transition: all 0.2s;
+  background: white;
 }
 
-.btn-cancel:hover {
-  background: #7f8c8d;
+.allergen-item:hover {
+  border-color: #f0a24a;
 }
 
-.btn-save {
-  padding: 0.75rem 1.5rem;
-  background: #069642;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.allergen-item.selected {
+  background: #fff7e6;
+  border-color: #f0a24a;
+}
+
+.allergen-checkbox {
+  margin-right: 0.5rem;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
-  font-weight: 500;
 }
 
-.btn-save:disabled {
+.allergen-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  flex: 1;
+}
+
+.allergen-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.allergen-name {
+  font-size: 0.8rem;
+  color: #333;
+}
+
+.section-description {
+  color: #888;
+  font-size: 0.75rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.no-allergens {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #888;
+  font-size: 0.8rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.btn-pagination {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background: #f0a24a;
+  color: white;
+  border-color: #f0a24a;
+}
+
+.btn-pagination:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-save:hover:not(:disabled) {
-  background: #6fce97;
+.pagination-info {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.per-page-selector {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.per-page-selector label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.per-page-selector select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
 }
 
 /* Modal stílusok */
@@ -1847,64 +1334,71 @@ button{
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
   z-index: 1000;
-  opacity: 1;
-  visibility: visible;
 }
 
 .modal {
   background: white;
-  border-radius: 8px;
-  width: 90%;
+  border-radius: 20px;
+  width: 100%;
   max-width: 800px;
   max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex !important;
   position: relative !important;
-  z-index: 1001;
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible !important;
-  display: block !important;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.2s ease-out;
 }
 
-.modal-sm {
-  max-width: 500px;
-  height: 50%;
+.modal-small {
+  max-width: 520px;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  background: #fff7e6;
 }
 
 .modal-header h2 {
   margin: 0;
-  color: #2c3e50;
+  font-size: 1.25rem;
+  color: #8a1212;
+  font-weight: 600;
 }
 
-.btn-close {
+.modal-close {
   background: none;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #7f8c8d;
-  padding: 0.5rem;
+  color: #888;
+  padding: 0 0.5rem;
+  transition: color 0.2s;
 }
 
-.btn-close:hover {
-  color: #e74c3c;
+.modal-close:hover {
+  color: #8a1212;
 }
 
 .modal-body {
   padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
@@ -1916,110 +1410,47 @@ button{
   margin-top: 1rem;
 }
 
-/* Törlés modal specifikus */
-.delete-modal .modal-body {
-  text-align: center;
-}
-
-.delete-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.delete-title {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1.5rem;
-}
-
-.delete-message {
-  margin: 0 0 1.5rem 0;
-  color: #7f8c8d;
-  line-height: 1.5;
-}
-
-.delete-message strong {
-  color: #2c3e50;
-}
-
-/* Hiba üzenet stílusok */
-.error-message-container {
-  text-align: left;
-  background: #fff3f3;
-  border: 1px solid #ffcdd2;
-  border-radius: 8px;
-  padding: 1rem;
-  margin: 1rem 0;
-}
-
-.error-icon {
-  font-size: 2rem;
-  color: #dc3545;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.error-content {
-  text-align: left;
-}
-
-.error-title {
-  font-weight: bold;
-  color: #721c24;
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-}
-
-.error-message {
-  color: #856404;
-  margin: 0 0 1rem 0;
-  line-height: 1.5;
-}
-
-.error-suggestions {
-  background: white;
-  padding: 1rem;
-  border-radius: 6px;
-  border-left: 4px solid #ffc107;
-  margin-top: 1rem;
-}
-
-.error-suggestions p {
-  margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.error-suggestions ul {
-  margin: 0;
-  padding-left: 1.5rem;
-}
-
-.error-suggestions li {
-  margin-bottom: 0.25rem;
-  color: #6c757d;
-}
-
-.btn-close-error {
-  padding: 0.75rem 1.5rem;
-  background: #6c757d;
-  color: white;
+.btn-cancel {
+  padding: 0.6rem 1.25rem;
+  background: #e9ecef;
+  color: #495057;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.2s;
 }
 
-.btn-close-error:hover {
-  background: #5a6268;
+.btn-cancel:hover {
+  background: #dee2e6;
+}
+
+.btn-save {
+  padding: 0.6rem 1.25rem;
+  background: #1fa317;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #158a0f;
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-delete-confirm {
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.25rem;
   background: #dc3545;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
 }
@@ -2033,236 +1464,198 @@ button{
   cursor: not-allowed;
 }
 
-/* Reszponzív design */
-@media (max-width: 768px) {
-  .ingredients {
-    padding: 1rem;
-  }
-  
-  .header-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-container,
-  .filter-container,
-  .sort-container {
-    min-width: unset;
-    width: 100%;
-  }
-  
-  .bulk-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .bulk-buttons {
-    justify-content: stretch;
-  }
-  
-  .btn-bulk {
-    flex: 1;
-    min-width: unset;
-  }
-  
-  .ingredients-table {
-    display: block;
-    overflow-x: auto;
-  }
-  
-  .form-row,
-  .nutrition-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal {
-    width: 95%;
-    margin: 1rem;
-  }
+.btn-close-error {
+  padding: 0.6rem 1.25rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
 }
 
-@media (max-width: 480px) {
-  .header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .bulk-buttons {
-    flex-direction: column;
-  }
-  
-  .actions-inner {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  
-  .actions button {
-    width: 100%;
-    min-width: 32px;
-  }
+.btn-close-error:hover {
+  background: #5a6268;
 }
-/* Allergének rács */
-.allergens-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
+
+/* Törlés modal */
+.delete-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.delete-title {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+}
+
+.delete-message {
+  margin: 0 0 1.5rem 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.error-message-container {
+  text-align: left;
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.error-icon {
+  font-size: 1.5rem;
+  color: #dc3545;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.error-title {
+  font-weight: bold;
+  color: #721c24;
+  margin: 0 0 0.5rem 0;
+}
+
+.error-message {
+  color: #856404;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.error-suggestions {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
   margin-top: 1rem;
 }
 
-.allergen-checkbox-item {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: white;
-}
-
-.allergen-checkbox-item:hover {
-  border-color: #3498db;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.allergen-checkbox-item.selected {
-  background: #e3f2fd;
-  border-color: #2196f3;
-}
-
-.allergen-checkbox {
-  margin-right: 0.5rem;
-  width: 18px;
-  height: 18px;
-}
-
-.allergen-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  flex: 1;
-}
-
-.allergen-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
-.allergen-name {
-  font-size: 0.875rem;
+.error-suggestions p {
+  margin: 0 0 0.5rem 0;
   color: #2c3e50;
 }
 
-.no-allergens {
-  grid-column: 1 / -1;
-  padding: 2rem;
-  text-align: center;
-  background: #f8f9fa;
-  border-radius: 8px;
-  color: #7f8c8d;
+.error-suggestions ul {
+  margin: 0;
+  padding-left: 1.5rem;
 }
 
-.section-description {
-  color: #7f8c8d;
-  font-size: 0.875rem;
-  margin: 0 0 0.5rem 0;
+.error-suggestions li {
+  margin-bottom: 0.25rem;
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.text-center {
+  text-align: center;
 }
 
 /* Reszponzív */
 @media (max-width: 768px) {
+  .ingredients {
+    padding: 1rem;
+  }
+
+  .content-card {
+    padding: 1rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .bulk-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .bulk-buttons {
+    justify-content: center;
+  }
+
+  .actions-group {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .form-row,
+  .nutrition-grid {
+    grid-template-columns: 1fr;
+  }
+
   .allergens-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
-  
-  .allergen-icon {
-    width: 20px;
-    height: 20px;
+
+  .modal {
+    width: 95%;
+    margin: 1rem;
   }
-  
-  .allergen-name {
-    font-size: 0.8rem;
-  }
-}
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
-  margin-top: 2rem;
-  padding: 1rem;
-}
 
-.pagination-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #999;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  color: #7f8c8d;
-  font-size: 0.875rem;
-}
-
-.pagination-total {
-  margin-left: 0.5rem;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-/* Per page selector */
-.per-page-selector {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
-.per-page-selector label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #7f8c8d;
-  font-size: 0.875rem;
-}
-
-.per-page-selector select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-}
-
-.per-page-selector select:hover {
-  border-color: #999;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
   .pagination {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .per-page-selector {
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+
+  .allergen-item {
+    padding: 0.4rem;
+  }
+
+  .allergen-name {
+    font-size: 0.7rem;
+  }
+
+  .allergen-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 </style>

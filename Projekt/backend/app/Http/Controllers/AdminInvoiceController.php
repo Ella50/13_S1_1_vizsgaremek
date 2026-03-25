@@ -99,13 +99,25 @@ class AdminInvoiceController extends Controller
     {
         $request->validate([
             'month' => ['nullable', 'date_format:Y-m'],
+            'search' => ['nullable', 'string', 'max:100'],  
         ]);
 
         $q = Invoice::query()->with('user');
 
+        // Hónap szűrés
         if ($request->filled('month')) {
             $monthStart = Carbon::createFromFormat('Y-m', $request->month)->startOfMonth()->toDateString();
             $q->whereDate('billingMonth', $monthStart);
+        }
+
+        // Keresés név vagy email alapján
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $q->whereHas('user', function($query) use ($searchTerm) {
+                $query->where('firstName', 'like', "%{$searchTerm}%")
+                    ->orWhere('lastName', 'like', "%{$searchTerm}%")
+                    ->orWhere('email', 'like', "%{$searchTerm}%");
+            });
         }
 
         $invoices = $q->orderByDesc('issueDate')

@@ -1,156 +1,125 @@
 <template>
-  <div class="container mt-4">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h1 class="mb-0">Dokumentumok kezelése</h1>
-        <div class="d-flex gap-3">
-          <!-- Szűrő az aktív dokumentumokra -->
-          <div class="form-check form-switch d-flex align-items-center">
+  <div class="admin-documents">
+    <div class="content-card">
+      <div class="card-header">
+        <h1 class="title">Dokumentumok kezelése</h1>
+        
+        <div class="header-actions">
+          <!-- Keresőmező -->
+          <div class="search-box">
             <input 
-              class="form-check-input me-2" 
-              type="checkbox" 
-              id="showActiveOnly" 
-              v-model="showActiveOnly"
+              type="text" 
+              v-model="searchQuery" 
+              placeholder="Keresés név vagy email alapján..."
+              class="search-input"
             >
-            <label class="form-check-label" for="showActiveOnly">Csak aktív dokumentumok</label>
+            <span class="search-icon">🔍</span>
           </div>
           
-          <!-- Statisztika -->
-          <span class="badge bg-info d-flex align-items-center">
-            Összesen: {{ filteredDocuments.length }} db
-          </span>
+          <!-- Filter tabs marad -->
+          <div class="filter-tabs">
+            <button 
+              :class="['filter-tab', { active: activeFilter === 'pending' }]"
+              @click="activeFilter = 'pending'"
+            >
+              Függőben lévők
+  
+            </button>
+            <button 
+              :class="['filter-tab', { active: activeFilter === 'accepted' }]"
+              @click="activeFilter = 'accepted'"
+            >
+              Elfogadottak
+
+            </button>
+          </div>
         </div>
       </div>
-      
+
       <!-- Loading State -->
-      <div v-if="isLoading" class="card-body text-center py-5 loading">
-        <div class="spinner" role="status"></div>
+      <div v-if="isLoading" class="loading-state">
+        <div class="spinner"></div>
         <p>Dokumentumok betöltése...</p>
       </div>
-      
+
       <!-- Error State -->
-      <div v-else-if="error" class="card-body">
-        <div class="alert alert-danger">
-          <h4 class="alert-heading">Hiba</h4>
-          <p>{{ error }}</p>
-          <button @click="loadDocuments" class="btn btn-outline-danger">
-            Újra
-          </button>
-        </div>
+      <div v-else-if="error" class="error-message">
+        <p>{{ error }}</p>
+        <button @click="loadDocuments" class="btn-secondary">Újrapróbálkozás</button>
       </div>
-      
+
       <!-- Content -->
-      <div v-else class="card-body">
-        <!-- Sikeres művelet üzenet -->
+      <div v-else>
+        <!-- Success message -->
         <transition name="fade">
-          <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+          <div v-if="successMessage" class="success-message">
             {{ successMessage }}
-            <button type="button" class="btn-close" @click="successMessage = ''"></button>
           </div>
         </transition>
-        
-        <!-- Dokumentumok táblázata -->
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead class="table-light">
+
+        <!-- Documents table -->
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
               <tr>
                 <th>Felhasználó</th>
                 <th>Típus</th>
                 <th>Dokumentum neve</th>
                 <th>Feltöltve</th>
                 <th>Státusz</th>
-                <th>Elfogadva</th>
                 <th>Műveletek</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="filteredDocuments.length === 0">
-                <td colspan="9" class="text-center py-4 text-muted">
-                 
+                <td colspan="6" class="empty-row">
                   Nincsenek megjeleníthető dokumentumok
                 </td>
               </tr>
-              <tr v-for="doc in filteredDocuments" :key="doc.id" :class="{ 'table-secondary': !doc.isActive }">
+              <tr v-for="doc in filteredDocuments" :key="doc.id">
                 <td>
-                  <div class="d-flex flex-column">
+                  <div class="user-info">
                     <strong>{{ doc.user?.firstName }} {{ doc.user?.lastName }}</strong>
-                    <small class="text-muted">{{ doc.user?.email }}</small>
+                    <small class="user-email">{{ doc.user?.email }}</small>
                   </div>
                 </td>
                 <td>
-                  <span :class="getTypeBadgeClass(doc.type)">
+                  <span :class="['type-badge', doc.type === 'discount' ? 'type-discount' : 'type-diabetes']">
                     {{ getTypeDisplayName(doc.type) }}
                   </span>
                 </td>
                 <td>
-                  <div class="d-flex align-items-center">
-                    <i :class="getFileIcon(doc.mimeType)" class="me-2 fs-5"></i>
+                  <div class="file-info">
                     <span>{{ doc.fileName }}</span>
                   </div>
                 </td>
-
                 <td>{{ formatDate(doc.created_at) }}</td>
                 <td>
-                  <span :class="getStatusBadgeClass(doc)">
-                    {{ getStatusText(doc) }}
+                  <span :class="['status-badge', doc.isAccepted ? 'status-accepted' : 'status-pending']">
+                    {{ doc.isAccepted ? 'Elfogadva' : 'Függőben' }}
                   </span>
                 </td>
-                <td>
-                  <span v-if="doc.isAccepted" class="badge bg-success">
-                    Elfogadva
-                  </span>
-                  <span v-else class="badge bg-warning text-dark">
-                    Függőben
-                  </span>
-                </td>
-                <td>
-                  <div class="btn-group btn-group-sm">
-                    <!-- Letöltés -->
-                    <button 
-                      @click="downloadDocument(doc)" 
-                      class="btn btn-outline-primary" 
-                      title="Letöltés"
-                    >
-                      ➜]
+                <td class="actions-cell">
+                  <div class="actions-group">
+                    <button @click="downloadDocument(doc)" class="btn-action btn-download">
+                      Letöltés
                     </button>
                     
-                    <!-- Elfogadás (csak ha nem elfogadott) -->
                     <button 
-                      v-if="!doc.isAccepted && doc.isActive"
+                      v-if="!doc.isAccepted"
                       @click="acceptDocument(doc)" 
-                      class="btn btn-outline-success" 
+                      class="btn-action btn-accept" 
                       title="Elfogadás"
                     >
-                      ✓
+                      Elfogadás
                     </button>
                     
-                    <!-- Elutasítás (csak ha nem elfogadott) -->
                     <button 
-                      v-if="!doc.isAccepted && doc.isActive"
-                      @click="rejectDocument(doc)" 
-                      class="btn btn-outline-warning" 
-                      title="Elutasítás"
+                      @click="confirmRejectDelete(doc)" 
+                      class="btn-action btn-delete" 
+                      title="Elutasítás / Törlés"
                     >
-                      ✘
-                    </button>
-                    
-                    <!-- Inaktívvá tétel 
-                    <button 
-                      v-if="doc.isActive && !doc.isAccepted"
-                      @click="confirmDeactivate(doc)" 
-                      class="btn btn-outline-secondary" 
-                      title="Inaktívvá tétel"
-                    >
-                      
-                    </button>-->
-                    
-                    <!-- Végleges törlés (admin) -->
-                    <button 
-                      @click="confirmPermanentDelete(doc)" 
-                      class="btn btn-outline-danger" 
-                      title="Törlés"
-                    >
-                      🗑️
+                      {{ doc.isAccepted ? 'Törlés' : 'Elutasítás' }}
                     </button>
                   </div>
                 </td>
@@ -174,46 +143,65 @@ export default {
       isLoading: true,
       error: '',
       successMessage: '',
-      showActiveOnly: false
+      activeFilter: 'pending', // pending vagy accepted
+      searchQuery: '' 
     };
   },
-  
+
   created() {
     this.loadDocuments();
   },
-  
+
+  computed: {
+    
+    filteredDocuments() {
+      let filtered = this.documents.filter(doc => doc.isActive);
+      
+      if (this.activeFilter === 'pending') {
+        filtered = filtered.filter(doc => !doc.isAccepted);
+      } else if (this.activeFilter === 'accepted') {
+        filtered = filtered.filter(doc => doc.isAccepted);
+      }
+      
+      return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+  },
+
+  watch: {
+    searchQuery: {
+      handler() {
+        this.loadDocuments();
+      },
+    } 
+  },
+
   methods: {
     async loadDocuments() {
       this.isLoading = true;
       this.error = '';
-      
+
       try {
-        const response = await axios.get('/admin/documents');
-        console.log('Raw response:', response);
-        console.log('Response data:', response.data);
-        
+        const response = await axios.get('/admin/documents',{
+          params: {
+          search: this.searchQuery 
+          }
+        });
         let data = response.data;
-        
-        // BOM kezelés
+
         if (typeof data === 'string') {
-          console.log('Response is string, removing BOM...');
           if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
-            console.log('BOM detected and removed');
             data = data.slice(1);
           }
-          
           try {
             data = JSON.parse(data);
-            console.log('Parsed JSON:', data);
           } catch (parseError) {
             console.error('JSON parse error:', parseError);
             this.error = 'Hiba történt az adatok feldolgozása során.';
             return;
           }
         }
-        
+
         let loadedDocs = [];
-        
         if (data && typeof data === 'object') {
           if (data.documents && Array.isArray(data.documents)) {
             loadedDocs = data.documents;
@@ -221,8 +209,7 @@ export default {
             loadedDocs = data;
           }
         }
-        
-        // Feldolgozzuk a dokumentumokat
+
         this.documents = loadedDocs.map(doc => ({
           id: doc.id,
           type: doc.type,
@@ -230,15 +217,11 @@ export default {
           created_at: doc.created_at,
           formatted_size: doc.formatted_size || doc.formattedSize,
           filePath: doc.filePath,
-          fileName: doc.fileName,
           mimeType: doc.mimeType,
           isActive: doc.isActive,
           isAccepted: doc.isAccepted || false,
           user: doc.user
         }));
-        
-        console.log('Processed documents:', this.documents);
-        
       } catch (error) {
         console.error('Error loading documents:', error);
         this.error = 'Hiba történt a dokumentumok betöltése során.';
@@ -246,14 +229,12 @@ export default {
         this.isLoading = false;
       }
     },
-    
-    // Dokumentum letöltése
+
     async downloadDocument(doc) {
       try {
         const response = await axios.get(`/admin/documents/${doc.id}/download`, {
           responseType: 'blob'
         });
-        
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
@@ -262,112 +243,51 @@ export default {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
-        
       } catch (error) {
         console.error('Download error:', error);
         this.showError('Hiba történt a letöltés során.');
       }
     },
-    
-    // Dokumentum elfogadása
+
     async acceptDocument(doc) {
       const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
-      
       if (confirm(`Biztosan elfogadod ezt a ${typeText} dokumentumot?`)) {
         try {
-          const response = await axios.post(`/admin/documents/${doc.id}/accept`);
-          
+          await axios.post(`/admin/documents/${doc.id}/accept`);
           this.successMessage = 'Dokumentum sikeresen elfogadva!';
-          this.loadDocuments(); // Újratöltés
-          
-          setTimeout(() => {
-            this.successMessage = '';
-          }, 3000);
-          
+          this.loadDocuments();
+          setTimeout(() => { this.successMessage = ''; }, 3000);
         } catch (error) {
           console.error('Accept error:', error);
           this.showError('Hiba történt az elfogadás során.');
         }
       }
     },
-    
-    // Dokumentum elutasítása
-    async rejectDocument(doc) {
+
+    // Egységes elutasítás/törlés funkció - véglegesen törli a dokumentumot
+    confirmRejectDelete(doc) {
       const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
+      const actionText = doc.isAccepted ? 'véglegesen törölni' : 'elutasítani';
       
-      if (confirm(`Biztosan elutasítod ezt a ${typeText} dokumentumot?`)) {
-        try {
-          const response = await axios.post(`/admin/documents/${doc.id}/reject`);
-          
-          this.successMessage = 'Dokumentum elutasítva!';
-          this.loadDocuments(); // Újratöltés
-          
-          setTimeout(() => {
-            this.successMessage = '';
-          }, 3000);
-          
-        } catch (error) {
-          console.error('Reject error:', error);
-          this.showError('Hiba történt az elutasítás során.');
-        }
+      if (confirm(`FIGYELEM! Biztosan ${actionText} szeretnéd ezt a ${typeText} dokumentumot? Ez a művelet nem visszavonható!`)) {
+        this.rejectDeleteDocument(doc);
       }
     },
-    
-    // Inaktívvá tétel megerősítése
-    confirmDeactivate(doc) {
-      const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
-      
-      if (confirm(`Biztosan inaktívvá szeretnéd tenni ezt a ${typeText} dokumentumot?`)) {
-        this.deactivateDocument(doc);
-      }
-    },
-    
-    // Dokumentum inaktívvá tétele
-    async deactivateDocument(doc) {
+
+    async rejectDeleteDocument(doc) {
       try {
-        await axios.delete(`/user/documents/${doc.id}`);
-        
-        this.successMessage = 'Dokumentum inaktívvá téve!';
-        this.loadDocuments();
-        
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 3000);
-        
-      } catch (error) {
-        console.error('Deactivate error:', error);
-        this.showError('Hiba történt az inaktívvá tétel során.');
-      }
-    },
-    
-    // Végleges törlés megerősítése
-    confirmPermanentDelete(doc) {
-      const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
-      
-      if (confirm(`FIGYELEM! Véglegesen törölni szeretnéd ezt a ${typeText} dokumentumot? Ez a művelet nem visszavonható!`)) {
-        this.permanentDeleteDocument(doc);
-      }
-    },
-    
-    // Dokumentum végleges törlése
-    async permanentDeleteDocument(doc) {
-      try {
+        // Végleges törlés - ugyanaz az endpoint, mint a force delete
         await axios.delete(`/admin/documents/${doc.id}/force`);
-        
-        this.successMessage = 'Dokumentum véglegesen törölve!';
+        const message = doc.isAccepted ? 'Dokumentum véglegesen törölve!' : 'Dokumentum elutasítva és törölve!';
+        this.successMessage = message;
         this.loadDocuments();
-        
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 3000);
-        
+        setTimeout(() => { this.successMessage = ''; }, 3000);
       } catch (error) {
-        console.error('Permanent delete error:', error);
-        this.showError('Hiba történt a végleges törlés során.');
+        console.error('Delete error:', error);
+        this.showError('Hiba történt a művelet során.');
       }
     },
-    
-    // Segédfüggvények
+
     formatDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -379,68 +299,114 @@ export default {
         minute: '2-digit'
       });
     },
-    
+
     getFileIcon(mimeType) {
-      if (mimeType?.includes('pdf')) return 'fas fa-file-pdf text-danger';
-      if (mimeType?.includes('word') || mimeType?.includes('doc')) return 'fas fa-file-word text-primary';
-      if (mimeType?.includes('image')) return 'fas fa-file-image text-success';
-      return 'fas fa-file text-secondary';
+      if (mimeType?.includes('pdf')) return '📄';
+      if (mimeType?.includes('word') || mimeType?.includes('doc')) return '📝';
+      if (mimeType?.includes('image')) return '🖼️';
+      return '📎';
     },
-    
-    getTypeBadgeClass(type) {
-      return type === 'discount' ? 'badge bg-success' : 'badge bg-danger';
-    },
-    
+
     getTypeDisplayName(type) {
       return type === 'discount' ? 'Kedvezmény' : 'Cukorbetegség';
     },
-    
-    getStatusBadgeClass(doc) {
-      if (!doc.isActive) return 'badge bg-secondary';
-      return doc.isAccepted ? 'badge bg-success' : 'badge bg-warning text-dark';
-    },
-    
-    getStatusText(doc) {
-      if (!doc.isActive) return 'Inaktív';
-      return doc.isAccepted ? 'Aktív/Elfogadott' : 'Aktív/Függőben';
-    },
-    
+
     showError(message) {
       this.error = message;
-      setTimeout(() => {
-        this.error = '';
-      }, 5000);
-    }
-  },
-  
-  computed: {
-    filteredDocuments() {
-      let filtered = this.documents;
-      
-      if (this.showActiveOnly) {
-        filtered = filtered.filter(doc => doc.isActive);
-      }
-      
-      // Rendezés: először a függőben lévők, majd az elfogadottak, végül az inaktívak
-      return filtered.sort((a, b) => {
-        if (a.isActive && !a.isAccepted && (!b.isActive || b.isAccepted)) return -1;
-        if (b.isActive && !b.isAccepted && (!a.isActive || a.isAccepted)) return 1;
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
+      setTimeout(() => { this.error = ''; }, 5000);
     }
   }
 };
 </script>
 
 <style scoped>
+.admin-documents {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 200px);
+}
+
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: #8a1212;
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Filter tabs - új stílusok */
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: #f5f5f5;
+  padding: 0.25rem;
+  border-radius: 12px;
+}
+
+.filter-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-tab:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.filter-tab.active {
+  background: #f0a24a;
+  color: #7b2c2c;
+}
+
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+}
+
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--barack, #ff8c69);
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem auto;
+  margin: 0 auto 1rem;
 }
 
 @keyframes spin {
@@ -448,48 +414,287 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-.loading {
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 8px;
   text-align: center;
-  padding: 3rem;
 }
 
-.table-secondary {
-  background-color: #f8f9fa !important;
-  opacity: 0.8;
-}
-
-.badge {
-  font-size: 0.85em;
-  padding: 0.5em 0.8em;
-}
-
-.btn-group .btn {
-  margin: 0 2px;
+.success-message {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
 }
 
-/* Reszponzív design */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table th {
+  background: #f0a24a;
+  color: #7b2c2c;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.data-table tr:hover {
+  background: #fef9ef;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-info strong {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.user-email {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.type-discount {
+  background: #d4edda;
+  color: #155724;
+}
+
+.type-diabetes {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.status-accepted {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.actions-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Egységes gombstílusok */
+.btn-action {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-download {
+  background: #e8eaf6;
+  color: #3f51b5;
+}
+
+.btn-download:hover {
+  background: #c5cae9;
+}
+
+.btn-accept {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-accept:hover {
+  background: #c8e6c9;
+}
+
+.btn-delete {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-delete:hover {
+  background: #ffcdd2;
+}
+
+.btn-secondary {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #e9ecef;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #dee2e6;
+}
+
+.empty-row {
+  text-align: center;
+  color: #888;
+  padding: 3rem !important;
+}
+
+
+/* Keresőmező stílusok */
+.search-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 250px;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.6rem;
+  font-size: 0.85rem;
+  color: #888;
+  pointer-events: none;
+}
+
+
 @media (max-width: 768px) {
-  .table {
-    font-size: 0.9rem;
+  .search-input {
+    width: 100%;
   }
   
-  .btn-group {
-    display: flex;
+  .search-box {
+    width: 100%;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-documents {
+    padding: 1rem;
+  }
+
+  .content-card {
+    padding: 1rem;
+  }
+
+  .card-header {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .filter-tabs {
+    width: 100%;
+  }
+
+  .filter-tab {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .actions-group {
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .user-info strong {
+    font-size: 0.75rem;
   }
   
-  .btn-group .btn {
-    margin: 2px 0;
+  .btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
   }
 }
 </style>

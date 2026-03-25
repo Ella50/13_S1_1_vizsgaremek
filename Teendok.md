@@ -1,14 +1,15 @@
 ## Egyéb:
-- menüben legyen logo, hamburger menü
+- optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
-- reszponziv, formazas mindenhol, telefonos nézet
-- elfelejtett jelszó állításnál a frontend szétcsúszva és a navbar ne legyen ott
-- GOMBOK MINDENHOL
 - TELEFONOS NÉZET MINDELHOL (pl. meals.vue tápértékek)
-- regisztráció nem jó
-- jelszavak: speciális karakterek
-- nem
+- jelszavak: speciális karakterek lekezelése?
+- ha modal: mögötte ne lehessen görgetni
+- felfüggesztett akkor beléphet megnézni a számláit?
+
+## Doucments
+- 
+
 
 ## PersonalInvoices.vue
 - gombok működjenek (modal overlay nem megfelelő)
@@ -18,11 +19,13 @@
 
 ## AdminInvoice.vue
 - hiba a fizetettre állításkor
+- legyen keresés/szűrő? 
 
 
 ## Users.vue
 - kártya törlés gomb
 - nem tölti be a várost csak a megyét
+- kicsit elcsúszva a modal
 
 ## Meals.vue
 - pontosabb tápérték számítás??
@@ -31,9 +34,15 @@
 
 ## Ingredients.vue
 - nem menti az allergént ha új hozzávalót töltök fel
+- nem lehet törölni ingredientet (újat)
+- nem lehet változtatni az elérhetőségét
+- modal
 
 ## Orders.vue
 
+## Profile.vue
+- ha már admin elfogadta dokumentummot akkor is le lehessen tölteni
+- értesítés ha nincs elfogadva???
 
 
 ## MenuMaker.vue
