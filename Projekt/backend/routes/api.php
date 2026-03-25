@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\KitchenController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Api\PersonalOrderController;
+use App\Http\Controllers\Api\PersonalInvoiceController;
 use App\Http\Controllers\Api\OrdersController;
 use App\Http\Controllers\AdminRfidController;
 use App\Http\Controllers\LunchTimeController;
@@ -149,11 +150,12 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::prefix('personal-invoices')->group(function () {
-            Route::get('/', [InvoiceController::class, 'userInvoices']);
-            Route::get('/{invoice}/orders', [InvoiceController::class, 'invoiceOrders']);
-            Route::get('/{invoice}/preview', [InvoiceController::class, 'previewInvoice']);
-            Route::get('/{invoice}/download', [InvoiceController::class, 'downloadInvoice']);
+            Route::get('/', [PersonalInvoiceController::class, 'userInvoices']);
+            Route::get('/{invoice}/orders', [PersonalInvoiceController::class, 'invoiceOrders']);
+            Route::get('/{invoice}/preview', [PersonalInvoiceController::class, 'previewInvoice']);
+            Route::get('/{invoice}/download', [PersonalInvoiceController::class, 'downloadInvoice']);
         });
+
 
             
     

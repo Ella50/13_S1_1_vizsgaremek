@@ -300,6 +300,7 @@ class AdminController extends Controller
                 'userStatus' => 'required|in:Aktív,Inaktív,Felfüggesztett',
                 'address' => 'nullable|string|max:500',
                 'hasDiscount' => 'boolean',
+                'hasDiabetes' => 'boolean',
                 'county_id' => 'nullable|exists:counties,id',
                 'city_id' => 'nullable|exists:cities,id',
                 'password' => 'nullable|string|min:8|confirmed'

@@ -12,14 +12,13 @@ import LunchTime from '../components/views/kitchen/LunchTime.vue'
 import Orders from '../components/views/kitchen/Orders.vue'
 import UserProfile from '../components/views/users/UserProfile.vue'
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
+import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
+
 import AdminInvoice from '../components/views/admin/AdminInvoice.vue'
 import Documents from '../components/views/admin/Documents.vue'
 
 import ResetPassword from '../components/auth/ResetPassword.vue'
 import NewPasswordForm from '../components/auth/NewPasswordForm.vue'
-
-
-//import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
 
 
 
@@ -101,12 +100,12 @@ const routes = [
         component: PersonalOrders,
         meta: { requiresAuth: true }
     },
-    /*{
+    {
         path: '/personal-invoices',
         name: 'PersonalInvoices',
         component: PersonalInvoices,
         meta: { requiresAuth: true }
-    },*/
+    },
     {
         path: '/kitchen/lunchtime',
         name: 'LunchTime',

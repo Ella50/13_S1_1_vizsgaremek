@@ -7,6 +7,7 @@
 
     $path = public_path('images/eMenza.png');
     $logo = base64_encode(file_get_contents($path));
+    $imagePath = __DIR__ . '/../../public/images/eMenza.png';
 
 @endphp
 
@@ -110,7 +111,7 @@ Adószám: 12345678-1-23
 </td>
 <td style="text-align:right;">
 <div>
-    <img src="{{ public_path('images/eMenza.png') }}" />
+    <img src="{{ $imagePath }}" /> 
 </div>
 </td>
 </tr>

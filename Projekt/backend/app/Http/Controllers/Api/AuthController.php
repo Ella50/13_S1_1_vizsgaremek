@@ -50,8 +50,8 @@ class AuthController extends Controller
             'address' => $request->address, 
             'rfidCard_id' => null,
             'class_id' => null,
-            'group_id' => null,
             'hasDiscount' => false,
+            'hasDiabetes' => false,
         ]);
 
             Log::info('Felhasználó létrehozva', ['user_id' => $user->id]);
