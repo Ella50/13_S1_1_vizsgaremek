@@ -1,67 +1,57 @@
 <template>
-  <div class="container mt-4">
-    <div class="card">
+  <div class="user-profile">
+    <div class="content-card">
       <div class="card-header">
-        <h1 class="mb-0">Profilom</h1>
+        <h1 class="title">Profilom</h1>
       </div>
-      
+
       <!-- Loading State -->
-      <div v-if="isLoading" class="card-body text-center py-5 loading">
-        <div class="spinner" role="status"></div>
+      <div v-if="isLoading" class="loading-state">
+        <div class="spinner"></div>
         <p>Adatok betöltése...</p>
       </div>
-      
+
       <!-- Error State -->
-      <div v-else-if="error" class="card-body">
-        <div class="alert alert-danger">
-          <h4 class="alert-heading">Hiba</h4>
-          <p>{{ error }}</p>
-          <button @click="retryLoading" class="btn btn-outline-danger">
-             Újra
-          </button>
-        </div>
+      <div v-else-if="error" class="error-message">
+        <p>{{ error }}</p>
+        <button @click="retryLoading" class="btn-secondary">Újrapróbálkozás</button>
       </div>
-      
+
       <!-- Content -->
-      <div v-else class="card-body">
-        <!-- Success/Error Messages 
-        <div v-if="message" :class="['alert', messageType === 'success' ? 'alert-success' : 'alert-danger']">
-          {{ message }}
-        </div>-->
-        
-        <div class="row">
-
-          <div class="col-md-6">
-            <div class="card mb-4">
-              <div class="card-header">
-                <h5 class="mb-0">Személyes adatok</h5>
+      <div v-else class="profile-content">
+        <div class="profile-grid">
+          <!-- Bal oldal -->
+          <div class="profile-left">
+            <!-- Személyes adatok -->
+            <div class="info-card">
+              <div class="info-card-header">
+                <h3>Személyes adatok</h3>
               </div>
-              <div class="card-body">
+              <div class="info-card-body">
+                <div class="form-group">
+                  <label>Vezetéknév *</label>
+                  <input type="text" v-model="profileForm.lastName" class="form-control" disabled>
+                </div>
 
-                  <div class="mb-3">
-                    <label class="form-label">Vezetéknév*</label>
-                    <input type="text" v-model="profileForm.firstName" class="form-control" required disabled>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label class="form-label">Keresztnév*</label>
-                    <input type="text" v-model="profileForm.lastName" class="form-control" required disabled>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label class="form-label">Középső név</label>
-                    <input type="text" v-model="profileForm.thirdName" class="form-control" disabled>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label class="form-label">Email cím *</label>
-                    <input type="email" v-model="profileForm.email" class="form-control" required disabled>
-                  </div>
+                <div class="form-group">
+                  <label>Keresztnév *</label>
+                  <input type="text" v-model="profileForm.firstName" class="form-control" disabled>
+                </div>
+
+                <div class="form-group">
+                  <label>Középső név</label>
+                  <input type="text" v-model="profileForm.thirdName" class="form-control" disabled>
+                </div>
+
+                <div class="form-group">
+                  <label>Email cím *</label>
+                  <input type="email" v-model="profileForm.email" class="form-control" disabled>
+                </div>
+
                 <form @submit.prevent="updateProfile">
-                  <!-- Megye kiválasztása -->
-                  <div class="mb-3">
-                    <label class="form-label">Megye *</label>
-                    <select v-model="selectedCountyId" @change="onCountyChange" class="form-select" required>
+                  <div class="form-group">
+                    <label>Megye *</label>
+                    <select v-model="selectedCountyId" @change="onCountyChange" class="form-control" required>
                       <option value="">Válassz megyét...</option>
                       <option v-for="county in counties" :key="county.id" :value="county.id">
                         {{ county.countyName }}
@@ -69,13 +59,12 @@
                     </select>
                   </div>
 
-                  <!-- Város kiválasztása -->
-                  <div class="mb-3">
-                    <label class="form-label">Város *</label>
+                  <div class="form-group">
+                    <label>Város *</label>
                     <select 
                       v-model="selectedCityId" 
                       @change="onCityChange" 
-                      class="form-select" 
+                      class="form-control" 
                       :disabled="!selectedCountyId || isLoadingCities" 
                       required
                     >
@@ -88,322 +77,201 @@
                     </select>
                   </div>
 
-                  <div class="mb-3">
-                    <label class="form-label">Cím</label>
+                  <div class="form-group">
+                    <label>Cím</label>
                     <input type="text" v-model="profileForm.address" class="form-control">
                   </div>
-                  
-                  <button type="submit" class="btn btn-primary" :disabled="isUpdating">
-                    <span v-if="isUpdating" class="spinner-border spinner-border-sm me-1"></span>
+
+                  <button type="submit" class="btn-primary" :disabled="isUpdating">
                     {{ isUpdating ? 'Mentés...' : 'Cím mentése' }}
                   </button>
                 </form>
               </div>
             </div>
-            
-            <div class="card">
-              <div class="card-header">
-                <h5 class="mb-0">Jelszó megváltoztatása</h5>
+
+            <!-- Jelszó megváltoztatása -->
+            <div class="info-card">
+              <div class="info-card-header">
+                <h3>Jelszó megváltoztatása</h3>
               </div>
-              <div class="card-body">
+              <div class="info-card-body">
                 <form @submit.prevent="changePassword">
-                  <div class="mb-3">
-                    <label class="form-label">Jelenlegi jelszó *</label>
+                  <div class="form-group">
+                    <label>Jelenlegi jelszó *</label>
                     <input type="password" v-model="passwordForm.current_password" class="form-control" required>
                   </div>
-                  
-                  <div class="mb-3">
-                    <label class="form-label">Új jelszó *</label>
+
+                  <div class="form-group">
+                    <label>Új jelszó *</label>
                     <input type="password" v-model="passwordForm.new_password" class="form-control" required>
                   </div>
-                  
-                  <div class="mb-3">
-                    <label class="form-label">Új jelszó megerősítése *</label>
+
+                  <div class="form-group">
+                    <label>Új jelszó megerősítése *</label>
                     <input type="password" v-model="passwordForm.new_password_confirmation" class="form-control" required>
                   </div>
-                  
-                  <button type="submit" class="changepassword-btn" :disabled="isChangingPassword">
-                    <span v-if="isChangingPassword">Mentés...</span>
-                    <span v-else>Jelszó megváltoztatása</span>
+
+                  <button type="submit" class="btn-primary" :disabled="isChangingPassword">
+                    {{ isChangingPassword ? 'Mentés...' : 'Jelszó megváltoztatása' }}
                   </button>
                 </form>
               </div>
             </div>
           </div>
-          
-          <div class="col-md-6">
-            <div class="card mb-4">
-              <div class="card-header">
-                <h5 class="mb-0">Egészségügyi információk</h5>
+
+          <!-- Jobb oldal -->
+          <div class="profile-right">
+            <!-- Egészségügyi információk -->
+            <div class="info-card">
+              <div class="info-card-header">
+                <h3>Egészségügyi információk</h3>
               </div>
-              <div class="card-body">
-                <div class="mb-4">
-                  <div class="form-check">
-                    <input type="checkbox" disabled="" v-model="hasDiabetes" @change="updateDiabetes" 
-                           id="hasDiabetes" class="form-check-input" :disabled="isUpdatingDiabetes">
-                    <label for="hasDiabetes" class="form-check-label fw-bold">
-                      Cukorbeteg vagyok
-                    </label>
-                  </div>
+              <div class="info-card-body">
+                <div class="checkbox-group">
+                  <label class="checkbox-label">
+                    <!-- <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" :disabled="isUpdatingDiabetes">-->
+                    <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" disabled>
+                    <span>Cukorbeteg vagyok</span>
+                  </label>
                 </div>
-                
-                <div>
-                  <h6 class="mb-3">Allergéneim</h6>
-                  
-                  <div v-if="userAllergens.length > 0" class="mb-4">
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                      <div v-for="allergen in userAllergens" :key="allergen.id" 
-                           class="badge d-flex align-items-center gap-2 allergen-tag" :title="allergen?.allergenName">
-                        <img v-if="allergen?.icon" 
-                            :src="getAllergenIconUrl(allergen.icon)" 
-                            :alt="allergen.allergenName" 
-                            class="allergen-icon">
-                        <span > {{ allergen.allergenName }}</span>
-                        <button @click="removeAllergen(allergen.id)" class="btn-close "
-                                title="Eltávolítás"></button>
-                      </div>
+
+                <div class="allergens-section">
+                  <h4>Allergéneim</h4>
+                  <div v-if="userAllergens.length > 0" class="allergens-list">
+                    <div v-for="allergen in userAllergens" :key="allergen.id" class="allergen-tag" :title="allergen.allergenName">
+                      <img v-if="allergen.icon" :src="getAllergenIconUrl(allergen.icon)" :alt="allergen.allergenName" class="allergen-icon">
+                      <span>{{ allergen.allergenName }}</span>
+                      <button @click="removeAllergen(allergen.id)" class="allergen-remove" title="Eltávolítás">×</button>
                     </div>
                   </div>
-                  <div v-else class="mb-4">
-                    <p class="text-muted fst-italic">Nincsenek allergéneid beállítva.</p>
-                  </div>
-                  
-                  <!-- Add Allergen -->
-                  <div>
-                    <label class="form-label">Új allergén hozzáadása</label>
-                    <div class="input-group">
-                      <select v-model="newAllergenId" class="form-select" :disabled="availableAllergens.length === 0">
+                  <div v-else class="empty-text">Nincsenek allergéneid beállítva.</div>
+
+                  <div class="add-allergen">
+                    <label>Új allergén hozzáadása</label>
+                    <div class="add-allergen-group">
+                      <select v-model="newAllergenId" class="form-control" :disabled="availableAllergens.length === 0">
                         <option value="">Válassz allergént...</option>
-                        <option v-for="allergen in availableAllergens" 
-                                :key="allergen.id" 
-                                :value="allergen.id">
+                        <option v-for="allergen in availableAllergens" :key="allergen.id" :value="allergen.id">
                           {{ allergen.allergenName }}
                         </option>
                       </select>
-                      <button @click="addAllergen" 
-                              class="btn-add" 
-                              :disabled="!newAllergenId || isAddingAllergen">
-                        <span v-if="isAddingAllergen">Hozzáadás...</span>
-                        <span v-else>Hozzáadás</span>
+                      <button @click="addAllergen" class="btn-secondary" :disabled="!newAllergenId || isAddingAllergen">
+                        {{ isAddingAllergen ? 'Hozzáadás...' : 'Hozzáadás' }}
                       </button>
                     </div>
-                    <div v-if="availableAllergens.length === 0" class="form-text text-muted">
+                    <div v-if="availableAllergens.length === 0" class="form-hint">
                       Nincs elérhető allergén hozzáadásra
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
 
-            <div class="card">
-              <div class="card-header">
-                <h5 class="mb-0">Egyéb információk</h5>
+            <!-- Egyéb információk -->
+            <div class="info-card">
+              <div class="info-card-header">
+                <h3>Egyéb információk</h3>
               </div>
-              <div class="card-body">
-                <dl class="row">
-                  <dt class="col-sm-4">Felhasználó típus:</dt>
-                  <dd class="col-sm-8">{{ userType }}</dd>
-
-                  <dt class="col-sm-4">Kedvezmény:</dt>
-                  <dd class="col-sm-8">{{ hasDiscount ? 'Nem' : 'Igen' }}</dd>
-                  
-                  <dt class="col-sm-4">Osztály:</dt>
-                  <dd class="col-sm-8">{{ className || '-' }}</dd>
-                  
-                  
-                  <dt class="col-sm-4">Regisztráció dátuma:</dt>
-                  <dd class="col-sm-8">{{ createdAt }}</dd>
-                </dl>
+              <div class="info-card-body">
+                <div class="info-row">
+                  <span class="info-label">Felhasználó típus:</span>
+                  <span class="info-value">{{ userType }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Kedvezmény:</span>
+                  <span class="info-value">{{ hasDiscount ? 'Nem' : 'Igen' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Osztály:</span>
+                  <span class="info-value">{{ className || '-' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Regisztráció dátuma:</span>
+                  <span class="info-value">{{ createdAt }}</span>
+                </div>
               </div>
             </div>
 
-
-            <div class="card mt-4">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Dokumentumok</h5>
+            <!-- Dokumentumok -->
+            <div class="info-card">
+              <div class="info-card-header">
+                <h3>Dokumentumok</h3>
                 <span class="badge">Max 5MB</span>
-
               </div>
+              <div class="info-card-body">
+                <div class="doc-hint">Engedélyezett formátumok: PDF, DOC, DOCX, JPG, PNG</div>
 
-              <small class="text-muted"> Engedélyezett formátumok: PDF, DOC, DOCX, JPG, PNG</small>
+                <!-- Kedvezmény dokumentum -->
+                <div class="document-section">
+                  <h4>Kedvezményre feljogosító dokumentum</h4>
 
-              <div class="card-body">
-
-                
-                  <!-- Kedvezmény dokumentum -->
-  <div class="document-section mb-4">
-    <h6 class="mb-3">
-
-      Kedvezményre feljogosító dokumentum
-    </h6>
-    
-    <!-- Meglévő dokumentum megjelenítése -->
-    <div v-if="discountDocument" class="existing-document mb-3">
-      <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-        <div class="d-flex align-items-center">
-
-          <div>
-            <div class="fw-bold">{{ discountDocument.original_name }}</div>
-            <small>
-              Feltöltve: {{ formatDate(discountDocument.created_at) }} 
-              ({{ discountDocument.formatted_size }})
-            </small>
-            <div v-if="discountDocument.isAccepted" class="text-success mt-1">
-
-            <strong>Elfogadva</strong>
-          </div>
-          <div v-else-if="discountDocument.isActive" class="text-warning mt-1">
-
-            <strong>Jóváhagyásra vár</strong> - Az admin még nem bírálta el
-          </div>
-          <div v-else class="text-secondary mt-1">
-            <strong>Inaktív</strong> - El lett távolítva
-          </div>
-
-          </div>
-        </div>
-        <div class="btn-group">
-          <button v-if="!discountDocument.isAccepted && discountDocument.isActive" 
-                @click="downloadDocument(discountDocument)"
-                  class="btn-download" 
-                  title="Letöltés">
-                  ➜]
-          </button>
-          <button @click="confirmDelete(discountDocument)" 
-                  class="btn-delete" 
-                  title="Törlés">
-                  🗑️
-          </button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
-    <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
-      Még nincs feltöltve dokumentum
-    </div>
-    
-    <!-- Feltöltő űrlap - mindig látszik -->
-    <form v-if="!discountDocument?.isAccepted" @submit.prevent="uploadDocument('discount')" class="upload-form">
-      <div class="input-group">
-        <input type="file" 
-              ref="discountFileInput"
-              @change="handleFileChange('discount', $event)" 
-              class="form-control"
-              :accept="allowedFileTypes"
-              :disabled="isUploading.discount">
-        <button type="submit" 
-                class="btn btn-success"
-                :disabled="!selectedFiles.discount || isUploading.discount">
-          <span v-if="isUploading.discount" class="spinner-border spinner-border-sm me-1"></span>
-          {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
-        </button>
-      </div>
-
-    </form>
-      <div v-else-if="discountDocument?.isAccepted" class="alert alert-success mt-2">
-      
-        <strong>Dokumentum elfogadva!</strong> A kedvezményed érvényes. Már nem szükséges új dokumentumot feltöltened.
-      </div>
-  </div>
-
-  <!-- Cukorbetegség dokumentum -->
-<div class="document-section">
-  <h6 class="mb-3">
-    Cukorbetegséget igazoló dokumentum
-  </h6>
-  
-  <!-- Meglévő dokumentum megjelenítése -->
-  <div v-if="diabetesDocument" class="existing-document mb-3">
-    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-      <div class="d-flex align-items-center">
-        <div>
-          <div class="fw-bold">{{ diabetesDocument.fileName }}</div>
-          <small>
-            Feltöltve: {{ formatDate(diabetesDocument.created_at) }} 
-            ({{ diabetesDocument.formatted_size }})
-          </small>
-          <!-- Státusz jelzés -->
-          <div v-if="diabetesDocument.isAccepted" class="text-success mt-1">
-
-            <strong>Elfogadva</strong>
-          </div>
-          <div v-else-if="diabetesDocument.isActive" class="text-warning mt-1">
-    
-            <strong>Jóváhagyásra vár</strong> - Az admin még nem bírálta el
-          </div>
-          <div v-else class="text-secondary mt-1">
-    
-            <strong>Inaktív</strong> - El lett távolítva
-          </div>
-        </div>
-      </div>
-      <div class="btn-group">
-        <button @click="downloadDocument(diabetesDocument)" 
-                class="btn-download" 
-                title="Letöltés">
-          ➜]
-        </button>
-        <!-- Törlés gomb csak akkor, ha NINCS elfogadva -->
-        <button v-if="!diabetesDocument.isAccepted && diabetesDocument.isActive" 
-                @click="confirmDelete(diabetesDocument)" 
-                class="btn-delete" 
-                title="Törlés">
-          🗑️
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Ha nincs dokumentum, mutasd az üres állapotot -->
-  <div v-else class="no-document mb-3 p-3 bg-light rounded text-center text-muted">
-    Még nincs feltöltve dokumentum
-  </div>
-  
-  <!-- Feltöltő űrlap - csak akkor, ha nincs elfogadott dokumentum -->
-  <form v-if="!diabetesDocument?.isAccepted" @submit.prevent="uploadDocument('diabetes')" class="upload-form">
-    <div class="input-group">
-      <input type="file" 
-             ref="diabetesFileInput"
-             @change="handleFileChange('diabetes', $event)" 
-             class="form-control"
-             :accept="allowedFileTypes"
-             :disabled="isUploading.diabetes">
-      <button type="submit" 
-              class="btn btn-success"
-              :disabled="!selectedFiles.diabetes || isUploading.diabetes">
-        <span v-if="isUploading.diabetes" class="spinner-border spinner-border-sm me-1"></span>
-        {{ isUploading.diabetes ? 'Feltöltés...' : 'Feltöltés' }}
-      </button>
-    </div>
-    <!-- Mutasd a kiválasztott fájl nevét -->
-    <small v-if="selectedFiles.diabetes" class="text-success mt-1 d-block">
-      Kiválasztva: {{ selectedFiles.diabetes.name }}
-    </small>
-  </form>
-  
-  <!-- Ha van elfogadott dokumentum, mutasd az üzenetet -->
-  <div v-else-if="diabetesDocument?.isAccepted" class="alert alert-success mt-2">
-  
-    <strong>Dokumentum elfogadva!</strong> A cukorbetegséged igazolva van. Már nem szükséges új dokumentumot feltöltened.
-  </div>
-</div>
-
-                <!-- Sikeres feltöltés üzenet -->
-                <transition name="fade">
-                  <div v-if="uploadSuccess" class="alert alert-success mt-3">
-                    {{ uploadSuccess }}
+                  <div v-if="discountDocument" class="existing-document">
+                    <div class="doc-info">
+                      <div class="doc-name">{{ discountDocument.fileName }}</div>
+                      <div class="doc-meta">
+                        Feltöltve: {{ formatDate(discountDocument.created_at) }} ({{ discountDocument.formatted_size }})
+                      </div>
+                      <div v-if="discountDocument.isAccepted" class="doc-status status-accepted">Elfogadva</div>
+                      <div v-else-if="discountDocument.isActive" class="doc-status status-pending">Jóváhagyásra vár</div>
+                      <div v-else class="doc-status status-inactive">Inaktív - El lett távolítva</div>
+                    </div>
+                    <div class="doc-actions">
+                      <button v-if="!discountDocument.isAccepted && discountDocument.isActive" @click="downloadDocument(discountDocument)" class="btn-icon btn-download" title="Letöltés">Letöltés</button>
+                      <button @click="confirmDelete(discountDocument)" class="btn-icon btn-delete" title="Törlés">Törlés</button>
+                    </div>
                   </div>
-                </transition>
+                  <div v-else class="no-document">Még nincs feltöltve dokumentum</div>
 
-                <!-- Hibaüzenet -->
-                <transition name="fade">
-                  <div v-if="uploadError" class="alert alert-danger mt-3">
-                    {{ uploadError }}
+                  <form v-if="!discountDocument?.isAccepted" @submit.prevent="uploadDocument('discount')" class="upload-form">
+                    <div class="upload-group">
+                      <input type="file" ref="discountFileInput" @change="handleFileChange('discount', $event)" class="file-input" :accept="allowedFileTypes" :disabled="isUploading.discount">
+                      <button type="submit" class="btn-primary" :disabled="!selectedFiles.discount || isUploading.discount">
+                        {{ isUploading.discount ? 'Feltöltés...' : 'Feltöltés' }}
+                      </button>
+                    </div>
+                  </form>
+                  <div v-else-if="discountDocument?.isAccepted" class="doc-alert success">✅ Dokumentum elfogadva! A kedvezményed érvényes.</div>
+                </div>
+
+                <!-- Cukorbetegség dokumentum -->
+                <div class="document-section">
+                  <h4>Cukorbetegséget igazoló dokumentum</h4>
+
+                  <div v-if="diabetesDocument" class="existing-document">
+                    <div class="doc-info">
+                      <div class="doc-name">{{ diabetesDocument.fileName }}</div>
+                      <div class="doc-meta">
+                        Feltöltve: {{ formatDate(diabetesDocument.created_at) }} ({{ diabetesDocument.formatted_size }})
+                      </div>
+                      <div v-if="diabetesDocument.isAccepted" class="doc-status status-accepted">Elfogadva</div>
+                      <div v-else-if="diabetesDocument.isActive" class="doc-status status-pending">Jóváhagyásra vár</div>
+                      <div v-else class="doc-status status-inactive">Inaktív - El lett távolítva</div>
+                    </div>
+                    <div class="doc-actions">
+                      <button @click="downloadDocument(diabetesDocument)" class="btn-icon btn-download" title="Letöltés">Letöltés</button>
+                      <button v-if="!diabetesDocument.isAccepted && diabetesDocument.isActive" @click="confirmDelete(diabetesDocument)" class="btn-icon btn-delete" title="Törlés">Törlés</button>
+                    </div>
                   </div>
-                </transition>
+                  <div v-else class="no-document">Még nincs feltöltve dokumentum</div>
 
+                  <form v-if="!diabetesDocument?.isAccepted" @submit.prevent="uploadDocument('diabetes')" class="upload-form">
+                    <div class="upload-group">
+                      <input type="file" ref="diabetesFileInput" @change="handleFileChange('diabetes', $event)" class="file-input" :accept="allowedFileTypes" :disabled="isUploading.diabetes">
+                      <button type="submit" class="btn-primary" :disabled="!selectedFiles.diabetes || isUploading.diabetes">
+                        {{ isUploading.diabetes ? 'Feltöltés...' : 'Feltöltés' }}
+                      </button>
+                    </div>
+                    <small v-if="selectedFiles.diabetes" class="file-selected">Kiválasztva: {{ selectedFiles.diabetes.name }}</small>
+                  </form>
+                  <div v-else-if="diabetesDocument?.isAccepted" class="doc-alert success">✅ Dokumentum elfogadva! A cukorbetegséged igazolva van.</div>
+                </div>
+
+                <transition name="fade">
+                  <div v-if="uploadSuccess" class="doc-alert success">{{ uploadSuccess }}</div>
+                </transition>
+                <transition name="fade">
+                  <div v-if="uploadError" class="doc-alert error">{{ uploadError }}</div>
+                </transition>
               </div>
             </div>
           </div>
@@ -421,11 +289,10 @@ export default {
   data() {
     return {
       user: null,
-
       counties: [],
-      cities: [], 
-      selectedCountyId: null, 
-      selectedCityId: null, 
+      cities: [],
+      selectedCountyId: null,
+      selectedCityId: null,
       isLoadingCities: false,
 
       profileForm: {
@@ -436,35 +303,29 @@ export default {
         city_id: null,
         address: ''
       },
-      
 
       passwordForm: {
         current_password: '',
         new_password: '',
         new_password_confirmation: ''
       },
-      
-      
+
       hasDiabetes: false,
       userAllergens: [],
       availableAllergens: [],
       newAllergenId: '',
       hasDiscount: false,
-      
 
       isLoading: true,
+      isUpdating: false,
       isChangingPassword: false,
       isAddingAllergen: false,
-      isUpdatingDiabetes: false,
-      
+      //isUpdatingDiabetes: false,
 
       message: '',
       messageType: '',
       error: '',
 
-
-      selectedFile: null,
-      documents: [],
       selectedFiles: {
         discount: null,
         diabetes: null
@@ -475,858 +336,528 @@ export default {
       },
       uploadSuccess: '',
       uploadError: '',
-      allowedFileTypes: '.pdf,.doc,.docx,.jpg,.jpeg,.png'
+      allowedFileTypes: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+      documents: []
     };
   },
-  
+
   computed: {
-
     discountDocument() {
-      return this.documents.find(doc => doc.type === 'discount'); 
+      return this.documents.find(doc => doc.type === 'discount');
     },
-      
     diabetesDocument() {
-      return this.documents.find(doc => doc.type === 'diabetes'); 
+      return this.documents.find(doc => doc.type === 'diabetes');
     },
-
-
     userType() {
       return this.user?.userType || 'Ismeretlen';
     },
     hasDiscount() {
-      return this.user?.hasDiscount || '-';
+      return this.user?.hasDiscount !== undefined ? (this.user.hasDiscount ? 'Igen' : 'Nem') : '-';
     },
     className() {
       return this.user?.studentClass?.className || '';
     },
-
     createdAt() {
       if (!this.user?.created_at) return '';
       return new Date(this.user.created_at).toLocaleDateString('hu-HU');
-    },
-
-    canUploadDiscount() {
-      const discountDoc = this.discountDocument;
-      // Ha nincs dokumentum, vagy van de nincs elfogadva, akkor lehet feltölteni
-      return !discountDoc || (!discountDoc.isAccepted && discountDoc.isActive);
-    },
-    
-    canUploadDiabetes() {
-      const diabetesDoc = this.diabetesDocument;
-      return !diabetesDoc || (!diabetesDoc.isAccepted && diabetesDoc.isActive);
     }
   },
-  
-async created() {
+
+  async created() {
     await this.loadUserData();
-    await this.loadDocuments(); 
+    await this.loadDocuments();
   },
-  
+
   methods: {
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('hu-HU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    },
 
-  formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('hu-HU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  },
-
-async loadDocuments() {
-  try {
-    const response = await axios.get('/user/documents');
-
-    
-    let data = response.data;
-    
-    // BOM kezelés
-    if (typeof data === 'string') {
-      if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
-        data = data.slice(1);
-      }
+    async loadDocuments() {
       try {
-        data = JSON.parse(data);
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-      }
-    }
-    
-    let loadedDocs = [];
-    
-    if (data && typeof data === 'object') {
-      if (data.documents && Array.isArray(data.documents)) {
-        loadedDocs = data.documents;
-      } else if (Array.isArray(data)) {
-        loadedDocs = data;
-      }
-    }
-    
-    this.documents = loadedDocs.map(doc => ({
-      id: doc.id,
-      type: doc.type,
-      fileName: doc.fileName || doc.fileName,
-      created_at: doc.created_at,
-      formatted_size: doc.formatted_size || doc.formattedSize,
-      filePath: doc.filePath,
-      fileName: doc.fileName,
-      mimeType: doc.mimeType,
-      isActive: doc.isActive,
-      isAccepted: doc.isAccepted || false 
-    }));
-    
+        const response = await axios.get('/user/documents');
+        let data = response.data;
 
-    
-  } catch (error) {
-    console.error('Error loading documents:', error);
-  }
-},
+        if (typeof data === 'string') {
+          if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
+            data = data.slice(1);
+          }
+          try {
+            data = JSON.parse(data);
+          } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+          }
+        }
 
-    
-    // Fájl kiválasztás kezelése
+        let loadedDocs = [];
+        if (data && typeof data === 'object') {
+          if (data.documents && Array.isArray(data.documents)) {
+            loadedDocs = data.documents;
+          } else if (Array.isArray(data)) {
+            loadedDocs = data;
+          }
+        }
+
+        this.documents = loadedDocs.map(doc => ({
+          id: doc.id,
+          type: doc.type,
+          fileName: doc.fileName || doc.original_name,
+          created_at: doc.created_at,
+          formatted_size: doc.formatted_size,
+          filePath: doc.filePath,
+          mimeType: doc.mimeType,
+          isActive: doc.isActive,
+          isAccepted: doc.isAccepted || false
+        }));
+      } catch (error) {
+        console.error('Error loading documents:', error);
+      }
+    },
+
     handleFileChange(type, event) {
       this.selectedFiles[type] = event.target.files[0];
       this.clearUploadMessages();
     },
 
-    getFileIcon(mimeType) {
-  if (mimeType?.includes('pdf')) return 'fas fa-file-pdf text-danger';
-  if (mimeType?.includes('word') || mimeType?.includes('doc')) return 'fas fa-file-word text-primary';
-  if (mimeType?.includes('image')) return 'fas fa-file-image text-success';
-  return 'fas fa-file text-secondary';
-},
-    
     async uploadDocument(type) {
-  const file = this.selectedFiles[type];
-  if (!file) {
-    this.showUploadError('Válassz ki egy fájlt!');
-    return;
-  }
-  
-  // Fájl méret ellenőrzés (5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    this.showUploadError('A fájl mérete nem lehet nagyobb 5MB-nál!');
-    return;
-  }
-  
-  this.isUploading[type] = true;
-  this.clearUploadMessages();
-  
-  const formData = new FormData();
-  formData.append('document', file);
-  formData.append('documentType', type);
-  
- 
-  
-  // FormData tartalom kiírása
-  for (let pair of formData.entries()) {
-    console.log(pair[0] + ': ' + (pair[0] === 'document' ? '[FÁJL]' : pair[1]));
-  }
+      const file = this.selectedFiles[type];
+      if (!file) {
+        this.showUploadError('Válassz ki egy fájlt!');
+        return;
+      }
 
-  try {
-    const response = await axios.post('/user/documents', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+      if (file.size > 5 * 1024 * 1024) {
+        this.showUploadError('A fájl mérete nem lehet nagyobb 5MB-nál!');
+        return;
       }
-    });
-    
-    console.log('Sikeres válasz:', response.data);
-    
-    // Dokumentumok újratöltése
-    await this.loadDocuments();
-    
-    // Fájl kiválasztás alaphelyzetbe állítása
-    this.selectedFiles[type] = null;
-    const fileInput = document.querySelector(`input[type="file"][data-type="${type}"]`);
-    if (fileInput) fileInput.value = '';
-    
-    this.uploadSuccess = type === 'discount' 
-      ? 'Kedvezmény dokumentum sikeresen feltöltve!' 
-      : 'Cukorbetegség dokumentum sikeresen feltöltve!';
-    
-    setTimeout(() => {
-      this.uploadSuccess = '';
-    }, 3000);
-    
-  } catch (error) {
-    console.error('=== HIBA RÉSZLETEK ===');
-    console.error('Status:', error.response?.status);
-    console.error('Status text:', error.response?.statusText);
-    console.error('Response data:', error.response?.data);
-    console.error('Response headers:', error.response?.headers);
-    
-    let errorMessage = 'Hiba történt a feltöltés során.';
-    
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.response?.data?.errors) {
-      // Validációs hibák esetén
-      const errors = error.response.data.errors;
-      const errorMessages = [];
-      
-      for (let field in errors) {
-        errorMessages.push(`${field}: ${errors[field].join(', ')}`);
+
+      this.isUploading[type] = true;
+      this.clearUploadMessages();
+
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('documentType', type);
+
+      try {
+        const response = await axios.post('/user/documents', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        await this.loadDocuments();
+        this.selectedFiles[type] = null;
+        const fileInput = this.$refs[`${type}FileInput`];
+        if (fileInput) fileInput.value = '';
+
+        this.uploadSuccess = type === 'discount'
+          ? 'Kedvezmény dokumentum sikeresen feltöltve!'
+          : 'Cukorbetegség dokumentum sikeresen feltöltve!';
+
+        setTimeout(() => { this.uploadSuccess = ''; }, 3000);
+      } catch (error) {
+        let errorMessage = 'Hiba történt a feltöltés során.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response?.data?.errors) {
+          const errors = error.response.data.errors;
+          const errorMessages = [];
+          for (let field in errors) {
+            errorMessages.push(`${field}: ${errors[field].join(', ')}`);
+          }
+          errorMessage = errorMessages.join(' | ');
+        }
+        this.showUploadError(errorMessage);
+      } finally {
+        this.isUploading[type] = false;
       }
-      
-      errorMessage = errorMessages.join(' | ');
-      console.error('Validációs hibák:', errors);
-    }
-    
-    this.showUploadError(errorMessage);
-    
-  } finally {
-    this.isUploading[type] = false;
-  }
-},
-    
-    // Dokumentum letöltése
+    },
+
     async downloadDocument(fileDoc) {
-    try {
-      const response = await axios.get(`/user/documents/${fileDoc.id}/download`, {
-        responseType: 'blob'
-      });
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileDoc.fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-    } catch (error) {
-      console.error('Download error:', error);
-      this.showUploadError('Hiba történt a letöltés során.');
-    }
-  },
-      
-    // Dokumentum törlés megerősítés
-  confirmDelete(doc) {
-    // Ha elfogadott, ne lehessen törölni
-    if (doc.isAccepted) {
-      this.showUploadError('Elfogadott dokumentumot nem törölhetsz!');
-      return;
-    }
-    
-    const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
-    
-    if (confirm(`Biztosan törölni szeretnéd ezt a ${typeText} dokumentumot?`)) {
-      this.deleteDocument(doc);
-    }
-  },
-    
-    // Dokumentum törlése
+      try {
+        const response = await axios.get(`/user/documents/${fileDoc.id}/download`, {
+          responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileDoc.fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Download error:', error);
+        this.showUploadError('Hiba történt a letöltés során.');
+      }
+    },
+
+    confirmDelete(doc) {
+      if (doc.isAccepted) {
+        this.showUploadError('Elfogadott dokumentumot nem törölhetsz!');
+        return;
+      }
+      const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
+      if (confirm(`Biztosan törölni szeretnéd ezt a ${typeText} dokumentumot?`)) {
+        this.deleteDocument(doc);
+      }
+    },
+
     async deleteDocument(doc) {
-  try {
-    await axios.delete(`/user/documents/${doc.id}`);
-    
-    // User oldalon eltűnik a dokumentum
-    this.documents = this.documents.filter(d => d.id !== doc.id);
-    
-    this.uploadSuccess = 'Dokumentum eltávolítva!';
-    setTimeout(() => {
-      this.uploadSuccess = '';
-    }, 3000);
-    
-  } catch (error) {
-    console.error('Delete error:', error);
-    this.showUploadError('Hiba történt a törlés során.');
-  }
-},
-    
-    // Üzenetek törlése
+      try {
+        await axios.delete(`/user/documents/${doc.id}`);
+        this.documents = this.documents.filter(d => d.id !== doc.id);
+        this.uploadSuccess = 'Dokumentum eltávolítva!';
+        setTimeout(() => { this.uploadSuccess = ''; }, 3000);
+      } catch (error) {
+        console.error('Delete error:', error);
+        this.showUploadError('Hiba történt a törlés során.');
+      }
+    },
+
     clearUploadMessages() {
       this.uploadSuccess = '';
       this.uploadError = '';
     },
-    
-    // Hibaüzenet megjelenítése
+
     showUploadError(message) {
       this.uploadError = message;
-      setTimeout(() => {
-        this.uploadError = '';
-      }, 5000);
+      setTimeout(() => { this.uploadError = ''; }, 5000);
     },
 
+    getAllergenIconUrl(iconPath) {
+      if (!iconPath) return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
+      const cleanPath = iconPath.replace(/^\//, '');
+      const baseUrl = 'http://localhost:8000';
+      return `${baseUrl}/images/allergens/${cleanPath.split('/').pop()}`;
+    },
 
-    // Helper function to get allergen icon URL
-getAllergenIconUrl(iconPath) {
- 
-  if (!iconPath) {
-    return 'https://via.placeholder.com/16x16/3498db/ffffff?text=❓';
-  }
+    async loadUserData() {
+      this.isLoading = true;
+      this.error = '';
 
-  // Tisztítsd az útvonalat
-  const cleanPath = iconPath.replace(/^\//, '');
-  
-
-  const baseUrl = 'http://localhost:8000';
-  const pathsToTry = [
-    `${baseUrl}/storage/${cleanPath}`,
-    
-    `${baseUrl}/images/allergens/${cleanPath.split('/').pop()}`,
-    
-    `${baseUrl}/${cleanPath.split('/').pop()}`
-  ];
-
-
-
-  return pathsToTry[1]; // public/images útvonal
-},
-
-
-handleImageError(event) {
-  console.error('Image failed to load:', {
-    src: event.target.src,
-    alt: event.target.alt
-  });
-  
-  event.target.style.display = 'none';
-  const parent = event.target.parentElement;
-  if (parent) {
-    const fallback = parent.querySelector('.allergen-icon-fallback');
-    if (fallback) {
-      fallback.style.display = 'flex';
-    }
-  }
-},
-    
- 
-async loadUserData() {
-  this.isLoading = true;
-  this.error = '';
-  
-  try {
-    const userResponse = await axios.get('/user/me');
-
-    
-    // BOM kezelés
-    let responseData = userResponse.data;
-    if (typeof responseData === 'string') {
-      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-        responseData = responseData.slice(1);
-      }
-      
       try {
-        responseData = JSON.parse(responseData);
+        const userResponse = await axios.get('/user/me');
+        let responseData = userResponse.data;
 
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        throw new Error('A válasz nem érvényes JSON formátumú');
-      }
-    }
-    
-    // Felhasználói adatok kinyerése
-    let userData = null;
-    if (responseData.user) {
-      userData = responseData.user;
-    } else if (responseData.data) {
-      userData = responseData.data;
-    } else {
-      userData = responseData;
-    }
-    
-    this.user = userData;
-    
-    if (this.user) {
-      
-      this.profileForm = {
-        firstName: this.user.firstName || '',
-        lastName: this.user.lastName || '',
-        thirdName: this.user.thirdName || '',
-        email: this.user.email || '',
-        address: this.user.address || '',
-        city_id: this.user.city_id || null
-      };
-      
-    
-      await this.loadCounties();
-      
-      if (this.user.city_id) {
-  
-        this.selectedCityId = this.user.city_id;
-        
-        if (this.user.city && this.user.city.county_id) {
-          this.selectedCountyId = this.user.city.county_id;
-          await this.loadCities(this.selectedCountyId);
-        } else {
-
+        if (typeof responseData === 'string') {
+          if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+            responseData = responseData.slice(1);
+          }
           try {
+            responseData = JSON.parse(responseData);
+          } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            throw new Error('A válasz nem érvényes JSON formátumú');
+          }
+        }
 
+        let userData = null;
+        if (responseData.user) userData = responseData.user;
+        else if (responseData.data) userData = responseData.data;
+        else userData = responseData;
+
+        this.user = userData;
+
+        if (this.user) {
+          this.profileForm = {
+            firstName: this.user.firstName || '',
+            lastName: this.user.lastName || '',
+            thirdName: this.user.thirdName || '',
+            email: this.user.email || '',
+            address: this.user.address || '',
+            city_id: this.user.city_id || null
+          };
+
+          await this.loadCounties();
+
+          if (this.user.city_id) {
+            this.selectedCityId = this.user.city_id;
             if (this.user.city && this.user.city.county_id) {
               this.selectedCountyId = this.user.city.county_id;
               await this.loadCities(this.selectedCountyId);
-            } else {
-              console.warn('No county_id found for city:', this.user.city_id);
             }
-          } catch (cityError) {
-            console.error('Error loading city details:', cityError);
           }
         }
-      }
-    }
-    
-    // Egészségügyi adatok betöltése
-    await this.loadHealthData();
-    
-    // Elérhető allergének betöltése
-    await this.loadAvailableAllergens();
-    
-    // Dokumentumok betöltése
-    await this.loadDocuments();
-    
-  } catch (error) {
-    console.error('Error loading user data:', error);
-    this.error = 'Hiba történt az adatok betöltése során: ' + error.message;
-  } finally {
-    this.isLoading = false;
-  }
-},
-    
-// Megyék betöltése
-async loadCounties() {
-  try {
-    const response = await axios.get('/user/counties');
-    
-    let responseData = response.data;
-    if (typeof responseData === 'string') {
-      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-        responseData = responseData.slice(1);
-      }
-      try {
-        responseData = JSON.parse(responseData);
-      } catch (parseError) {
-        console.error('Counties JSON parse error:', parseError);
-      }
-    }
-    
-    if (responseData.data && Array.isArray(responseData.data)) {
-      this.counties = responseData.data;
-    } else if (Array.isArray(responseData)) {
-      this.counties = responseData;
-    }
-    
-    
-  } catch (error) {
-    console.error('Error loading counties:', error);
-  }
-},
 
-// Városok betöltése megye alapján
-async loadCities(countyId) {
-  if (!countyId) {
-    this.cities = [];
-    return;
-  }
-  
-  this.isLoadingCities = true;
-  
-  try {
-    const response = await axios.get(`/user/cities/${countyId}`);
-    
-    let responseData = response.data;
-    if (typeof responseData === 'string') {
-      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-        responseData = responseData.slice(1);
+        await this.loadHealthData();
+        await this.loadAvailableAllergens();
+        await this.loadDocuments();
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        this.error = 'Hiba történt az adatok betöltése során: ' + error.message;
+      } finally {
+        this.isLoading = false;
       }
+    },
+
+    async loadCounties() {
       try {
-        responseData = JSON.parse(responseData);
-      } catch (parseError) {
-        console.error('Cities JSON parse error:', parseError);
-      }
-    }
-    
-    if (responseData.data && Array.isArray(responseData.data)) {
-      this.cities = responseData.data;
-    } else if (Array.isArray(responseData)) {
-      this.cities = responseData;
-    }
-    
-  } catch (error) {
-    console.error('Error loading cities:', error);
-    this.cities = [];
-  } finally {
-    this.isLoadingCities = false;
-  }
-},
-async changePassword() {
-    // Ellenőrizzük, hogy az új jelszó és a megerősítés egyezik-e
-    if (this.passwordForm.new_password !== this.passwordForm.new_password_confirmation) {
-      this.showMessage('Az új jelszavak nem egyeznek!', 'error');
-      return;
-    }
-    
-    // Jelszó hossz ellenőrzés
-    if (this.passwordForm.new_password.length < 8) {
-      this.showMessage('Az új jelszónak legalább 8 karakter hosszúnak kell lennie!', 'error');
-      return;
-    }
-    
-    this.isChangingPassword = true;
-    this.clearMessage();
-    
-    try {
-      const response = await axios.post('/user/auth/change-password', {
-        current_password: this.passwordForm.current_password,
-        new_password: this.passwordForm.new_password,
-        new_password_confirmation: this.passwordForm.new_password_confirmation
-      });
-      
-      // Sikeres válasz esetén
-      this.showMessage(response.data.message || 'Jelszó sikeresen megváltoztatva!', 'success');
-      
-      // Űrlap alaphelyzetbe állítása
-      this.passwordForm = {
-        current_password: '',
-        new_password: '',
-        new_password_confirmation: ''
-      };
-      
-    } catch (error) {
-      console.error('Error changing password:', error);
-      
-      // Hibaüzenetek megjelenítése
-      if (error.response?.data?.errors) {
-        // Validációs hibák esetén
-        const errorMessages = [];
-        const errors = error.response.data.errors;
-        
-        for (let field in errors) {
-          if (Array.isArray(errors[field])) {
-            errorMessages.push(...errors[field]);
-          } else {
-            errorMessages.push(errors[field]);
+        const response = await axios.get('/user/counties');
+        let responseData = response.data;
+        if (typeof responseData === 'string') {
+          if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+            responseData = responseData.slice(1);
+          }
+          try {
+            responseData = JSON.parse(responseData);
+          } catch (parseError) {
+            console.error('Counties JSON parse error:', parseError);
           }
         }
-        
-        this.showMessage(errorMessages.join(', '), 'error');
-      } else if (error.response?.data?.message) {
-        // Általános hibaüzenet
-        this.showMessage(error.response.data.message, 'error');
-      } else {
-        this.showMessage('Hiba történt a jelszó módosítása során. Kérlek próbáld újra később.', 'error');
+        if (responseData.data && Array.isArray(responseData.data)) {
+          this.counties = responseData.data;
+        } else if (Array.isArray(responseData)) {
+          this.counties = responseData;
+        }
+      } catch (error) {
+        console.error('Error loading counties:', error);
       }
-    } finally {
-      this.isChangingPassword = false;
-    }
-  },
-// Megye változásának kezelése
-async onCountyChange() {
-  this.selectedCityId = null;
-  this.profileForm.city_id = null;
-  await this.loadCities(this.selectedCountyId);
-},
+    },
 
-// Város változásának kezelése
-onCityChange() {
-  this.profileForm.city_id = this.selectedCityId;
-},
-
-async loadHealthData() {
-  try {
-    const response = await axios.get('/user/health');
-    
-    //BOM
-    let responseData = response.data;
-    if (typeof responseData === 'string') {
-      
-      
-     
-      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-  
-        responseData = responseData.slice(1);
+    async loadCities(countyId) {
+      if (!countyId) {
+        this.cities = [];
+        return;
       }
-      
+      this.isLoadingCities = true;
       try {
-        responseData = JSON.parse(responseData);
-   
-      } catch (parseError) {
-        console.error('Health data JSON parse error:', parseError);
-        console.error('Raw health response (first 100 chars):', responseData.substring(0, 100));
-        throw parseError;
+        const response = await axios.get(`/user/cities/${countyId}`);
+        let responseData = response.data;
+        if (typeof responseData === 'string') {
+          if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+            responseData = responseData.slice(1);
+          }
+          try {
+            responseData = JSON.parse(responseData);
+          } catch (parseError) {
+            console.error('Cities JSON parse error:', parseError);
+          }
+        }
+        if (responseData.data && Array.isArray(responseData.data)) {
+          this.cities = responseData.data;
+        } else if (Array.isArray(responseData)) {
+          this.cities = responseData;
+        }
+      } catch (error) {
+        console.error('Error loading cities:', error);
+        this.cities = [];
+      } finally {
+        this.isLoadingCities = false;
       }
-    }
-    
-    // Allergének kezelése
-    let userAllergens = [];
-    if (responseData.allergens && Array.isArray(responseData.allergens)) {
-      for (let i = 0; i < responseData.allergens.length; i++) {
-        userAllergens.push({
-          id: responseData.allergens[i].id,
-          allergenName: responseData.allergens[i].allergenName,
-          icon: responseData.allergens[i].icon,
-          icon_url: responseData.allergens[i].icon_url
-        });
-      }
-    }
-    
-    // Diabetes állapot kezelése
-    let hasDiabetes = false;
-    if (typeof responseData.has_diabetes !== 'undefined') {
-      hasDiabetes = responseData.has_diabetes;
-    }
-    
-    this.userAllergens = userAllergens;
-    this.hasDiabetes = hasDiabetes;
-    
- 
-    
-  } catch (error) {
-    console.error('Error loading health data:', error);
-    this.showMessage('Hiba történt az egészségügyi adatok betöltése során.', 'error');
-  }
-},
+    },
 
-async loadAvailableAllergens() {
-  try {
-    const response = await axios.get('/allergens');
-    
-   
+    async onCountyChange() {
+      this.selectedCityId = null;
+      this.profileForm.city_id = null;
+      await this.loadCities(this.selectedCountyId);
+    },
 
-    let responseData = response.data;
-    if (typeof responseData === 'string') {
+    onCityChange() {
+      this.profileForm.city_id = this.selectedCityId;
+    },
 
-      
-      if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
-        responseData = responseData.slice(1);
-      }
-      
+    async updateProfile() {
+      this.clearMessage();
+      this.isUpdating = true;
+
       try {
-        responseData = JSON.parse(responseData);
-
-      } catch (parseError) {
-        console.error('Allergens JSON parse error:', parseError);
-        console.error('Raw allergens response (first 100 chars):', responseData.substring(0, 100));
-        throw parseError;
+        const response = await axios.put('/user/update', this.profileForm);
+        this.user = response.data.data || response.data.user || response.data;
+        this.profileForm = {
+          firstName: this.user.firstName || '',
+          lastName: this.user.lastName || '',
+          thirdName: this.user.thirdName || '',
+          email: this.user.email || '',
+          address: this.user.address || '',
+          city_id: this.user.city_id || null
+        };
+        if (this.user.city_id) {
+          this.selectedCityId = this.user.city_id;
+          if (this.user.city && this.user.city.county_id) {
+            this.selectedCountyId = this.user.city.county_id;
+          }
+        }
+        this.showMessage('Profiladatok sikeresen frissítve!', 'success');
+        window.location.reload();
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        if (error.response?.data?.errors) {
+          const errors = Object.values(error.response.data.errors).flat();
+          this.showMessage(errors.join(', '), 'error');
+        } else {
+          this.showMessage(error.response?.data?.message || 'Hiba történt a profil frissítése során.', 'error');
+        }
+      } finally {
+        this.isUpdating = false;
       }
-    }
-    
-    // Ha a válasz közvetlenül egy tömb
-    let allAllergens = [];
-    if (Array.isArray(responseData)) {
-      for (let i = 0; i < responseData.length; i++) {
-        allAllergens.push({
-          id: responseData[i].id,
-          allergenName: responseData[i].allergenName,
-          icon: responseData[i].icon,
-          icon_url: responseData[i].icon_url
-        });
-      }
-    }
-    
- 
-    const userAllergenIds = [];
-    for (let i = 0; i < this.userAllergens.length; i++) {
-      if (this.userAllergens[i] && this.userAllergens[i].id) {
-        userAllergenIds.push(this.userAllergens[i].id);
-      }
-    }
-    
+    },
 
-    
-    // Szűrés
-    this.availableAllergens = [];
-    for (let i = 0; i < allAllergens.length; i++) {
-      const allergen = allAllergens[i];
-      if (allergen && allergen.id && !userAllergenIds.includes(allergen.id)) {
-        this.availableAllergens.push(allergen);
-      }
-    }
-
-  } catch (error) {
-    console.error('Error loading allergens:', error);
-    this.availableAllergens = [];
-  }
-},
-
-
-
-async updateProfile() {
-  this.clearMessage();
-  this.isUpdating = true;
-  
-  try {
-
-    const response = await axios.put('/user/update', this.profileForm);
-
-    this.user = response.data.data || response.data.user || response.data;
-    
-    // Profile form frissítése
-    this.profileForm = {
-      firstName: this.user.firstName || '',
-      lastName: this.user.lastName || '',
-      thirdName: this.user.thirdName || '',
-      email: this.user.email || '',
-      address: this.user.address || '',
-      city_id: this.user.city_id || null
-    };
-    
-    // Ha a város megváltozott, frissítsük a kiválasztott értékeket
-    if (this.user.city_id) {
-      this.selectedCityId = this.user.city_id;
-      
-      // Ha a city objektum tartalmazza a county_id-t
-      if (this.user.city && this.user.city.county_id) {
-        this.selectedCountyId = this.user.city.county_id;
-      }
-    }
-    
-    this.showMessage('Profiladatok sikeresen frissítve!', 'success');
-    
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    
-    if (error.response?.data?.errors) {
-      const errors = Object.values(error.response.data.errors).flat();
-      this.showMessage(errors.join(', '), 'error');
-    } else {
-      this.showMessage(error.response?.data?.message || 'Hiba történt a profil frissítése során.', 'error');
-    }
-  } finally {
-    this.isUpdating = false;
-    window.location.reload();
-  }
-},
-    
-    // Change password
     async changePassword() {
       if (this.passwordForm.new_password !== this.passwordForm.new_password_confirmation) {
         this.showMessage('Az új jelszavak nem egyeznek!', 'error');
         return;
       }
-      
+      if (this.passwordForm.new_password.length < 8) {
+        this.showMessage('Az új jelszónak legalább 8 karakter hosszúnak kell lennie!', 'error');
+        return;
+      }
+
       this.isChangingPassword = true;
       this.clearMessage();
-      
+
       try {
         await axios.post('/user/auth/change-password', this.passwordForm);
-        
         this.showMessage('Jelszó sikeresen megváltoztatva!', 'success');
-        window.alert('Jelszó sikeresen megváltoztatva!');
-        
-        // Reset form
         this.passwordForm = {
           current_password: '',
           new_password: '',
           new_password_confirmation: ''
         };
-        
       } catch (error) {
         console.error('Error changing password:', error);
-        
         if (error.response?.data?.errors) {
           const errors = Object.values(error.response.data.errors).flat();
           this.showMessage(errors.join(', '), 'error');
         } else {
           this.showMessage(error.response?.data?.message || 'Hiba történt a jelszó módosítása során.', 'error');
-          alert(error.response?.data?.message || 'Hiba történt a jelszó módosítása során.');
         }
       } finally {
         this.isChangingPassword = false;
       }
     },
-    
 
-async addAllergen() {
-  if (!this.newAllergenId) return;
-  
-  this.isAddingAllergen = true;
-  this.clearMessage();
-  
-  try {
-    await axios.post('/user/allergens', {
-      allergen_id: this.newAllergenId
-    });
-    
+    async loadHealthData() {
+      try {
+        const response = await axios.get('/user/health');
+        let responseData = response.data;
+        if (typeof responseData === 'string') {
+          if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+            responseData = responseData.slice(1);
+          }
+          try {
+            responseData = JSON.parse(responseData);
+          } catch (parseError) {
+            console.error('Health data JSON parse error:', parseError);
+            throw parseError;
+          }
+        }
 
-    await this.loadHealthData();
-    
-    await this.loadAvailableAllergens();
-    
-    this.newAllergenId = '';
-    this.showMessage('Allergén sikeresen hozzáadva!', 'success');
-    
-  } catch (error) {
-    
-    let errorMessage = 'Hiba történt az allergén hozzáadása során.';
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.response?.data?.errors) {
-      const errors = Object.values(error.response.data.errors).flat();
-      errorMessage = errors.join(', ');
-    }
-    
-    this.showMessage(errorMessage, 'error');
-  } finally {
-    this.isAddingAllergen = false;
-  }
-},
-    
+        let userAllergens = [];
+        if (responseData.allergens && Array.isArray(responseData.allergens)) {
+          userAllergens = responseData.allergens.map(a => ({
+            id: a.id,
+            allergenName: a.allergenName,
+            icon: a.icon
+          }));
+        }
+        this.userAllergens = userAllergens;
+        this.hasDiabetes = responseData.has_diabetes || false;
+      } catch (error) {
+        console.error('Error loading health data:', error);
+        this.showMessage('Hiba történt az egészségügyi adatok betöltése során.', 'error');
+      }
+    },
 
-async removeAllergen(allergenId) {
-  this.clearMessage();
-  
-  if (!confirm('Biztosan eltávolítod ezt az allergént?')) {
-    return;
-  }
-  
-  try {
-    await axios.delete(`/user/allergens/${allergenId}`);
-    
+    async loadAvailableAllergens() {
+      try {
+        const response = await axios.get('/allergens');
+        let responseData = response.data;
+        if (typeof responseData === 'string') {
+          if (responseData.charCodeAt(0) === 0xFEFF || responseData.charCodeAt(0) === 65279) {
+            responseData = responseData.slice(1);
+          }
+          try {
+            responseData = JSON.parse(responseData);
+          } catch (parseError) {
+            console.error('Allergens JSON parse error:', parseError);
+            throw parseError;
+          }
+        }
 
-    await this.loadHealthData();
-    
+        let allAllergens = [];
+        if (Array.isArray(responseData)) {
+          allAllergens = responseData.map(a => ({
+            id: a.id,
+            allergenName: a.allergenName,
+            icon: a.icon
+          }));
+        }
 
-    await this.loadAvailableAllergens();
-    
-    this.showMessage('Allergén sikeresen eltávolítva!', 'success');
-    
-  } catch (error) {
-    console.error('Error removing allergen:', error);
-    this.showMessage(error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.', 'error');
-  }
-},
-    
-    // Update diabetes status
+        const userAllergenIds = this.userAllergens.map(a => a.id);
+        this.availableAllergens = allAllergens.filter(a => !userAllergenIds.includes(a.id));
+      } catch (error) {
+        console.error('Error loading allergens:', error);
+        this.availableAllergens = [];
+      }
+    },
+
+    async addAllergen() {
+      if (!this.newAllergenId) return;
+      this.isAddingAllergen = true;
+      this.clearMessage();
+
+      try {
+        await axios.post('/user/allergens', { allergen_id: this.newAllergenId });
+        await this.loadHealthData();
+        await this.loadAvailableAllergens();
+        this.newAllergenId = '';
+        this.showMessage('Allergén sikeresen hozzáadva!', 'success');
+      } catch (error) {
+        let errorMessage = 'Hiba történt az allergén hozzáadása során.';
+        if (error.response?.data?.message) errorMessage = error.response.data.message;
+        else if (error.response?.data?.errors) errorMessage = Object.values(error.response.data.errors).flat().join(', ');
+        this.showMessage(errorMessage, 'error');
+      } finally {
+        this.isAddingAllergen = false;
+      }
+    },
+
+    async removeAllergen(allergenId) {
+      if (!confirm('Biztosan eltávolítod ezt az allergént?')) return;
+      this.clearMessage();
+
+      try {
+        await axios.delete(`/user/allergens/${allergenId}`);
+        await this.loadHealthData();
+        await this.loadAvailableAllergens();
+        this.showMessage('Allergén sikeresen eltávolítva!', 'success');
+      } catch (error) {
+        console.error('Error removing allergen:', error);
+        this.showMessage(error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.', 'error');
+      }
+    },
+/*
     async updateDiabetes() {
       this.isUpdatingDiabetes = true;
       this.clearMessage();
-      
+
       try {
-        await axios.put('/user/diabetes', {
-          has_diabetes: this.hasDiabetes
-        });
-        
+        await axios.put('/user/diabetes', { has_diabetes: this.hasDiabetes });
         this.showMessage('Cukorbetegség állapota frissítve!', 'success');
-        
       } catch (error) {
         console.error('Error updating diabetes:', error);
         this.showMessage('Hiba történt a cukorbetegség állapotának frissítése során.', 'error');
-        // Revert checkbox state on error
         this.hasDiabetes = !this.hasDiabetes;
       } finally {
         this.isUpdatingDiabetes = false;
       }
     },
-    
-    // Retry loading
+*/
     retryLoading() {
       this.loadUserData();
     },
-    
-    // Message helpers
+
     showMessage(text, type = 'success') {
       this.message = text;
       this.messageType = type;
-      
-      // Auto-hide after 5 seconds
-      setTimeout(() => {
-        this.clearMessage();
-      }, 5000);
+      setTimeout(() => { this.clearMessage(); }, 5000);
     },
-    
+
     clearMessage() {
       this.message = '';
       this.messageType = '';
@@ -1336,58 +867,460 @@ async removeAllergen(allergenId) {
 </script>
 
 <style scoped>
-.allergen-icon {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
+.user-profile {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 200px);
 }
 
-.badge {
-  font-size: 0.9em;
-  padding: 0.5em 0.8em;
-  color: black;
-  font-weight: normal;
-}
-
-.allergen-tag[title*="Glutén"]{border-color:#6a8b0e50;background:#e7e3a4;}
-.allergen-tag[title*="Tej"]{border-color:#3d5e6359;background:#60747775;}
-.allergen-tag[title*="Tojás"]{border-color:#6e42c160;background:#3a0e4e4f;}
-.allergen-tag[title*="Hal"]{border-color:#dfc01350;background:#ffdb79c5;}
-.allergen-tag[title*="Dió"]{border-color:#f87f1c6c;background:#ca8d5c7e;}
-.allergen-tag[title*="Földimogyoró"]{border-color:#df77227e;background:#f7c584b9;}
-.allergen-tag[title*="Zeller"]{border-color:#7849b644;background:#967ebec4;}
-.allergen-tag[title*="Rákfélék"]{border-color:#2dc5be44;background:#6bafbbc2;}
-.allergen-tag[title*="Mustár"]{border-color:#17157262;background:#84889eb9;}
-.allergen-tag[title*="Kukorica"]{border-color:#5a244262;background:#df6fa3b9;}
-.allergen-tag[title*="Szójabab"]{border-color:#5a244262;background:#e48da3b9;}
-
-
-.btn-close {
-  filter: invert(1);
-  opacity: 0.7;
-}
-
-.btn-close:hover {
-  opacity: 1;
-}
-
-.card {
-  border: none;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
 }
 
 .card-header {
-  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: #8a1212;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Profile grid */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.profile-left,
+.profile-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Info cards */
+.info-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.info-card-header {
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-card-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #8a1212;
+}
+
+.info-card-body {
+  padding: 1.25rem;
+}
+
+/* Form elements */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
+}
+
+.form-control:disabled {
+  background: #f8f9fa;
+  color: #666;
+}
+
+/* Buttons */
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background: #1fa317;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.85rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #158a0f;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background: #e9ecef;
+  color: #495057;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #dee2e6;
+}
+
+.btn-icon {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: smaller;
+}
+
+.btn-download {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.btn-download:hover {
+  background: #bbdef5;
+}
+
+.btn-delete {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-delete:hover {
+  background: #ffcdd2;
+}
+
+/* Checkbox */
+.checkbox-group {
+  margin-bottom: 1.25rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: not-allowed;
+  font-size: 0.85rem;
+}
+
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
+  cursor: not-allowed;
+}
+
+/* Allergens */
+.allergens-section {
+  margin-top: 1rem;
+}
+
+.allergens-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.allergens-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.allergen-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.4rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.allergen-tag:hover {
+  border-color: #f0a24a;
+  transform: translateY(-1px);
+}
+
+.allergen-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.allergen-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #999;
+  padding: 0 0.2rem;
+  transition: color 0.2s;
+}
+
+.allergen-remove:hover {
+  color: #c62828;
+}
+
+.empty-text {
+  color: #888;
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.add-allergen {
+  margin-top: 0.5rem;
+}
+
+.add-allergen label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.add-allergen-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-allergen-group .form-control {
+  flex: 1;
+}
+
+.form-hint {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+/* Info rows */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.info-value {
+  color: #333;
+  font-size: 0.8rem;
+}
+
+/* Documents */
+.doc-hint {
+  font-size: 0.7rem;
+  color: #888;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.document-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.document-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.document-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.existing-document {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.doc-info {
+  flex: 1;
+}
+
+.doc-name {
+  font-weight: 500;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.doc-meta {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+.doc-status {
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.status-accepted { color: #2e7d32; }
+.status-pending { color: #ed6c02; }
+.status-inactive { color: #9c27b0; }
+
+.doc-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.no-document {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 0.75rem;
+  text-align: center;
+  color: #888;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.upload-form {
+  margin-top: 0.5rem;
+}
+
+.upload-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.file-input {
+  flex: 1;
+  padding: 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  background: white;
+}
+
+.file-selected {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  color: #2e7d32;
+}
+
+.doc-alert {
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.doc-alert.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.doc-alert.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.badge {
+  background: #f0a24a;
+  color: #7b2c2c;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Loading state */
+.loading-state {
+  text-align: center;
+  padding: 3rem;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--barack);
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem auto;
+  margin: 0 auto 1rem;
 }
 
 @keyframes spin {
@@ -1395,62 +1328,70 @@ async removeAllergen(allergenId) {
   100% { transform: rotate(360deg); }
 }
 
-.loading {
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 12px;
   text-align: center;
-  padding: 3rem;
 }
 
-dl {
-  margin-bottom: 0;
+/* Animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-dt {
-  font-weight: 600;
-}
-
-dd {
-  margin-bottom: 0.5rem;
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-  .card {
-    margin-bottom: 1rem;
+  .user-profile {
+    padding: 1rem;
+  }
+
+  .content-card {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .add-allergen-group {
+    flex-direction: column;
+  }
+
+  .upload-group {
+    flex-direction: column;
+  }
+
+  .existing-document {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+
+  .doc-actions {
+    justify-content: center;
   }
 }
 
+@media (max-width: 480px) {
+  .info-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
 
-.changepassword-btn{
-  background: #1fa317;;
+  .info-label {
+    margin-bottom: 0.25rem;
+  }
 }
-
-.btn-add, .changepassword-btn{
-  margin-top: 10px;
-}
-
-.text-muted {
-  padding-left: 20px;
-}
-
-.upload-button{
-  width: 30%;
-}
-
-.btn-download{
-  min-width: 50px;
-  min-height: 30px;
-  background: #78aacc;
-  border-radius: 10px;
-  margin: 3px;
-}
-
-.btn-delete{
-  min-width: 50px;
-  min-height: 30px;
-  background: #eebec2;
-  border-radius: 10px;
-    margin: 3px;
-
-}
-
-
 </style>

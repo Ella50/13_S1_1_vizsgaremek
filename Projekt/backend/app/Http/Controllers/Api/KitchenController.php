@@ -51,7 +51,11 @@ class KitchenController extends Controller
                     'ingredients.energy',
                     'ingredients.protein',
                     'ingredients.carbohydrate',
-                    'ingredients.fat'
+                    'ingredients.fat',
+                    'ingredients.sodium',
+                    'ingredients.sugar',
+                    'ingredients.fiber',
+                    'ingredients.isAvailable'
                 ]);
                 $q->withPivot('amount', 'unit');
                 
@@ -91,7 +95,11 @@ class KitchenController extends Controller
                             'energy' => (int) $ingredient->energy,
                             'protein' => (int) $ingredient->protein,
                             'carbohydrate' => (int) $ingredient->carbohydrate,
+                            'sodium' => (int) $ingredient->sodium,
+                            'sugar' => (int) $ingredient->sugar,
+                            'fiber' => (int) $ingredient->fiber,
                             'fat' => (int) $ingredient->fat,
+                            'isAvailable' => (bool) $ingredient->isAvailable,
                             'pivot' => [
                                 'amount' => (float) ($ingredient->pivot->amount ?? 0),
                                 'unit' => $ingredient->pivot->unit ?? 'g'
@@ -172,7 +180,7 @@ private function getAllergenIconUrl($iconPath)
     public function getMealIngredients($id, Request $request = null)
     {
         try {
-            Log::info('=== START getMealIngredients for ID: ' . $id . ' ===');
+
             
             // Paraméterek kezelése
             $withAllergens = true; // Mindig betöltjük az allergéneket

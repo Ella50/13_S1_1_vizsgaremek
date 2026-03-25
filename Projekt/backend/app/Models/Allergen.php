@@ -14,7 +14,7 @@ class Allergen extends Model
         'icon',
     ];
 
-    protected $appends = ['icon_url']; // Hozzáadjuk a virtuális attribútumot
+    protected $appends = ['icon_url']; 
 
 
     public function getIconUrlAttribute()
@@ -23,12 +23,12 @@ class Allergen extends Model
             return null;
         }
         
-        // Ha teljes URL van mentve, azt adjuk vissza
+  
         if (filter_var($this->icon, FILTER_VALIDATE_URL)) {
             return $this->icon;
         }
         
-        // Egyébként asset() függvénnyel generáljuk a teljes URL-t
+
         return asset('storage/' . $this->icon);
     }
 
