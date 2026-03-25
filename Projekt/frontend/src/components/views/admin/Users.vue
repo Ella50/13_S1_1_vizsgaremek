@@ -1,49 +1,171 @@
 <template>
   <div class="admin-users">
-    <div class="header">
-      <h1>Felhasználók kezelése</h1>
-      <div class="header-actions">
-        <input 
-          v-model="search" 
-          type="text" 
-          placeholder="Keresés"
-          @input="fetchUsers">
+    <div class="content-card">
+      <div class="card-header">
+        <h1 class="title">Felhasználók kezelése</h1>
         
-        <select v-model="filters.userType" @change="fetchUsers">
-          <option value="">Összes szerepkör</option>
-          <option value="Tanuló">Tanuló</option>
-          <option value="Tanár">Tanár</option>
-          <option value="Admin">Admin</option>
-          <option value="Konyha">Konyha</option>
-          <option value="Dolgozó">Dolgozó</option>
-        </select>
-        
-        <select v-model="filters.userStatus" @change="fetchUsers">
-          <option value="">Összes státusz</option>
-          <option value="Aktív">Aktív</option>
-          <option value="Inaktív">Inaktív</option>
-          <option value="Felfüggesztett">Felfüggesztett</option>
-        </select>
+        <div class="header-controls">
+          <div class="search-box">
+            <input 
+              v-model="search" 
+              type="text" 
+              placeholder="Keresés név vagy email alapján..."
+              class="search-input"
+              @input="onSearchInput"
+            >
+            <span class="search-icon">🔍</span>
+          </div>
+          
+          <select v-model="filters.userType" @change="fetchUsers" class="filter-select">
+            <option value="">Összes szerepkör</option>
+            <option value="Tanuló">Tanuló</option>
+            <option value="Tanár">Tanár</option>
+            <option value="Admin">Admin</option>
+            <option value="Konyha">Konyha</option>
+            <option value="Dolgozó">Dolgozó</option>
+          </select>
+          
+          <select v-model="filters.userStatus" @change="fetchUsers" class="filter-select">
+            <option value="">Összes státusz</option>
+            <option value="Aktív">Aktív</option>
+            <option value="Inaktív">Inaktív</option>
+            <option value="Felfüggesztett">Felfüggesztett</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tömeges műveletek -->
+      <div v-if="selectedUsers.length > 0" class="bulk-actions">
+        <div class="bulk-header">
+          <span class="selected-count">{{ selectedUsers.length }} felhasználó kiválasztva</span>
+          <div class="bulk-buttons">
+            <button @click="bulkUpdateAvailability(true)" class="btn-bulk btn-bulk-available">
+              Aktiválás
+            </button>
+            <button @click="bulkUpdateAvailability(false)" class="btn-bulk btn-bulk-unavailable">
+              Deaktiválás
+            </button>
+            <button @click="clearSelection" class="btn-bulk btn-bulk-clear">
+              Kijelölés törlése
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Felhasználók betöltése...</p>
+      </div>
+
+      <div v-else-if="error" class="error-message">
+        <p>{{ error }}</p>
+        <button @click="fetchUsers" class="btn-secondary">Újrapróbálkozás</button>
+      </div>
+
+      <div v-else>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="checkbox-col">
+                  <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" class="select-all">
+                </th>
+                <th>Név</th>
+                <th>Email</th>
+                <th>Szerepkör</th>
+                <th>Státusz</th>
+                <th>Regisztráció</th>
+                <th>Műveletek</th>
+                <th>Felfüggesztés</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="user in users.data" :key="user.id">
+                <td class="checkbox-col">
+                  <input type="checkbox" :value="user.id" v-model="selectedUsers" class="select-item">
+                </td>
+                <td class="user-name-cell">{{ user.firstName }} {{ user.lastName }} {{ user.thirdName }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <span :class="['role-badge', getRoleClass(user.userType)]">
+                    {{ user.userType }}
+                  </span>
+                </td>
+                <td>
+                  <span :class="['status-badge', getStatusClass(user.userStatus)]">
+                    {{ user.userStatus }}
+                  </span>
+                </td>
+                <td>{{ formatDate(user.created_at) }}</td>
+                <td class="actions-cell">
+                  <div class="actions-group">
+                    <button @click="openEditModal(user.id)" class="btn-icon btn-edit" title="Szerkesztés">
+                      ✎
+                    </button>
+                    <button 
+                      v-if="user.userStatus === 'Inaktív'"
+                      @click="updateStatus(user.id, 'Aktív')"
+                      class="btn-icon btn-activate"
+                      title="Aktiválás">
+                      ✓
+                    </button>
+                    <button 
+                      v-if="user.userStatus === 'Aktív'"
+                      @click="updateStatus(user.id, 'Inaktív')"
+                      class="btn-icon btn-deactivate"
+                      title="Deaktiválás">
+                      ❚❚
+                    </button>
+                  </div>
+                </td>
+                <td class="suspend-cell">
+                  <button 
+                    v-if="user.userStatus !== 'Felfüggesztett'"
+                    @click="updateStatus(user.id, 'Felfüggesztett')"
+                    class="btn-suspend"
+                    title="Felfüggesztés">
+                    Felfüggesztés
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="users.data && users.data.length === 0">
+                <td colspan="8" class="empty-row">Nincsenek felhasználók</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="users.data && users.data.length > 0" class="pagination">
+          <button @click="changePage(users.current_page - 1)" :disabled="users.current_page === 1" class="btn-pagination">
+            Előző
+          </button>
+          <span class="pagination-info">
+            {{ users.current_page }} / {{ users.last_page }} oldal
+            ({{ users.total }} felhasználó)
+          </span>
+          <button @click="changePage(users.current_page + 1)" :disabled="users.current_page === users.last_page" class="btn-pagination">
+            Következő
+          </button>
+        </div>
       </div>
     </div>
 
-
-    <div v-if="showEditModal" class="modal-overlay">
+    <!-- Edit Modal -->
+    <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
       <div class="modal">
         <div class="modal-header">
           <h2>Felhasználó szerkesztése</h2>
-          <button @click="closeEditModal" class="btn-close">×</button>
+          <button @click="closeEditModal" class="modal-close">×</button>
         </div>
         
         <div class="modal-body">
-          <div v-if="editLoading" class="loading-small">
+          <div v-if="editLoading" class="loading-state-small">
             <div class="spinner-small"></div>
             <p>Adatok betöltése...</p>
           </div>
           
           <form v-else @submit.prevent="saveUserChanges" class="edit-form">
             <div class="form-grid">
-
               <div class="form-group">
                 <label>Keresztnév *</label>
                 <input v-model="editUser.firstName" type="text" required>
@@ -86,7 +208,6 @@
 
               <div class="form-group">
                 <label>Vármegye *</label>
-                <!--<input v-model="editUser.county_id" @change="loadCitiesForCounty" type="text">-->
                 <select v-model="editUser.county_id" @change="loadCitiesForCounty" required>
                   <option value="">Válassz megyét</option>
                   <option v-for="county in counties" :key="county.id" :value="county.id">
@@ -97,31 +218,27 @@
 
               <div class="form-group">
                 <label>Város *</label>
-                <!--<input v-model="editUser.city" type="text">-->
                 <select v-model="editUser.city_id" required :disabled="!editUser.county_id">
                   <option value="">Válassz várost</option>
                   <option v-for="city in citiesForCounty" :key="city.id" :value="city.id">
                     {{ city.zipCode }} - {{ city.cityName }}
                   </option>
                 </select>
-                <small v-if="!editUser.county_id" class="text-muted">
-                  Először válassz megyét
-                </small>
+                <small v-if="!editUser.county_id" class="form-hint">Először válassz megyét</small>
               </div>
-              
               
               <div class="form-group">
                 <label>Lakcím *</label>
                 <input v-model="editUser.address" type="text">
               </div>
               
-              <div class="form-group">
+              <div class="form-group checkbox-group">
                 <label class="checkbox-label">
                   <input v-model="editUser.hasDiscount" type="checkbox">
                   <span>Kedvezményes</span>
                 </label>
               </div>
-              <div class="form-group">
+              <div class="form-group checkbox-group">
                 <label class="checkbox-label">
                   <input v-model="editUser.hasDiabetes" type="checkbox">
                   <span>Cukorbeteg</span>
@@ -129,28 +246,23 @@
               </div>
             </div>
 
-            <!--Kártyaolvasó-->
             <div class="rfid-section">
-            <div class="rfid-row">
-              <div>
-                <strong>RFID kártya:</strong>
-                <span v-if="editUser.rfid_uid">{{ editUser.rfid_uid }}</span>
-                <span v-else class="text-muted">Nincs hozzárendelve</span>
+              <div class="rfid-row">
+                <div>
+                  <strong>RFID kártya:</strong>
+                  <span v-if="editUser.rfid_uid">{{ editUser.rfid_uid }}</span>
+                  <span v-else class="text-muted">Nincs hozzárendelve</span>
+                </div>
+                <button type="button" class="btn-rfid" @click="openCardAssignModal">
+                  Kártya hozzáadása
+                </button>
               </div>
-
-              <button type="button" class="btn-rfid" @click="openCardAssignModal">
-                Kártya hozzáadása
-              </button>
             </div>
-          </div>
             
             <div class="modal-footer">
-              <button type="button" @click="closeEditModal" class="btn-cancel">
-                Mégse
-              </button>
+              <button type="button" @click="closeEditModal" class="btn-cancel">Mégse</button>
               <button type="submit" :disabled="saving" class="btn-save">
-                <span v-if="saving">Mentés...</span>
-                <span v-else>Mentés</span>
+                {{ saving ? "Mentés..." : "Mentés" }}
               </button>
             </div>
           </form>
@@ -158,200 +270,48 @@
       </div>
     </div>
 
-    <div v-if="showRfidModal" class="modal-overlay modal-overlay--rfid">
-      <div class="modal modal--rfid">
+    <!-- RFID Modal -->
+    <div v-if="showRfidModal" class="modal-overlay" @click.self="closeRfidModal">
+      <div class="modal modal-small">
         <div class="modal-header">
           <h2>Kártya hozzárendelése</h2>
-          <button @click="closeRfidModal" class="btn-close">×</button>
+          <button @click="closeRfidModal" class="modal-close">×</button>
         </div>
-
         <div class="modal-body">
           <p>Érintsd a kártyát az olvasóhoz…</p>
-
           <div v-if="rfidState === 'waiting'" class="rfid-status rfid-status--waiting">
             Várakozás beolvasásra…
           </div>
-
           <div v-else-if="rfidState === 'success'" class="rfid-status rfid-status--success">
             ✅ Sikeres hozzárendelés: <strong>{{ lastUid }}</strong>
           </div>
-
           <div v-else-if="rfidState === 'busy'" class="rfid-status rfid-status--busy">
             ⚠️ A kártya foglalt.
           </div>
-
           <div v-else-if="rfidState === 'error'" class="rfid-status rfid-status--error">
             ❌ Hiba: {{ rfidErrorMessage }}
           </div>
-
           <div class="modal-footer">
             <button type="button" class="btn-cancel" @click="closeRfidModal">Bezárás</button>
           </div>
         </div>
       </div>
     </div>
-
-
-    
-          <!-- Tömeges műveletek -->
-      <div v-if="selectedUsers.length > 0" class="bulk-actions">
-        <div class="bulk-header">
-          <span class="selected-count">{{ selectedUsers.length }} felhasználó kiválasztva</span>
-          <div class="bulk-buttons">
-            <button
-              @click="bulkUpdateAvailability(true)"
-              class="btn-bulk btn-bulk-available"
-            >
-              Aktiválás
-            </button>
-            <button
-              @click="bulkUpdateAvailability(false)"
-              class="btn-bulk btn-bulk-unavailable"
-            >
-              Deaktiválás
-            </button>
-            <button
-              @click="clearSelection"
-              class="btn-bulk btn-bulk-clear"
-            >
-              Kijelölés törlése
-            </button>
-          </div>
-        </div>
-    </div>
-    
-    <div v-if="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Felhasználók betöltése...</p>
-    </div>
-    
-    <div v-else-if="error" class="error">
-      <p>{{ error }}</p>
-      <button @click="fetchUsers">Újra próbál</button>
-    </div>
-    
-    <div v-else>
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th class="checkbox-col">
-              <input
-                type="checkbox"
-                :checked="allSelected"
-                @change="toggleSelectAll"
-                class="select-all"
-              />
-            </th>
-            <th>Név</th>
-            <th>Email</th>
-            <th>Szerepkör</th>
-            <th>Státusz</th>
-            <th>Regisztráció</th>
-            <th>Műveletek</th>
-            <th>Felfüggesztés</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in users.data" :key="user.id">
-           <!-- Kijelölés -->
-            <td class="checkbox-col">
-                <input
-                  type="checkbox"
-                  :value="user.id"
-                  v-model="selectedUsers"
-                  class="select-item"
-                />
-            </td>
-            <td>{{ user.firstName }} {{ user.lastName }} {{ user.thirdName }}</td>
-            <td>{{ user.email }}</td>
-            <td>
-              <span :class="`role-badge ${user.userType.toLowerCase()}`">
-                {{ user.userType }}
-              </span>
-            </td>
-            <td>
-              <span  :class="`status-badge ${user.userStatus}`">
-                {{ user.userStatus }}
-              </span>
-            </td>
-            <td>{{ formatDate(user.created_at) }}</td>
-            <td class="actions">
-              <div class="actions-inner">
-                <button 
-                  @click="openEditModal(user.id)"
-                  class="btn-edit"
-                  title="Szerkesztés">
-                  ✎
-                </button>
-
-                <button 
-                  v-if="user.userStatus === 'Inaktív'"
-                  @click="updateStatus(user.id, 'Aktív')"
-                  class="btn-activate"
-                  title="Aktiválás">
-                  ✓
-                </button>
-                
-                <button 
-                  v-if="user.userStatus === 'Aktív'"
-                  @click="updateStatus(user.id, 'Inaktív')"
-                  class="btn-deactivate"
-                  title="Deaktiválás">
-                  ❚❚
-                </button>
-              </div>
-            </td>
-            <td>
-              <button 
-                v-if="user.userStatus !== 'Felfüggesztett'"
-                @click="updateStatus(user.id, 'Felfüggesztett')"
-                class="btn-suspend"
-                title="Felfüggesztés">
-                Felfüggesztés
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div v-if="users.data && users.data.length > 0" class="pagination">
-        <button 
-          @click="changePage(users.current_page - 1)"
-          :disabled="users.current_page === 1"
-        >
-          Előző
-        </button>
-        
-        <span>
-          Oldal {{ users.current_page }} / {{ users.last_page }}
-          (Összesen: {{ users.total }} felhasználó)
-        </span>
-        
-        <button 
-          @click="changePage(users.current_page + 1)"
-          :disabled="users.current_page === users.last_page"
-        >
-          Következő
-        </button>
-      </div>
-    </div>
   </div>
-  
 </template>
 
 <script>
-import { computed } from 'vue';
 import AuthService from '../../../services/authService'
 import { addAlert } from '../../auth/AppAlert.vue'
-import { showConfirm   } from '../../auth/AppConfirm.vue' 
+import { showConfirm } from '../../auth/AppConfirm.vue' 
 
 export default {
-  
   data() {
     return {
       users: { data: [] },
       selectedUsers: [],
       search: '',
+      searchTimeout: null,
       filters: {
         userType: '',
         userStatus: ''
@@ -359,10 +319,8 @@ export default {
       loading: false,
       error: '',
       currentPage: 1,
-
       counties: [],
       citiesForCounty: [],
-
       showEditModal: false,
       editUser: {
         id: null,
@@ -376,11 +334,11 @@ export default {
         hasDiscount: false,
         hasDiabetes: false,
         rfid_uid: null,
-        rfidCard: null,
+        county_id: null,
+        city_id: null,
       },
       editLoading: false,
       saving: false,
-
       showRfidModal: false,
       rfidState: 'waiting',
       rfidErrorMessage: '',
@@ -389,15 +347,33 @@ export default {
       rfidSince: null,
     }
   },
-  
+
+  watch: {
+    showEditModal(newVal) {
+      if (newVal) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    },
+    showRfidModal(newVal) {
+      if (newVal) {
+        document.body.style.overflow = 'hidden';
+      } else if (!this.showEditModal) {
+        // Csak akkor állítjuk vissza, ha a másik modal sincs nyitva
+        document.body.style.overflow = '';
+      }
+    }
+  },
+    
   computed: {
     currentUser() {
       return AuthService.getUser()
     },
     allSelected() {
       return this.users.data && 
-            this.users.data.length > 0 &&
-            this.users.data.every(user => this.selectedUsers.includes(user.id))
+        this.users.data.length > 0 &&
+        this.users.data.every(user => this.selectedUsers.includes(user.id))
     }
   },
   
@@ -406,7 +382,18 @@ export default {
     this.loadCounties()
   },
   
+  beforeDestroy() {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout)
+    this.stopRfidPolling()
+  },
+  
   methods: {
+    onSearchInput() {
+      if (this.searchTimeout) clearTimeout(this.searchTimeout)
+      this.searchTimeout = setTimeout(() => {
+        this.fetchUsers()
+      }, 300)
+    },
 
     async fetchUsers() {
       this.loading = true
@@ -418,26 +405,16 @@ export default {
           search: this.search,
           ...this.filters
         }
-
         Object.keys(params).forEach(key => {
-          if (params[key] === '' || params[key] === null) {
-            delete params[key]
-          }
+          if (params[key] === '' || params[key] === null) delete params[key]
         })
 
         const response = await AuthService.api.get('/admin/users', { params })
-        
         let responseData = response.data
         
         if (typeof responseData === 'string') {
           responseData = responseData.replace(/^\uFEFF/, '')
           responseData = JSON.parse(responseData)
-        } else if (typeof responseData === 'object') {
-          const jsonString = JSON.stringify(responseData)
-          if (jsonString.charCodeAt(0) === 0xFEFF) {
-            const cleanString = jsonString.replace(/^\uFEFF/, '')
-            responseData = JSON.parse(cleanString)
-          }
         }
         
         if (responseData.success && responseData.data) {
@@ -445,7 +422,6 @@ export default {
         } else {
           this.error = 'Érvénytelen válasz formátum'
         }
-        
       } catch (error) {
         this.error = error.response?.data?.message || 'Hiba történt a felhasználók betöltése során'
       } finally {
@@ -453,53 +429,62 @@ export default {
       }
     },
 
+    getRoleClass(role) {
+      const classes = {
+        'Admin': 'admin',
+        'Konyha': 'kitchen',
+        'Tanuló': 'student',
+        'Tanár': 'teacher',
+        'Dolgozó': 'worker'
+      }
+      return classes[role] || role.toLowerCase()
+    },
+
+    getStatusClass(status) {
+      const classes = {
+        'Aktív': 'active',
+        'Inaktív': 'inactive',
+        'Felfüggesztett': 'suspended'
+      }
+      return classes[status] || status.toLowerCase()
+    },
+
     async loadCounties() {
       try {
-        const response = await AuthService.api.get('/admin/counties');
-        
-        if (response.data.success) {
-          this.counties = response.data.data;
-        } else {
-          console.error(response.data.message);
-        }
+        const response = await AuthService.api.get('/admin/counties')
+        if (response.data.success) this.counties = response.data.data
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
     },
 
     async loadCitiesForCounty() {
       if (!this.editUser.county_id) {
-        this.citiesForCounty = [];
-        this.editUser.city_id = null;
-        return;
+        this.citiesForCounty = []
+        this.editUser.city_id = null
+        return
       }
-      
       try {
-        const response = await AuthService.api.get(`/admin/cities/by-county/${this.editUser.county_id}`);
-        
+        const response = await AuthService.api.get(`/admin/cities/by-county/${this.editUser.county_id}`)
         if (response.data.success) {
-          this.citiesForCounty = response.data.data;
-          
-          if (this.editUser.city_id) {
-            const exists = this.citiesForCounty.some(city => city.id == this.editUser.city_id);
-            if (!exists) this.editUser.city_id = null;
+          this.citiesForCounty = response.data.data
+          if (this.editUser.city_id && !this.citiesForCounty.some(city => city.id == this.editUser.city_id)) {
+            this.editUser.city_id = null
           }
-        } else {
-          this.citiesForCounty = [];
         }
       } catch (error) {
-        this.citiesForCounty = [];
+        this.citiesForCounty = []
       }
     },
 
     async openEditModal(userId) {
       this.showEditModal = true
+      document.body.style.overflow = 'hidden';
       this.editLoading = true
       this.citiesForCounty = []
       
       try {
         const userFromList = this.users.data.find(u => u.id == userId)
-        
         if (userFromList) {
           this.editUser = {
             id: userFromList.id,
@@ -512,70 +497,62 @@ export default {
             address: '',
             hasDiscount: userFromList.hasDiscount || false,
             hasDiabetes: userFromList.hasDiabetes || false,
+            county_id: null,
+            city_id: null,
           }
         }
 
         const response = await AuthService.api.get(`/admin/users/${userId}`)
-        
         if (response.data.success) {
           const userData = response.data.data
-          
           this.editUser = {
             ...this.editUser,
             address: userData.address || this.editUser.address,
             thirdName: userData.thirdName || this.editUser.thirdName,
             hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
             hasDiabetes: userData.hasDiabetes || this.editUser.hasDiabetes,
-            county_id: userData.city?.county?.id || null, 
-            city_id: userData.city_id || this.editUser.city_id
+            county_id: userData.city?.county?.id || null,
+            city_id: userData.city_id || null
           }
-          
-          if (this.editUser.county_id) {
-            await this.loadCitiesForCounty()
-          }
+          if (this.editUser.county_id) await this.loadCitiesForCounty()
         }
-      } 
-      catch (error) {
+      } catch (error) {
         if (!this.editUser.id) {
-          addAlert({
-            message: 'Felhasználó nem található',
-            type: 'error'
-          })
+          addAlert({ message: 'Felhasználó nem található', type: 'error' })
           this.closeEditModal()
         }
-      } 
-      finally {
+      } finally {
         this.editLoading = false
       }
     },
 
     closeEditModal() {
-      this.closeRfidModal()
-      this.showEditModal = false
-      this.citiesForCounty = []
+      this.showEditModal = false;
+      this.citiesForCounty = [];
+      // Csak akkor állítjuk vissza a görgetést, ha a másik modal sincs nyitva
+      if (!this.showRfidModal) {
+        document.body.style.overflow = '';
+      }
       this.editUser = {
-        id: null,
-        firstName: '',
-        lastName: '',
-        thirdName: '',
-        email: '',
-        userType: 'Tanuló',
-        userStatus: 'Aktív',
-        address: '',
-        hasDiscount: false,
-        hasDiabetes: false,
+        id: null, firstName: '', lastName: '', thirdName: '', email: '',
+        userType: 'Tanuló', userStatus: 'Aktív', address: '', hasDiscount: false, hasDiabetes: false
+      };
+    },
+
+    closeRfidModal() {
+      this.showRfidModal = false;
+      this.stopRfidPolling();
+      // Csak akkor állítjuk vissza a görgetést, ha a másik modal sincs nyitva
+      if (!this.showEditModal) {
+        document.body.style.overflow = '';
       }
     },
 
     async saveUserChanges() {
-      const confirmed = await showConfirm({
-        message: 'Biztosan menti a változtatásokat?'
-      })
-
+      const confirmed = await showConfirm({ message: 'Biztosan menti a változtatásokat?' })
       if (!confirmed) return
   
       this.saving = true
-      
       try {
         const updateData = {
           firstName: this.editUser.firstName,
@@ -591,7 +568,6 @@ export default {
         }
         
         const response = await AuthService.api.put(`/admin/users/${this.editUser.id}`, updateData)
-        
         if (response.data.success) {
           const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
           if (userIndex !== -1) {
@@ -599,33 +575,17 @@ export default {
               this.users.data[userIndex][key] = updateData[key]
             })
           }
-          
-          addAlert({
-            message: 'Felhasználó sikeresen frissítve!',
-            type: 'success'
-          })
-
+          addAlert({ message: 'Felhasználó sikeresen frissítve!', type: 'success' })
           this.closeEditModal()
         } else {
-          addAlert({
-            message: response.data.message || 'Ismeretlen hiba történt',
-            type: 'error'
-          })
+          addAlert({ message: response.data.message || 'Ismeretlen hiba történt', type: 'error' })
         }
       } catch (error) {
-
         if (error.response?.data?.errors) {
           const errors = Object.values(error.response.data.errors).flat()
-          addAlert({
-            title: 'Validációs hibák',
-            message: errors.join(', '),
-            type: 'error'
-          })
+          addAlert({ title: 'Validációs hibák', message: errors.join(', '), type: 'error' })
         } else {
-          addAlert({
-            message: error.response?.data?.message || 'Hiba történt a mentés során',
-            type: 'error'
-          })
+          addAlert({ message: error.response?.data?.message || 'Hiba történt a mentés során', type: 'error' })
         }
       } finally {
         this.saving = false
@@ -633,32 +593,16 @@ export default {
     },
 
     async updateStatus(userId, newUserStatus) {
-      const confirmed = await showConfirm({
-        message: 'Biztos?'
-      })
-
+      const confirmed = await showConfirm({ message: 'Biztos?' })
       if (!confirmed) return
       
       try {
-        await AuthService.api.put(`/admin/users/${userId}/status`, {
-          userStatus: newUserStatus
-        })
-        
+        await AuthService.api.put(`/admin/users/${userId}/status`, { userStatus: newUserStatus })
         const userIndex = this.users.data.findIndex(u => u.id === userId)
-        if (userIndex !== -1) {
-          this.users.data[userIndex].userStatus = newUserStatus
-        }
-        
-        addAlert({
-          message: `Felhasználó státusza frissítve: ${newUserStatus}`,
-          type: 'success'
-        })
-
+        if (userIndex !== -1) this.users.data[userIndex].userStatus = newUserStatus
+        addAlert({ message: `Felhasználó státusza frissítve: ${newUserStatus}`, type: 'success' })
       } catch (error) {
-        addAlert({
-          message: error.response?.data?.message || 'Hiba történt a státusz frissítése során',
-          type: 'error'
-        })
+        addAlert({ message: error.response?.data?.message || 'Hiba történt a státusz frissítése során', type: 'error' })
       }
     },
 
@@ -677,11 +621,7 @@ export default {
 
     async bulkUpdateAvailability(isAvailable) {
       if (this.selectedUsers.length === 0) return
-      
-      const confirmed = await showConfirm({
-        message: 'Biztos?'
-      })
-
+      const confirmed = await showConfirm({ message: 'Biztos?' })
       if (!confirmed) return
       
       try {
@@ -691,12 +631,8 @@ export default {
         })
         await this.fetchUsers()
         this.clearSelection()
-        
       } catch (error) {
-        addAlert({
-          message: 'Hiba történt a tömeges frissítés során',
-          type: 'error'
-        })
+        addAlert({ message: 'Hiba történt a tömeges frissítés során', type: 'error' })
       }
     },
 
@@ -713,281 +649,308 @@ export default {
     },
 
     openCardAssignModal() {
-      if (!this.editUser?.id) return;
-
-      this.showRfidModal = true;
-      this.rfidState = 'waiting';
-      this.rfidErrorMessage = '';
-      this.lastUid = '';
-
-      this.rfidSince = new Date().toISOString();
-      this.startRfidPolling();
+      if (!this.editUser?.id) return
+      this.showRfidModal = true
+      this.rfidState = 'waiting'
+      this.rfidErrorMessage = ''
+      this.lastUid = ''
+      this.rfidSince = new Date().toISOString()
+      this.startRfidPolling()
     },
 
     closeRfidModal() {
-      this.showRfidModal = false;
-      this.stopRfidPolling();
+      this.showRfidModal = false
+      this.stopRfidPolling()
     },
 
     startRfidPolling() {
-      this.stopRfidPolling();
-      this.rfidPollTimer = setInterval(() => this.checkLatestRfid(), 1000);
+      this.stopRfidPolling()
+      this.rfidPollTimer = setInterval(() => this.checkLatestRfid(), 1000)
     },
 
     stopRfidPolling() {
       if (this.rfidPollTimer) {
-        clearInterval(this.rfidPollTimer);
-        this.rfidPollTimer = null;
+        clearInterval(this.rfidPollTimer)
+        this.rfidPollTimer = null
       }
     },
 
     async checkLatestRfid() {
-      if (!this.showRfidModal || this.rfidState !== 'waiting') return;
-
+      if (!this.showRfidModal || this.rfidState !== 'waiting') return
       try {
-        const res = await AuthService.api.get('/admin/rfid/latest-scan', {
-          params: { since: this.rfidSince }
-        });
-
-        if (!res.data?.success) return;
-
-        const scan = res.data.data;
-        if (!scan?.uid) return;
-
-        this.rfidSince = scan.scanned_at || new Date().toISOString();
-        await this.assignRfidToUser(scan.uid);
-
+        const res = await AuthService.api.get('/admin/rfid/latest-scan', { params: { since: this.rfidSince } })
+        if (!res.data?.success) return
+        const scan = res.data.data
+        if (!scan?.uid) return
+        this.rfidSince = scan.scanned_at || new Date().toISOString()
+        await this.assignRfidToUser(scan.uid)
       } catch (e) {
-        this.rfidState = 'error';
-        this.rfidErrorMessage = e.response?.data?.message || 'Nem sikerült lekérni az RFID-t.';
-        this.stopRfidPolling();
+        this.rfidState = 'error'
+        this.rfidErrorMessage = e.response?.data?.message || 'Nem sikerült lekérni az RFID-t.'
+        this.stopRfidPolling()
       }
     },
 
     async assignRfidToUser(uid) {
       try {
-        const res = await AuthService.api.post(`/admin/users/${this.editUser.id}/rfid/assign`, { uid });
-
+        const res = await AuthService.api.post(`/admin/users/${this.editUser.id}/rfid/assign`, { uid })
         if (res.data?.success) {
-          this.lastUid = uid;
-          this.rfidState = 'success';
-
-          this.editUser.rfid_uid = uid;
-          this.editUser.rfidCard = { cardNumber: uid };
-
-          this.stopRfidPolling();
-          return;
+          this.lastUid = uid
+          this.rfidState = 'success'
+          this.editUser.rfid_uid = uid
+          this.stopRfidPolling()
+          return
         }
-
         if (res.data?.code === 'CARD_BUSY') {
-          this.rfidState = 'busy';
+          this.rfidState = 'busy'
         } else {
-          this.rfidState = 'error';
-          this.rfidErrorMessage = res.data?.message || 'Ismeretlen hiba.';
+          this.rfidState = 'error'
+          this.rfidErrorMessage = res.data?.message || 'Ismeretlen hiba.'
         }
-
-        this.stopRfidPolling();
+        this.stopRfidPolling()
       } catch (e) {
         if (e.response?.data?.code === 'CARD_BUSY') {
-          this.rfidState = 'busy';
+          this.rfidState = 'busy'
         } else {
-          this.rfidState = 'error';
-          this.rfidErrorMessage = e.response?.data?.message || 'Hiba a hozzárendelés során.';
+          this.rfidState = 'error'
+          this.rfidErrorMessage = e.response?.data?.message || 'Hiba a hozzárendelés során.'
         }
-        this.stopRfidPolling();
+        this.stopRfidPolling()
       }
     }
   }
 }
 </script>
+
 <style scoped>
 .admin-users {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: calc(100vh - 200px);
 }
 
-.header {
-  margin-bottom: 2rem;
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
 }
 
-.header h1 {
-  margin: 0 0 1rem 0;
-}
-
-.header-actions {
+.card-header {
   display: flex;
-  gap: 1rem;
+  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: #8a1212;
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
-.header-actions input,
-.header-actions select {
-  padding: 0.5rem 1rem;
+.search-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 250px;
+  transition: all 0.2s;
 }
 
-.header-actions input {
-  flex: 1;
-  min-width: 300px;
+.search-input:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
 }
 
-.users-table {
+.search-icon {
+  position: absolute;
+  left: 0.6rem;
+  font-size: 0.85rem;
+  color: #888;
+  pointer-events: none;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: white;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #f0a24a;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.data-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  font-size: 0.85rem;
 }
 
-.users-table th {
+.data-table th {
   background: #f0a24a;
   color: #7b2c2c;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.data-table tr:hover {
+  background: #fef9ef;
+}
+
+.checkbox-col {
+  width: 40px;
   text-align: center;
-  padding: 1rem;
+}
+
+.select-all, .select-item {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.user-name-cell {
   font-weight: 500;
-}
-
-.users-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-  text-align: center;
-}
-
-.users-table tr:hover {
-  background: #f8f9fa;
 }
 
 .role-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
   font-weight: 500;
 }
 
-.role-badge.admin {
-  background: #e74c3c;
-  color: white;
-}
-
-.role-badge.konyha {
-  background: #e67e22;
-  color: white;
-}
-
-.role-badge.tanuló {
-  background: #3498db;
-  color: white;
-}
-
-.role-badge.tanár {
-  background: #2ecc71;
-  color: white;
-}
-
-.role-badge.dolgozó {
-  background: #9b59b6;
-  color: white;
-}
+.role-badge.admin { background: #e74c3c; color: white; }
+.role-badge.kitchen { background: #e67e22; color: white; }
+.role-badge.student { background: #3498db; color: white; }
+.role-badge.teacher { background: #2ecc71; color: white; }
+.role-badge.worker { background: #9b59b6; color: white; }
 
 .status-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
   font-weight: 500;
 }
 
-.status-badge.Aktív {
-  background: #d4edda;
-  color: #155724;
+.status-badge.active { background: #d4edda; color: #155724; }
+.status-badge.inactive { background: #fff3cd; color: #856404; }
+.status-badge.suspended { background: #f8d7da; color: #721c24; }
+
+.actions-cell {
+  white-space: nowrap;
 }
 
-.status-badge.Inaktív {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.status-badge.Felfüggesztett {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.actions {
-  text-align: center;
-  vertical-align: middle;
-}
-
-.actions-inner {
-  display: inline-flex;
+.actions-group {
+  display: flex;
   gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
 }
 
-.actions button {
+.btn-icon {
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 1rem;
-  display: flex;
+  transition: all 0.2s;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s;
-  margin: auto;
 }
 
-.actions button:hover {
-  opacity: 0.8;
-}
+.btn-edit { background: #e3f2fd; color: #1976d2; }
+.btn-edit:hover { background: #bbdef5; }
 
-.btn-edit {
-  background: #a1bacc;
-  color: white;
-}
+.btn-activate { background: #e8f5e9; color: #2e7d32; }
+.btn-activate:hover { background: #c8e6c9; }
 
-.btn-activate {
-  background: #d4edda;
-  color: #155724;
-}
-
-.btn-deactivate {
-  background: #fff3cd;
-  color: #856404;
-}
+.btn-deactivate { background: #fff3cd; color: #856404; }
+.btn-deactivate:hover { background: #ffeaa7; }
 
 .btn-suspend {
   background: #f8d7da;
   color: #a1656b;
-  border-radius: 8px;
-
-  transition: all 0.2s;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
   cursor: pointer;
-  width: 10%;
-  min-width: 130px;
-  font-weight: bolder;
-
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-.btn-suspend:hover{
+.btn-suspend:hover {
   background: #f0a9af;
   color: #522a2e;
-  border-radius: 8px;
-  transition: all 0.2s;
-
-
 }
-
-
 
 .pagination {
   display: flex;
@@ -998,240 +961,37 @@ export default {
   padding: 1rem;
 }
 
-.pagination button {
+.btn-pagination {
   padding: 0.5rem 1rem;
   border: 1px solid #ddd;
   background: white;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.pagination button:disabled {
+.btn-pagination:hover:not(:disabled) {
+  background: #f0a24a;
+  color: white;
+  border-color: #f0a24a;
+}
+
+.btn-pagination:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.pagination span {
-  color: #7f8c8d;
+.pagination-info {
+  color: #666;
+  font-size: 0.85rem;
 }
 
-
-.loading {
-  text-align: center;
-  padding: 3rem;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--barack);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem auto;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error {
-  text-align: center;
-  padding: 3rem;
-  color: #e74c3c;
-}
-
-.error button {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 1;
-  visibility: visible;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  position: relative !important;
-  z-index: 1001;
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible !important;
-  display: block !important;
-}
-
-.modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h2 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #7f8c8d;
-  padding: 0.5rem;
-}
-
-.btn-close:hover {
-  color: #e74c3c;
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-group label {
-  font-weight: 500;
-  color: #476079;
-}
-
-.form-group input,
-.form-group select {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  margin-top: 1rem;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: auto;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #eee;
-  margin-top: 1rem;
-}
-
-.btn-cancel {
-  padding: 0.75rem 1.5rem;
-  background: #95a5a6;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-cancel:hover {
-  background: #7f8c8d;
-}
-
-.btn-save {
-  padding: 0.75rem 1.5rem;
-  background: #069642;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-save:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-save:hover:not(:disabled) {
-  background: #6fce97;
-}
-
-.loading-small {
-  text-align: center;
-  padding: 2rem;
-}
-
-.spinner-small {
-  width: 30px;
-  height: 30px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #a0d3f5;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem auto;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal {
-    width: 95%;
-    margin: 1rem;
-  }
-}
-
-/* Tömeges műveletek */
+/* Bulk actions */
 .bulk-actions {
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1rem;
-  margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .bulk-header {
@@ -1256,76 +1016,354 @@ export default {
 .btn-bulk {
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
+  transition: all 0.2s;
 }
 
-.btn-bulk-available {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
+.btn-bulk-available { background: #d4edda; color: #155724; }
+.btn-bulk-available:hover { background: #c3e6cb; }
 
-.btn-bulk-available:hover {
-  background: #c3e6cb;
-}
+.btn-bulk-unavailable { background: #fff3cd; color: #856404; }
+.btn-bulk-unavailable:hover { background: #ffeaa7; }
 
-.btn-bulk-unavailable {
-  background: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
-}
+.btn-bulk-clear { background: #e9ecef; color: #6c757d; }
+.btn-bulk-clear:hover { background: #dee2e6; }
 
-.btn-bulk-unavailable:hover {
-  background: #ffeaa7;
-}
-
-.btn-bulk-clear {
-  background: #f8f9fa;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-}
-
-.btn-bulk-clear:hover {
+.btn-secondary {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
   background: #e9ecef;
-}
-
-/* Checkbox oszlop */
-.checkbox-col {
-  width: 40px;
-  text-align: center;
-}
-
-.select-all,
-.select-item {
-  width: 18px;
-  height: 18px;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 0.85rem;
 }
 
-.modal-overlay--rfid { z-index: 1100; }
-.modal--rfid { z-index: 1101; max-width: 520px; }
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex !important;
+  position: relative !important;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.modal-small {
+  max-width: 520px;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  background: #fff7e6;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #8a1212;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+  padding: 0 0.5rem;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: #8a1212;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+  margin-top: 1rem;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #f0a24a;
+}
+
+.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: normal;
+  text-transform: none;
+}
+
+.form-hint {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+.btn-cancel {
+  padding: 0.6rem 1.25rem;
+  background: #e9ecef;
+  color: #495057;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #dee2e6;
+}
+
+.btn-save {
+  padding: 0.6rem 1.25rem;
+  background: #1fa317;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #158a0f;
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-state-small {
+  text-align: center;
+  padding: 2rem;
+}
+
+.spinner-small {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.rfid-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #ddd;
+}
+
+.rfid-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
 .btn-rfid {
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   background: #f0a24a;
   color: #7b2c2c;
   font-weight: 600;
+  transition: background 0.2s;
 }
 
-.rfid-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #ddd; }
-.rfid-row { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+.btn-rfid:hover {
+  background: #e5942c;
+}
 
-.rfid-status { margin-top:1rem; padding:0.75rem 1rem; border-radius:8px; font-weight:600; }
-.rfid-status--waiting { background:#eef3ff; }
-.rfid-status--success { background:#d4edda; }
-.rfid-status--busy { background:#fff3cd; }
-.rfid-status--error { background:#f8d7da; }
+.rfid-status {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+}
 
+.rfid-status--waiting { background: #eef3ff; color: #1976d2; }
+.rfid-status--success { background: #d4edda; color: #155724; }
+.rfid-status--busy { background: #fff3cd; color: #856404; }
+.rfid-status--error { background: #f8d7da; color: #c62828; }
 
+.empty-row {
+  text-align: center;
+  color: #888;
+  padding: 3rem !important;
+}
+
+.text-muted {
+  color: #888;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-users {
+    padding: 1rem;
+  }
+
+  .content-card {
+    padding: 1rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .actions-group {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .bulk-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .bulk-buttons {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+
+  .btn-suspend {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}
 </style>

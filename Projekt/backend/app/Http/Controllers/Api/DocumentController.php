@@ -11,30 +11,38 @@ use Illuminate\Support\Facades\Log;
 
 class DocumentController extends Controller
 {
-    // Konstansok a típusokhoz
+
     const TYPE_DISCOUNT = 'Kedvezmény';
     const TYPE_DIABETES = 'Cukorbetegség';
     
-    // Angol -> Magyar mapping
+
     const TYPE_MAPPING = [
         'discount' => self::TYPE_DISCOUNT,
         'diabetes' => self::TYPE_DIABETES
     ];
     
-    // Magyar -> Angol mapping (visszafelé)
+
     const TYPE_MAPPING_REVERSE = [
         self::TYPE_DISCOUNT => 'discount',
         self::TYPE_DIABETES => 'diabetes'
     ];
 
-    /**
-     * Admin: Összes dokumentum listázása (minden dokumentum, akár aktív, akár inaktív)
-     */
-    public function index()
+
+    public function index(Request $request)
     {
-        $documents = Document::with('user:id,firstName,lastName,email')
-            ->latest()
-            ->get();
+        $query = Document::with('user:id,firstName,lastName,email');
+        
+        // Keresés név vagy email alapján
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->whereHas('user', function($q) use ($searchTerm) {
+                $q->where('firstName', 'like', "%{$searchTerm}%")
+                ->orWhere('lastName', 'like', "%{$searchTerm}%")
+                ->orWhere('email', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        $documents = $query->latest()->get();
         
         foreach ($documents as $document) {
             $document->type = self::TYPE_MAPPING_REVERSE[$document->documentType] ?? $document->documentType;
@@ -46,7 +54,6 @@ class DocumentController extends Controller
             'documents' => $documents
         ]);
     }
-
     /**
      * Felhasználó saját dokumentumainak listázása (CSAK AKTÍV)
      */
