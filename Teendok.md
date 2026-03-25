@@ -2,20 +2,30 @@
 - menüben legyen logo, hamburger menü
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
-- footerek
-- footer túl nagy telefonos nézetben
 - reszponziv, formazas mindenhol, telefonos nézet
-- személyes számlák!!!!!!!!!!!!!!!!!!!!!!
 - elfelejtett jelszó állításnál a frontend szétcsúszva és a navbar ne legyen ott
 - GOMBOK MINDENHOL
 - TELEFONOS NÉZET MINDELHOL (pl. meals.vue tápértékek)
+- regisztráció nem jó
+- jelszavak: speciális karakterek
+- nem
+
+## PersonalInvoices.vue
+- gombok működjenek (modal overlay nem megfelelő)
+- pdf formázás eltérő az adminostól (jobb??)
+- frontend
+- ha admin beállítja hogy "fizetv"e, akkor a usernek is kiírja hogy befizetve amúgy meg "Folyamatban.."
+
+## AdminInvoice.vue
+- hiba a fizetettre állításkor
 
 
 ## Users.vue
 - kártya törlés gomb
+- nem tölti be a várost csak a megyét
 
 ## Meals.vue
-- pontosabb tápérték számítás
+- pontosabb tápérték számítás??
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
 
 
@@ -23,7 +33,7 @@
 - nem menti az allergént ha új hozzávalót töltök fel
 
 ## Orders.vue
-- a cukormentes rendelések összessége is meg legyen jelenítve (A opcióból készül a ckormentes opció) + a táblázatban is
+
 
 
 ## MenuMaker.vue
