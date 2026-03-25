@@ -35,28 +35,6 @@ Route::get('/allergens', [UserHealthController::class, 'getAllergens']);
 Route::post('/forgot-password', [App\Http\Controllers\Api\ResetPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 
-Route::get('/test-mail', function() {
-    try {
-        Mail::raw('Ez egy teszt email a Mailtrap beállítások ellenőrzésére!', function($message) {
-            $message->to('test@example.com')
-                    ->subject('Teszt email');
-        });
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Email elküldve! Nézd meg a Mailtrap Inbox-odban.'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Hiba: ' . $e->getMessage()
-        ], 500);
-    }
-});
-
-// Opcionális tokenellenőrzés???
-//Route::post('/reset-password/check-token', [PasswordResetController::class, 'checkToken']);
-
 
 //Menü utvonalak (nem a sanctumba van ezért publikusak??)
 
@@ -195,7 +173,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Konyha
     Route::prefix('kitchen')->group(function () {
-
+        // Meals.vue
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::get('/meals/with-allergens', [KitchenController::class, 'mealsWithAllergens']);
         Route::post('/meals', [KitchenController::class, 'storeMeal']);
@@ -227,7 +205,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
    
 
-        //Hozzávalók kezelése (ingredient.vue)
+        //Hozzávalók kezelése (Ingredients.vue)
         Route::prefix('ingredients')->group(function () {
             Route::get('/', [KitchenController::class, 'getIngredientsList']);
             Route::post('/', [KitchenController::class, 'createIngredient']); 

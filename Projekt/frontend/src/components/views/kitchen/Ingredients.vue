@@ -114,8 +114,8 @@
                         <span v-if="ingredient.isAvailable">❚❚</span>
                         <span v-else>✓</span>
                       </button>
-                      <button @click="confirmDelete(ingredient)" class="btn-icon btn-delete" title="Törlés">
-                        🗑️
+                      <button @click="confirmDelete(ingredient)" class="btn-delete" title="Törlés">
+                        Törlés
                       </button>
                     </div>
                   </td>
@@ -138,7 +138,7 @@
                             <div class="form-row">
                               <div class="form-group">
                                 <label>Hozzávaló neve *</label>
-                                <input type="text" v-model="editForm.ingredientName" required placeholder="Pl.: Paradicsom">
+                                <input type="text" v-model="editForm.ingredientName" required >
                               </div>
                               <div class="form-group">
                                 <label>Típus *</label>
@@ -266,7 +266,7 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Hozzávaló neve *</label>
-                    <input type="text" v-model="newForm.ingredientName" required placeholder="Pl.: Paradicsom">
+                    <input type="text" v-model="newForm.ingredientName" required>
                   </div>
                   <div class="form-group">
                     <label>Típus *</label>
@@ -1085,7 +1085,19 @@ function clearSelection() {
 .btn-activate:hover { background: #c8e6c9; }
 .btn-deactivate { background: #fff3cd; color: #856404; }
 .btn-deactivate:hover { background: #ffeaa7; }
-.btn-delete { background: #ffebee; color: #c62828; }
+
+.btn-delete { 
+    background: #f8d7da;
+  color: #a1656b;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
 .btn-delete:hover { background: #ffcdd2; }
 
 /* Szerkesztő sor */

@@ -30,13 +30,14 @@
 ## Meals.vue
 - pontosabb tápérték számítás??
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
+- összetevők felsaorolása a usernek
+- pagináció?
 
 
 ## Ingredients.vue
 - nem menti az allergént ha új hozzávalót töltök fel
 - nem lehet törölni ingredientet (újat)
 - nem lehet változtatni az elérhetőségét
-- modal
 
 ## Orders.vue
 
@@ -46,8 +47,7 @@
 
 
 ## MenuMaker.vue
-- frontend üres
-- kicsi káosz
+- összes menü betöltése?
 
 
 ## Userprofil.vue
