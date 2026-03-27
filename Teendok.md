@@ -6,6 +6,8 @@
 - jelszavak: speciális karakterek lekezelése?
 - ha modal: mögötte ne lehessen görgetni
 - felfüggesztett akkor beléphet megnézni a számláit?
+- navbar ott van ha visszaállítom a jelszót
+- regisztráció sikeres üzenet (custom alert legyen)
 
 ## Doucments
 - 
@@ -24,7 +26,6 @@
 
 ## Users.vue
 - kártya törlés gomb
-- nem tölti be a várost csak a megyét
 - kicsit elcsúszva a modal
 
 ## Meals.vue
@@ -32,12 +33,14 @@
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
 - összetevők felsaorolása a usernek
 - pagináció?
+- nem működik a törlés NEM IGAZ -> nem törli mert van hozzá rendelés kapcsolva (ilyne hibaüzenet kell)
 
 
 ## Ingredients.vue
 - nem menti az allergént ha új hozzávalót töltök fel
 - nem lehet törölni ingredientet (újat)
 - nem lehet változtatni az elérhetőségét
+- ne lenyíljon, hanem modal
 
 ## Orders.vue
 

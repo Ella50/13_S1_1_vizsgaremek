@@ -63,7 +63,7 @@ class MenuItem extends Model
         ];
     }
 
-    // MenuItem.php fájlba hozzáadni:
+ 
 
 /**
  * Menü adatainak lekérése (visszafelé kompatibilis)

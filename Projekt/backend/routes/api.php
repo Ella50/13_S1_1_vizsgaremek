@@ -225,25 +225,3 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-
-/*
-Route::post('/reset-password', [App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLinkEmail']);
-
-Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
-
-Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
-
-Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
-
-Route::post('/test-simple', function() { return response()->json(['ok' => true]); });
-
-Route::post("/api/simple-password-reset", [App\Http\Controllers\VerySimplePasswordController::class, "sendReset"]);
-
-Route::post("/test-password", function(Illuminate\Http\Request $request) {
-    return response()->json([
-        "status" => "OK",
-        "message" => "Backend működik!",
-        "received_email" => $request->input("email", "nincs"),
-        "server_time" => date("Y-m-d H:i:s")
-    ]);
-});*/
