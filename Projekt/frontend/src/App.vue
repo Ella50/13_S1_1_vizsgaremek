@@ -13,7 +13,7 @@
 <script>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import Navigation from './components/Navigation.vue'
+import Navigation from './components/layout/Navigation.vue'
 import AppAlert from "@/components/auth/AppAlert.vue";
 import Footer from './components/layout/Footer.vue';
 import AppConfirm from "@/components/auth/AppConfirm.vue";
@@ -30,7 +30,7 @@ export default {
     const route = useRoute()
     
     const showNavigation = computed(() => {
-      return !['/login', '/register', '/resert-password', '/resetpassword', 'forgot-password'].includes(route.path)
+      return !['/login', '/register', '/reset-password', 'forgot-password'].includes(route.path)
     })
     
     return { showNavigation }
