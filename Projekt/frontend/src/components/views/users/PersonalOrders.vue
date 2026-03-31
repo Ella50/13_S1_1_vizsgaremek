@@ -1,268 +1,246 @@
 <template>
   <div class="personal-orders">
-    <!-- Fejléc -->
-    <div class="orders-header">
-      <h1>Személyes rendelések</h1>
-      
-      <div class="header-controls">
-        <!-- Hónap választó -->
-        <div class="month-selector">
-          <button 
-            @click="previousMonth" 
-            class="month-nav"
-            :disabled="!canGoToPreviousMonth"
-          >
-            ←
-          </button>
-          
-          <button @click="showMonthPicker = true" class="current-month">
-            {{ currentMonthDisplay }}
-          </button>
-          
-          <button 
-            @click="nextMonth" 
-            class="month-nav"
-            :disabled="!canGoToNextMonth"
-          >
-            →
-          </button>
-        </div>
-
-        <!-- Frissítés gomb -->
-        <button @click="refreshData" class="btn-refresh">
-          ⟳ Frissítés
-        </button>
-      </div>
-    </div>
-
-    <!-- Hónap választó modal -->
-    <div v-if="showMonthPicker" class="month-picker-modal" @click.self="showMonthPicker = false">
-      <div class="month-picker-content">
-        <div class="month-picker-header">
-          <h3>Válassz hónapot</h3>
-          <button @click="showMonthPicker = false" class="close-btn">×</button>
-        </div>
+    <div class="content-card">
+      <div class="card-header">
+        <h1 class="title">Személyes rendelések</h1>
         
-        <div class="months-grid">
-          <button
-            v-for="month in availableMonths"
-            :key="`${month.year}-${month.month}`"
-            @click="selectMonth(month)"
-            :class="{ active: isCurrentMonth(month) }"
-            class="month-btn"
-          >
-            {{ month.display }}
+        <div class="header-controls">
+          <div class="month-selector">
+            <button 
+              @click="previousMonth" 
+              class="nav-btn"
+              :disabled="!canGoToPreviousMonth"
+            >
+              ←
+            </button>
+            
+            <button @click="showMonthPicker = true" class="current-month">
+              {{ currentMonthDisplay }}
+            </button>
+            
+            <button 
+              @click="nextMonth" 
+              class="nav-btn"
+              :disabled="!canGoToNextMonth"
+            >
+              →
+            </button>
+          </div>
+
+          <button @click="refreshData" class="btn-primary" :disabled="loading">
+            {{ loading ? 'Betöltés...' : 'Frissítés' }}
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Töltés/hiba állapot -->
-    <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
-      <p>Rendelések betöltése...</p>
-    </div>
+      <!-- Hónap választó modal -->
+      <div v-if="showMonthPicker" class="modal-overlay" @click.self="showMonthPicker = false">
+        <div class="modal modal-small">
+          <div class="modal-header">
+            <h2>Válassz hónapot</h2>
+            <button @click="showMonthPicker = false" class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="months-grid">
+              <button
+                v-for="month in availableMonths"
+                :key="`${month.year}-${month.month}`"
+                @click="selectMonth(month)"
+                :class="{ active: isCurrentMonth(month) }"
+                class="month-btn"
+              >
+                {{ month.display }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <div v-else-if="error" class="error-state">
-      <p>{{ error }}</p>
-      <button @click="loadOrders" class="retry-btn">Újrapróbálkozás</button>
-    </div>
+      <!-- Töltés/hiba állapot -->
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Rendelések betöltése...</p>
+      </div>
 
-    <!-- Rendelések táblázat -->
-    <div v-else-if="availableDates.length > 0" class="orders-table-wrapper">
-      <table class="orders-table">
-        <thead>
-          <tr>
-            <th>Dátum</th>
-            <th>Leves</th>
-            <th>A opció</th>
-            <th>B opció</th>
-            <th>Választás</th>
-            <th>Státusz</th>
-            <th>Művelet</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr 
-            v-for="date in availableDates" 
-            :key="date.date"
-            :class="{
-              'cancelled-order': date.order_status === 'Lemondva',
-              'active-order': date.order_status === 'Rendelve',
-              'today': isToday(date.date),
-              'deadline-passed': !canModifyOrder(date.date) && date.has_order
-            }"
-          >
-            <!-- Dátum -->
-            <td class="date-cell">
-              <div class="date-display">
-                <span class="day-number">{{ getDayNumber(date.date) }}</span>
-                <span class="month-name">{{ getMonthName(date.date) }}</span>
-              </div>
-            </td>
+      <div v-else-if="error" class="error-message">
+        <p>{{ error }}</p>
+        <button @click="loadOrders" class="btn-secondary">Újrapróbálkozás</button>
+      </div>
 
-            <!-- Leves -->
-            <td class="meal-cell">
-              <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'Leves') }">
-                {{ date.menu.soup?.mealName || 'Nincs leves' }}
-                <span 
-                  v-if="hasAllergenWarning(date, 'Leves')"
-                  class="allergen-warning"
-                  :title="getAllergenTooltip(date, 'Leves')"
-                >
-                  ⚠️
-                </span>
-              </div>
-            </td>
-
-            <!-- A opció -->
-            <td class="meal-cell">
-              <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'A opció') }">
-                {{ date.menu.optionA?.mealName || 'Nincs A opció' }}
-                <span 
-                  v-if="hasAllergenWarning(date, 'A opció')"
-                  class="allergen-warning"
-                  :title="getAllergenTooltip(date, 'A opció')"
-                >
-                  ⚠️
-                </span>
-              </div>
-              <div class="meal-price" v-if="date.menu.optionA?.price">
-                {{ date.menu.optionA.price }} Ft
-              </div>
-            </td>
-
-            <!-- B opció -->
-            <td class="meal-cell">
-              <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'B opció') }">
-                {{ date.menu.optionB?.mealName || 'Nincs B opció' }}
-                <span 
-                  v-if="hasAllergenWarning(date, 'B opció')"
-                  class="allergen-warning"
-                  :title="getAllergenTooltip(date, 'B opció')"
-                >
-                  ⚠️
-                </span>
-              </div>
-              <div class="meal-price" v-if="date.menu.optionB?.price">
-                {{ date.menu.optionB.price }} Ft
-              </div>
-            </td>
-
-            <!-- Választás -->
-            <td class="choice-cell">
-              <!-- Cukorbeteg: fix opció -->
-              <template v-if="userInfo?.hasDiabetes">
-                <span class="fixed-choice">{{ getDiabeticChoice(date) }}</span>
-              </template>
-              
-              <!-- Normál felhasználó: mindig látszanak a gombok -->
-              <template v-else>
-                <div class="choice-buttons">
-                  <!-- A opció gomb -->
-                  <button 
-                    v-if="canShowOption(date, 'A')"
-                    @click="handleOptionClick(date, 'A')"
-                    :class="{
-                      active: isOptionSelected(date, 'A'),
-                      'selected-order': date.order_status === 'Rendelve' && date.selected_option === 'A' && !canModifyOrder(date.date)
-                    }"
-                    class="choice-btn"
-                    :disabled="isOptionDisabled(date, 'A')"
-                  >
-                    A
-                  </button>
-                  <span v-else class="no-option">-</span>
-                  
-                  <!-- B opció gomb -->
-                  <button 
-                    v-if="canShowOption(date, 'B')"
-                    @click="handleOptionClick(date, 'B')"
-                    :class="{
-                      active: isOptionSelected(date, 'B'),
-                      'selected-order': date.order_status === 'Rendelve' && date.selected_option === 'B' && !canModifyOrder(date.date)
-                    }"
-                    class="choice-btn"
-                    :disabled="isOptionDisabled(date, 'B')"
-                  >
-                    B
-                  </button>
-                  <span v-else class="no-option">-</span>
+      <!-- Rendelések táblázat -->
+      <div v-else-if="availableDates.length > 0" class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dátum</th>
+              <th>Leves</th>
+              <th>A opció</th>
+              <th>B opció</th>
+              <th>Választás</th>
+              <th>Státusz</th>
+              <th>Művelet</th>
+             </tr>
+          </thead>
+          <tbody>
+            <tr 
+              v-for="date in availableDates" 
+              :key="date.date"
+              :class="{
+                'cancelled-order': date.order_status === 'Lemondva',
+                'active-order': date.order_status === 'Rendelve',
+                'today': isToday(date.date),
+                'deadline-passed': !canModifyOrder(date.date) && date.has_order
+              }"
+            >
+              <!-- Dátum -->
+              <td class="date-cell">
+                <div class="date-display">
+                  <span class="day-number">{{ getDayNumber(date.date) }}</span>
+                  <span class="month-name">{{ getMonthName(date.date) }}</span>
                 </div>
-              </template>
-            </td>
+              </td>
 
-            <!-- Státusz -->
-            <td class="status-cell">
-              <span :class="['status-badge', getStatusClass(date)]">
-                {{ getStatusText(date) }}
-              </span>
-            </td>
-
-            <!-- Művelet cella - a reorder részt kicseréljük -->
-            <td class="action-cell">
-              <div class="actions-inner">
-                <!-- Aktív rendelés -->
-                <template v-if="date.order_status === 'Rendelve'">
-                  <button 
-                    v-if="canModifyOrder(date.date)"
-                    @click="changeOrderOption(date, date.selected_option === 'A' ? 'B' : 'A')"
-                    class="action-btn edit"
-                    :title="'Módosítás (határidő: ' + getDeadlineInfo(date.date) + ')'"
+              <!-- Leves -->
+              <td class="meal-cell">
+                <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'Leves') }">
+                  {{ date.menu.soup?.mealName || 'Nincs leves' }}
+                  <span 
+                    v-if="hasAllergenWarning(date, 'Leves')"
+                    class="allergen-warning"
+                    :title="getAllergenTooltip(date, 'Leves')"
                   >
-                    ✎
-                  </button>
-                  <button 
-                    v-if="canCancelOrder(date.date)"
-                    @click="cancelOrder(date.order_id)"
-                    class="action-btn cancel"
-                    :title="'Lemondás (határidő: ' + getCancelDeadlineInfo(date.date) + ')'"
-                  >
-                    ✗
-                  </button>
-                  <span v-else class="disabled-action" :title="'Határidő lejárt: ' + getDeadlineInfo(date.date)">
-                    Lejárt
+                    ⚠️
                   </span>
-                </template>
-                
-                <template v-else>
-                  <button 
-                    v-if="canModifyOrder(date.date)"
-                    @click="placeOrder(date)"
-                    class="action-btn order"
-                    :disabled="!canPlaceOrder(date)"
-                    :title="'Rendelés (határidő: ' + getDeadlineInfo(date.date) + ')'"
+                </div>
+              </td>
+
+              <!-- A opció -->
+              <td class="meal-cell">
+                <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'A opció') }">
+                  {{ date.menu.optionA?.mealName || 'Nincs A opció' }}
+                  <span 
+                    v-if="hasAllergenWarning(date, 'A opció')"
+                    class="allergen-warning"
+                    :title="getAllergenTooltip(date, 'A opció')"
                   >
-                    Rendelés
-                  </button>
-                  <span v-else class="disabled-action">Lejárt</span>
+                    ⚠️
+                  </span>
+                </div>
+                <div class="meal-price" v-if="date.menu.optionA?.price">
+                  {{ date.menu.optionA.price }} Ft
+                </div>
+              </td>
+
+              <!-- B opció -->
+              <td class="meal-cell">
+                <div class="meal-name" :class="{ 'allergen-meal': hasAllergenWarning(date, 'B opció') }">
+                  {{ date.menu.optionB?.mealName || 'Nincs B opció' }}
+                  <span 
+                    v-if="hasAllergenWarning(date, 'B opció')"
+                    class="allergen-warning"
+                    :title="getAllergenTooltip(date, 'B opció')"
+                  >
+                    ⚠️
+                  </span>
+                </div>
+                <div class="meal-price" v-if="date.menu.optionB?.price">
+                  {{ date.menu.optionB.price }} Ft
+                </div>
+              </td>
+
+              <!-- Választás -->
+              <td class="choice-cell">
+                <template v-if="userInfo?.hasDiabetes">
+                  <span class="fixed-choice">A</span>
                 </template>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+                <template v-else>
+                  <div class="choice-buttons">
+                    <button 
+                      v-if="canShowOption(date, 'A')"
+                      @click="handleOptionClick(date, 'A')"
+                      :class="{
+                        active: isOptionSelected(date, 'A'),
+                        'selected-order': date.order_status === 'Rendelve' && date.selected_option === 'A' && !canModifyOrder(date.date)
+                      }"
+                      class="choice-btn"
+                      :disabled="isOptionDisabled(date, 'A')"
+                    >
+                      A
+                    </button>
+                    <span v-else class="no-option">-</span>
+                    
+                    <button 
+                      v-if="canShowOption(date, 'B')"
+                      @click="handleOptionClick(date, 'B')"
+                      :class="{
+                        active: isOptionSelected(date, 'B'),
+                        'selected-order': date.order_status === 'Rendelve' && date.selected_option === 'B' && !canModifyOrder(date.date)
+                      }"
+                      class="choice-btn"
+                      :disabled="isOptionDisabled(date, 'B')"
+                    >
+                      B
+                    </button>
+                    <span v-else class="no-option">-</span>
+                  </div>
+                </template>
+              </td>
 
-    <!-- Nincs adat -->
-    <div v-else class="no-data">
-      <p>Nincsenek elérhető rendelések ebben a hónapban</p>
-    </div>
+              <!-- Státusz -->
+              <td class="status-cell">
+                <span :class="['status-badge', getStatusClass(date)]">
+                  {{ getStatusText(date) }}
+                </span>
+              </td>
 
-    <!-- Információs sáv -->
-    <div class="info-footer">
-      <div class="info-item">
-        <span class="info-icon">⏰</span>
-        <span>Rendelés/módosítás: előző munkanap 10:00-ig | Lemondás: aznap 8:00-ig</span>
+              <!-- Művelet cella -->
+              <td class="action-cell">
+                <div class="actions-inner">
+                  <template v-if="date.order_status === 'Rendelve'">
+                    <button 
+                      v-if="canModifyOrder(date.date)"
+                      @click="changeOrderOption(date, date.selected_option === 'A' ? 'B' : 'A')"
+                      class="btn-action btn-edit"
+                      :title="'Módosítás (határidő: ' + getDeadlineInfo(date.date) + ')'"
+                    >
+                      Módosít
+                    </button>
+                    <button 
+                      v-if="canCancelOrder(date.date)"
+                      @click="cancelOrder(date.order_id)"
+                      class="btn-action btn-cancel"
+                      :title="'Lemondás (határidő: ' + getCancelDeadlineInfo(date.date) + ')'"
+                    >
+                      Lemond
+                    </button>
+                    <span v-else class="disabled-action">Lejárt</span>
+                  </template>
+                  
+                  <template v-else>
+                    <button 
+                      v-if="canModifyOrder(date.date)"
+                      @click="placeOrder(date)"
+                      class="btn-action btn-order"
+                      :disabled="!canPlaceOrder(date)"
+                      :title="'Rendelés (határidő: ' + getDeadlineInfo(date.date) + ')'"
+                    >
+                      Rendelés
+                    </button>
+                    <span v-else class="disabled-action">Lejárt</span>
+                  </template>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="info-item">
-        <span class="info-icon">⚠️</span>
-        <span>Allergén figyelmeztetés (piros szöveg)</span>
+
+      <!-- Nincs adat -->
+      <div v-else class="empty-state">
+        <p>Nincsenek elérhető rendelések ebben a hónapban</p>
       </div>
-      <div v-if="userInfo?.hasDiabetes" class="info-item">
-        <span class="info-icon">🩺</span>
-        <span>Cukorbeteg mód: automatikusan A opció</span>
-      </div>
+
+
     </div>
   </div>
 </template>
@@ -294,7 +272,6 @@ export default {
       const startYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
       
       for (let year = startYear - 1; year <= startYear + 1; year++) {
-        // Szeptember - December
         for (let month = 9; month <= 12; month++) {
           months.push({
             year,
@@ -302,7 +279,6 @@ export default {
             display: this.getMonthNameFull(month) + ' ' + year
           })
         }
-        // Január - Június
         for (let month = 1; month <= 6; month++) {
           months.push({
             year: year + 1,
@@ -413,6 +389,7 @@ export default {
     selectMonth(month) {
       this.selectedMonth = { year: month.year, month: month.month }
       this.showMonthPicker = false
+      document.body.style.overflow = 'hidden'
       this.tempSelections = {}
       this.loadOrders()
     },
@@ -422,7 +399,6 @@ export default {
              this.selectedMonth?.month === month.month
     },
     
-    // Dátum formázás
     getDayNumber(dateString) {
       return new Date(dateString).getDate()
     },
@@ -445,56 +421,48 @@ export default {
       return dateString === today
     },
     
-canModifyOrder(dateString) {
-  const orderDate = new Date(dateString)
-  const now = new Date()
-  
-  // Előző munkanap 10:00
-  let deadline = this.getPreviousWorkingDay(orderDate)
-  deadline.setHours(10, 0, 0, 0)
-  
-  return now <= deadline
-},
-
-canCancelOrder(dateString) {
-  return this.canModifyOrder(dateString)
-},
-
-getPreviousWorkingDay(date) {
-  const result = new Date(date)
-  const dayOfWeek = date.getDay() // 0 = vasárnap, 1 = hétfő, ..., 6 = szombat
-  
-  if (dayOfWeek === 1) { // Hétfő
-    // Péntek (3 nappal korábban)
-    result.setDate(date.getDate() - 3)
-  } else if (dayOfWeek === 0) { // Vasárnap
-    // Péntek (2 nappal korábban)
-    result.setDate(date.getDate() - 2)
-  } else { // Kedd - Szombat
-    // Előző nap
-    result.setDate(date.getDate() - 1)
-  }
-  
-  return result
-},
-
-getDeadlineInfo(dateString) {
-  const date = new Date(dateString)
-  const deadline = this.getPreviousWorkingDay(date)
-  deadline.setHours(10, 0, 0, 0)
-  
-  return deadline.toLocaleDateString('hu-HU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }) + ' óra'
-},
-
-getCancelDeadlineInfo(dateString) {
-  return this.getDeadlineInfo(dateString)
-},
+    canModifyOrder(dateString) {
+      const orderDate = new Date(dateString)
+      const now = new Date()
+      let deadline = this.getPreviousWorkingDay(orderDate)
+      deadline.setHours(10, 0, 0, 0)
+      return now <= deadline
+    },
+    
+    canCancelOrder(dateString) {
+      return this.canModifyOrder(dateString)
+    },
+    
+    getPreviousWorkingDay(date) {
+      const result = new Date(date)
+      const dayOfWeek = date.getDay()
+      
+      if (dayOfWeek === 1) {
+        result.setDate(date.getDate() - 3)
+      } else if (dayOfWeek === 0) {
+        result.setDate(date.getDate() - 2)
+      } else {
+        result.setDate(date.getDate() - 1)
+      }
+      return result
+    },
+    
+    getDeadlineInfo(dateString) {
+      const date = new Date(dateString)
+      const deadline = this.getPreviousWorkingDay(date)
+      deadline.setHours(10, 0, 0, 0)
+      return deadline.toLocaleDateString('hu-HU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) + ' óra'
+    },
+    
+    getCancelDeadlineInfo(dateString) {
+      return this.getDeadlineInfo(dateString)
+    },
     
     canShowOption(date, option) {
       if (option === 'A') return !!date.menu.optionA
@@ -503,50 +471,32 @@ getCancelDeadlineInfo(dateString) {
     },
     
     isOptionSelected(date, option) {
-      // Aktív rendelésnél a kiválasztott opciót mutatjuk
       if (date.order_status === 'Rendelve') {
         return date.selected_option === option
       }
-      // Lemondott vagy nincs rendelés: ideiglenes választást mutatjuk
       return this.tempSelections[date.date] === option
     },
     
     isOptionDisabled(date, option) {
-      // Cukorbetegek nem kattinthatnak
       if (this.userInfo?.hasDiabetes) return true
-      
-      // Ha van aktív rendelés és nem módosítható, akkor tiltott
       if (date.order_status === 'Rendelve' && !this.canModifyOrder(date.date)) return true
-      
-      // Ha nincs rendelés (vagy le van mondva) és lejárt a határidő, akkor tiltott
       if ((!date.has_order || date.order_status === 'Lemondva') && !this.canModifyOrder(date.date)) return true
-      
       return false
     },
     
     handleOptionClick(date, option) {
-        // Ha van aktív rendelés és módosítható
-        if (date.order_status === 'Rendelve' && this.canModifyOrder(date.date)) {
-          this.changeOrderOption(date, option)
-        } 
-        // Ha nincs rendelés VAGY le van mondva, és módosítható
-        else if ((!date.has_order || date.order_status === 'Lemondva') && this.canModifyOrder(date.date)) {
-          this.selectOptionForNewOrder(date, option)
-        }
-    },
-      
-  canPlaceOrder(date) {
-    // Cukorbetegeknek automatikusan mehet
-    if (this.userInfo?.hasDiabetes) return true
-    // Normál felhasználóknak kell opció választás
-    return !!this.tempSelections[date.date]
-  },
-    
-    getDiabeticChoice(date) {
-      return 'A'
+      if (date.order_status === 'Rendelve' && this.canModifyOrder(date.date)) {
+        this.changeOrderOption(date, option)
+      } else if ((!date.has_order || date.order_status === 'Lemondva') && this.canModifyOrder(date.date)) {
+        this.selectOptionForNewOrder(date, option)
+      }
     },
     
-    // Allergén figyelmeztetések
+    canPlaceOrder(date) {
+      if (this.userInfo?.hasDiabetes) return true
+      return !!this.tempSelections[date.date]
+    },
+    
     hasAllergenWarning(date, mealType) {
       return date.allergen_warnings?.some(w => w.meal === mealType) || false
     },
@@ -554,26 +504,7 @@ getCancelDeadlineInfo(dateString) {
     getAllergenTooltip(date, mealType) {
       const warning = date.allergen_warnings?.find(w => w.meal === mealType)
       if (!warning) return ''
-      return 'Allergént tartalmaz!'
-    },
-    
-    getDeadlineInfo(dateString) {
-      const date = new Date(dateString)
-      const deadline = new Date(date)
-      deadline.setDate(deadline.getDate() - 1)
-      
-      if (date.getDay() === 1) {
-        deadline.setDate(date.getDate() - 3)
-      }
-      
-      return deadline.toLocaleDateString('hu-HU') + ' 10:00'
-    },
-    
-    getCancelDeadlineInfo(dateString) {
-      const date = new Date(dateString)
-      const deadline = new Date(date)
-      deadline.setHours(8, 0, 0, 0)
-      return deadline.toLocaleDateString('hu-HU') + ' 8:00'
+      return 'Allergént figyelmeztetés!'
     },
     
     selectOptionForNewOrder(date, option) {
@@ -581,81 +512,62 @@ getCancelDeadlineInfo(dateString) {
     },
     
     async placeOrder(date) {
-  let selectedOption = this.tempSelections[date.date]
-  
-  // Cukorbetegeknek automatikus
-  if (this.userInfo?.hasDiabetes) {
-    selectedOption = 'A'
-  }
-  
-  if (!selectedOption) {
-    alert('Kérlek válassz opciót!')
-    return
-  }
-  
-  if (!this.canModifyOrder(date.date)) {
-    alert('A rendelési határidő lejárt!')
-    return
-  }
-  
-  if (!confirm(`Biztosan rendelni szeretnéd a ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`)) {
-    return
-  }
-  
-  try {
-    let response
-    
-    console.log('Rendelési adatok:', {
-      has_order: date.has_order,
-      order_status: date.order_status,
-      order_id: date.order_id,
-      selectedOption
-    })
-    
-    // Ha van már lemondott rendelés erre a napra, akkor újraaktiváljuk
-    if (date.has_order && date.order_status === 'Lemondva' && date.order_id) {
-      console.log('Lemondott rendelés újraaktiválása:', date.order_id)
-      response = await AuthService.api.post(`/user/personal-orders/${date.order_id}/reactivate`, {
-        selectedOption
-      })
-    } else {
-      console.log('Új rendelés létrehozása')
-      response = await AuthService.api.post('/user/personal-orders', {
-        date: date.date,
-        menuitems_id: date.menu_item_id,
-        selectedOption
-      })
-    }
-    
-    console.log('Válasz:', response.data)
-    
-    if (response.data?.success) {
-      alert('Rendelés sikeresen leadva!')
-      delete this.tempSelections[date.date]
-      await this.loadOrders()
-    } else {
-      alert(response.data?.message || 'Ismeretlen hiba történt')
-    }
-  } catch (err) {
-    console.error('Rendelési hiba:', err)
-    console.error('Hiba részletei:', err.response?.data)
-    alert(err.response?.data?.message || 'Hiba történt a rendelés során')
-  }
-},
+      let selectedOption = this.tempSelections[date.date]
+      
+      if (this.userInfo?.hasDiabetes) {
+        selectedOption = 'A'
+      }
+      
+      if (!selectedOption) {
+        alert('Kérlek válassz opciót!')
+        return
+      }
+      
+      if (!this.canModifyOrder(date.date)) {
+        alert('A rendelési határidő lejárt!')
+        return
+      }
+      
+      if (!confirm(`Biztosan rendelni szeretnéd a ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`)) {
+        return
+      }
+      
+      try {
+        let response
+        
+        if (date.has_order && date.order_status === 'Lemondva' && date.order_id) {
+          response = await AuthService.api.post(`/user/personal-orders/${date.order_id}/reactivate`, {
+            selectedOption
+          })
+        } else {
+          response = await AuthService.api.post('/user/personal-orders', {
+            date: date.date,
+            menuitems_id: date.menu_item_id,
+            selectedOption
+          })
+        }
+        
+        if (response.data?.success) {
+          alert('Rendelés sikeresen leadva!')
+          delete this.tempSelections[date.date]
+          await this.loadOrders()
+        } else {
+          alert(response.data?.message || 'Ismeretlen hiba történt')
+        }
+      } catch (err) {
+        console.error('Rendelési hiba:', err)
+        alert(err.response?.data?.message || 'Hiba történt a rendelés során')
+      }
+    },
     
     async changeOrderOption(date, newOption) {
       if (!date.has_order || !date.order_id) return
-      
       if (date.selected_option === newOption) return
-      
       if (!this.canModifyOrder(date.date)) {
         alert('A módosítási határidő lejárt!')
         return
       }
-      
-      if (!confirm(`Biztosan módosítani szeretnéd a ${newOption} opcióra?`)) {
-        return
-      }
+      if (!confirm(`Biztosan módosítani szeretnéd a ${newOption} opcióra?`)) return
       
       try {
         const response = await AuthService.api.patch(`/user/personal-orders/${date.order_id}/update-option`, {
@@ -673,59 +585,29 @@ getCancelDeadlineInfo(dateString) {
     },
     
     async cancelOrder(orderId) {
-  const date = this.availableDates.find(d => d.order_id === orderId)
-  if (!date) return
-  
-  if (!this.canCancelOrder(date.date)) {
-    alert('A lemondási határidő lejárt! (aznap 8:00-ig lehet lemondani)')
-    return
-  }
-  
-  if (!confirm('Biztosan le szeretnéd mondani ezt a rendelést?')) {
-    return
-  }
-  
-  try {
-    const response = await AuthService.api.delete(`/user/personal-orders/${orderId}/cancel`)
-    
-    if (response.data?.success) {
-      alert('Rendelés sikeresen lemondva!')
-      // Ideiglenes választás törlése erre a napra, ha lenne
-      if (this.tempSelections[date.date]) {
-        delete this.tempSelections[date.date]
-      }
-      await this.loadOrders()
-    }
-  } catch (err) {
-    console.error('Lemondási hiba:', err)
-    alert(err.response?.data?.message || 'Hiba történt a lemondás során')
-  }
-},
-    
-    async reorderDate(date) {
-      if (!this.canModifyOrder(date.date)) {
-        alert('A rendelési határidő lejárt!')
+      const date = this.availableDates.find(d => d.order_id === orderId)
+      if (!date) return
+      
+      if (!this.canCancelOrder(date.date)) {
+        alert('A lemondási határidő lejárt! (aznap 8:00-ig lehet lemondani)')
         return
       }
       
-      const selectedOption = date.selected_option || 'A'
-      
-      if (!confirm(`Biztosan újra szeretnéd rendelni a ${selectedOption} opciót?`)) {
-        return
-      }
+      if (!confirm('Biztosan le szeretnéd mondani ezt a rendelést?')) return
       
       try {
-        const response = await AuthService.api.post(`/user/personal-orders/${date.order_id}/reorder`, {
-          selectedOption
-        })
+        const response = await AuthService.api.delete(`/user/personal-orders/${orderId}/cancel`)
         
         if (response.data?.success) {
-          alert('Újrarendelés sikeres!')
+          alert('Rendelés sikeresen lemondva!')
+          if (this.tempSelections[date.date]) {
+            delete this.tempSelections[date.date]
+          }
           await this.loadOrders()
         }
       } catch (err) {
-        console.error('Újrarendelési hiba:', err)
-        alert(err.response?.data?.message || 'Hiba történt az újrarendelés során')
+        console.error('Lemondási hiba:', err)
+        alert(err.response?.data?.message || 'Hiba történt a lemondás során')
       }
     },
     
@@ -760,63 +642,75 @@ getCancelDeadlineInfo(dateString) {
 
 <style scoped>
 .personal-orders {
+  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  min-height: calc(100vh - 200px);
 }
 
-.orders-header {
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+}
+
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #eef2f6;
+  border-bottom: 1px solid #eee;
 }
 
-.orders-header h1 {
+.title {
+  font-size: 1.75rem;
+  color: #8a1212;
   margin: 0;
-  color: #2c3e50;
-  font-size: 1.8rem;
   font-weight: 600;
 }
 
 .header-controls {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .month-selector {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: white;
+  background: #f8f9fa;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 30px;
   padding: 0.25rem;
 }
 
-.month-nav {
+.nav-btn {
   width: 36px;
   height: 36px;
   border: none;
   background: transparent;
-  color: #3498db;
+  color: #8a1212;
   font-size: 1.2rem;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
 }
 
-.month-nav:hover:not(:disabled) {
-  background: #f0f7ff;
+.nav-btn:hover:not(:disabled) {
+  background: #f0a24a;
+  color: white;
 }
 
-.month-nav:disabled {
+.nav-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
@@ -825,84 +719,126 @@ getCancelDeadlineInfo(dateString) {
   padding: 0.5rem 1rem;
   background: transparent;
   border: none;
-  color: #2c3e50;
+  color: #333;
   font-weight: 500;
   cursor: pointer;
   min-width: 160px;
   text-align: center;
+  font-size: 0.85rem;
 }
 
 .current-month:hover {
-  color: #3498db;
+  color: #f0a24a;
 }
 
-.btn-refresh {
+.btn-primary {
   padding: 0.5rem 1rem;
-  background: #2ecc71;
+  background: #1fa317;
   color: white;
   border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  border-radius: 8px;
   font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.85rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #158a0f;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background: #e9ecef;
+  color: #495057;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.2s;
+  font-size: 0.85rem;
 }
 
-.btn-refresh:hover {
-  background: #27ae60;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+.btn-secondary:hover {
+  background: #dee2e6;
 }
 
-/* Hónap választó modal */
-.month-picker-modal {
+/* Modal */
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
   z-index: 1000;
 }
 
-.month-picker-content {
+.modal {
   background: white;
-  border-radius: 12px;
-  padding: 2rem;
+  border-radius: 20px;
+  width: 100%;
   max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.2s ease-out;
 }
 
-.month-picker-header {
+.modal-small {
+  max-width: 500px;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  background: #fff7e6;
 }
 
-.month-picker-header h3 {
+.modal-header h2 {
   margin: 0;
-  color: #2c3e50;
   font-size: 1.25rem;
+  color: #8a1212;
+  font-weight: 600;
 }
 
-.close-btn {
-  background: transparent;
+.modal-close {
+  background: none;
   border: none;
   font-size: 1.5rem;
-  color: #95a5a6;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  color: #888;
+  padding: 0 0.5rem;
+  transition: color 0.2s;
 }
 
-.close-btn:hover {
-  background: #f8f9fa;
-  color: #2c3e50;
+.modal-close:hover {
+  color: #8a1212;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .months-grid {
@@ -915,80 +851,106 @@ getCancelDeadlineInfo(dateString) {
   padding: 0.75rem 0.5rem;
   background: #f8f9fa;
   border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  color: #2c3e50;
+  border-radius: 8px;
+  color: #333;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
+  font-size: 0.85rem;
 }
 
 .month-btn:hover {
-  background: #eef2f6;
+  background: #fef9ef;
+  border-color: #f0a24a;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .month-btn.active {
-  background: #3498db;
-  border-color: #3498db;
-  color: white;
+  background: #f0a24a;
+  border-color: #f0a24a;
+  color: #7b2c2c;
 }
 
-/* Táblázat */
-.orders-table-wrapper {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  margin-bottom: 2rem;
+/* Loading state */
+.loading-state {
+  text-align: center;
+  padding: 3rem;
 }
 
-.orders-table {
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+
+/* Table */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  margin-bottom: 1.5rem;
+}
+
+.data-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.85rem;
 }
 
-.orders-table th {
-  background: #f8f9fa;
-  padding: 1rem;
+.data-table th {
+  background: #f0a24a;
+  color: #7b2c2c;
+  padding: 0.75rem 1rem;
   text-align: left;
-  color: #2c3e50;
   font-weight: 600;
-  font-size: 0.9rem;
-  border-bottom: 2px solid #e0e0e0;
 }
 
-.orders-table td {
-  padding: 1rem;
+.data-table td {
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid #f0f0f0;
-  color: #2c3e50;
+  vertical-align: middle;
 }
 
-.orders-table tr:last-child td {
-  border-bottom: none;
-}
-
-.orders-table tbody tr:hover {
-  background: #f8f9fa;
+.data-table tr:hover {
+  background: #fef9ef;
 }
 
 /* Sor állapotok */
-.orders-table tr.cancelled-order {
-  background: #fef5f5;
-  opacity: 0.8;
-}
-
-.orders-table tr.active-order {
-  background: #f0fdf4;
-}
-
-.orders-table tr.today {
-  background: #f0f9ff;
-}
-
-.orders-table tr.past-deadline {
+.data-table tr.cancelled-order {
   opacity: 0.7;
+}
+
+.data-table tr.active-order {
+  background: #e8f5e9;
+}
+
+.data-table tr.today {
+  background: #fff7e6;
 }
 
 /* Dátum cella */
@@ -1003,17 +965,16 @@ getCancelDeadlineInfo(dateString) {
 }
 
 .day-number {
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   line-height: 1.2;
-  color: #2c3e50;
+  color: #8a1212;
 }
 
 .month-name {
-  font-size: 0.75rem;
-  color: #7f8c8d;
+  font-size: 0.7rem;
+  color: #888;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 /* Étel cella */
@@ -1027,40 +988,32 @@ getCancelDeadlineInfo(dateString) {
   gap: 0.5rem;
   font-weight: 500;
   line-height: 1.4;
+  color: #333;
 }
 
-/* Allergén figyelmeztetés piros szöveg */
 .meal-name.allergen-meal {
   color: #e74c3c;
   font-weight: bold;
 }
 
 .meal-price {
-  font-size: 0.85rem;
-  color: #27ae60;
+  font-size: 0.7rem;
+  color: #1fa317;
   font-weight: 600;
   margin-top: 0.25rem;
 }
 
-/* Allergén ikon */
 .allergen-warning {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background: #fff3cd;
-  border: 1px solid #ffeeba;
   border-radius: 50%;
   color: #856404;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   cursor: help;
-  transition: all 0.2s;
-}
-
-.allergen-warning:hover {
-  transform: scale(1.1);
-  background: #ffeeba;
 }
 
 /* Választás cella */
@@ -1076,12 +1029,12 @@ getCancelDeadlineInfo(dateString) {
 }
 
 .choice-btn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: 2px solid #e0e0e0;
   border-radius: 50%;
   background: white;
-  color: #7f8c8d;
+  color: #888;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -1093,12 +1046,22 @@ getCancelDeadlineInfo(dateString) {
 .choice-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-color: #f0a24a;
+  color: #f0a24a;
 }
 
 .choice-btn.active {
-  background: var(--zold);
-  border-color: var(--zold);
+  background: #1fa317;
+  border-color: #1fa317;
   color: white;
+}
+
+.choice-btn.selected-order {
+  background: #27ae60;
+  border-color: #27ae60;
+  color: white;
+  opacity: 0.8;
+  cursor: default;
 }
 
 .choice-btn:disabled {
@@ -1110,205 +1073,134 @@ getCancelDeadlineInfo(dateString) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #27ae60;
+  background: #1fa317;
   color: white;
   font-weight: 600;
 }
 
-.cancelled-choice {
+.no-option {
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #f8f9fa;
-  color: #95a5a6;
-  font-weight: 600;
-  border: 2px dashed #e0e0e0;
-}
-
-.disabled-choice {
-  color: #95a5a6;
-  font-style: italic;
+  color: #ccc;
+  font-size: 0.8rem;
 }
 
 /* Státusz badge */
 .status-cell {
-  width: 120px;
+  width: 100px;
 }
 
 .status-badge {
   display: inline-block;
-  padding: 0.4rem 0.8rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 500;
   text-align: center;
-  min-width: 90px;
+  min-width: 80px;
 }
 
 .status-badge.ordered {
   background: #d4edda;
   color: #155724;
-  border: 1px solid #c3e6cb;
 }
 
-.status-badge.cancelled { /*le lett mondva, de még rendelhető*/
+.status-badge.cancelled {
   background: #d1ecf1;
   color: #0c5460;
-  border: 1px solid #bee5eb;
 }
 
 .status-badge.deadline-passed {
   background: #fff3cd;
   color: #856404;
-  border: 1px solid #ffeeba;
 }
 
-.status-badge.available { /*rendelhető*/
+.status-badge.available {
   background: #d1ecf1;
   color: #0c5460;
-  border: 1px solid #bee5eb;
 }
 
 /* Művelet cella */
 .action-cell {
-  width: 100px;
+  width: 140px;
   text-align: center;
-  vertical-align: middle;
 }
 
 .actions-inner {
-  display: inline-flex;
+  display: flex;
   gap: 0.5rem;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.action-btn {
-  width: 32px;
-  height: 32px;
+.btn-action {
+  padding: 0.4rem 0.75rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.2s;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.action-btn:hover {
-  opacity: 0.8;
+.btn-order {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
-.action-btn.order {
-  background: #27ae60;
-  color: white;
-  width: auto;
-  padding: 0 0.75rem;
-  font-size: 0.85rem;
+.btn-order:hover:not(:disabled) {
+  background: #c8e6c9;
+  transform: translateY(-1px);
 }
 
-.action-btn.order:hover:not(:disabled) {
-  background: #219150;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+.btn-edit {
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
-.action-btn.edit {
-  background: #3498db;
-  color: white;
+.btn-edit:hover {
+  background: #bbdef5;
+  transform: translateY(-1px);
 }
 
-.action-btn.cancel {
-  background: #e74c3c;
-  color: white;
+.btn-cancel {
+  background: #ffebee;
+  color: #c62828;
 }
 
-.action-btn.reorder {
-  background: #f39c12;
-  color: white;
+.btn-cancel:hover {
+  background: #ffcdd2;
+  transform: translateY(-1px);
 }
 
-.action-btn:disabled {
+.btn-action:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .disabled-action {
-  display: block;
-  color: #95a5a6;
-  font-size: 0.85rem;
+  color: #bbb;
+  font-size: 0.7rem;
   font-style: italic;
-  text-align: center;
-  padding: 0.5rem;
-}
-
-/* Állapotok */
-.loading-state,
-.error-state,
-.no-data {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  margin-bottom: 2rem;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f1f2f6;
-  border-top-color: #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-state p {
-  color: #e74c3c;
-  margin-bottom: 1rem;
-}
-
-.retry-btn {
-  padding: 0.5rem 1.5rem;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.retry-btn:hover {
-  background: #2980b9;
-}
-
-.no-data p {
-  color: #95a5a6;
-  margin: 0;
 }
 
 /* Információs sáv */
 .info-footer {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   padding: 1rem;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  color: #7f8c8d;
-  font-size: 0.9rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  color: #666;
+  font-size: 0.75rem;
   flex-wrap: wrap;
 }
 
@@ -1319,69 +1211,72 @@ getCancelDeadlineInfo(dateString) {
 }
 
 .info-icon {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 /* Reszponzív */
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
   .personal-orders {
     padding: 1rem;
   }
-  
-  .orders-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
+
+  .content-card {
+    padding: 1rem;
   }
-  
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
   .header-controls {
+    width: 100%;
     justify-content: space-between;
   }
-  
-  .orders-table {
-    min-width: 1000px;
-  }
-  
-  .orders-table-wrapper {
-    overflow-x: auto;
-  }
-}
 
-@media (max-width: 768px) {
+  .month-selector {
+    flex: 1;
+    justify-content: center;
+  }
+
   .info-footer {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
-  
+
   .months-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .actions-inner {
+    flex-direction: column;
+  }
+
+  .btn-action {
+    width: 100%;
+  }
 }
 
-.choice-btn.selected-order {
-  background: #27ae60;
-  border-color: #27ae60;
-  color: white;
-  opacity: 0.8;
-  cursor: default;
-}
+@media (max-width: 480px) {
+  .choice-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
 
-.choice-btn.selected-order:hover {
-  transform: none;
-  box-shadow: none;
-}
+  .date-display {
+    text-align: center;
+  }
 
-.no-option {
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #95a5a6;
-  font-size: 0.9rem;
+  .day-number {
+    font-size: 1rem;
+  }
 }
 
 .deadline-passed {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 </style>

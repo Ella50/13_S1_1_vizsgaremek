@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Meal;
+use App\Models\Order;
+use Carbon\Carbon;
 
 class MenuItem extends Model
 {
@@ -33,7 +35,7 @@ class MenuItem extends Model
     {
         return [
             'id' => $this->id,
-            'day' => $this->day,
+            'day' => $this->day instanceof Carbon ? $this->day->toDateString() : $this->day,
             'soup' => $this->soupMeal ? [
                 'id' => $this->soupMeal->id,
                 'mealName' => $this->soupMeal->mealName,

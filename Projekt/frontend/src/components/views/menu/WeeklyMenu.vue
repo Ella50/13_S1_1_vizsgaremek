@@ -5,9 +5,9 @@
         <h1>Heti menü</h1>
 
         <div class="week-navigation">
-          <button @click="prevWeek" class="nav-btn">Előző hét</button>
+          <button @click="prevWeek" class="nav-btn">← Előző hét</button>
           <span class="week-range">{{ weekDisplay }}</span>
-          <button @click="nextWeek" class="nav-btn">Következő hét</button>
+          <button @click="nextWeek" class="nav-btn">Következő hét →</button>
         </div>
       </div>
 
