@@ -787,10 +787,11 @@ export default {
   background: white;
   border-radius: 20px;
   width: 100%;
-  max-width: 500px;
+  max-width: 800px;
   max-height: 90vh;
   overflow: hidden;
-  display: flex;
+  display: flex !important;
+  position: relative !important;
   flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   animation: modalFadeIn 0.2s ease-out;

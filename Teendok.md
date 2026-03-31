@@ -4,7 +4,6 @@
 - custom alert
 - TELEFONOS NÉZET MINDELHOL (pl. meals.vue tápértékek)
 - jelszavak: speciális karakterek lekezelése?
-- ha modal: mögötte ne lehessen görgetni
 - felfüggesztett akkor beléphet megnézni a számláit?
 - navbar ott van ha visszaállítom a jelszót
 - regisztráció sikeres üzenet (custom alert legyen)
@@ -34,7 +33,6 @@
 - pontosabb tápérték számítás??
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
 - összetevők felsaorolása a usernek
-- pagináció?
 - nem működik a törlés NEM IGAZ -> nem törli mert van hozzá rendelés kapcsolva (ilyne hibaüzenet kell)
 
 
