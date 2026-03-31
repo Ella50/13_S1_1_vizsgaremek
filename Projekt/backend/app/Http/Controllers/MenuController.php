@@ -70,7 +70,7 @@ class MenuController extends Controller
     }
 
     // Menü mentése (CREATE + UPDATE egyben)
-    public function saveMenu(Request $request)
+    public function saveMenu(Request $request, $id = null)
     {
         $request->validate([
             'day' => 'required|date',
@@ -80,23 +80,45 @@ class MenuController extends Controller
             'other' => 'nullable|exists:meals,id'
         ]);
 
-        $menu = MenuItem::updateOrCreate(
-            ['day' => $request->day],
-            [
+        // Ha van ID, akkor frissítünk
+        if ($id) {
+            $menu = MenuItem::find($id);
+            
+            if (!$menu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Menü nem található'
+                ], 404);
+            }
+            
+            $menu->update([
                 'soup' => $request->soup,
                 'optionA' => $request->optionA,
                 'optionB' => $request->optionB,
                 'other' => $request->other
-            ]
-        );
+            ]);
+            
+            $message = 'Menü sikeresen frissítve.';
+        } else {
+            // Nincs ID, új menü létrehozása
+            $menu = MenuItem::updateOrCreate(
+                ['day' => $request->day],
+                [
+                    'soup' => $request->soup,
+                    'optionA' => $request->optionA,
+                    'optionB' => $request->optionB,
+                    'other' => $request->other
+                ]
+            );
+            $message = 'Menü sikeresen mentve.';
+        }
 
         return response()->json([
             'success' => true, 
-            'message' => 'Menü sikeresen mentve.',
+            'message' => $message,
             'data' => $menu->getMenuWithMeals()
         ]);
     }
-
     // Mai menü lekérése
     public function getTodayMenu()
     {
@@ -215,4 +237,55 @@ class MenuController extends Controller
             'week_end' => $end->toDateString()
         ]);
     }
+
+    
+    public function listMenus(Request $request)
+    {
+        $year = $request->query('year');
+        $month = $request->query('month');
+        $perPage = $request->query('per_page', 10);
+        
+        $query = MenuItem::query()
+            ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
+            ->orderBy('day', 'desc');
+        
+        // Szűrés év és hónap alapján
+        if ($year && $month) {
+            $query->whereYear('day', $year)
+                ->whereMonth('day', $month);
+        }
+        
+        $menus = $query->paginate($perPage);
+        
+        $formattedMenus = $menus->getCollection()->map(function($menu) {
+            return $menu->getMenuWithMeals();
+        });
+        
+        $menus->setCollection($formattedMenus);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $menus
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $menu = MenuItem::find($id);
+        
+        if (!$menu) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Menü nem található'
+            ], 404);
+        }
+        
+        $menu->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Menü sikeresen törölve'
+        ]);
+    }
+    
 }

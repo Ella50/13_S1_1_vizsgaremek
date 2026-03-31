@@ -182,10 +182,6 @@
                   <span class="info-value">{{ hasDiscount ? 'Nem' : 'Igen' }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Osztály:</span>
-                  <span class="info-value">{{ className || '-' }}</span>
-                </div>
-                <div class="info-row">
                   <span class="info-label">Regisztráció dátuma:</span>
                   <span class="info-value">{{ createdAt }}</span>
                 </div>

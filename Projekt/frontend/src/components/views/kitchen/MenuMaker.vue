@@ -5,50 +5,192 @@
         <h1 class="title">Menük kezelése</h1>
         
         <div class="header-controls">
-          <button @click="openCreateModal" class="btn-primary">
-            + Új menü hozzáadása
+          <div class="month-selector">
+            <button 
+              @click="previousMonth" 
+              class="nav-btn"
+              :disabled="!canGoToPreviousMonth"
+            >
+              ←
+            </button>
+            
+            <button @click="showMonthPicker = true" class="current-month">
+              {{ currentMonthDisplay }}
+            </button>
+            
+            <button 
+              @click="nextMonth" 
+              class="nav-btn"
+              :disabled="!canGoToNextMonth"
+            >
+              →
+            </button>
+          </div>
+
+          <button @click="fetchMenus" class="btn-primary" :disabled="loading">
+            {{ loading ? 'Betöltés...' : 'Frissítés' }}
           </button>
-          <button @click="openEditModal" class="btn-secondary">
-            ✏️ Menü szerkesztése
+          
+          <button @click="openCreateModal" class="btn-primary">
+            + Új menü
           </button>
         </div>
       </div>
 
-      <!-- Modal -->
-      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-        <div class="modal">
+      <!-- Hónap választó modal -->
+      <div v-if="showMonthPicker" class="modal-overlay" @click.self="showMonthPicker = false">
+        <div class="modal modal-small">
           <div class="modal-header">
-            <h2>{{ step === 1 ? 'Dátum kiválasztása' : `Ételek kiválasztása - ${selectedDate}` }}</h2>
-            <button @click="closeModal" class="modal-close">×</button>
+            <h2>Válassz hónapot</h2>
+            <button @click="showMonthPicker = false" class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="months-grid">
+              <button
+                v-for="month in availableMonths"
+                :key="`${month.year}-${month.month}`"
+                @click="selectMonth(month)"
+                :class="{ active: isCurrentMonth(month) }"
+                class="month-btn"
+              >
+                {{ month.display }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Menük betöltése...</p>
+      </div>
+
+      <div v-else-if="error" class="error-message">
+        <p>{{ error }}</p>
+        <button @click="fetchMenus" class="btn-secondary">Újrapróbálkozás</button>
+      </div>
+
+      <div v-else>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Dátum</th>
+                <th>Leves</th>
+                <th>A opció</th>
+                <th>B opció</th>
+                <th>Egyéb</th>
+                <th>Műveletek</th>
+              </tr>
+            </thead>
+            <tbody>
+               <tr 
+                  v-for="menu in menus.data" 
+                  :key="menu.id"
+                  :class="{ 'past-menu': isPastDate(menu.day) }"
+                >
+                <td class="date-cell">{{ formatDate(menu.day) }}</td>
+                <td>{{ menu.soup?.mealName || '—' }}</td>
+                <td>{{ menu.optionA?.mealName || '—' }}</td>
+                <td>{{ menu.optionB?.mealName || '—' }}</td>
+                <td>{{ menu.other?.mealName || '—' }}</td>
+                <td class="actions-cell">
+                  <div class="actions-group">
+                    <button 
+                      @click="openEditModal(menu)" 
+                      class="btn-icon btn-edit" 
+                      title="Szerkesztés"
+                      :disabled="!canEditMenu(menu)"
+                    >
+                      ✎
+                    </button>
+                    <button 
+                      @click="deleteMenu(menu.id)" 
+                      class="btn-delete" 
+                      title="Törlés"
+                      :disabled="!canDeleteMenu(menu)"
+                    >
+                      Törlés
+                    </button>
+                  </div>
+                  <span v-if="!canEditMenu(menu)" class="past-menu-badge">
+                    Lejárt
+                  </span>
+              </td>
+              </tr>
+              <tr v-if="menus.data && menus.data.length === 0">
+                <td colspan="6" class="empty-row">Nincsenek menük ebben a hónapban</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="menus.data && menus.data.length > 0 && menus.last_page > 1" class="pagination">
+          <button @click="changePage(menus.current_page - 1)" :disabled="menus.current_page === 1" class="btn-pagination">
+            Előző
+          </button>
+          <span class="pagination-info">
+            {{ menus.current_page }} / {{ menus.last_page }} oldal
+            ({{ menus.total }} menü)
+          </span>
+          <button @click="changePage(menus.current_page + 1)" :disabled="menus.current_page === menus.last_page" class="btn-pagination">
+            Következő
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create/Edit Modal (ugyanaz marad) -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>{{ isEditMode ? 'Menü szerkesztése' : 'Új menü létrehozása' }}</h2>
+          <button @click="closeModal" class="modal-close">×</button>
+        </div>
+        
+        <div class="modal-body">
+          <div v-if="modalLoading" class="loading-state-small">
+            <div class="spinner-small"></div>
+            <p>Adatok betöltése...</p>
           </div>
           
-          <div class="modal-body">
-            <!-- Step 1: Dátum választás -->
-            <div v-if="step === 1" class="step-1">
-              <div class="form-group">
-                <label>Válassz dátumot</label>
-                <select v-model="selectedDate" @change="onDateSelected" class="form-control">
-                  <option disabled value="">Válassz dátumot</option>
-                  <option v-for="date in availableDates" :key="date" :value="date">
-                    {{ date }}
-                  </option>
-                </select>
-              </div>
+          <form v-else @submit.prevent="saveMenu" class="edit-form">
+            <div class="form-group">
+              <label>Dátum *</label>
               
-              <div class="modal-footer">
-                <button :disabled="!selectedDate" @click="step = 2" class="btn-primary">Tovább</button>
-                <button @click="closeModal" class="btn-cancel">Mégse</button>
-              </div>
+              <!-- Új menü létrehozásakor: legördülő lista -->
+              <select 
+                v-if="!isEditMode"
+                v-model="formData.day" 
+                required 
+                class="form-control"
+              >
+                <option disabled value="">Válassz dátumot</option>
+                <option v-for="date in availableDates" :key="date" :value="date">
+                  {{ formatDate(date) }}
+                </option>
+              </select>
+              
+              <!-- Szerkesztés módban: csak szövegmező (readonly) -->
+              <input 
+                v-else
+                :value="formatDate(formData.day)" 
+                type="text" 
+                class="form-control" 
+                disabled
+              >
+              
+              <small v-if="isEditMode" class="form-hint">Szerkesztésnél a dátum nem módosítható</small>
             </div>
 
-            <!-- Step 2: Ételek kiválasztása -->
-            <div v-else class="step-2">
+            <div class="meal-selection">
               <div class="meal-types">
                 <button
                   v-for="type in mealTypes"
                   :key="type.slot"
                   :class="['meal-type-btn', { active: activeSlot === type.slot }]"
                   @click="activeSlot = type.slot; activeCategory = type.category"
+                  type="button"
                 >
                   {{ type.label }}
                 </button>
@@ -59,6 +201,7 @@
                   v-model="mealSearch"
                   class="search-input"
                   placeholder="Keresés étel név szerint..."
+                  type="text"
                 >
                 <span class="search-icon">🔍</span>
               </div>
@@ -70,7 +213,7 @@
                   class="meal-item"
                 >
                   <span class="meal-name">{{ meal.mealName }}</span>
-                  <button class="btn-action btn-add" @click="addMeal(meal)">Hozzáad</button>
+                  <button type="button" class="btn-action btn-add" @click="addMeal(meal)">Hozzáad</button>
                 </div>
                 
                 <div v-if="filteredMeals.length === 0" class="empty-state-small">
@@ -86,31 +229,34 @@
                   <div class="selected-item" :class="{ empty: !selectedMeals.soup }">
                     <span class="selected-label">Leves:</span>
                     <span class="selected-value">{{ selectedMeals.soup?.mealName || '—' }}</span>
+                    <button v-if="selectedMeals.soup" type="button" class="btn-remove" @click="removeMeal('soup')">✕</button>
                   </div>
                   <div class="selected-item" :class="{ empty: !selectedMeals.optionA }">
                     <span class="selected-label">A opció:</span>
                     <span class="selected-value">{{ selectedMeals.optionA?.mealName || '—' }}</span>
+                    <button v-if="selectedMeals.optionA" type="button" class="btn-remove" @click="removeMeal('optionA')">✕</button>
                   </div>
                   <div class="selected-item" :class="{ empty: !selectedMeals.optionB }">
                     <span class="selected-label">B opció:</span>
                     <span class="selected-value">{{ selectedMeals.optionB?.mealName || '—' }}</span>
+                    <button v-if="selectedMeals.optionB" type="button" class="btn-remove" @click="removeMeal('optionB')">✕</button>
                   </div>
                   <div class="selected-item" :class="{ empty: !selectedMeals.other }">
                     <span class="selected-label">Egyéb:</span>
                     <span class="selected-value">{{ selectedMeals.other?.mealName || '—' }}</span>
+                    <button v-if="selectedMeals.other" type="button" class="btn-remove" @click="removeMeal('other')">✕</button>
                   </div>
                 </div>
               </div>
-
-              <div class="modal-footer">
-                <button @click="step = 1" class="btn-secondary">Vissza</button>
-                <button @click="saveMenu" :disabled="!canSave" class="btn-primary">
-                  Mentés
-                </button>
-                <button @click="closeModal" class="btn-cancel">Mégse</button>
-              </div>
             </div>
-          </div>
+            
+            <div class="modal-footer">
+              <button type="button" @click="closeModal" class="btn-cancel">Mégse</button>
+              <button type="submit" :disabled="!canSave || saving" class="btn-save">
+                {{ saving ? "Mentés..." : (isEditMode ? "Frissítés" : "Létrehozás") }}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -120,17 +266,34 @@
 <script>
 import AuthService from '../../../services/authService'
 import { addAlert } from '../../auth/AppAlert.vue'
+import { showConfirm } from '../../auth/AppConfirm.vue'
 
 export default {
   data() {
     return {
+      // Táblázatos nézet adatai
+      menus: { data: [] },
+      loading: false,
+      error: '',
+      currentPage: 1,
+      
+      // Hónap választó
+      selectedMonth: null,
+      showMonthPicker: false,
+      
+      // Modal állapotok
       showModal: false,
-      step: 1,
-      isEdit: false,
-      mealSearch: '',
+      isEditMode: false,
+      modalLoading: false,
+      saving: false,
+      editingMenuId: null,
+      
+      // Dátum választás
       availableDates: [],
-      selectedDate: '',
+      
+      // Ételek listája
       meals: [],
+      mealSearch: '',
       mealTypes: [
         { slot: 'soup', category: 'Leves', label: 'Leves' },
         { slot: 'optionA', category: 'Főétel', label: 'A opció' },
@@ -139,8 +302,10 @@ export default {
       ],
       activeSlot: 'soup',
       activeCategory: 'Leves',
-      editingMenuId: null,
-      selectedMeals: {
+      
+      // Form adatok
+      formData: {
+        day: '',
         soup: null,
         optionA: null,
         optionB: null,
@@ -150,14 +315,24 @@ export default {
   },
 
   computed: {
+    selectedMeals() {
+      return {
+        soup: this.formData.soup,
+        optionA: this.formData.optionA,
+        optionB: this.formData.optionB,
+        other: this.formData.other
+      }
+    },
+
     filteredMeals() {
       const search = this.mealSearch.toLowerCase()
       const forbiddenIds = new Set()
-      if (this.activeSlot === 'optionA' && this.selectedMeals.optionB) {
-        forbiddenIds.add(this.selectedMeals.optionB.id)
+      
+      if (this.activeSlot === 'optionA' && this.formData.optionB) {
+        forbiddenIds.add(this.formData.optionB.id)
       }
-      if (this.activeSlot === 'optionB' && this.selectedMeals.optionA) {
-        forbiddenIds.add(this.selectedMeals.optionA.id)
+      if (this.activeSlot === 'optionB' && this.formData.optionA) {
+        forbiddenIds.add(this.formData.optionA.id)
       }
 
       return this.meals
@@ -171,132 +346,383 @@ export default {
 
     canSave() {
       return (
-        this.selectedDate &&
-        this.selectedMeals.soup &&
-        this.selectedMeals.optionA &&
-        this.selectedMeals.optionB
+        this.formData.day &&
+        this.formData.soup &&
+        this.formData.optionA &&
+        this.formData.optionB
       )
+    },
+
+    availableMonths() {
+      const months = []
+      const currentYear = new Date().getFullYear()
+      
+      for (let year = currentYear - 1; year <= currentYear + 1; year++) {
+        for (let month = 1; month <= 12; month++) {
+          months.push({
+            year,
+            month,
+            display: this.getMonthNameFull(month) + ' ' + year
+          })
+        }
+      }
+      
+      return months
+    },
+    
+    currentMonthDisplay() {
+      if (!this.selectedMonth) return 'Válassz hónapot'
+      return this.getMonthNameFull(this.selectedMonth.month) + ' ' + this.selectedMonth.year
+    },
+    
+    canGoToPreviousMonth() {
+      if (!this.selectedMonth) return false
+      const index = this.availableMonths.findIndex(
+        m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+      )
+      return index > 0
+    },
+    
+    canGoToNextMonth() {
+      if (!this.selectedMonth) return false
+      const index = this.availableMonths.findIndex(
+        m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+      )
+      return index < this.availableMonths.length - 1
     }
   },
 
+  watch: {
+    showModal(newVal) {
+      if (newVal) {
+        document.body.style.overflow = 'hidden'
+      } else {
+        document.body.style.overflow = ''
+      }
+    },
+    showMonthPicker(newVal) {
+      if (newVal) {
+        document.body.style.overflow = 'hidden'
+      } else {
+        document.body.style.overflow = ''
+      }
+    }
+  },
+
+  mounted() {
+    this.initMonth()
+    this.fetchMenus()
+  },
+
   methods: {
-    async openCreateModal() {
-      this.isEdit = false
-      await this.fetchAvailableDates()
-      await this.fetchMeals()
-      this.resetState()
-      this.showModal = true
-      document.body.style.overflow = 'hidden'
+    initMonth() {
+      const now = new Date()
+      this.selectedMonth = { year: now.getFullYear(), month: now.getMonth() + 1 }
     },
 
-    async openEditModal() {
-      this.isEdit = true
-      await this.fetchExistingDates()
-      await this.fetchMeals()
-      this.resetState()
-      this.showModal = true
-      document.body.style.overflow = 'hidden'
-    },
-
-    resetState() {
-      this.step = 1
-      this.selectedDate = ''
-      this.isEdit = false
-      this.editingMenuId = null
-      this.mealSearch = ''
-      this.activeSlot = 'soup'
-      this.activeCategory = 'Leves'
-      this.resetMealsOnly()
-    },
-
-    closeModal() {
-      this.showModal = false
-      document.body.style.overflow = ''
-      this.resetState()
+    async fetchMenus() {
+      if (!this.selectedMonth) return
+      
+      this.loading = true
+      this.error = ''
+      
+      try {
+        const params = {
+          page: this.currentPage,
+          year: this.selectedMonth.year,
+          month: this.selectedMonth.month
+        }
+        
+        const response = await AuthService.api.get('/menu/list', { params })
+        
+        let data = response.data
+        if (typeof data === 'string') {
+          data = data.replace(/^\uFEFF/, '')
+          data = JSON.parse(data)
+        }
+        
+        if (data.success && data.data) {
+          // Biztosítsuk, hogy a dátum string formátumú legyen
+          if (data.data.data) {
+            data.data.data = data.data.data.map(menu => ({
+              ...menu,
+              day: menu.day ? (typeof menu.day === 'object' ? menu.day.toISOString?.().split('T')[0] : menu.day) : null
+            }))
+          }
+          this.menus = data.data
+        } else {
+          this.error = 'Érvénytelen válasz formátum'
+          this.menus = { data: [] }
+        }
+      } catch (error) {
+        console.error('Hiba:', error)
+        this.error = error.response?.data?.message || 'Hiba történt a menük betöltése során'
+        this.menus = { data: [] }
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchAvailableDates() {
-      const res = await AuthService.api.get('/menu/available-dates')
-      this.availableDates = res.data
-    },
-
-    async fetchExistingDates() {
-      const res = await AuthService.api.get('/menu/existing-dates')
-      this.availableDates = res.data
+      try {
+        const res = await AuthService.api.get('/menu/available-dates')
+        let data = res.data
+        if (typeof data === 'string') {
+          data = data.replace(/^\uFEFF/, '')
+          data = JSON.parse(data)
+        }
+        
+        // Csak a mai és jövőbeli dátumokat mutassuk
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        
+        this.availableDates = Array.isArray(data) 
+          ? data.filter(date => {
+              const dateObj = new Date(date)
+              dateObj.setHours(0, 0, 0, 0)
+              return dateObj >= today
+            })
+          : []
+          
+      } catch (e) {
+        console.error('Dátumok betöltése sikertelen', e)
+        this.availableDates = []
+      }
     },
 
     async fetchMeals() {
       try {
         const res = await AuthService.api.get('/kitchen/meals')
-        this.meals = Array.isArray(res.data) ? res.data : res.data.meals
+        let data = res.data
+        if (typeof data === 'string') {
+          data = data.replace(/^\uFEFF/, '')
+          data = JSON.parse(data)
+        }
+        this.meals = Array.isArray(data) ? data : data.meals || []
       } catch (e) {
         console.error('Ételek betöltése sikertelen', e)
         addAlert({ message: 'Hiba az ételek betöltésekor', type: 'error' })
+        this.meals = []
       }
     },
 
-    async onDateSelected() {
-      this.resetMealsOnly()
-
-      try {
-        const res = await AuthService.api.get(`/menu/${this.selectedDate}`)
-        if (res.data) {
-          this.isEdit = true
-          this.editingMenuId = res.data.id
-          this.selectedMeals.soup = res.data.soup ?? null
-          this.selectedMeals.optionA = res.data.optionA ?? null
-          this.selectedMeals.optionB = res.data.optionB ?? null
-          this.selectedMeals.other = res.data.other ?? null
-        }
-      } catch (e) {
-        this.isEdit = false
-        this.editingMenuId = null
-      }
-    },
-
-    resetMealsOnly() {
-      this.selectedMeals = {
+    resetForm() {
+      this.formData = {
+        day: '',
         soup: null,
         optionA: null,
         optionB: null,
         other: null
       }
+      this.mealSearch = ''
+      this.activeSlot = 'soup'
+      this.activeCategory = 'Leves'
+      this.editingMenuId = null
+      this.isEditMode = false
+    },
+
+    async openCreateModal() {
+      this.isEditMode = false
+      this.editingMenuId = null
+      this.resetForm()
+      this.modalLoading = true
+      this.showModal = true
+      
+      await Promise.all([
+        this.fetchAvailableDates(),
+        this.fetchMeals()
+      ])
+      
+      this.modalLoading = false
+    },
+
+    async openEditModal(menu) {
+      console.log('Szerkesztendő menü:', menu)
+      
+      this.isEditMode = true
+      this.editingMenuId = menu.id
+      this.modalLoading = true
+      this.showModal = true
+      
+      await this.fetchMeals()
+      
+      // A dátumot egyszerűen átvesszük, nem kell formázni
+      this.formData = {
+        day: menu.day,
+        soup: menu.soup || null,
+        optionA: menu.optionA || null,
+        optionB: menu.optionB || null,
+        other: menu.other || null
+      }
+      
+      console.log('Beállított formData:', this.formData)
+      console.log('formData.day értéke:', this.formData.day)
+      console.log('formData.day típusa:', typeof this.formData.day)
+      
+      this.modalLoading = false
+    },
+    closeModal() {
+      this.showModal = false
+      this.resetForm()
     },
 
     addMeal(meal) {
-      this.selectedMeals[this.activeSlot] = meal
+      this.formData[this.activeSlot] = meal
+    },
+
+    removeMeal(slot) {
+      this.formData[slot] = null
     },
 
     async saveMenu() {
       if (!this.canSave) return
 
+      if (this.isEditMode && this.isPastDate(this.formData.day)) {
+        addAlert({ 
+          message: 'Múltbeli menü nem módosítható!', 
+          type: 'error' 
+        })
+        return
+      }
+
+      const confirmed = await showConfirm({ 
+        message: this.isEditMode ? 'Biztosan módosítja a menüt?' : 'Biztosan létrehozza az új menüt?' 
+      })
+      if (!confirmed) return
+      
+      this.saving = true
+
       const payload = {
-        day: this.selectedDate,
-        soup: this.selectedMeals.soup.id,
-        optionA: this.selectedMeals.optionA.id,
-        optionB: this.selectedMeals.optionB.id,
-        other: this.selectedMeals.other?.id ?? null
+        day: this.formData.day,
+        soup: this.formData.soup.id,
+        optionA: this.formData.optionA.id,
+        optionB: this.formData.optionB.id,
+        other: this.formData.other?.id || null
       }
 
       try {
-        if (this.isEdit && this.editingMenuId) {
+        if (this.isEditMode && this.editingMenuId) {
           await AuthService.api.put(`/menu/${this.editingMenuId}`, payload)
-          addAlert({ message: 'Menü sikeresen módosítva!', type: 'success' })
+          addAlert({ message: 'A menü módosítása sikeresen el lett mentve.', type: 'success' })
         } else {
           await AuthService.api.post('/menu', payload)
-          addAlert({ message: 'Új menü sikeresen létrehozva!', type: 'success' })
+          addAlert({ message: 'Az új menü sikeresen létre lett hozva.', type: 'success' })
         }
+
         this.closeModal()
+        await this.fetchMenus()
       } catch (e) {
         console.error('Mentés sikertelen', e)
-        addAlert({ message: 'A mentés sikertelen volt. Próbálja újra!', type: 'error' })
+        addAlert({ message: 'A mentés/szerkesztés sikertelen volt. Próbálja újra!', type: 'error' })
+      } finally {
+        this.saving = false
       }
-    }
+    },
+
+    async deleteMenu(menuId) {
+      // Először keresd meg a menüt az adatok között
+      const menu = this.menus.data.find(m => m.id === menuId)
+      
+      if (!menu) {
+        addAlert({ message: 'Menü nem található!', type: 'error' })
+        return
+      }
+      
+      // Ellenőrizzük, hogy nem múltbeli-e
+      if (this.isPastDate(menu.day)) {
+        addAlert({ 
+          message: 'Múltbeli menü nem törölhető!', 
+          type: 'error' 
+        })
+        return
+      }
+      
+      const confirmed = await showConfirm({ 
+        message: 'Biztosan törölni szeretné ezt a menüt?',
+        title: 'Menü törlése'
+      })
+      if (!confirmed) return
+      
+      try {
+        await AuthService.api.delete(`/menu/${menuId}`)
+        addAlert({ message: 'Menü sikeresen törölve!', type: 'success' })
+        await this.fetchMenus()
+      } catch (e) {
+        console.error('Törlés sikertelen', e)
+        addAlert({ message: 'A törlés sikertelen volt.', type: 'error' })
+      }
+    },
+    changePage(page) {
+      if (page < 1 || page > this.menus.last_page) return
+      this.currentPage = page
+      this.fetchMenus()
+      window.scrollTo(0, 0)
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('hu-HU')
+    },
+
+    getMonthNameFull(month) {
+      const months = [
+        'Január', 'Február', 'Március', 'Április', 'Május', 'Június',
+        'Július', 'Augusztus', 'Szeptember', 'Október', 'November', 'December'
+      ]
+      return months[month - 1]
+    },
+
+    previousMonth() {
+      if (!this.canGoToPreviousMonth) return
+      const index = this.availableMonths.findIndex(
+        m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+      )
+      this.selectMonth(this.availableMonths[index - 1])
+    },
+    
+    nextMonth() {
+      if (!this.canGoToNextMonth) return
+      const index = this.availableMonths.findIndex(
+        m => m.year === this.selectedMonth.year && m.month === this.selectedMonth.month
+      )
+      this.selectMonth(this.availableMonths[index + 1])
+    },
+    
+    selectMonth(month) {
+      this.selectedMonth = { year: month.year, month: month.month }
+      this.showMonthPicker = false
+      this.currentPage = 1
+      this.fetchMenus()
+    },
+    
+    isCurrentMonth(month) {
+      return this.selectedMonth?.year === month.year && 
+             this.selectedMonth?.month === month.month
+    },
+
+    isPastDate(dateString) {
+      if (!dateString) return false
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const menuDate = new Date(dateString)
+      menuDate.setHours(0, 0, 0, 0)
+      return menuDate < today
+    },
+    
+    canEditMenu(menu) {
+      return !this.isPastDate(menu.day)
+    },
+    
+    canDeleteMenu(menu) {
+      return !this.isPastDate(menu.day)
+    },
   }
 }
 </script>
 
 <style scoped>
+/* A meglévő stílusok + a monthpicker stílusok */
 .menu-maker {
   padding: 2rem;
   max-width: 1400px;
@@ -336,6 +762,89 @@ export default {
   flex-wrap: wrap;
 }
 
+/* Month selector stílusok */
+.month-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 30px;
+  padding: 0.25rem;
+}
+
+.nav-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #8a1212;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #f0a24a;
+  color: white;
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.current-month {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 160px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.current-month:hover {
+  color: #f0a24a;
+}
+
+/* Months grid a modalban */
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.month-btn {
+  padding: 0.75rem 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.month-btn:hover {
+  background: #fef9ef;
+  border-color: #f0a24a;
+  transform: translateY(-1px);
+}
+
+.month-btn.active {
+  background: #f0a24a;
+  border-color: #f0a24a;
+  color: #7b2c2c;
+}
+
 .btn-primary {
   padding: 0.5rem 1rem;
   background: #1fa317;
@@ -357,6 +866,75 @@ export default {
   cursor: not-allowed;
 }
 
+.menu-maker {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 200px);
+}
+
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: #8a1212;
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 250px;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.6rem;
+  font-size: 0.85rem;
+  color: #888;
+  pointer-events: none;
+}
+
+
 .btn-secondary {
   padding: 0.5rem 1rem;
   background: #e9ecef;
@@ -373,25 +951,105 @@ export default {
   background: #dee2e6;
 }
 
-.btn-cancel {
-  padding: 0.5rem 1rem;
-  background: #e9ecef;
-  color: #495057;
-  border: none;
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
   border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  text-align: center;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 0.85rem;
 }
 
-.btn-cancel:hover {
-  background: #dee2e6;
+.data-table th {
+  background: #f0a24a;
+  color: #7b2c2c;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
 }
 
-.btn-action {
-  padding: 0.4rem 0.75rem;
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.data-table tr:hover {
+  background: #fef9ef;
+}
+
+.date-cell {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.actions-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-edit {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.btn-edit:hover {
+  background: #bbdef5;
+}
+
+.btn-delete {
+    background: #f8d7da;
+  color: #a1656b;
+  border: none;
+  padding: 0.4rem 0.75rem;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.75rem;
@@ -399,13 +1057,48 @@ export default {
   transition: all 0.2s;
 }
 
-.btn-add {
-  background: #e8f5e9;
-  color: #2e7d32;
+.btn-delete:hover {
+  background: #ffcdd2;
 }
 
-.btn-add:hover {
-  background: #c8e6c9;
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.btn-pagination {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background: #f0a24a;
+  color: white;
+  border-color: #f0a24a;
+}
+
+.btn-pagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.empty-row {
+  text-align: center;
+  color: #888;
+  padding: 3rem !important;
 }
 
 /* Modal styles */
@@ -423,7 +1116,6 @@ export default {
   z-index: 1000;
 }
 
-
 .modal {
   background: white;
   border-radius: 20px;
@@ -437,7 +1129,6 @@ export default {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   animation: modalFadeIn 0.2s ease-out;
 }
-
 
 @keyframes modalFadeIn {
   from { opacity: 0; transform: scale(0.95); }
@@ -489,17 +1180,11 @@ export default {
   margin-top: 1rem;
 }
 
-/* Step 1 styles */
-.step-1 {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
@@ -523,8 +1208,17 @@ export default {
   box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
 }
 
-/* Step 2 styles */
-.step-2 {
+.form-control:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.form-hint {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+.meal-selection {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -557,38 +1251,8 @@ export default {
   color: #7b2c2c;
 }
 
-.search-box {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 100%;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.6rem 0.75rem 0.6rem 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #f0a24a;
-  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.6rem;
-  font-size: 0.85rem;
-  color: #888;
-  pointer-events: none;
-}
-
 .meals-scroll {
-  max-height: 300px;
+  max-height: 250px;
   overflow-y: auto;
   border: 1px solid #eee;
   border-radius: 12px;
@@ -616,6 +1280,25 @@ export default {
   font-size: 0.85rem;
 }
 
+.btn-action {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-add {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-add:hover {
+  background: #c8e6c9;
+}
+
 .empty-state-small {
   text-align: center;
   padding: 2rem;
@@ -627,7 +1310,6 @@ export default {
   background: #f8f9fa;
   border-radius: 12px;
   padding: 1rem;
-  margin-top: 0.5rem;
 }
 
 .selected-header {
@@ -669,7 +1351,100 @@ export default {
   font-weight: 500;
 }
 
-/* Reszponzív */
+.btn-remove {
+  background: none;
+  border: none;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0 0.25rem;
+  opacity: 0.6;
+}
+
+.btn-remove:hover {
+  opacity: 1;
+}
+
+.btn-cancel {
+  padding: 0.6rem 1.25rem;
+  background: #e9ecef;
+  color: #495057;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #dee2e6;
+}
+
+.btn-save {
+  padding: 0.6rem 1.25rem;
+  background: #1fa317;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #158a0f;
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-state-small {
+  text-align: center;
+  padding: 2rem;
+}
+
+.spinner-small {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1fa317;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+/* Múltbeli menük stílusa */
+.data-table tr.past-menu {
+  opacity: 0.7;
+  background-color: #f5f5f5;
+}
+
+.data-table tr.past-menu:hover {
+  background-color: #eeeeee;
+}
+
+.past-menu-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: #e9ecef;
+  color: #6c757d;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-icon:disabled:hover {
+  transform: none;
+  background: inherit;
+}
+/* Responsive */
 @media (max-width: 768px) {
   .menu-maker {
     padding: 1rem;
@@ -690,10 +1465,12 @@ export default {
     align-items: stretch;
   }
 
-  .btn-primary,
-  .btn-secondary {
+  .search-box {
     width: 100%;
-    text-align: center;
+  }
+
+  .search-input {
+    width: 100%;
   }
 
   .modal {
@@ -727,6 +1504,12 @@ export default {
     font-size: 1.25rem;
   }
 
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
   .meal-item {
     flex-direction: column;
     gap: 0.5rem;
@@ -742,5 +1525,14 @@ export default {
     text-align: center;
     gap: 0.25rem;
   }
+
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
 }
+
+
+
 </style>

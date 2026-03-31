@@ -12,6 +12,8 @@
 ## Doucments
 - 
 
+## PersonalOrders.vue
+- hónapváálasztó modalon kívűl görgetés
 
 ## PersonalInvoices.vue
 - gombok működjenek (modal overlay nem megfelelő)
