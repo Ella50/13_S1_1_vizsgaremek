@@ -249,12 +249,16 @@
             <div class="rfid-section">
               <div class="rfid-row">
                 <div>
-                  <strong>RFID kártya:</strong>
-                  <span v-if="editUser.rfid_uid">{{ editUser.rfid_uid }}</span>
-                  <span v-else class="text-muted">Nincs hozzárendelve</span>
-                </div>
-                <button type="button" class="btn-rfid" @click="openCardAssignModal">
-                  Kártya hozzáadása
+                    <div>
+                      <strong>RFID kártya: </strong>
+                      <span v-if="editUser.rfid_card?.cardNumber">
+                        {{ editUser.rfid_card.cardNumber }}
+                      </span>
+                      <span v-else class="text-muted">Nincs hozzárendelve</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn-rfid" @click="openCardAssignModal">
+                    Kártya hozzáadása
                 </button>
               </div>
             </div>
@@ -478,51 +482,46 @@ export default {
     },
 
     async openEditModal(userId) {
-      this.showEditModal = true
-      document.body.style.overflow = 'hidden';
-      this.editLoading = true
-      this.citiesForCounty = []
-      
+      this.showEditModal = true;
+      this.editLoading = true;
+      this.citiesForCounty = [];
+      console.log(this.editUser)
+
       try {
-        const userFromList = this.users.data.find(u => u.id == userId)
-        if (userFromList) {
-          this.editUser = {
-            id: userFromList.id,
-            firstName: userFromList.firstName || '',
-            lastName: userFromList.lastName || '',
-            thirdName: userFromList.thirdName || '',
-            email: userFromList.email || '',
-            userType: userFromList.userType || 'Tanuló',
-            userStatus: userFromList.userStatus || 'Aktív',
-            address: '',
-            hasDiscount: userFromList.hasDiscount || false,
-            hasDiabetes: userFromList.hasDiabetes || false,
-            county_id: null,
-            city_id: null,
-          }
+        const response = await AuthService.api.get(`/admin/users/${userId}`);
+
+        if (!response.data.success) {
+          addAlert({ message: 'Felhasználó nem található', type: 'error' });
+          this.closeEditModal();
+          return;
         }
 
-        const response = await AuthService.api.get(`/admin/users/${userId}`)
-        if (response.data.success) {
-          const userData = response.data.data
-          this.editUser = {
-            ...this.editUser,
-            address: userData.address || this.editUser.address,
-            thirdName: userData.thirdName || this.editUser.thirdName,
-            hasDiscount: userData.hasDiscount || this.editUser.hasDiscount,
-            hasDiabetes: userData.hasDiabetes || this.editUser.hasDiabetes,
-            county_id: userData.city?.county?.id || null,
-            city_id: userData.city_id || null
-          }
-          if (this.editUser.county_id) await this.loadCitiesForCounty()
+        const userData = response.data.data;
+
+        this.editUser = {
+          id: userData.id,
+          firstName: userData.firstName || '',
+          lastName: userData.lastName || '',
+          thirdName: userData.thirdName || '',
+          email: userData.email || '',
+          userType: userData.userType || 'Tanuló',
+          userStatus: userData.userStatus || 'Aktív',
+          address: userData.address || '',
+          hasDiscount: userData.hasDiscount || false,
+          hasDiabetes: userData.hasDiabetes || false,
+          county_id: userData.city?.county?.id || null,
+          city_id: userData.city_id || null,
+          rfid_uid: userData.rfid_card?.cardNumber || null
+        };
+
+        if (this.editUser.county_id) {
+          await this.loadCitiesForCounty();
         }
       } catch (error) {
-        if (!this.editUser.id) {
-          addAlert({ message: 'Felhasználó nem található', type: 'error' })
-          this.closeEditModal()
-        }
+        addAlert({ message: 'Hiba történt a betöltés során', type: 'error' });
+        this.closeEditModal();
       } finally {
-        this.editLoading = false
+        this.editLoading = false;
       }
     },
 
@@ -535,7 +534,7 @@ export default {
       }
       this.editUser = {
         id: null, firstName: '', lastName: '', thirdName: '', email: '',
-        userType: 'Tanuló', userStatus: 'Aktív', address: '', hasDiscount: false, hasDiabetes: false
+        userType: 'Tanuló', userStatus: 'Aktív', address: '', hasDiscount: false, hasDiabetes: false, 
       };
     },
 
