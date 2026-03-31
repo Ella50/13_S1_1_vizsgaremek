@@ -45,7 +45,6 @@
 ## Orders.vue
 
 ## Profile.vue
-- ha már admin elfogadta dokumentummot akkor is le lehessen tölteni
 - értesítés ha nincs elfogadva???
 
 
@@ -54,13 +53,9 @@
 
 
 ## Userprofil.vue
-- frontend
-- gombok
 
 
 ## TodayMenu.vue
-- frontend
-- backend (nem tölti be)
 
 
 ## PersonalOrders.vue
@@ -80,4 +75,3 @@
 
 ## Domi
 -Price id a seederben
--számlázás(date? 2026-03, de az adatb-ben 2026-03-01 a billingMonth)

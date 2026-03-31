@@ -38,6 +38,9 @@ class User extends Authenticatable
         'hasDiabetes' => 'boolean',
     ];
 
+    protected $appends = [
+        'rfid_uid',
+    ];
     // Jelszó mező átnevezése
     public function getAuthPassword()
     {
@@ -125,6 +128,11 @@ class User extends Authenticatable
     public function hasDiabetesDocument()
     {
         return $this->documents()->where('type', 'diabetes')->exists();
+    }
+
+    public function getRfidUidAttribute()
+    {
+        return $this->rfidCard->uid ?? null;
     }
 
 
