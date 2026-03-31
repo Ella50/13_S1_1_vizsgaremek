@@ -337,7 +337,7 @@ export default {
         address: '',
         hasDiscount: false,
         hasDiabetes: false,
-        rfid_uid: null,
+        rfid_card: null, // Changed from rfid_uid to rfid_card
         county_id: null,
         city_id: null,
       },
@@ -364,7 +364,6 @@ export default {
       if (newVal) {
         document.body.style.overflow = 'hidden';
       } else if (!this.showEditModal) {
-        // Csak akkor állítjuk vissza, ha a másik modal sincs nyitva
         document.body.style.overflow = '';
       }
     }
@@ -485,7 +484,6 @@ export default {
       this.showEditModal = true;
       this.editLoading = true;
       this.citiesForCounty = [];
-      console.log(this.editUser)
 
       try {
         const response = await AuthService.api.get(`/admin/users/${userId}`);
@@ -511,7 +509,7 @@ export default {
           hasDiabetes: userData.hasDiabetes || false,
           county_id: userData.city?.county?.id || null,
           city_id: userData.city_id || null,
-          rfid_uid: userData.rfid_card?.cardNumber || null
+          rfid_card: userData.rfid_card || null  // Store the entire rfid_card object
         };
 
         if (this.editUser.county_id) {
@@ -528,20 +526,27 @@ export default {
     closeEditModal() {
       this.showEditModal = false;
       this.citiesForCounty = [];
-      // Csak akkor állítjuk vissza a görgetést, ha a másik modal sincs nyitva
       if (!this.showRfidModal) {
         document.body.style.overflow = '';
       }
       this.editUser = {
-        id: null, firstName: '', lastName: '', thirdName: '', email: '',
-        userType: 'Tanuló', userStatus: 'Aktív', address: '', hasDiscount: false, hasDiabetes: false, 
+        id: null, 
+        firstName: '', 
+        lastName: '', 
+        thirdName: '', 
+        email: '',
+        userType: 'Tanuló', 
+        userStatus: 'Aktív', 
+        address: '', 
+        hasDiscount: false, 
+        hasDiabetes: false,
+        rfid_card: null  // Reset to null instead of empty string
       };
     },
 
     closeRfidModal() {
       this.showRfidModal = false;
       this.stopRfidPolling();
-      // Csak akkor állítjuk vissza a görgetést, ha a másik modal sincs nyitva
       if (!this.showEditModal) {
         document.body.style.overflow = '';
       }
@@ -696,7 +701,12 @@ export default {
         if (res.data?.success) {
           this.lastUid = uid
           this.rfidState = 'success'
-          this.editUser.rfid_uid = uid
+          // Update the rfid_card object properly
+          this.editUser.rfid_card = {
+            id: res.data.data?.cardId || null,
+            cardNumber: uid,
+            user_id: this.editUser.id
+          }
           this.stopRfidPolling()
           return
         }
