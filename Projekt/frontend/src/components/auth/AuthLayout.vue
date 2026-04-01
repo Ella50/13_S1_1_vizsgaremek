@@ -35,6 +35,99 @@ export default {
 <style>
 
 
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding: 0.8rem;
+  padding-right: 45px; 
+  border: 2px solid #555;
+  border-radius: 25px;
+  font-size: 1rem;
+  box-sizing: border-box; 
+}
+
+/* Böngésző beépített ikonjainak elrejtése */
+.password-wrapper input[type="password"]::-ms-reveal,
+.password-wrapper input[type="password"]::-ms-clear,
+.password-wrapper input[type="password"]::-webkit-contacts-auto-fill-button,
+.password-wrapper input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #666;
+  opacity: 0.7;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.password-toggle:hover {
+  opacity: 1;
+  color: #333;
+}
+
+.password-toggle:focus {
+  outline: none;
+}
+
+.toggle-icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  transition: all 0.2s;
+  display: block;
+  flex-shrink: 0;
+}
+
+
+
+input[type="password"]::-ms-reveal {
+  display: none;
+}
+
+.register-text {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  color: #8a1212;
+  text-align: center;
+}
+
+.register-text a {
+  color: #8a1212;
+  text-decoration: underline;
+}
+
+.register-text a:hover {
+  color: #e94f4f;
+  text-decoration: underline;
+}
+
+
 .left-side {
   width: 50%;
   height: 100vh;
@@ -91,7 +184,6 @@ export default {
 }
 
 .bottom-right{
-   /*background-image: url("../../../abrosz.png");*/
     height: 100%;
     width: 100%;
     background-repeat: no-repeat;
@@ -223,11 +315,10 @@ export default {
     overflow: hidden;
   }
 
-  /* Bal oldal - felső rész */
   .left-side {
     width: 100%;
-    height: 30vh; /* Fix magasság */
-    min-height: 200px; /* Minimum magasság */
+    height: 30vh; 
+    min-height: 200px; 
     overflow: hidden;
   }
 
@@ -250,23 +341,22 @@ export default {
     max-width: 150%;
   }
 
-  /* Jobb oldal - alsó, görgethető rész */
   .right-side {
     width: 100%;
-    height: 70vh; /* Maradék magasság */
+    height: 70vh;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 1.5rem 1rem;
   }
 
   .right-side-content {
-    padding-bottom: 2rem; /* Extra hely a görgetéshez */
+    padding-bottom: 2rem;
   }
 }
 
 @media (max-width: 480px) {
   .left-side {
-    height: 25vh; /* Kisebb magasság mobilon */
+    height: 25vh; 
     min-height: 150px;
   }
 
@@ -300,7 +390,7 @@ export default {
   }
 }
 
-/* Magasabb képernyők esetén */
+/* Magasabb képernyők ??*/
 @media (min-height: 800px) and (max-width: 768px) {
   .left-side {
     height: 25vh;
@@ -311,7 +401,7 @@ export default {
   }
 }
 
-/* Táblagép landscape nézet */
+/* Táblagép landscape */
 @media (orientation: landscape) and (max-width: 1024px) {
   .left-side {
     height: 100vh;

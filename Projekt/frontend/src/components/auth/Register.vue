@@ -9,7 +9,7 @@
         <input type="text" v-model="form.firstName" placeholder="Keresztnév *" required>
       </div>
       
-      <input type="text" v-model="form.thirdName" placeholder="Harmadik név (opcionális)">
+      <input type="text" v-model="form.thirdName" placeholder="Harmadik név">
 
       <!-- Cím adatok -->
       <div class="form-row">
@@ -273,6 +273,8 @@ export default {
 </script>
 
 <style scoped>
+
+
 .register-form {
   width: 70%;
   display: flex;
