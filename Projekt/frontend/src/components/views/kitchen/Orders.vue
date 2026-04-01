@@ -343,9 +343,11 @@ export default {
     
     // Confirm metódusok
     showConfirm({ message, title = '' }) {
+      console.log('showConfirm called - setting confirmVisible to true');
       this.confirmMessage = message;
       this.confirmTitle = title;
       this.confirmVisible = true;
+      console.log('confirmVisible is now:', this.confirmVisible);
       
       return new Promise((resolve) => {
         this.confirmResolver = resolve;
@@ -537,65 +539,47 @@ export default {
     },
     
     async cancelOrder(order) {
-      const confirmed = await this.showConfirm({
-        title: 'Rendelés lemondása',
-        message: 'Biztosan lemondja ezt a rendelést?'
-      });
-      
-      if (!confirmed) return;
-      
-      try {
-        const token = localStorage.getItem('token') || this.getAuthToken();
-        const response = await axios.delete(`http://localhost:8000/api/user/personal-orders/${order.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (response.data.success) {
-          this.showAlert({
-            message: 'Rendelés sikeresen lemondva',
-            type: 'success'
-          });
-          this.loadOrders();
-        } else {
-          this.showAlert({
-            message: response.data.message || 'Hiba a rendelés lemondásakor',
-            type: 'error'
-          });
-        }
-      } catch (error) {
-        console.error('Hiba a rendelés lemondásakor:', error);
-        this.showAlert({
-          message: error.response?.data?.message || 'Hiba a rendelés lemondásakor',
-          type: 'error'
-        });
+  console.log('Lemondás gombra kattintottál, order ID:', order.id);
+  
+  const confirmed = confirm('Biztosan lemondja ezt a rendelést?');
+  console.log('Confirm eredménye:', confirmed);
+  
+  if (!confirmed) return;
+  
+  try {
+    const token = localStorage.getItem('token') || this.getAuthToken();
+    const response = await axios.delete(`http://localhost:8000/api/user/personal-orders/${order.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
       }
-    },
+    });
+    
+    if (response.data.success) {
+      alert('Rendelés sikeresen lemondva');
+      this.loadOrders();
+    } else {
+      alert(response.data.message || 'Hiba a rendelés lemondásakor');
+    }
+  } catch (error) {
+    console.error('Hiba a rendelés lemondásakor:', error);
+    alert(error.response?.data?.message || 'Hiba a rendelés lemondásakor');
+  }
+},
     
     async restoreOrder(order) {
-      const confirmed = await this.showConfirm({
-        title: 'Rendelés visszaállítása',
-        message: 'Biztosan visszaállítja ezt a rendelést?'
-      });
-      
-      if (!confirmed) return;
-      
-      try {
-        order.orderStatus = 'Rendelve';
-        this.showAlert({
-          message: 'Rendelés helyileg visszaállítva',
-          type: 'success'
-        });
-      } catch (error) {
-        console.error('Hiba a rendelés visszaállításakor:', error);
-        this.showAlert({
-          message: 'Hiba a rendelés visszaállításakor',
-          type: 'error'
-        });
-      }
-    },
+  const confirmed = confirm('Biztosan visszaállítja ezt a rendelést?');
+  
+  if (!confirmed) return;
+  
+  try {
+    order.orderStatus = 'Rendelve';
+    alert('Rendelés helyileg visszaállítva');
+  } catch (error) {
+    console.error('Hiba a rendelés visszaállításakor:', error);
+    alert('Hiba a rendelés visszaállításakor');
+  }
+},
     
     getPercentage(count, total) {
       if (!total || total === 0) return '0.0';
@@ -780,82 +764,67 @@ export default {
 }
 
 /* Confirm stílusok */
+/* Confirm stílusok - FELÜLÍRT, ERŐSEBB VERZIÓ */
 .confirm-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10002;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
 }
 
 .confirm-box {
-  background: white;
-  padding: 24px;
-  border-radius: 14px;
-  min-width: 320px;
-  text-align: center;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
-  animation: scaleIn 0.25s ease;
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  background: white !important;
+  padding: 24px !important;
+  border-radius: 14px !important;
+  min-width: 320px !important;
+  text-align: center !important;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25) !important;
+  z-index: 100000 !important;
+  position: relative !important;
 }
 
 .confirm-title {
-  margin-bottom: 10px;
+  margin-bottom: 10px !important;
+  font-size: 1.2rem !important;
+  font-weight: bold !important;
 }
 
 .confirm-message {
-  font-weight: bold;
-  text-align: center;
-  margin: 10px 0 20px 0;
+  font-weight: bold !important;
+  text-align: center !important;
+  margin: 10px 0 20px 0 !important;
 }
 
 .confirm-actions {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 15px !important;
 }
 
 .confirm-actions .btn-cancel {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.confirm-actions .btn-cancel:hover {
-  background: #c0392b;
+  background: #e74c3c !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 18px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
 }
 
 .confirm-actions .btn-ok {
-  background: #2ecc71;
-  color: white;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.confirm-actions .btn-ok:hover {
-  background: #27ae60;
+  background: #2ecc71 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 18px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
 }
 
 /* Napi összesítés stílusok */
