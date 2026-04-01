@@ -79,7 +79,7 @@
               <th>Választás</th>
               <th>Státusz</th>
               <th>Művelet</th>
-             </tr>
+            </tr>
           </thead>
           <tbody>
             <tr 
@@ -239,8 +239,26 @@
       <div v-else class="empty-state">
         <p>Nincsenek elérhető rendelések ebben a hónapban</p>
       </div>
+    </div>
 
+    <!-- Alert értesítés -->
+    <div class="alert-container" v-if="alertVisible">
+      <div :class="['alert', alertType]">
+        <strong v-if="alertTitle">{{ alertTitle }}</strong>
+        <div>{{ alertMessage }}</div>
+      </div>
+    </div>
 
+    <!-- Confirm modal -->
+    <div v-if="confirmVisible" class="confirm-overlay">
+      <div class="confirm-box">
+        <h3 v-if="confirmTitle" class="confirm-title">{{ confirmTitle }}</h3>
+        <p class="confirm-message">{{ confirmMessage }}</p>
+        <div class="confirm-actions">
+          <button class="btn-cancel" @click="confirmCancel">Mégse</button>
+          <button class="btn-ok" @click="confirmOk">OK</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -260,8 +278,22 @@ export default {
       selectedMonth: null,
       showMonthPicker: false,
       tempSelections: {},
+      
+      // Alert állapotok
+      alertVisible: false,
+      alertMessage: '',
+      alertTitle: '',
+      alertType: 'success',
+      alertTimeout: null,
+      
+      // Confirm állapotok
+      confirmVisible: false,
+      confirmMessage: '',
+      confirmTitle: '',
+      confirmResolver: null
     }
   },
+  
   watch: {
     showMonthPicker(newVal) {
       if (newVal) {
@@ -326,7 +358,57 @@ export default {
     this.init()
   },
   
+  beforeUnmount() {
+    if (this.alertTimeout) {
+      clearTimeout(this.alertTimeout)
+    }
+    document.body.style.overflow = ''
+  },
+  
   methods: {
+    // Alert metódusok
+    showAlert({ message, type = 'success', title = '' }) {
+      if (this.alertTimeout) {
+        clearTimeout(this.alertTimeout)
+      }
+      
+      this.alertMessage = message
+      this.alertType = type
+      this.alertTitle = title
+      this.alertVisible = true
+      
+      this.alertTimeout = setTimeout(() => {
+        this.alertVisible = false
+      }, 3000)
+    },
+    
+    // Confirm metódusok
+    showConfirm({ message, title = '' }) {
+      this.confirmMessage = message
+      this.confirmTitle = title
+      this.confirmVisible = true
+      
+      return new Promise((resolve) => {
+        this.confirmResolver = resolve
+      })
+    },
+    
+    confirmOk() {
+      this.confirmVisible = false
+      if (this.confirmResolver) {
+        this.confirmResolver(true)
+        this.confirmResolver = null
+      }
+    },
+    
+    confirmCancel() {
+      this.confirmVisible = false
+      if (this.confirmResolver) {
+        this.confirmResolver(false)
+        this.confirmResolver = null
+      }
+    },
+    
     async init() {
       await Promise.all([
         this.loadUserInfo(),
@@ -374,6 +456,10 @@ export default {
       } catch (err) {
         console.error('Hiba a rendelések betöltésekor:', err)
         this.error = 'Nem sikerült betölteni a rendeléseket'
+        this.showAlert({
+          message: this.error,
+          type: 'error'
+        })
       } finally {
         this.loading = false
       }
@@ -514,7 +600,7 @@ export default {
     getAllergenTooltip(date, mealType) {
       const warning = date.allergen_warnings?.find(w => w.meal === mealType)
       if (!warning) return ''
-      return 'Allergént figyelmeztetés!'
+      return 'Allergén figyelmeztetés!'
     },
     
     selectOptionForNewOrder(date, option) {
@@ -529,18 +615,27 @@ export default {
       }
       
       if (!selectedOption) {
-        alert('Kérlek válassz opciót!')
+        this.showAlert({
+          message: 'Kérlek válassz opciót!',
+          type: 'warning'
+        })
         return
       }
       
       if (!this.canModifyOrder(date.date)) {
-        alert('A rendelési határidő lejárt!')
+        this.showAlert({
+          message: 'A rendelési határidő lejárt!',
+          type: 'error'
+        })
         return
       }
       
-      if (!confirm(`Biztosan rendelni szeretnéd a ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`)) {
-        return
-      }
+      const confirmed = await this.showConfirm({
+        title: 'Rendelés leadása',
+        message: `Biztosan rendelni szeretnéd a ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`
+      })
+      
+      if (!confirmed) return
       
       try {
         let response
@@ -558,15 +653,24 @@ export default {
         }
         
         if (response.data?.success) {
-          alert('Rendelés sikeresen leadva!')
+          this.showAlert({
+            message: 'Rendelés sikeresen leadva!',
+            type: 'success'
+          })
           delete this.tempSelections[date.date]
           await this.loadOrders()
         } else {
-          alert(response.data?.message || 'Ismeretlen hiba történt')
+          this.showAlert({
+            message: response.data?.message || 'Ismeretlen hiba történt',
+            type: 'error'
+          })
         }
       } catch (err) {
         console.error('Rendelési hiba:', err)
-        alert(err.response?.data?.message || 'Hiba történt a rendelés során')
+        this.showAlert({
+          message: err.response?.data?.message || 'Hiba történt a rendelés során',
+          type: 'error'
+        })
       }
     },
     
@@ -574,10 +678,19 @@ export default {
       if (!date.has_order || !date.order_id) return
       if (date.selected_option === newOption) return
       if (!this.canModifyOrder(date.date)) {
-        alert('A módosítási határidő lejárt!')
+        this.showAlert({
+          message: 'A módosítási határidő lejárt!',
+          type: 'error'
+        })
         return
       }
-      if (!confirm(`Biztosan módosítani szeretnéd a ${newOption} opcióra?`)) return
+      
+      const confirmed = await this.showConfirm({
+        title: 'Opció módosítása',
+        message: `Biztosan módosítani szeretnéd a ${newOption} opcióra?`
+      })
+      
+      if (!confirmed) return
       
       try {
         const response = await AuthService.api.patch(`/user/personal-orders/${date.order_id}/update-option`, {
@@ -585,12 +698,23 @@ export default {
         })
         
         if (response.data?.success) {
-          alert('Opció sikeresen módosítva!')
+          this.showAlert({
+            message: 'Opció sikeresen módosítva!',
+            type: 'success'
+          })
           await this.loadOrders()
+        } else {
+          this.showAlert({
+            message: response.data?.message || 'Hiba történt a módosítás során',
+            type: 'error'
+          })
         }
       } catch (err) {
         console.error('Módosítási hiba:', err)
-        alert(err.response?.data?.message || 'Hiba történt a módosítás során')
+        this.showAlert({
+          message: err.response?.data?.message || 'Hiba történt a módosítás során',
+          type: 'error'
+        })
       }
     },
     
@@ -599,25 +723,44 @@ export default {
       if (!date) return
       
       if (!this.canCancelOrder(date.date)) {
-        alert('A lemondási határidő lejárt! (aznap 8:00-ig lehet lemondani)')
+        this.showAlert({
+          message: 'A lemondási határidő lejárt! (aznap 8:00-ig lehet lemondani)',
+          type: 'error'
+        })
         return
       }
       
-      if (!confirm('Biztosan le szeretnéd mondani ezt a rendelést?')) return
+      const confirmed = await this.showConfirm({
+        title: 'Rendelés lemondása',
+        message: 'Biztosan le szeretnéd mondani ezt a rendelést?'
+      })
+      
+      if (!confirmed) return
       
       try {
         const response = await AuthService.api.delete(`/user/personal-orders/${orderId}/cancel`)
         
         if (response.data?.success) {
-          alert('Rendelés sikeresen lemondva!')
+          this.showAlert({
+            message: 'Rendelés sikeresen lemondva!',
+            type: 'success'
+          })
           if (this.tempSelections[date.date]) {
             delete this.tempSelections[date.date]
           }
           await this.loadOrders()
+        } else {
+          this.showAlert({
+            message: response.data?.message || 'Hiba történt a lemondás során',
+            type: 'error'
+          })
         }
       } catch (err) {
         console.error('Lemondási hiba:', err)
-        alert(err.response?.data?.message || 'Hiba történt a lemondás során')
+        this.showAlert({
+          message: err.response?.data?.message || 'Hiba történt a lemondás során',
+          type: 'error'
+        })
       }
     },
     
@@ -656,6 +799,7 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   min-height: calc(100vh - 200px);
+  position: relative;
 }
 
 .content-card {
@@ -1203,26 +1347,124 @@ export default {
   font-style: italic;
 }
 
-/* Információs sáv */
-.info-footer {
-  display: flex;
-  gap: 1.5rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 12px;
-  color: #666;
-  font-size: 0.75rem;
-  flex-wrap: wrap;
+/* Alert stílusok */
+.alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
 }
 
-.info-item {
+.alert {
+  margin-bottom: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  color: white;
+  min-width: 250px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease;
+}
+
+.alert.success {
+  background: #4CAF50;
+}
+
+.alert.error {
+  background: #ff4d4f;
+}
+
+.alert.warning {
+  background: #ff9800;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Confirm stílusok */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  z-index: 10002;
 }
 
-.info-icon {
-  font-size: 1rem;
+.confirm-box {
+  background: white;
+  padding: 24px;
+  border-radius: 14px;
+  min-width: 320px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  animation: scaleIn 0.25s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.confirm-title {
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0 20px 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirm-actions .btn-cancel {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-cancel:hover {
+  background: #c0392b;
+}
+
+.confirm-actions .btn-ok {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-ok:hover {
+  background: #27ae60;
 }
 
 /* Reszponzív */
@@ -1252,11 +1494,6 @@ export default {
   .month-selector {
     flex: 1;
     justify-content: center;
-  }
-
-  .info-footer {
-    flex-direction: column;
-    gap: 0.5rem;
   }
 
   .months-grid {
