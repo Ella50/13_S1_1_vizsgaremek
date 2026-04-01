@@ -2,15 +2,14 @@
   <AuthLayout>
     <h2 class="title">Jelszó visszaállítása</h2>
 
-    <!-- Sikeres üzenet -->
     <div v-if="successMessage" class="success-message">
-      ✅ {{ successMessage }}
+      {{ successMessage }}
     </div>
 
-    <!-- Email form (csak ha még nem küldtük el) -->
-    <div v-if="!emailSent">
+
+    <div v-if="!emailSent" class="div-form">
       <p class="info-text">
-        Add meg az email címed, és küldünk egy visszaállítási linket.
+        Adja meg az email címét, és küldünk egy visszaállítási linket.
       </p>
 
       <form @submit.prevent="handleResetPassword" class="auth-form">
@@ -34,10 +33,7 @@
     <div v-else class="success-container">
       <div class="success-icon">✓</div>
       <h3 class="success-title">Email elküldve!</h3>
-      <p class="success-text">Ellenőrizd az emailed a további utasításokért.</p>
-      <p class="info-text-small">
-        Ha nem találod az emailt, nézd meg a spam mappában is.
-      </p>
+      <p class="success-text">Ellenőrizze az emailjét a további utasításokért.</p>
       <button @click="resetForm" class="btn_auth secondary-btn">
         Új email küldése
       </button>
@@ -69,7 +65,7 @@ export default {
   methods: {
     async handleResetPassword() {
       if (!this.form.email) {
-        this.error = "Kérjük, add meg az email címed!";
+        this.error = "Kérjük, adja meg az email címét!";
         return;
       }
 
@@ -98,7 +94,7 @@ export default {
         }
       } catch (err) {
         console.error("Hiba:", err);
-        this.error = err.response?.data?.message || "Hálózati hiba";
+        this.error = err.response?.data?.message || "Nincs ezzel az email címmel regisztrált felhasználó.";
       } finally {
         this.loading = false;
       }
@@ -114,9 +110,14 @@ export default {
 </script>
 
 <style scoped>
-/* Egységes stílusok a Login/Register komponensekkel */
+
+.div-form{
+  float: right;
+}
+
+
 .auth-form {
-  width: 70%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -131,6 +132,7 @@ export default {
 }
 
 .btn_auth {
+  margin: auto;
   width: 100%;
   padding: 0.9rem;
   background: #1fa317;
@@ -170,17 +172,7 @@ export default {
   text-align: center;
 }
 
-.register-text {
-  margin-top: 1.5rem;
-  font-size: 1rem;
-  color: #8a1212;
-  text-align: center;
-}
 
-.register-text a {
-  color: #8a1212;
-  text-decoration: underline;
-}
 
 .error {
   color: #c70000;
@@ -207,7 +199,6 @@ export default {
 
 .success-icon {
   font-size: 4rem;
-  color: #1fa317;
   margin-bottom: 1rem;
 }
 
@@ -222,13 +213,7 @@ export default {
   margin-bottom: 0.5rem;
 }
 
-.info-text-small {
-  font-size: 0.85rem;
-  color: #777;
-  margin-bottom: 1.5rem;
-}
 
-/* Reszponzív beállítások - megegyezik a Register/Login komponensekkel */
 @media (max-width: 768px) {
   .auth-form {
     width: 100%;

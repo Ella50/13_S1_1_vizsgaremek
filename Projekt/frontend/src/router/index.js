@@ -138,12 +138,6 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
-        path: '/resetpassword',
-        name: 'resetpassword',
-        component: ResetPassword,
-        meta: { requiresAuth: false }
-    },
-    {
 
         path: '/reset-password/:token',
         name: 'newpasswordform', 

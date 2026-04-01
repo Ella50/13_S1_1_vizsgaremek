@@ -5,7 +5,6 @@
 - TELEFONOS NÉZET MINDELHOL (pl. meals.vue tápértékek)
 - jelszavak: speciális karakterek lekezelése?
 - felfüggesztett akkor beléphet megnézni a számláit?
-- navbar ott van ha visszaállítom a jelszót
 - regisztráció sikeres üzenet (custom alert legyen)
 - jelszó nézés nem teljesen jó
 

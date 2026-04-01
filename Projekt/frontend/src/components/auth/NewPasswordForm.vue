@@ -4,12 +4,12 @@
 
     <!-- Sikeres üzenet -->
     <div v-if="successMessage" class="success-message">
-      ✅ {{ successMessage }}
+      {{ successMessage }}
     </div>
 
     <!-- Hiba üzenet -->
     <div v-if="error" class="error-message">
-      ❌ {{ error }}
+      {{ error }}
     </div>
 
     <form @submit.prevent="handleResetPassword" class="auth-form">
@@ -142,7 +142,6 @@ export default {
 </script>
 
 <style scoped>
-/* Egységes stílusok a Login/Register komponensekkel */
 .auth-form {
   width: 70%;
   display: flex;

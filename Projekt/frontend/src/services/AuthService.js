@@ -44,17 +44,14 @@ class AuthService {
           message: error.message
         })
         
-        // Fontos: logout API hívásnál NE töröljünk automatikusan
-        // és NE redirecteljünk
         if (error.response?.status === 401) {
           const url = error.config?.url || ''
           
-          // Csak logout NEM ÉS más URL esetén
+   
           if (!url.includes('/logout')) {
             console.log('Unauthorized, clearing auth data...')
             this.clearAuth()
-            // Fontos: Itt NE redirecteljünk automatikusan
-            // A komponens fog kezelni
+
           }
         }
         return Promise.reject(error)
@@ -110,20 +107,17 @@ class AuthService {
         data: error.response?.data
       })
       
-      // Fontos: itt NEM hívjuk meg a clearAuth()-t
-      // mert az interceptor már meghívhatta volna
-      // Csak ha 401-es hiba volt és logout hívás volt
+
       if (error.response?.status === 401) {
         console.log('401: token már érvénytelen, csak töröljük lokálisan')
-        // clearAuth() már meghívódhatott az interceptorból
-        // De ellenőrizzük, hogy még van-e token
+
         if (this.getToken()) {
           this.clearAuth()
         }
         return { success: true }
       }
       
-      // Egyéb hibák esetén is töröljük
+
       this.clearAuth()
       return { 
         success: false, 
@@ -133,7 +127,7 @@ class AuthService {
   }
 
   clearAuth() {
-    // Összes auth adat törlése
+
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     localStorage.removeItem('userType')
@@ -186,12 +180,8 @@ class AuthService {
     return this.getUserRole() === 'Dolgozó'
   }
 
-  isExternal() {
-    return this.getUserRole() === 'Külsős'
-  }
-
   canViewMenu() {
-    const allowedRoles = ['Tanuló', 'Tanár', 'Dolgozó', 'Külsős']
+    const allowedRoles = ['Tanuló', 'Tanár', 'Dolgozó']
     return allowedRoles.includes(this.getUserRole())
   }
 
@@ -204,8 +194,7 @@ class AuthService {
       isStudent: role === 'Tanuló',
       isTeacher: role === 'Tanár',
       isEmployee: role === 'Dolgozó',
-      isExternal: role === 'Külsős',
-      canViewMenu: ['Tanuló', 'Tanár', 'Dolgozó', 'Külsős'].includes(role),
+      canViewMenu: ['Tanuló', 'Tanár', 'Dolgozó'].includes(role),
       displayName: role === 'Tanuló' ? 'Tanuló' : 
                    role === 'Tanár' ? 'Tanár' : role
     }

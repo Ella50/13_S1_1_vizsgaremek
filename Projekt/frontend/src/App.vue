@@ -30,7 +30,7 @@ export default {
     const route = useRoute()
     
     const showNavigation = computed(() => {
-      return !['/login', '/register', '/reset-password', 'forgot-password'].includes(route.path)
+      return !['/login', '/register', '/reset-password', '/resetpassword', '/reset-password/:token', 'forgot-password'].includes(route.path)
     })
     
     return { showNavigation }

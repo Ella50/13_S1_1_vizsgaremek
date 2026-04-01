@@ -205,7 +205,6 @@ class MealIngredientSeeder extends Seeder
         if (!empty($missingIngredients)) {
             $this->command->warn('Hiányzó összetevők: ' . implode(', ', array_unique($missingIngredients)));
             
-            // Nézzük meg, milyen összetevők vannak
             $this->command->info('Elérhető összetevők:');
             $availableIngredients = array_keys($ingredients);
             sort($availableIngredients);
