@@ -89,12 +89,20 @@
                       PDF
                     </button>
                     <button
-                      class="btn-action btn-paid"
                       v-if="inv.invoiceStatus !== 'Fizetve'"
+                      class="btn-action btn-paid"
                       @click="markPaid(inv)"
                       :disabled="payingId === inv.id"
                     >
                       {{ payingId === inv.id ? "Mentés..." : "Fizetve" }}
+                    </button>
+                    <button
+                      v-if="inv.invoiceStatus === 'Fizetve'"
+                      class="btn-action btn-unpaid"
+                      @click="markUnpaid(inv)"
+                      :disabled="payingId === inv.id"
+                    >
+                      {{ payingId === inv.id ? "Visszaállítás..." : "Visszavonás" }}
                     </button>
                   </div>
                 </td>
@@ -150,7 +158,7 @@
                 @click="markPaid(selected)"
                 :disabled="payingId === selected.id"
               >
-                {{ payingId === selected.id ? "Mentés..." : " Fizetve" }}
+                {{ payingId === selected.id ? "Mentés..." : "Fizetve" }}
               </button>
             </div>
 
@@ -187,6 +195,26 @@
         </div>
       </div>
     </div>
+
+    <!-- Alert értesítés -->
+    <div class="alert-container" v-if="alertVisible">
+      <div :class="['alert', alertType]">
+        <strong v-if="alertTitle">{{ alertTitle }}</strong>
+        <div>{{ alertMessage }}</div>
+      </div>
+    </div>
+
+    <!-- Confirm modal -->
+    <div v-if="confirmVisible" class="confirm-overlay">
+      <div class="confirm-box">
+        <h3 v-if="confirmTitle" class="confirm-title">{{ confirmTitle }}</h3>
+        <p class="confirm-message">{{ confirmMessage }}</p>
+        <div class="confirm-actions">
+          <button class="btn-cancel" @click="confirmCancel">Mégse</button>
+          <button class="btn-ok" @click="confirmOk">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -197,6 +225,7 @@ import {
   adminFetchInvoice,
   adminGenerateInvoicesForMonth,
   adminMarkInvoicePaid,
+  adminMarkInvoiceUnpaid
 } from "@/services/invoiceApi";
 
 const loading = ref(false);
@@ -212,7 +241,156 @@ const billingMonth = ref("");
 const searchQuery = ref("");
 const searchTimeout = ref(null);
 
-// Görgetés tiltásának kezelése
+// Alert állapotok
+const alertVisible = ref(false);
+const alertMessage = ref('');
+const alertTitle = ref('');
+const alertType = ref('success');
+let alertTimeout = null;
+
+// Confirm állapotok
+const confirmVisible = ref(false);
+const confirmMessage = ref('');
+const confirmTitle = ref('');
+let confirmResolver = null;
+
+// Alert metódusok
+function showAlert({ message, type = 'success', title = '' }) {
+  if (alertTimeout) {
+    clearTimeout(alertTimeout);
+  }
+  
+  alertMessage.value = message;
+  alertType.value = type;
+  alertTitle.value = title;
+  alertVisible.value = true;
+  
+  alertTimeout = setTimeout(() => {
+    alertVisible.value = false;
+  }, 3000);
+}
+
+// Confirm metódusok
+function showConfirm({ message, title = '' }) {
+  confirmMessage.value = message;
+  confirmTitle.value = title;
+  confirmVisible.value = true;
+  
+  return new Promise((resolve) => {
+    confirmResolver = resolve;
+  });
+}
+
+function confirmOk() {
+  confirmVisible.value = false;
+  if (confirmResolver) {
+    confirmResolver(true);
+    confirmResolver = null;
+  }
+}
+
+function confirmCancel() {
+  confirmVisible.value = false;
+  if (confirmResolver) {
+    confirmResolver(false);
+    confirmResolver = null;
+  }
+}
+
+async function markPaid(inv) {
+  const confirmed = await showConfirm({
+    title: 'Fizetettre állítás',
+    message: `Biztosan fizetettre állítod a(z) ${inv.invoiceNumber} számú számlát?`
+  });
+  
+  if (!confirmed) return;
+  
+  payingId.value = inv.id;
+  error.value = "";
+  
+  try {
+    await adminMarkInvoicePaid(inv.id);
+    
+    const index = rows.value.findIndex(row => row.id === inv.id);
+    if (index !== -1) {
+      rows.value[index] = {
+        ...rows.value[index],
+        invoiceStatus: 'Fizetve',
+        paidAt: new Date().toISOString()
+      };
+    }
+    
+    if (selected.value?.id === inv.id) {
+      selected.value = {
+        ...selected.value,
+        invoiceStatus: 'Fizetve',
+        paidAt: new Date().toISOString()
+      };
+    }
+    
+    showAlert({
+      message: 'Számla sikeresen fizetettre állítva',
+      type: 'success'
+    });
+    
+  } catch (e) {
+    console.error('Mark as paid error:', e);
+    showAlert({
+      message: e?.response?.data?.message || "Hiba a fizetettre állításkor",
+      type: 'error'
+    });
+  } finally {
+    payingId.value = null;
+  }
+}
+
+async function markUnpaid(inv) {
+  const confirmed = await showConfirm({
+    title: 'Státusz visszaállítása',
+    message: `Biztosan visszaállítod "Generálva" státuszra a(z) ${inv.invoiceNumber} számú számlát?`
+  });
+  
+  if (!confirmed) return;
+  
+  payingId.value = inv.id;
+  error.value = "";
+  
+  try {
+    await adminMarkInvoiceUnpaid(inv.id);
+    
+    const index = rows.value.findIndex(row => row.id === inv.id);
+    if (index !== -1) {
+      rows.value[index] = {
+        ...rows.value[index],
+        invoiceStatus: 'Generálva',
+        paidAt: null
+      };
+    }
+    
+    if (selected.value?.id === inv.id) {
+      selected.value = {
+        ...selected.value,
+        invoiceStatus: 'Generálva',
+        paidAt: null
+      };
+    }
+    
+    showAlert({
+      message: 'Számla státusza sikeresen visszaállítva',
+      type: 'success'
+    });
+    
+  } catch (e) {
+    console.error('Mark as unpaid error:', e);
+    showAlert({
+      message: e?.response?.data?.message || "Hiba a visszaállításkor",
+      type: 'error'
+    });
+  } finally {
+    payingId.value = null;
+  }
+}
+
 watch(selected, (newVal) => {
   if (newVal) {
     document.body.style.overflow = 'hidden';
@@ -221,7 +399,6 @@ watch(selected, (newVal) => {
   }
 });
 
-// Komponens bezárásakor görgetés visszaállítása
 onBeforeUnmount(() => {
   document.body.style.overflow = '';
 });
@@ -302,6 +479,10 @@ async function load() {
     rows.value = invoiceData;
   } catch (e) {
     error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
+    showAlert({
+      message: error.value,
+      type: 'error'
+    });
     console.error(e);
   } finally {
     loading.value = false;
@@ -310,12 +491,28 @@ async function load() {
 
 async function generate() {
   if (!billingMonth.value) return;
+  
+  const confirmed = await showConfirm({
+    title: 'Számlák generálása',
+    message: `Biztosan legenerálod a(z) ${formatMonth(billingMonth.value)} havi számlákat?`
+  });
+  
+  if (!confirmed) return;
+  
   generating.value = true;
   try {
     await adminGenerateInvoicesForMonth(billingMonth.value);
     await load();
+    showAlert({
+      message: 'Számlák sikeresen legenerálva',
+      type: 'success'
+    });
   } catch (e) {
     console.log(e.response?.data);
+    showAlert({
+      message: e?.response?.data?.message || "Hiba a számlák generálásakor",
+      type: 'error'
+    });
   } finally {
     generating.value = false;
   }
@@ -351,12 +548,20 @@ async function open(id) {
 
     if (!invoiceData) {
       error.value = "Hibás adatformátum";
+      showAlert({
+        message: error.value,
+        type: 'error'
+      });
       return;
     }
 
     selected.value = invoiceData;
   } catch (e) {
     error.value = e?.response?.data?.message || e?.message || "Hiba a számla betöltésekor";
+    showAlert({
+      message: error.value,
+      type: 'error'
+    });
   }
 }
 
@@ -368,7 +573,10 @@ async function pdf(inv) {
   try {
     const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
     if (!token) {
-      error.value = 'Nincs bejelentkezve - hiányzik a token';
+      showAlert({
+        message: 'Nincs bejelentkezve - hiányzik a token',
+        type: 'error'
+      });
       return;
     }
 
@@ -381,19 +589,28 @@ async function pdf(inv) {
     });
 
     if (response.status === 401) {
-      error.value = 'Nincs jogosultság (401) - jelentkezz be újra';
+      showAlert({
+        message: 'Nincs jogosultság (401) - jelentkezz be újra',
+        type: 'error'
+      });
       return;
     }
 
     if (!response.ok) {
-      error.value = `Hiba: ${response.status}`;
+      showAlert({
+        message: `Hiba: ${response.status}`,
+        type: 'error'
+      });
       return;
     }
 
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const errorData = await response.json();
-      error.value = errorData.message || 'Hiba a PDF letöltésekor';
+      showAlert({
+        message: errorData.message || 'Hiba a PDF letöltésekor',
+        type: 'error'
+      });
       return;
     }
 
@@ -406,26 +623,17 @@ async function pdf(inv) {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
+    
+    showAlert({
+      message: 'PDF sikeresen letöltve',
+      type: 'success'
+    });
   } catch (e) {
     console.error('PDF download error:', e);
-    error.value = e.message || "Hiba a PDF letöltésekor";
-  }
-}
-
-async function markPaid(inv) {
-  payingId.value = inv.id;
-  error.value = "";
-  try {
-    await adminMarkInvoicePaid(inv.id);
-    if (selected.value?.id === inv.id) {
-      const data = await adminFetchInvoice(inv.id);
-      selected.value = data.invoice || data;
-    }
-    await load();
-  } catch (e) {
-    error.value = e?.response?.data?.message || "Hiba a fizetettre állításkor";
-  } finally {
-    payingId.value = null;
+    showAlert({
+      message: e.message || "Hiba a PDF letöltésekor",
+      type: 'error'
+    });
   }
 }
 
@@ -702,6 +910,135 @@ watch(billingMonth, () => {
 .btn-paid:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-unpaid {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-unpaid:hover:not(:disabled) {
+  background: #ffeaa7;
+}
+
+/* Alert stílusok */
+.alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10001;
+}
+
+.alert {
+  margin-bottom: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  color: white;
+  min-width: 250px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease;
+}
+
+.alert.success {
+  background: #4CAF50;
+}
+
+.alert.error {
+  background: #ff4d4f;
+}
+
+.alert.warning {
+  background: #ff9800;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Confirm stílusok */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+}
+
+.confirm-box {
+  background: white;
+  padding: 24px;
+  border-radius: 14px;
+  min-width: 320px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  animation: scaleIn 0.25s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.confirm-title {
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0 20px 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirm-actions .btn-cancel {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-cancel:hover {
+  background: #c0392b;
+}
+
+.confirm-actions .btn-ok {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-ok:hover {
+  background: #27ae60;
 }
 
 /* Modal styles */

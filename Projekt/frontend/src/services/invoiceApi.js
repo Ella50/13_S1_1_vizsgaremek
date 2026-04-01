@@ -12,8 +12,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export default api;
+// Válasz interceptor a BOM karakter kezelésére
+api.interceptors.response.use(
+  (response) => {
+    // Ha a válasz string, távolítsuk el a BOM karaktert
+    if (typeof response.data === 'string') {
+      try {
+        const cleanJson = response.data.replace(/^\uFEFF/, '');
+        response.data = JSON.parse(cleanJson);
+      } catch (e) {
+        console.error('JSON parse error in interceptor:', e);
+      }
+    }
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
+export default api;
 
 export async function fetchInvoices() {
   const { data } = await api.get("/invoices");
@@ -25,50 +43,39 @@ export async function adminFetchInvoices(params) {
     const response = await api.get('/admin/invoices', { params });
     console.log("TELJES RESPONSE:", response);
     console.log("RESPONSE.DATA:", response.data);
-    
-    // Ha string, távolítsuk el a BOM karaktert és parse-oljuk
-    if (typeof response.data === 'string') {
-      // BOM karakter eltávolítása
-      const cleanJson = response.data.replace(/^\uFEFF/, '');
-      return JSON.parse(cleanJson);
-    }
     return response.data;
   } catch (error) {
     console.error("Hiba az adminFetchInvoices-ben:", error);
     throw error;
   }
 }
+
 export async function adminFetchInvoice(id) {
   const res = await api.get(`/admin/invoices/${id}`);
   return res.data;
 }
 
 export async function adminGenerateInvoicesForMonth(month) {
-  const res = await api.post(
-    "/admin/invoices/generate-month",
-    { month }
-  );
+  const res = await api.post("/admin/invoices/generate-month", { month });
   return res.data;
 }
 
-
-export async function adminMarkInvoicePaid(id) {
-  const res = await api.post(`/admin/invoices/${id}/paid`);
-  return res.data;
+export async function adminMarkInvoicePaid(invoiceId) {
+  try {
+    const response = await api.put(`/admin/invoices/${invoiceId}/paid`);
+    return response.data;
+  } catch (error) {
+    console.error('API hiba a fizetettre állításkor:', error);
+    throw error;
+  }
 }
 
-export async function downloadInvoicePdf(id, filename = "szamla.pdf") {
-  const res = await api.get(`/invoices/${id}/pdf`, { responseType: "blob" });
-
-  const blob = new Blob([res.data], { type: "application/pdf" });
-  const url = window.URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  window.URL.revokeObjectURL(url);
+export async function adminMarkInvoiceUnpaid(invoiceId) {
+  try {
+    const response = await api.put(`/admin/invoices/${invoiceId}/unpaid`);
+    return response.data;
+  } catch (error) {
+    console.error('API hiba a visszaállításkor:', error);
+    throw error;
+  }
 }

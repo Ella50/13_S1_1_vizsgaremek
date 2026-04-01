@@ -1,95 +1,104 @@
 <template>
   <div class="orders-container">
-    <div class="content-card">
-      <div class="card-header">
-        <h1 class="title">Rendelések kezelése</h1>
-        
-        <div class="header-controls">
-          <div class="filter-group" v-if="viewMode === 'daily'">
-            <input type="date" v-model="selectedDate" class="date-input" @change="loadOrders" />
-          </div>
-          <button @click="loadOrders" class="btn-primary" :disabled="loading">
+    <div class="header-section">
+      <h1>Rendelések Kezelése</h1>
+    </div>
+
+    <div class="filters-section card">
+      <div class="filter-row">
+        <div class="filter-group" v-if="viewMode === 'daily'">
+          <label for="datePicker">Dátum:</label>
+          <input type="date" id="datePicker" v-model="selectedDate" class="form-control" @change="loadOrders" />
+        </div>
+
+        <div class="filter-actions">
+          <button @click="loadOrders" class="datepicker-btn" :disabled="loading">
             {{ loading ? 'Betöltés...' : 'Frissítés' }}
           </button>
         </div>
       </div>
+    </div>
 
-      <!-- Napi összesítés -->
-      <div v-if="viewMode === 'daily' && dailyMealSummary" class="daily-summary-section">
-        <div class="summary-header">
-          <h3>Napi Összesítés - {{ formatDate(selectedDate) }}</h3>
-        </div>
-        
-        <div class="summary-cards">
-          <!-- Leves összesítés -->
-          <div class="summary-card">
-            <div class="card-icon soup-icon">
-              <span>Leves</span>
-            </div>
-            <div class="card-info">
-              <p class="meal-name">{{ dailyMealSummary.soup.name || 'Nincs adat' }}</p>
-              <div class="meal-count">
-                <span class="count-number">{{ dailyMealSummary.soup.count || 0 }}</span>
-                <span class="count-label">db rendelés</span>
+    <!-- Napi összesítés -->
+    <div v-if="viewMode === 'daily' && dailyMealSummary" class="daily-summary-section card mt-4">
+      <div class="card-header">
+        <h3>Napi Összesítés - {{ formatDate(selectedDate) }}</h3>
+      </div>
+      
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="meal-summary-card">
+              <div class="meal-icon" id="leves-opcio">
+                <span>Leves</span>
+              </div>
+              <div class="meal-info">
+                <p class="meal-name">{{ dailyMealSummary.soup.name || 'Nincs adat' }}</p>
+                <div class="meal-count">
+                  <span class="count-number">{{ dailyMealSummary.soup.count || 0 }}</span>
+                  <span class="count-label">db rendelés</span>
+                </div>
               </div>
             </div>
           </div>
           
-          <!-- A opció összesítés -->
-          <div class="summary-card">
-            <div class="card-icon optionA-icon">
-              <span>A</span>
-            </div>
-            <div class="card-info">
-              <p class="meal-name">{{ dailyMealSummary.option_a.name || 'Nincs adat' }}</p>
-              <div class="meal-count">
-                <span class="count-number">{{ dailyMealSummary.option_a.count || 0 }}</span>
-                <span class="count-label">db rendelés</span>
+          <div class="col-md-3">
+            <div class="meal-summary-card">
+              <div class="meal-icon" id="A-opcio">
+                <span>A</span>
+              </div>
+              <div class="meal-info">
+                <p class="meal-name">{{ dailyMealSummary.option_a.name || 'Nincs adat' }}</p>
+                <div class="meal-count">
+                  <span class="count-number">{{ dailyMealSummary.option_a.count || 0 }}</span>
+                  <span class="count-label">db rendelés</span>
+                </div>
               </div>
             </div>
           </div>
           
-          <!-- B opció összesítés -->
-          <div class="summary-card">
-            <div class="card-icon optionB-icon">
-              <span>B</span>
-            </div>
-            <div class="card-info">
-              <p class="meal-name">{{ dailyMealSummary.option_b.name || 'Nincs adat' }}</p>
-              <div class="meal-count">
-                <span class="count-number">{{ dailyMealSummary.option_b.count || 0 }}</span>
-                <span class="count-label">db rendelés</span>
+          <div class="col-md-3">
+            <div class="meal-summary-card">
+              <div class="meal-icon" id="B-opcio">
+                <span>B</span>
+              </div>
+              <div class="meal-info">
+                <p class="meal-name">{{ dailyMealSummary.option_b.name || 'Nincs adat' }}</p>
+                <div class="meal-count">
+                  <span class="count-number">{{ dailyMealSummary.option_b.count || 0 }}</span>
+                  <span class="count-label">db rendelés</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Cukormentes összesítés -->
-          <div class="summary-card">
-            <div class="card-icon diabetic-icon">
-              <span>Cukor<br>mentes</span>
-            </div>
-            <div class="card-info">
-              <p class="meal-name">{{ dailyMealSummary.diabetic.name || 'Nincs adat' }}</p>
-              <div class="meal-count">
-                <span class="count-number">{{ dailyMealSummary.diabetic.count || 0 }}</span>
-                <span class="count-label">db rendelés</span>
+          <div class="col-md-3">
+            <div class="meal-summary-card">
+              <div class="meal-icon" id="B-opcio">
+                <span>CM</span>
+              </div>
+              <div class="meal-info">
+                <p class="meal-name">{{ dailyMealSummary.option_b.name || 'Nincs adat' }}</p>
+                <div class="meal-count">
+                  <span class="count-number">{{ dailyMealSummary.option_b.count || 0 }}</span>
+                  <span class="count-label">db rendelés</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Összegző táblázat -->
-        <div class="summary-table-wrapper">
-          <h4>Részletek</h4>
-          <div class="table-wrapper">
-            <table class="data-table">
+ 
+        <div class="summary-table mt-4">
+          <h5>Részletes eloszlás</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
               <thead>
-                <tr>
+                <tr class="table-light">
                   <th>Étel típusa</th>
                   <th>Étel neve</th>
                   <th>Darabszám</th>
                   <th>% az összesből</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 <tr>
@@ -97,15 +106,6 @@
                   <td>{{ dailyMealSummary.soup.name || 'Nincs adat' }}</td>
                   <td>{{ dailyMealSummary.soup.count || 0 }}</td>
                   <td>{{ getPercentage(dailyMealSummary.soup.count, dailyMealSummary.total_by_option.total_soup) }}%</td>
-                </tr>
-                <tr class="diabetic-row">
-                  <td><strong>Cukormentes (A opcióból)</strong></td>
-                  <td>
-                    {{ dailyMealSummary.diabetic.name || 'Cukormentes menü' }}
-                    <span class="badge-diabetic">cukormentes</span>
-                  </td>
-                  <td><strong class="diabetic-count">{{ dailyMealSummary.diabetic.count || 0 }}</strong></td>
-                  <td>{{ getPercentage(dailyMealSummary.diabetic.count, dailyMealSummary.total_by_option.total_soup) }}%</td>
                 </tr>
                 <tr>
                   <td><strong>A opció</strong></td>
@@ -125,7 +125,7 @@
                   <td>{{ dailyMealSummary.other.count || 0 }}</td>
                   <td>{{ getPercentage(dailyMealSummary.other.count, dailyMealSummary.total_by_option.other) }}%</td>
                 </tr>
-                <tr class="total-row">
+                <tr class="table-secondary">
                   <td colspan="2"><strong>ÖSSZESEN</strong></td>
                   <td><strong>{{ dailyMealSummary.total_by_option.total_soup || 0 }}</strong></td>
                   <td><strong>100%</strong></td>
@@ -133,103 +133,84 @@
               </tbody>
             </table>
           </div>
-
-          <div v-if="dailyMealSummary.diabetic.count > 0" class="diabetic-summary">
-            <div class="diabetic-info">
-              <span class="diabetic-icon-small">🍎</span>
-              <div>
-                <h6>Cukorbeteg rendelések összesítése</h6>
-                <p class="diabetic-text">
-                  {{ dailyMealSummary.diabetic.count }} db cukorbeteg rendelés az A opcióból
-                  (összes A opció: {{ dailyMealSummary.option_a.count }} db, 
-                  ebből cukorbeteg: {{ ((dailyMealSummary.diabetic.count / dailyMealSummary.option_a.count) * 100).toFixed(1) }}%)
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-
-      <!-- Betöltés állapota -->
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Rendelések betöltése...</p>
-      </div>
-
-      <!-- Üres állapot -->
-      <div v-else-if="!loading && orders.length === 0 && viewMode === 'daily'" class="empty-state">
-        <p>Nincsenek rendelések ezen a napon</p>
       </div>
     </div>
 
     <!-- Részletek modal -->
-    <div v-if="selectedOrder" class="modal-overlay" @click.self="selectedOrder = null">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Rendelés részletei #{{ selectedOrder.id }}</h2>
-          <button @click="selectedOrder = null" class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="order-details">
-            <div class="details-row">
-              <div class="details-col">
-                <h4>Felhasználó:</h4>
-                <p>{{ selectedOrder.user?.email || 'Ismeretlen' }}</p>
-                <p class="text-muted">{{ selectedOrder.user?.userType || '' }}</p>
+    <div v-if="selectedOrder" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Rendelés részletei #{{ selectedOrder.id }}</h5>
+            <button type="button" class="btn-close" @click="selectedOrder = null"></button>
+          </div>
+          <div class="modal-body">
+            <div class="order-details-simple">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <h6>Felhasználó:</h6>
+                  <p>{{ selectedOrder.user?.email || 'Ismeretlen' }}</p>
+                  <p class="text-muted small">{{ selectedOrder.user?.userType || '' }}</p>
+                </div>
+                <div class="col-md-6">
+                  <h6>Rendelés információk:</h6>
+                  <p>Dátum: {{ formatDate(selectedOrder.orderDate) }}</p>
+                  <p>Opció: 
+                    <span class="badge" :class="getOptionBadgeClass(selectedOrder.selectedOption)">
+                      {{ getOptionDisplay(selectedOrder.selectedOption) }}
+                    </span>
+                  </p>
+                  <p>Ár: {{ formatCurrency(selectedOrder.price?.amount || selectedOrder.price || 0) }}</p>
+                </div>
               </div>
-              <div class="details-col">
-                <h4>Rendelés információk:</h4>
-                <p>Dátum: {{ formatDate(selectedOrder.orderDate) }}</p>
-                <p>Opció: 
-                  <span class="badge" :class="getOptionBadgeClass(selectedOrder.selectedOption)">
-                    {{ getOptionDisplay(selectedOrder.selectedOption) }}
-                  </span>
-                </p>
-                <p>Ár: {{ formatCurrency(selectedOrder.price?.amount || selectedOrder.price || 0) }}</p>
-              </div>
-            </div>
-            
-            <div v-if="selectedOrder.menuItem" class="details-row">
-              <div class="details-col">
-                <h4>Leves:</h4>
-                <p>{{ selectedOrder.menuItem.soupMeal?.mealName || '-' }}</p>
-              </div>
-              <div class="details-col">
-                <h4>Főétel:</h4>
-                <p v-if="selectedOrder.selectedOption === 'A'">
-                  {{ selectedOrder.menuItem.optionAMeal?.mealName || '-' }}
-                </p>
-                <p v-else-if="selectedOrder.selectedOption === 'B'">
-                  {{ selectedOrder.menuItem.optionBMeal?.mealName || '-' }}
-                </p>
-                <p v-else-if="selectedOrder.selectedOption === 'other'">
-                  {{ selectedOrder.menuItem.otherMeal?.mealName || '-' }}
-                </p>
-                <p v-else>-</p>
+              
+              <div class="row mb-3" v-if="selectedOrder.menuItem">
+                <div class="col-md-6">
+                  <h6>Leves:</h6>
+                  <p>{{ selectedOrder.menuItem.soupMeal?.mealName || '-' }}</p>
+                </div>
+                <div class="col-md-6">
+                  <h6>Főétel:</h6>
+                  <p v-if="selectedOrder.selectedOption === 'A'">
+                    {{ selectedOrder.menuItem.optionAMeal?.mealName || '-' }}
+                  </p>
+                  <p v-else-if="selectedOrder.selectedOption === 'B'">
+                    {{ selectedOrder.menuItem.optionBMeal?.mealName || '-' }}
+                  </p>
+                  <p v-else-if="selectedOrder.selectedOption === 'other'">
+                    {{ selectedOrder.menuItem.otherMeal?.mealName || '-' }}
+                  </p>
+                  <p v-else>-</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button @click="selectedOrder = null" class="btn-cancel">Bezárás</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="selectedOrder = null">
+              Bezárás
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Confirm Modal -->
-    <div v-if="confirmVisible" class="modal-overlay" @click.self="confirmCancel">
-      <div class="modal modal-small">
-        <div class="modal-header">
-          <h2>{{ confirmTitle || 'Megerősítés' }}</h2>
-          <button @click="confirmCancel" class="modal-close">×</button>
-        </div>
-        <div class="modal-body text-center">
-          <div class="confirm-icon">❓</div>
-          <p class="confirm-message">{{ confirmMessage }}</p>
-        </div>
-        <div class="modal-footer">
-          <button @click="confirmCancel" class="btn-cancel">Mégse</button>
-          <button @click="confirmOk" class="btn-primary">Igen</button>
+    <!-- Alert értesítés -->
+    <div class="alert-container" v-if="alertVisible">
+      <div :class="['alert', alertType]">
+        <strong v-if="alertTitle">{{ alertTitle }}</strong>
+        <div>{{ alertMessage }}</div>
+      </div>
+    </div>
+
+    <!-- Confirm modal -->
+    <div v-if="confirmVisible" class="confirm-overlay">
+      <div class="confirm-box">
+        <h3 v-if="confirmTitle" class="confirm-title">{{ confirmTitle }}</h3>
+        <p class="confirm-message">{{ confirmMessage }}</p>
+        <div class="confirm-actions">
+          <button class="btn-cancel" @click="confirmCancel">Mégse</button>
+          <button class="btn-ok" @click="confirmOk">OK</button>
         </div>
       </div>
     </div>
@@ -238,11 +219,10 @@
 
 <script>
 import axios from 'axios';
-import { addAlert } from '../../auth/AppAlert.vue'
 
 export default {
   name: 'Orders',
-  
+
   data() {
     return {
       viewMode: 'daily',
@@ -270,6 +250,14 @@ export default {
       apiBaseUrl: '/kitchen/orders',
       dailyMealSummary: null,
       
+      // Alert állapotok
+      alertVisible: false,
+      alertMessage: '',
+      alertTitle: '',
+      alertType: 'success',
+      alertTimeout: null,
+      
+      // Confirm állapotok
       confirmVisible: false,
       confirmMessage: '',
       confirmTitle: '',
@@ -337,7 +325,24 @@ export default {
   },
   
   methods: {
-    showConfirm({ message, title = "" }) {
+    // Alert metódusok
+    showAlert({ message, type = 'success', title = '' }) {
+      if (this.alertTimeout) {
+        clearTimeout(this.alertTimeout);
+      }
+      
+      this.alertMessage = message;
+      this.alertType = type;
+      this.alertTitle = title;
+      this.alertVisible = true;
+      
+      this.alertTimeout = setTimeout(() => {
+        this.alertVisible = false;
+      }, 3000);
+    },
+    
+    // Confirm metódusok
+    showConfirm({ message, title = '' }) {
       this.confirmMessage = message;
       this.confirmTitle = title;
       this.confirmVisible = true;
@@ -440,7 +445,7 @@ export default {
           this.orders = [];
           this.totalItems = 0;
           this.totalPages = 1;
-          addAlert({
+          this.showAlert({
             message: responseData.message || 'Hiba történt a rendelések betöltésekor',
             type: 'error'
           });
@@ -451,7 +456,7 @@ export default {
         this.orders = [];
         this.totalItems = 0;
         this.totalPages = 1;
-        addAlert({
+        this.showAlert({
           message: error.response?.data?.message || 'Hiba történt a rendelések betöltésekor',
           type: 'error'
         });
@@ -475,8 +480,6 @@ export default {
         'other': activeOrders.filter(o => o.selectedOption === 'other')
       };
       
-      const diabeticOrders = ordersByOption['A'].filter(order => order.user && order.user.hasDiabetes === true);
-      
       let menu = null;
       if (data.menu) {
         menu = data.menu;
@@ -499,14 +502,6 @@ export default {
           'name': menu?.optionBMeal?.mealName || 'B opció',
           'count': ordersByOption['B'].length,
           'orders': ordersByOption['B'].map(o => o.id)
-        },
-        'diabetic': {
-          'name': menu?.optionAMeal?.mealName || 'Cukormentes menü',
-          'count': diabeticOrders.length,
-          'orders': diabeticOrders.map(o => o.id),
-          'percentage': ordersByOption['A'].length > 0 
-            ? ((diabeticOrders.length / ordersByOption['A'].length) * 100).toFixed(1) 
-            : 0
         },
         'other': {
           'name': menu?.otherMeal?.mealName || 'Egyéb',
@@ -532,9 +527,74 @@ export default {
       };
     },
     
+    viewModeChanged() {
+      this.dailyMealSummary = null;
+      this.loadOrders();
+    },
+    
     viewOrderDetails(order) {
       this.selectedOrder = order;
-      document.body.style.overflow = 'hidden';
+    },
+    
+    async cancelOrder(order) {
+      const confirmed = await this.showConfirm({
+        title: 'Rendelés lemondása',
+        message: 'Biztosan lemondja ezt a rendelést?'
+      });
+      
+      if (!confirmed) return;
+      
+      try {
+        const token = localStorage.getItem('token') || this.getAuthToken();
+        const response = await axios.delete(`http://localhost:8000/api/user/personal-orders/${order.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.data.success) {
+          this.showAlert({
+            message: 'Rendelés sikeresen lemondva',
+            type: 'success'
+          });
+          this.loadOrders();
+        } else {
+          this.showAlert({
+            message: response.data.message || 'Hiba a rendelés lemondásakor',
+            type: 'error'
+          });
+        }
+      } catch (error) {
+        console.error('Hiba a rendelés lemondásakor:', error);
+        this.showAlert({
+          message: error.response?.data?.message || 'Hiba a rendelés lemondásakor',
+          type: 'error'
+        });
+      }
+    },
+    
+    async restoreOrder(order) {
+      const confirmed = await this.showConfirm({
+        title: 'Rendelés visszaállítása',
+        message: 'Biztosan visszaállítja ezt a rendelést?'
+      });
+      
+      if (!confirmed) return;
+      
+      try {
+        order.orderStatus = 'Rendelve';
+        this.showAlert({
+          message: 'Rendelés helyileg visszaállítva',
+          type: 'success'
+        });
+      } catch (error) {
+        console.error('Hiba a rendelés visszaállításakor:', error);
+        this.showAlert({
+          message: 'Hiba a rendelés visszaállításakor',
+          type: 'error'
+        });
+      }
     },
     
     getPercentage(count, total) {
@@ -546,6 +606,12 @@ export default {
       if (!date) return '';
       const d = new Date(date);
       return d.toLocaleDateString('hu-HU');
+    },
+    
+    formatDateTime(datetime) {
+      if (!datetime) return '';
+      const d = new Date(datetime);
+      return d.toLocaleString('hu-HU');
     },
     
     formatCurrency(amount) {
@@ -568,12 +634,24 @@ export default {
     
     getOptionBadgeClass(option) {
       const classes = {
-        'A': 'badge-success',
-        'B': 'badge-info',
-        'soup': 'badge-primary',
-        'other': 'badge-secondary'
+        'A': 'bg-success',
+        'B': 'bg-info',
+        'soup': 'bg-primary',
+        'other': 'bg-secondary'
       };
-      return classes[option] || 'badge-secondary';
+      return classes[option] || 'bg-secondary';
+    },
+    
+    getStatusBadgeClass(status) {
+      const classes = {
+        'Rendelve': 'bg-success',
+        'Lemondva': 'bg-warning',
+        'Fizetve': 'bg-info',
+        'active': 'bg-success',
+        'inactive': 'bg-warning',
+        'suspended': 'bg-danger'
+      };
+      return classes[status] || 'bg-secondary';
     },
     
     getAuthToken() {
@@ -607,542 +685,339 @@ export default {
 
 <style scoped>
 .orders-container {
-  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  min-height: calc(100vh - 200px);
+  padding: 20px;
+  min-height: 100vh;
 }
 
-.content-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem;
+.header-section {
+  margin-bottom: 30px;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.title {
-  font-size: 1.75rem;
-  color: #8a1212;
-  margin: 0;
-  font-weight: 600;
-}
-
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.date-input {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  background: white;
-}
-
-.date-input:focus {
-  outline: none;
-  border-color: #f0a24a;
-  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
-}
-
-.btn-primary {
-  padding: 0.5rem 1rem;
-  background: #1fa317;
+.datepicker-btn {
+  background-color: var(--zold, #28a745);
   color: white;
-  border: none;
-  border-radius: 8px;
   font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-  font-size: 0.85rem;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #158a0f;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-cancel {
-  padding: 0.5rem 1rem;
-  background: #e9ecef;
-  color: #495057;
+  height: 40px;
+  padding: 3px 20px;
+  border-radius: 3px;
   border: none;
-  border-radius: 8px;
-  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;
 }
 
-.btn-cancel:hover {
-  background: #dee2e6;
-}
-
-/* Napi összesítés */
-.daily-summary-section {
-  margin-bottom: 1.5rem;
-}
-
-.summary-header {
-  margin-bottom: 1rem;
-}
-
-.summary-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #8a1212;
-  font-weight: 600;
-}
-
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.summary-card {
+.filters-section {
   background: white;
-  border-radius: 12px;
-  padding: 1rem;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+.filter-row {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eee;
-  transition: transform 0.2s, box-shadow 0.2s;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-end;
 }
 
-.summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.filter-group {
+  flex: 1;
+  min-width: 200px;
 }
 
-.card-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+.filter-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Alert stílusok */
+.alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+}
+
+.alert {
+  margin-bottom: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  color: white;
+  min-width: 250px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease;
+}
+
+.alert.success {
+  background: #4CAF50;
+}
+
+.alert.error {
+  background: #ff4d4f;
+}
+
+.alert.warning {
+  background: #ff9800;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Confirm stílusok */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-  flex-shrink: 0;
+  z-index: 10002;
+}
+
+.confirm-box {
+  background: white;
+  padding: 24px;
+  border-radius: 14px;
+  min-width: 320px;
   text-align: center;
-  line-height: 1.2;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  animation: scaleIn 0.25s ease;
 }
 
-.soup-icon { background: #8a1212; }
-.optionA-icon { background: #6c757d; }
-.optionB-icon { background: #1fa317; }
-
-.diabetic-icon { 
-  background: #17a2b8; 
-  font-size: smaller;
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-.card-info {
-  flex: 1;
+.confirm-title {
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0 20px 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirm-actions .btn-cancel {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-cancel:hover {
+  background: #c0392b;
+}
+
+.confirm-actions .btn-ok {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-ok:hover {
+  background: #27ae60;
+}
+
+/* Napi összesítés stílusok */
+.daily-summary-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.meal-summary-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  height: 100%;
+  transition: transform 0.3s;
+}
+
+.meal-summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+}
+
+.meal-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+#leves-opcio {
+  background: #dc3545;
+}
+
+#A-opcio {
+  background: #6c757d;
+}
+
+#B-opcio {
+  background: #28a745;
+}
+
+.meal-info h4 {
+  margin: 0 0 5px 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
 }
 
 .meal-name {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.85rem;
-  color: #666;
+  margin: 0 0 10px 0;
+  color: #6c757d;
+  font-size: larger;
   font-weight: 500;
 }
 
 .meal-count {
   display: flex;
   align-items: baseline;
-  gap: 0.25rem;
 }
 
 .count-number {
-  font-size: 1.5rem;
+  font-size: 32px;
   font-weight: 700;
-  color: #333;
+  color: #2c3e50;
+  margin-right: 8px;
 }
 
 .count-label {
-  font-size: 0.7rem;
-  color: #888;
-}
-
-/* Táblázat */
-.summary-table-wrapper {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 1rem;
-}
-
-.summary-table-wrapper h4 {
-  margin: 0 0 1rem 0;
-  font-size: 0.9rem;
-  color: #8a1212;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid #eee;
-  background: white;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
   font-size: 0.85rem;
+  color: #6c757d;
 }
 
-.data-table th {
-  background: #f0a24a;
-  color: #7b2c2c;
-  padding: 0.75rem 1rem;
-  text-align: left;
+.summary-table {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.summary-table h5 {
+  color: #495057;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.summary-table th {
   font-weight: 600;
-}
-
-.data-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.data-table tr:hover {
-  background: #fef9ef;
-}
-
-.diabetic-row {
-  background: #e3f2fd;
-}
-
-.total-row {
+  color: #495057;
   background: #f8f9fa;
-  font-weight: 600;
 }
 
-.badge-diabetic {
-  display: inline-block;
-  padding: 0.2rem 0.5rem;
-  background: #17a2b8;
-  color: white;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  margin-left: 0.5rem;
+.summary-table td {
+  vertical-align: middle;
 }
 
-.diabetic-count {
-  color: #17a2b8;
+.table-secondary {
+  background-color: #f8f9fa !important;
 }
 
-.diabetic-summary {
-  margin-top: 1rem;
-  padding: 1rem;
+.card {
   background: white;
-  border-radius: 12px;
-  border-left: 4px solid #17a2b8;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.diabetic-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.diabetic-icon-small {
-  font-size: 1.5rem;
-}
-
-.diabetic-info h6 {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.85rem;
-  color: #333;
-}
-
-.diabetic-text {
-  margin: 0;
-  font-size: 0.75rem;
-  color: #666;
-}
-
-/* Badge stílusok */
-.badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 500;
-}
-
-.badge-success { background: #d4edda; color: #155724; }
-.badge-info { background: #d1ecf1; color: #0c5460; }
-.badge-primary { background: #cfe2ff; color: #084298; }
-.badge-secondary { background: #e9ecef; color: #495057; }
-
-/* Betöltés állapota */
-.loading-state {
-  text-align: center;
-  padding: 3rem;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #1fa317;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: #666;
-  background: #f9f9f9;
-  border-radius: 12px;
-}
-
-/* Modal stílusok */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 1000;
-}
-
-.modal {
+.card-header {
   background: white;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 700px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  animation: modalFadeIn 0.2s ease-out;
-}
-
-.modal-small {
-  max-width: 450px;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.modal-header {
+  border-bottom: 1px solid #eee;
+  padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #eee;
-  background: #fff7e6;
 }
 
-.modal-header h2 {
+.card-header h3 {
   margin: 0;
-  font-size: 1.25rem;
-  color: #8a1212;
-  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.3rem;
 }
 
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #888;
-  padding: 0 0.5rem;
-  transition: color 0.2s;
+.card-body {
+  padding: 20px;
 }
 
-.modal-close:hover {
-  color: #8a1212;
-}
-
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #eee;
-  background: #fafafa;
-}
-
-.order-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.details-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.details-col h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.8rem;
-  color: #666;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.details-col p {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.9rem;
-  color: #333;
-}
-
-.text-muted {
-  color: #888;
-  font-size: 0.8rem;
-}
-
-/* Confirm modal */
-.confirm-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.confirm-message {
-  font-size: 1rem;
-  color: #333;
-  margin: 0;
-}
-
-.text-center {
-  text-align: center;
-}
-
-/* Reszponzív */
 @media (max-width: 768px) {
-  .orders-container {
-    padding: 1rem;
-  }
-
-  .content-card {
-    padding: 1rem;
-  }
-
-  .card-header {
+  .filter-row {
     flex-direction: column;
-    align-items: flex-start;
   }
-
-  .title {
-    font-size: 1.25rem;
-  }
-
-  .header-controls {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .date-input {
+  
+  .filter-group {
     width: 100%;
   }
-
-  .btn-primary {
-    width: 100%;
-    text-align: center;
-  }
-
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .summary-card {
-    padding: 0.75rem;
-  }
-
-  .card-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 0.8rem;
-  }
-
-  .count-number {
-    font-size: 1.25rem;
-  }
-
-  .details-row {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .modal {
-    width: 95%;
-    margin: 1rem;
-  }
-
-  .diabetic-info {
+  
+  .meal-summary-card {
     flex-direction: column;
     text-align: center;
+    padding: 15px;
   }
-}
-
-@media (max-width: 480px) {
-  .data-table th,
-  .data-table td {
-    padding: 0.5rem;
-    font-size: 0.75rem;
+  
+  .meal-icon {
+    margin-right: 0;
+    margin-bottom: 10px;
   }
-
-  .badge-diabetic {
-    display: inline-block;
-    margin-top: 0.25rem;
+  
+  .meal-count {
+    justify-content: center;
   }
-
-  .diabetic-row td {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+  
+  .table-responsive {
+    font-size: 0.9rem;
   }
 }
 </style>
