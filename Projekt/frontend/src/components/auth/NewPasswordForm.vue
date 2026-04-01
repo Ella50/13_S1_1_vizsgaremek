@@ -2,30 +2,27 @@
   <AuthLayout>
     <h2 class="title">Új jelszó beállítása</h2>
 
-    <!-- Sikeres üzenet -->
     <div v-if="successMessage" class="success-message">
       {{ successMessage }}
     </div>
 
-    <!-- Hiba üzenet -->
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
 
     <form @submit.prevent="handleResetPassword" class="auth-form">
-      <input
-        type="password"
+      <PasswordInput 
         v-model="form.password"
         placeholder="Új jelszó *"
-        required
-        minlength="8"
+        :required="true"
+        :minlength="8"
       />
-      <input
-        type="password"
+      
+      <PasswordInput 
         v-model="form.password_confirmation"
         placeholder="Jelszó megerősítése *"
-        required
-        minlength="8"
+        :required="true"
+        :minlength="8"
       />
 
       <button class="btn_auth" type="submit" :disabled="loading">
@@ -39,12 +36,14 @@
   </AuthLayout>
 </template>
 
+
 <script>
 import AuthLayout from "./AuthLayout.vue";
+import PasswordInput from "./PasswordInput.vue";
 import axios from "axios";
 
 export default {
-  components: { AuthLayout },
+  components: { AuthLayout, PasswordInput },
   props: {
     token: {
       type: String,

@@ -48,11 +48,20 @@
       <div class="form-row">
         <div class="form-group">
           <label>Jelszó *</label>
-          <input type="password" v-model="form.password" placeholder="Minimum 8 karakter" required minlength="8">
+          <PasswordInput 
+            v-model="form.password"
+            placeholder="Minimum 8 karakter"
+            :required="true"
+            :minlength="8"
+          />
         </div>
         <div class="form-group">
           <label>Jelszó megerősítése *</label>
-          <input type="password" v-model="form.password_confirmation" placeholder="Jelszó újra" required>
+          <PasswordInput 
+            v-model="form.password_confirmation"
+            placeholder="Jelszó újra"
+            :required="true"
+          />
         </div>
       </div>
 
@@ -82,10 +91,11 @@
 
 <script>
 import AuthLayout from './AuthLayout.vue'
+import PasswordInput from './PasswordInput.vue'
 import axios from '../../axios'
 
 export default {
-  components: { AuthLayout },
+  components: { AuthLayout, PasswordInput },
   data() {
     return {
       form: {

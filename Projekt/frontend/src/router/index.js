@@ -43,13 +43,13 @@ const routes = [
         path: '/resetpassword',
         name: 'resetpassword',
         component: ResetPassword,
-        meta: { requiresAuth: false  }
+        meta: { requiresAuth: false, showNavigation: false }
     },
     {
         path: '/newpasswordform',
         name: 'newpasswordform',
         component: NewPasswordForm,
-        meta: { requiresAuth: false }
+        meta: { requiresAuth: false, showNavigation: false }
     },
     {
         path: '/dashboard',
@@ -140,13 +140,13 @@ const routes = [
     {
 
         path: '/reset-password/:token',
-        name: 'newpasswordform', 
+        name: 'reset-password-token', 
         component: NewPasswordForm,
         props: (route) => ({
             token: route.params.token,
             email: route.query.email
         }),
-        meta: { requiresAuth: false }
+        meta: { requiresAuth: false, showNavigation: false }
     },
 
     
