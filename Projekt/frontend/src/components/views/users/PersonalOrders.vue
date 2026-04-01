@@ -262,6 +262,15 @@ export default {
       tempSelections: {},
     }
   },
+  watch: {
+    showMonthPicker(newVal) {
+      if (newVal) {
+        document.body.style.overflow = 'hidden'
+      } else {
+        document.body.style.overflow = ''
+      }
+    }
+  },
   
   computed: {
     availableMonths() {
@@ -389,7 +398,8 @@ export default {
     selectMonth(month) {
       this.selectedMonth = { year: month.year, month: month.month }
       this.showMonthPicker = false
-      document.body.style.overflow = 'hidden'
+
+      document.body.style.overflow = ''
       this.tempSelections = {}
       this.loadOrders()
     },

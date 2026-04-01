@@ -23,14 +23,14 @@ return new class extends Migration
             $table->foreignId('county_id')->constrained('counties');
         });
 
-
+ /*
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
             $table->string('className')->unique();
             $table->timestamps();
         });
 
- /*
+
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
             $table->string('groupName')->unique();

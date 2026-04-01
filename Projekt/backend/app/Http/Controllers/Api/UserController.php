@@ -19,7 +19,7 @@ class UserController extends Controller
     public function me(Request $request)
     {
         try {
-            $user = $request->user()->load(['city', 'studentClass', 'group',  'rfidCard']);
+            $user = $request->user()->load(['city',  'rfidCard']);
             
             return response()->json([
                 'success' => true,
@@ -55,7 +55,7 @@ class UserController extends Controller
         try {
             $user->update($request->only(['address', 'city_id']));
             
-            $user->load(['city', 'studentClass', 'group', 'rfidCard']);
+            $user->load(['city', 'rfidCard']);
 
             return response()->json([
                 'success' => true,
@@ -77,7 +77,7 @@ class UserController extends Controller
     public function index()
     {
         try {
-            $users = User::with(['city', 'studentClass', 'group', 'rfidCard'])->get();
+            $users = User::with(['city', 'rfidCard'])->get();
             
             return response()->json([
                 'success' => true,
@@ -107,8 +107,6 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'userType' => 'required|in:Tanuló,Tanár,Admin',
             'rfidCard_id' => 'required|integer|exists:rfidcard,id',
-            'class_id' => 'nullable|integer|exists:class,id',
-            'group_id' => 'nullable|integer|exists:group,id',
             'status' => 'required|in:active,inactive,suspended',
             'hasDiscount' => 'sometimes|boolean'
         ]);
@@ -128,7 +126,7 @@ class UserController extends Controller
             $user = User::create($userData);
 
             // Újra betöltjük a kapcsolatokkal
-            $user->load(['city', 'studentClass', 'group', 'rfidCard']);
+            $user->load(['city', 'rfidCard']);
 
             return response()->json([
                 'success' => true,
@@ -149,7 +147,7 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            $user = User::with(['city', 'studentClass', 'group', 'rfidCard'])->find($id);
+            $user = User::with(['city', 'rfidCard'])->find($id);
             
             if (!$user) {
                 return response()->json([
@@ -195,8 +193,6 @@ class UserController extends Controller
             'password' => 'sometimes|string|min:8',
             'userType' => 'sometimes|in:Tanuló,Tanár,Admin',
             'rfidCard_id' => 'sometimes|integer|exists:rfidcard,id',
-            'class_id' => 'sometimes|integer|exists:class,id',
-            'group_id' => 'sometimes|integer|exists:group,id',
             'status' => 'sometimes|in:active,inactive,suspended',
             'hasDiscount' => 'sometimes|boolean'
         ]);
@@ -220,7 +216,7 @@ class UserController extends Controller
             $user->update($userData);
 
             // Újra betöltjük a kapcsolatokkal
-            $user->load(['city', 'studentClass', 'group', 'rfidCard']);
+            $user->load(['city', 'rfidCard']);
 
             return response()->json([
                 'success' => true,
@@ -279,7 +275,7 @@ class UserController extends Controller
                 ], 400);
             }
 
-            $users = User::with(['city', 'studentClass', 'group', 'rfidCard'])
+            $users = User::with(['city', 'rfidCard'])
                         ->where('userType', $type)
                         ->get();
 
@@ -311,7 +307,7 @@ class UserController extends Controller
                 ], 400);
             }
 
-            $users = User::with(['city', 'studentClass', 'group', 'rfidCard'])
+            $users = User::with(['city', 'rfidCard'])
                         ->where('status', $status)
                         ->get();
 
@@ -334,7 +330,7 @@ class UserController extends Controller
     public function getByClass($classId)
     {
         try {
-            $users = User::with(['city', 'studentClass', 'group', 'rfidCard'])
+            $users = User::with(['city', 'rfidCard'])
                         ->where('class_id', $classId)
                         ->get();
 

@@ -335,7 +335,6 @@
         <div class="modal-body">
           <form @submit.prevent="saveMeal">
             <div class="basic-info-section">
-              <h3>Alapadatok</h3>
               <div class="form-row">
                 <div class="form-group">
                   <label>Étel neve *</label>

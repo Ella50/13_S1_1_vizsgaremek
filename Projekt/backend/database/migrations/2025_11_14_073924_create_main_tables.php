@@ -61,8 +61,6 @@ return new class extends Migration
         $table->string('password');
         $table->enum('userType', ['Tanuló', 'Tanár', 'Dolgozó', 'Admin', 'Konyha'])->default('Tanuló');
         $table->foreignId('rfidCard_id')->nullable()->constrained('rfidCards'); 
-        $table->foreignId('class_id')->nullable()->constrained('classes');
-        //$table->foreignId('group_id')->nullable()->constrained('groups'); 
         $table->enum('userStatus', ['Inaktív', 'Aktív', 'Felfüggesztett'])->default('Inaktív');
         $table->boolean('hasDiscount')->default(false);
         $table->boolean('hasDiabetes')->default(false);
