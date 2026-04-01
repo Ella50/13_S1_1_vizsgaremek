@@ -6,13 +6,15 @@
 - jelszavak: speciális karakterek lekezelése?
 - felfüggesztett akkor beléphet megnézni a számláit?
 - regisztráció sikeres üzenet (custom alert legyen)
-- jelszó nézés nem teljesen jó
+- navbar a newpassword.vueján
+- navbar dinamika jobb
+- rfid design egységesyítés
+- rfid hangjelzés leolvasáskor?
 
 ## Doucments
 - 
 
 ## PersonalOrders.vue
-- hónapváálasztó modalon kívűl görgetés
 
 ## PersonalInvoices.vue
 - gombok működjenek (modal overlay nem megfelelő)
@@ -39,16 +41,13 @@
 - nem menti az allergént ha új hozzávalót töltök fel
 - nem lehet törölni ingredientet (újat)
 - nem lehet változtatni az elérhetőségét
-- ne lenyíljon, hanem modal
 
 ## Orders.vue
 
 ## Profile.vue
-- értesítés ha nincs elfogadva???
 
 
 ## MenuMaker.vue
-- összes menü betöltése?
 
 
 ## Userprofil.vue
@@ -71,6 +70,3 @@
     pip install robotframework-seleniumlibrary
     Robotframework használat: python -m robot --outputdir results tests\bejelentkezes.robot
 )
-
-## Domi
--Price id a seederben

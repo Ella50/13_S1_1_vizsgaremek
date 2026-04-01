@@ -17,20 +17,26 @@ import Navigation from './components/layout/Navigation.vue'
 import AppAlert from "@/components/auth/AppAlert.vue";
 import Footer from './components/layout/Footer.vue';
 import AppConfirm from "@/components/auth/AppConfirm.vue";
+import PasswordInput from './components/auth/PasswordInput.vue'
 
 export default {
   components: { 
     Navigation,
     Footer,
     AppAlert,
-    AppConfirm
+    AppConfirm,
+    PasswordInput
   },
   
   setup() {
     const route = useRoute()
     
     const showNavigation = computed(() => {
-      return !['/login', '/register', '/reset-password', '/resetpassword', '/reset-password/:token', 'forgot-password'].includes(route.path)
+   
+      if (route.meta.showNavigation === false) {
+        return false
+      }
+      return true
     })
     
     return { showNavigation }

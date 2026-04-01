@@ -34,7 +34,7 @@ export default {
 
 <style>
 
-
+/*
 .password-wrapper {
   position: relative;
   width: 100%;
@@ -50,7 +50,7 @@ export default {
   box-sizing: border-box; 
 }
 
-/* Böngésző beépített ikonjainak elrejtése */
+
 .password-wrapper input[type="password"]::-ms-reveal,
 .password-wrapper input[type="password"]::-ms-clear,
 .password-wrapper input[type="password"]::-webkit-contacts-auto-fill-button,
@@ -105,10 +105,12 @@ export default {
 }
 
 
-
 input[type="password"]::-ms-reveal {
   display: none;
 }
+  */
+
+  
 
 .register-text {
   margin-top: 1.5rem;
