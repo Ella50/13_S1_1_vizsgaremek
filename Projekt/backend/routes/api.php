@@ -164,6 +164,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show']);
         Route::post('/invoices/generate-month', [AdminInvoiceController::class, 'generateMonth']);
         Route::get('/invoices/{invoice}/pdf', [AdminInvoiceController::class, 'downloadPdf']);
+        Route::put('/invoices/{invoice}/paid', [AdminInvoiceController::class, 'markAsPaid']);
+        Route::put('/invoices/{invoice}/unpaid', [AdminInvoiceController::class, 'markAsUnpaid']);
 
 
         //Dokuments

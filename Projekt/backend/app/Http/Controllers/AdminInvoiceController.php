@@ -7,6 +7,7 @@ use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminInvoiceController extends Controller
@@ -173,6 +174,101 @@ class AdminInvoiceController extends Controller
         ]);
     }
 
+    /**
+     * Számla fizetettre állítása
+     */
+    public function markAsPaid($invoice)
+    {
+        try {
+            $invoice = Invoice::findOrFail($invoice);
+            
+            // Ellenőrizzük, hogy nem már fizetett-e
+            if ($invoice->invoiceStatus === 'Fizetve') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A számla már fizetett státuszban van.'
+                ], 400);
+            }
+            
+            // Státusz frissítése - használd a helyes mezőneveket
+            $invoice->invoiceStatus = 'Fizetve';
+            $invoice->paidAt = now();  // paidAt, nem paid_at
+            $invoice->save();
+            
+            // Naplózás
+            Log::info('Számla fizetettre állítva', [
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoiceNumber,
+                'admin_id' => auth()->id()
+            ]);
+            
+            // Frissített számla visszaadása a kapcsolatokkal
+            $invoice->load(['user', 'orders']);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Számla sikeresen fizetettre állítva.',
+                'invoice' => $invoice
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Hiba a számla fizetettre állítása közben', [
+                'invoice_id' => $invoice ?? null,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a számla frissítése közben: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function markAsUnpaid($invoice)
+    {
+         try {
+            // Távolítsd el az output buffert és a BOM-ot
+            if (ob_get_length()) ob_clean();
+            
+            $invoice = Invoice::findOrFail($invoice);
+            
+            if ($invoice->invoiceStatus !== 'Fizetve') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Csak fizetett számla állítható vissza.'
+                ], 400);
+            }
+            
+            $invoice->invoiceStatus = 'Generálva';
+            $invoice->paidAt = null;
+            $invoice->save();
+            
+            Log::info('Számla visszaállítva Generálva státuszra', [
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoiceNumber,
+                'admin_id' => auth()->id()
+            ]);
+            
+            $invoice->load(['user', 'orders']);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Számla sikeresen visszaállítva.',
+                'invoice' => $invoice
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Hiba a számla visszaállítása közben', [
+                'invoice_id' => $invoice ?? null,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     private function generateInvoiceNumber(Carbon $monthStart): string
     {
