@@ -21,8 +21,6 @@ class User extends Authenticatable
         'password',
         'userType',
         'rfidCard_id',
-        'class_id',
-        'group_id',
         'userStatus',
         'hasDiscount',
         'hasDiabetes',
@@ -72,16 +70,6 @@ class User extends Authenticatable
     }
     
 
-    public function studentClass()
-    {
-        return $this->belongsTo(studentClass::class, 'class_id');
-    }
-
-    public function group()
-    {
-        return $this->belongsTo(Group::class);
-    }
-
     public function rfidCard()
     {
         return $this->belongsTo(\App\Models\RfidCard::class, 'rfidCard_id');
@@ -109,7 +97,6 @@ class User extends Authenticatable
         return $this->hasMany(Document::class);
     }
 
-    // Helper metódusok a dokumentumok típus szerinti lekéréséhez
     public function getDiscountDocument()
     {
         return $this->documents()->where('type', 'discount')->latest()->first();

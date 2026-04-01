@@ -84,7 +84,7 @@
                 <td class="checkbox-col">
                   <input type="checkbox" :value="user.id" v-model="selectedUsers" class="select-item">
                 </td>
-                <td class="user-name-cell">{{ user.firstName }} {{ user.lastName }} {{ user.thirdName }}</td>
+                <td class="user-name-cell">{{ user.lastName }} {{ user.firstName }} {{ user.thirdName }}</td>
                 <td>{{ user.email }}</td>
                 <td>
                   <span :class="['role-badge', getRoleClass(user.userType)]">
@@ -166,14 +166,14 @@
           
           <form v-else @submit.prevent="saveUserChanges" class="edit-form">
             <div class="form-grid">
-              <div class="form-group">
-                <label>Keresztnév *</label>
-                <input v-model="editUser.firstName" type="text" required>
-              </div>
               
               <div class="form-group">
                 <label>Vezetéknév *</label>
                 <input v-model="editUser.lastName" type="text" required>
+              </div>
+              <div class="form-group">
+                <label>Keresztnév *</label>
+                <input v-model="editUser.firstName" type="text" required>
               </div>
               
               <div class="form-group">

@@ -252,9 +252,7 @@ class AdminController extends Controller
         
         $user = User::with([
             'city', 
-            'city.county', // <-- A county-t is betöltjük a városon keresztül
-            'studentClass', 
-            'group', 
+            'city.county',
             'rfidCard'
         ])->find($id);
         

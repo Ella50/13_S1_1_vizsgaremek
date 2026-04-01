@@ -7,6 +7,7 @@
 - felfüggesztett akkor beléphet megnézni a számláit?
 - navbar ott van ha visszaállítom a jelszót
 - regisztráció sikeres üzenet (custom alert legyen)
+- jelszó nézés nem teljesen jó
 
 ## Doucments
 - 
@@ -16,8 +17,7 @@
 
 ## PersonalInvoices.vue
 - gombok működjenek (modal overlay nem megfelelő)
-- pdf formázás eltérő az adminostól (jobb??)
-- frontend
+- pdf formázás eltérő az adminostól 
 - ha admin beállítja hogy "fizetv"e, akkor a usernek is kiírja hogy befizetve amúgy meg "Folyamatban.."
 
 ## AdminInvoice.vue
