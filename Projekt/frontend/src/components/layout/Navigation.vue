@@ -8,8 +8,6 @@
         </router-link>
         
         <div class="nav-links">
-          <!--<router-link to="/dashboard">Főoldal</router-link>-->
-          
           <!-- Admin -->
           <template v-if="AuthService.isAdmin()">
             <div class="dropdown">
@@ -36,7 +34,6 @@
           </template>
 
           <!-- Közös linkek -->
-
           <router-link v-if="AuthService.canViewMenu()" to="/menu/today">Mai menü</router-link>
           <router-link to="/menu/week">Heti menü</router-link>
           <router-link to="/kitchen/meals">Ételek</router-link>
@@ -63,18 +60,12 @@
       </template>
     </div>
 
-    <!-- Telefonos navigáció -->
+    <!-- Telefonos navigáció (változatlan) -->
     <div class="mobile-bottom-nav" v-if="AuthService.isAuthenticated()">
-      <!-- <router-link to="/dashboard" class="mobile-nav-item" :class="{ active: $route.path === '/dashboard' }">
-        <span class="icon">🏠</span>
-        <span class="label">Főoldal</span>
-      </router-link>-->
-
       <router-link to="/menu/today" class="mobile-nav-item" :class="{ active: $route.path.includes('/menu') }">
         <span class="icon">𓌉◯𓇋</span>
         <span class="label">Mai menü</span>
       </router-link>
-
 
       <router-link to="/kitchen/meals" class="mobile-nav-item" :class="{ active: $route.path === '/kitchen/meals' }">
         <span class="icon">☷</span>
@@ -90,21 +81,18 @@
         <span class="icon">☰</span>
         <span class="label">Több</span>
       </div>
-
     </div>
 
     <div class="mobile-bottom-nav" v-else>
       <router-link to="/login" class="mobile-nav-item">
-        <span class="icon">🔑</span>
         <span class="label">Belépés</span>
       </router-link>
       <router-link to="/register" class="mobile-nav-item">
-        <span class="icon">📝</span>
         <span class="label">Regisztráció</span>
       </router-link>
     </div>
 
-    <!-- Action Sheet for More Options -->
+    <!-- Action Sheet (változatlan) -->
     <transition name="slide-up">
       <div v-if="showActionSheet" class="action-sheet-overlay" @click="closeActionSheet">
         <div class="action-sheet" @click.stop>
@@ -114,7 +102,6 @@
           </div>
           
           <div class="action-sheet-content">
-            <!-- Admin szekció -->
             <template v-if="AuthService.isAdmin()">
               <div class="action-section">
                 <div class="section-title">Admin</div>
@@ -124,7 +111,6 @@
               </div>
             </template>
 
-            <!-- Konyha szekció -->
             <template v-if="AuthService.isKitchen()">
               <div class="action-section">
                 <div class="section-title">Konyha</div>
@@ -135,34 +121,24 @@
               </div>
             </template>
 
-
-            <!-- Általános szekció -->
-      
-              <div class="action-section">
-                <div class="section-title">Általános</div>
-                <!--<button v-if="AuthService.canViewMenu()" @click="navigateTo('/menu/today')">📅 Mai menü</button>-->
-                <button @click="navigateTo('/menu/week')">Heti menü</button>
-                <button @click="navigateTo('/kitchen/meals')">Ételek</button>
-                <button 
-                  v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" 
-                  @click="navigateTo('/personal-orders')"
-                >
-                  Rendelések
-                </button>
-                <button 
-                  v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" 
-                  @click="navigateTo('/personal-invoices')"
-                >
+            <div class="action-section">
+              <div class="section-title">Általános</div>
+              <button @click="navigateTo('/menu/week')">Heti menü</button>
+              <button @click="navigateTo('/kitchen/meals')">Ételek</button>
+              <button 
+                v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" 
+                @click="navigateTo('/personal-orders')"
+              >
+                Rendelések
+              </button>
+              <button 
+                v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" 
+                @click="navigateTo('/personal-invoices')"
+              >
                 Számlák
-                </button>
+              </button>
+            </div>
 
-              </div>
-  
-
-
-            
-
-            <!-- Kijelentkezés -->
             <div class="action-section">
               <button @click="logout" class="logout-action" :disabled="loggingOut">
                 <span v-if="loggingOut">Kijelentkezés...</span>
@@ -232,7 +208,7 @@ nav {
   position: relative;
   width: 100%;
   z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
 }
 
 /* Desktop Navigation */
@@ -253,10 +229,20 @@ nav {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: transform 0.2s ease;
 }
 
-.logo-image{
+.logo:hover {
+  transform: scale(1.02);
+}
+
+.logo-image {
   width: 180px;
+  transition: filter 0.2s ease;
+}
+
+.logo:hover .logo-image {
+  filter: brightness(0.95);
 }
 
 .nav-links {
@@ -272,29 +258,56 @@ nav {
   padding: 0.5rem 1rem;
   border-radius: 8px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   background: transparent;
   border: none;
   cursor: pointer;
   font-size: 1rem;
+  position: relative;
 }
 
-.nav-links a:hover, .dropdown-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+.nav-links a::after, .dropdown-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;  /* kicsit lejjebb, hogy ne fedje át a szöveget */
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 2px;
+  background: #8a1212;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.2s ease;
 }
+
+.nav-links a:hover::after, .dropdown-btn:hover::after {
+  transform: scaleX(0.7);
+}
+
 
 .nav-links a.router-link-active {
-  background: rgba(255, 255, 255, 0.4);
   font-weight: 600;
+}
+
+.nav-links a.router-link-active::after {
+  transform: scaleX(0.7);
 }
 
 .register-btn {
   background: #8a1212 !important;
   color: white !important;
+  border-radius: 30px !important;
+  padding: 0.5rem 1.2rem !important;
+}
+
+.register-btn::after {
+  display: none;
 }
 
 .register-btn:hover {
   background: #a51616 !important;
+  transform: translateY(-2px);
+
 }
 
 /* Dropdown */
@@ -308,12 +321,24 @@ nav {
   position: absolute;
   top: 100%;
   left: 0;
-  background: white;
+  background: rgb(255, 255, 255);
   min-width: 200px;
-  border-radius: 8px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  border: #333 1px dotted;
   z-index: 1001;
   padding: 0.5rem 0;
+  animation: fadeInDown 0.2s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown:hover .dropdown-content {
@@ -325,42 +350,43 @@ nav {
   padding: 0.8rem 1rem;
   color: #333;
   border-radius: 0;
+  transition: all 0.2s ease;
+}
+
+.dropdown-content a::after {
+  display: none;
 }
 
 .dropdown-content a:hover {
   background: #ffd294;
   color: #8a1212;
+  padding-left: 1.5rem;
 }
 
 .logout-btn {
-  /*background: #8a1212;
-  color: rgb(207, 181, 181);
-  width: auto;
-  height: auto;
-
-  cursor: pointer;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;*/
-  transition: all 0.2s;
-    background: var(--piros);
+  transition: all 0.2s ease;
+  background: #8a1212;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 30px;
   cursor: pointer;
-  width: 10%;
+  width: auto;
   min-width: 130px;
   font-weight: bold;
+  font-size: 0.9rem;
 }
 
 .logout-btn:hover:not(:disabled) {
-  background: #8a1212;
-  color: rgb(255, 255, 255);
+  background: #a51616;
 }
 
-/* Mobile Bottom Navigation */
+.logout-btn:active {
+  transform: translateY(0);
+  background: #555151;
+}
+
+
 .mobile-bottom-nav {
   display: none;
   position: fixed;
@@ -414,7 +440,7 @@ nav {
   box-shadow: 0 4px 10px rgba(138, 18, 18, 0.2);
 }
 
-/* Action Sheet */
+
 .action-sheet-overlay {
   position: fixed;
   top: 0;
@@ -462,14 +488,12 @@ nav {
   cursor: pointer;
   padding: 0.5rem;
   text-align: right;
-
 }
 
 .close-sheet:hover {
   color: #ca1616;
   background: transparent !important;
   border: none;
-
 }
 
 .action-section {
@@ -515,7 +539,7 @@ nav {
   background: #ffebee !important;
 }
 
-/* Animations */
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);
@@ -533,7 +557,6 @@ nav {
   animation: slideUp 0.3s reverse;
 }
 
-/* Responsive Breakpoints */
 @media (max-width: 768px) {
   .desktop-nav {
     padding: 0.8rem 1rem;
@@ -547,13 +570,11 @@ nav {
     display: flex;
   }
   
-  /* Add padding to body for fixed bottom nav */
   body {
     padding-bottom: 70px;
   }
 }
 
-/* Small screens */
 @media (max-width: 480px) {
   .mobile-nav-item .label {
     font-size: 0.65rem;

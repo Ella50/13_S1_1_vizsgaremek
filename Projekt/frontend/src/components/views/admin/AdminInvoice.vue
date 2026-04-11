@@ -42,6 +42,8 @@
       </div>
 
       <div v-else>
+
+
         <div v-if="rows.length === 0" class="empty-state">
           Nincs találat erre a hónapra.
         </div>
@@ -64,7 +66,7 @@
                 <td>
                   <div class="user-info">
                     <div class="user-name">
-                      {{ inv.user?.firstName + " " + inv.user?.lastName || inv.firstName || "—" }}
+                      {{ inv.user?.lastName + " " + inv.user?.firstName || inv.firstName || "—" }}
                     </div>
                     <div class="user-email">
                       {{ inv.user?.email || inv.userEmail || "" }}
@@ -110,7 +112,42 @@
             </tbody>
           </table>
         </div>
-      </div>
+          <!-- Pagináció -->
+          div v-if="pagination.last_page > 1" class="pagination">
+          <button 
+            @click="changePage(pagination.current_page - 1)" 
+            :disabled="pagination.current_page === 1"
+            class="btn-pagination"
+          >
+            Előző
+          </button>
+          
+          <span class="pagination-info">
+            {{ pagination.current_page }} / {{ pagination.last_page }} oldal
+            ({{ pagination.total }} számla)
+          </span>
+          
+          <button 
+            @click="changePage(pagination.current_page + 1)" 
+            :disabled="pagination.current_page === pagination.last_page"
+            class="btn-pagination"
+          >
+            Következő
+          </button>
+        </div>
+
+        <!-- Sorok száma választó -->
+        <div v-if="rows.length" class="per-page-selector">
+          <label>
+            Sorok száma oldalanként:
+            <select v-model="perPage" @change="changePerPage">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+        </div>
 
       <!-- MODAL -->
       <div v-if="selected" class="modal-overlay" @click.self="close">
@@ -237,9 +274,20 @@ const selected = ref(null);
 const payingId = ref(null);
 
 const billingMonth = ref("");
-
 const searchQuery = ref("");
 const searchTimeout = ref(null);
+
+// Pagináció állapotok
+const currentPage = ref(1);
+const perPage = ref(25);
+const pagination = ref({
+  current_page: 1,
+  last_page: 1,
+  per_page: 25,
+  total: 0,
+  from: 0,
+  to: 0
+});
 
 // Alert állapotok
 const alertVisible = ref(false);
@@ -253,6 +301,46 @@ const confirmVisible = ref(false);
 const confirmMessage = ref('');
 const confirmTitle = ref('');
 let confirmResolver = null;
+
+// Computed properties
+const totalSum = computed(() => {
+  const arr = Array.isArray(rows.value) ? rows.value : [];
+  return arr.reduce((sum, i) => {
+    const net = Number(i.totalAmount || 0);
+    const gross = net * 1.27;
+    return sum + gross;
+  }, 0);
+});
+
+// Látható oldalszámok
+const visiblePages = computed(() => {
+  const current = pagination.value.current_page;
+  const last = pagination.value.last_page;
+  const delta = 2;
+  const range = [];
+  const rangeWithDots = [];
+  let l;
+
+  for (let i = 1; i <= last; i++) {
+    if (i === 1 || i === last || (i >= current - delta && i <= current + delta)) {
+      range.push(i);
+    }
+  }
+
+  range.forEach((i) => {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l !== 1) {
+        rangeWithDots.push('...');
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  });
+
+  return rangeWithDots;
+});
 
 // Alert metódusok
 function showAlert({ message, type = 'success', title = '' }) {
@@ -297,119 +385,92 @@ function confirmCancel() {
   }
 }
 
-async function markPaid(inv) {
-  const confirmed = await showConfirm({
-    title: 'Fizetettre állítás',
-    message: `Biztosan fizetettre állítod a(z) ${inv.invoiceNumber} számú számlát?`
-  });
-  
-  if (!confirmed) return;
-  
-  payingId.value = inv.id;
+// Pagináció kezelés
+function changePage(page) {
+  if (page < 1 || page > pagination.value.last_page) return;
+  currentPage.value = page;
+  load();
+  window.scrollTo(0, 0);
+}
+
+function changePerPage() {
+  currentPage.value = 1;
+  load();
+}
+
+// Fő adatbetöltés paginációval
+async function load() {
+  loading.value = true;
   error.value = "";
-  
   try {
-    await adminMarkInvoicePaid(inv.id);
-    
-    const index = rows.value.findIndex(row => row.id === inv.id);
-    if (index !== -1) {
-      rows.value[index] = {
-        ...rows.value[index],
-        invoiceStatus: 'Fizetve',
-        paidAt: new Date().toISOString()
-      };
-    }
-    
-    if (selected.value?.id === inv.id) {
-      selected.value = {
-        ...selected.value,
-        invoiceStatus: 'Fizetve',
-        paidAt: new Date().toISOString()
-      };
-    }
-    
-    showAlert({
-      message: 'Számla sikeresen fizetettre állítva',
-      type: 'success'
+    const response = await adminFetchInvoices({
+      month: billingMonth.value,
+      search: searchQuery.value,
+      page: currentPage.value,
+      per_page: perPage.value
     });
-    
+
+    let invoiceData = [];
+    let paginationData = null;
+
+    if (typeof response === 'string') {
+      try {
+        const cleanJson = response.replace(/^\uFEFF/, '');
+        const parsed = JSON.parse(cleanJson);
+        if (parsed?.invoices?.data) {
+          invoiceData = parsed.invoices.data;
+          paginationData = {
+            current_page: parsed.invoices.current_page,
+            last_page: parsed.invoices.last_page,
+            per_page: parsed.invoices.per_page,
+            total: parsed.invoices.total,
+            from: parsed.invoices.from,
+            to: parsed.invoices.to
+          };
+        }
+      } catch (e) {
+        console.error("JSON parse error:", e);
+      }
+    } else if (response && typeof response === 'object') {
+      if (response.invoices?.data) {
+        invoiceData = response.invoices.data;
+        paginationData = {
+          current_page: response.invoices.current_page,
+          last_page: response.invoices.last_page,
+          per_page: response.invoices.per_page,
+          total: response.invoices.total,
+          from: response.invoices.from,
+          to: response.invoices.to
+        };
+      }
+    }
+
+    rows.value = invoiceData;
+    if (paginationData) {
+      pagination.value = paginationData;
+    }
   } catch (e) {
-    console.error('Mark as paid error:', e);
+    error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
     showAlert({
-      message: e?.response?.data?.message || "Hiba a fizetettre állításkor",
+      message: error.value,
       type: 'error'
     });
+    console.error(e);
   } finally {
-    payingId.value = null;
+    loading.value = false;
   }
 }
 
-async function markUnpaid(inv) {
-  const confirmed = await showConfirm({
-    title: 'Státusz visszaállítása',
-    message: `Biztosan visszaállítod "Generálva" státuszra a(z) ${inv.invoiceNumber} számú számlát?`
-  });
-  
-  if (!confirmed) return;
-  
-  payingId.value = inv.id;
-  error.value = "";
-  
-  try {
-    await adminMarkInvoiceUnpaid(inv.id);
-    
-    const index = rows.value.findIndex(row => row.id === inv.id);
-    if (index !== -1) {
-      rows.value[index] = {
-        ...rows.value[index],
-        invoiceStatus: 'Generálva',
-        paidAt: null
-      };
-    }
-    
-    if (selected.value?.id === inv.id) {
-      selected.value = {
-        ...selected.value,
-        invoiceStatus: 'Generálva',
-        paidAt: null
-      };
-    }
-    
-    showAlert({
-      message: 'Számla státusza sikeresen visszaállítva',
-      type: 'success'
-    });
-    
-  } catch (e) {
-    console.error('Mark as unpaid error:', e);
-    showAlert({
-      message: e?.response?.data?.message || "Hiba a visszaállításkor",
-      type: 'error'
-    });
-  } finally {
-    payingId.value = null;
-  }
-}
-
-watch(selected, (newVal) => {
-  if (newVal) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = '';
-  }
-});
-
-onBeforeUnmount(() => {
-  document.body.style.overflow = '';
-});
-
+// Keresés debounce
 function onSearchInput() {
   if (searchTimeout.value) clearTimeout(searchTimeout.value);
   searchTimeout.value = setTimeout(() => {
+    currentPage.value = 1;
     load();
   }, 300);
 }
 
+// Segédfüggvények
 function formatFt(n) {
   const x = Number(n || 0);
   return x.toLocaleString("hu-HU") + " Ft";
@@ -440,55 +501,7 @@ function getStatusClass(status) {
   return classes[status] || 'status-default';
 }
 
-const totalSum = computed(() => {
-  const arr = Array.isArray(rows.value) ? rows.value : [];
-  return arr.reduce((sum, i) => {
-    const net = Number(i.totalAmount || 0);
-    const gross = net * 1.27;
-    return sum + gross;
-  }, 0);
-});
-
-async function load() {
-  loading.value = true;
-  error.value = "";
-  try {
-    const response = await adminFetchInvoices({
-      month: billingMonth.value,
-      search: searchQuery.value
-    });
-
-    let invoiceData = [];
-
-    if (typeof response === 'string') {
-      try {
-        const cleanJson = response.replace(/^\uFEFF/, '');
-        const parsed = JSON.parse(cleanJson);
-        if (parsed?.invoices?.data) {
-          invoiceData = parsed.invoices.data;
-        }
-      } catch (e) {
-        console.error("JSON parse error:", e);
-      }
-    } else if (response && typeof response === 'object') {
-      if (response.invoices?.data) {
-        invoiceData = response.invoices.data;
-      }
-    }
-
-    rows.value = invoiceData;
-  } catch (e) {
-    error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
-    showAlert({
-      message: error.value,
-      type: 'error'
-    });
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-}
-
+// Generálás
 async function generate() {
   if (!billingMonth.value) return;
   
@@ -502,6 +515,7 @@ async function generate() {
   generating.value = true;
   try {
     await adminGenerateInvoicesForMonth(billingMonth.value);
+    currentPage.value = 1;
     await load();
     showAlert({
       message: 'Számlák sikeresen legenerálva',
@@ -518,6 +532,85 @@ async function generate() {
   }
 }
 
+// Fizetettre állítás
+async function markPaid(inv) {
+  const confirmed = await showConfirm({
+    title: 'Fizetettre állítás',
+    message: `Biztosan fizetettre állítod a(z) ${inv.invoiceNumber} számú számlát?`
+  });
+  
+  if (!confirmed) return;
+  
+  payingId.value = inv.id;
+  error.value = "";
+  
+  try {
+    await adminMarkInvoicePaid(inv.id);
+    await load();
+    
+    if (selected.value?.id === inv.id) {
+      selected.value = {
+        ...selected.value,
+        invoiceStatus: 'Fizetve'
+      };
+    }
+    
+    showAlert({
+      message: 'Számla sikeresen fizetettre állítva',
+      type: 'success'
+    });
+    
+  } catch (e) {
+    console.error('Mark as paid error:', e);
+    showAlert({
+      message: e?.response?.data?.message || "Hiba a fizetettre állításkor",
+      type: 'error'
+    });
+  } finally {
+    payingId.value = null;
+  }
+}
+
+// Visszavonás (Fizetve -> Generálva)
+async function markUnpaid(inv) {
+  const confirmed = await showConfirm({
+    title: 'Státusz visszaállítása',
+    message: `Biztosan visszaállítod "Generálva" státuszra a(z) ${inv.invoiceNumber} számú számlát?`
+  });
+  
+  if (!confirmed) return;
+  
+  payingId.value = inv.id;
+  error.value = "";
+  
+  try {
+    await adminMarkInvoiceUnpaid(inv.id);
+    await load();
+    
+    if (selected.value?.id === inv.id) {
+      selected.value = {
+        ...selected.value,
+        invoiceStatus: 'Generálva'
+      };
+    }
+    
+    showAlert({
+      message: 'Számla státusza sikeresen visszaállítva',
+      type: 'success'
+    });
+    
+  } catch (e) {
+    console.error('Mark as unpaid error:', e);
+    showAlert({
+      message: e?.response?.data?.message || "Hiba a visszaállításkor",
+      type: 'error'
+    });
+  } finally {
+    payingId.value = null;
+  }
+}
+
+// Modal kezelés
 async function open(id) {
   error.value = "";
   try {
@@ -569,6 +662,7 @@ function close() {
   selected.value = null;
 }
 
+// PDF letöltés
 async function pdf(inv) {
   try {
     const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
@@ -637,6 +731,26 @@ async function pdf(inv) {
   }
 }
 
+// Görgetés tiltás modalnál
+watch(selected, (newVal) => {
+  if (newVal) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+});
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = '';
+});
+
+// Hónap változás figyelés
+watch(billingMonth, () => {
+  currentPage.value = 1;
+  load();
+});
+
+// Alapértelmezett hónap beállítása
 function setDefaultMonth() {
   const now = new Date();
   const y = now.getFullYear();
@@ -646,10 +760,6 @@ function setDefaultMonth() {
 
 setDefaultMonth();
 load();
-
-watch(billingMonth, () => {
-  load();
-});
 </script>
 
 <style scoped>
@@ -1249,6 +1359,103 @@ watch(billingMonth, () => {
   pointer-events: none;
 }
 
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.btn-pagination {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background: #f0a24a;
+  color: #7b2c2c;
+  border-color: #f0a24a;
+}
+
+.btn-pagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* Sorok száma választó */
+.per-page-selector {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding: 0 0.5rem;
+}
+
+.per-page-selector label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.per-page-selector select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+
+@media (max-width: 768px) {
+  .pagination {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .page-numbers {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .btn-pagination {
+    order: 0;
+  }
+  
+  .per-page-selector {
+    justify-content: center;
+  }
+  
+
+}
+
+@media (max-width: 480px) {
+  .page-number {
+    min-width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+  
+  .btn-pagination {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.75rem;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .admin-invoices {
@@ -1354,4 +1561,6 @@ watch(billingMonth, () => {
     font-size: 0.75rem;
   }
 }
+
+
 </style>

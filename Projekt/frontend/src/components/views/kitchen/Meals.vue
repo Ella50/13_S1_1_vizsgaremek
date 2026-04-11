@@ -40,11 +40,11 @@
 
       <div v-else>
         <div v-if="meals.length === 0" class="empty-state">
-          <p>Nincs még étel hozzáadva.</p>
+          <p>Nincs találat</p>
           <button v-if="canEdit" @click="openCreateModal" class="btn-primary">
-            + Adja hozzá az első ételt
+            + Adjon hozzá ételt
           </button>
-          <p v-else>Kérjük várjon, amíg a konyha hozzáadja az ételeket</p>
+
         </div>
 
         <div v-else class="meals-grid">
@@ -727,7 +727,7 @@ export default {
   
   computed: {
     canEdit() {
-      return AuthService.isKitchen() || AuthService.isAdmin()
+      return AuthService.isKitchen()
     },
     
     canAddIngredient() {

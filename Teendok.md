@@ -2,9 +2,6 @@
 - optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
-- TELEFONOS NÉZET MINDELHOL (pl. meals.vue tápértékek)
-- jelszavak: speciális karakterek lekezelése?
-- felfüggesztett akkor beléphet megnézni a számláit?
 - regisztráció sikeres üzenet (custom alert legyen)
 - navbar a newpassword.vueján
 - navbar dinamika jobb
@@ -17,14 +14,11 @@
 ## PersonalOrders.vue
 
 ## PersonalInvoices.vue
-- gombok működjenek (modal overlay nem megfelelő)
 - pdf formázás eltérő az adminostól 
-- ha admin beállítja hogy "fizetv"e, akkor a usernek is kiírja hogy befizetve amúgy meg "Folyamatban.."
+- pagináció?
 
 ## AdminInvoice.vue
-- hiba a fizetettre állításkor
-- legyen keresés/szűrő? 
-
+-  pagináció van, nem jó (többadat?)
 
 ## Users.vue
 - kártya törlés gomb
@@ -33,7 +27,6 @@
 ## Meals.vue
 - pontosabb tápérték számítás??
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
-- összetevők felsaorolása a usernek
 - nem működik a törlés NEM IGAZ -> nem törli mert van hozzá rendelés kapcsolva (ilyne hibaüzenet kell)
 
 
