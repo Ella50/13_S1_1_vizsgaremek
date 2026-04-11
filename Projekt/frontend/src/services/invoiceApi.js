@@ -5,17 +5,17 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// FONTOS: token az interceptorból (mert ez egy külön axios instance)
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("auth_token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Válasz interceptor a BOM karakter kezelésére
+// interceptor a BOM karakter kezelésére
 api.interceptors.response.use(
   (response) => {
-    // Ha a válasz string, távolítsuk el a BOM karaktert
+
     if (typeof response.data === 'string') {
       try {
         const cleanJson = response.data.replace(/^\uFEFF/, '');
@@ -40,9 +40,14 @@ export async function fetchInvoices() {
 
 export async function adminFetchInvoices(params) {
   try {
-    const response = await api.get('/admin/invoices', { params });
-    console.log("TELJES RESPONSE:", response);
-    console.log("RESPONSE.DATA:", response.data);
+    const { month, search, page, per_page } = params;
+    const queryParams = new URLSearchParams();
+    if (month) queryParams.append('month', month);
+    if (search) queryParams.append('search', search);
+    if (page) queryParams.append('page', page);
+    if (per_page) queryParams.append('per_page', per_page);
+    
+    const response = await api.get(`/admin/invoices?${queryParams.toString()}`);
     return response.data;
   } catch (error) {
     console.error("Hiba az adminFetchInvoices-ben:", error);

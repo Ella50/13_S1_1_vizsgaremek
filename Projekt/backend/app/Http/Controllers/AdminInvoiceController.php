@@ -14,7 +14,6 @@ class AdminInvoiceController extends Controller
 {
     public function generateMonth(Request $request)
     {
-        // pl. "2026-02" formátum
         $request->validate([
             'month' => ['required', 'date_format:Y-m'],
         ]);
@@ -22,7 +21,6 @@ class AdminInvoiceController extends Controller
         $monthStart = Carbon::createFromFormat('Y-m', $request->month)->startOfMonth();
         $monthEnd   = (clone $monthStart)->endOfMonth();
 
-        // 1) Keresd meg azokat a usereket, akiknek van "Rendelve" rendelésük a hónapban
         $userIds = Order::query()
             ->whereBetween('orderDate', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->where('orderStatus', 'Rendelve')
@@ -37,7 +35,7 @@ class AdminInvoiceController extends Controller
 
         DB::transaction(function () use ($userIds, $monthStart, $monthEnd, &$created) {
             foreach ($userIds as $userId) {
-                // 2) Gyűjtsük a számlázandó rendeléseket (Rendelve + invoice_id null)
+
                 $orders = Order::query()
                     ->with('price')
                     ->where('user_id', $userId)
@@ -52,24 +50,22 @@ class AdminInvoiceController extends Controller
 
                 if ($orders->isEmpty()) continue;
 
-                // 3) Total összeg (price.amount alapján)
+           
                 $total = $orders->sum(function ($o) {
                     return (float) ($o->price?->amount ?? 0);
                 });
 
-                // 4) Invoice létrehozás
                 $invoice = Invoice::create([
                     'user_id'        => $userId,
                     'invoiceNumber'  => $this->generateInvoiceNumber($monthStart),
-                    'billingMonth'   => $monthStart->toDateString(),  // első nap dátuma elég
+                    'billingMonth'   => $monthStart->toDateString(),  //első nap dátuma
                     'issueDate'      => now()->toDateString(),
                     'dueDate'        => now()->addDays(8)->toDateString(),
                     'totalAmount'    => $total,
-                    'paymentMethod'  => 'Bankkártya',                 // vagy amit szeretnél defaultnak
+                    'paymentMethod'  => 'Bankkártya',                 //default
                     'invoiceStatus'  => 'Generálva',
                 ]);
 
-                // 5) Rendelések hozzárendelése a számlához
                 Order::whereIn('id', $orders->pluck('id'))
                     ->update(['invoice_id' => $invoice->id]);
 
@@ -86,7 +82,6 @@ class AdminInvoiceController extends Controller
 
     public function downloadPdf(Invoice $invoice)
     {
-        // Admin letöltés: ha csak adminnak, itt ellenőrizd a role-t
         $invoice->load(['user', 'orders.price']);
 
         $pdf = Pdf::loadView('pdf.invoice', [
@@ -100,8 +95,14 @@ class AdminInvoiceController extends Controller
     {
         $request->validate([
             'month' => ['nullable', 'date_format:Y-m'],
-            'search' => ['nullable', 'string', 'max:100'],  
+            'search' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
+
+        $perPage = $request->input('per_page', 25);
+
+
 
         $q = Invoice::query()->with('user');
 
@@ -121,9 +122,9 @@ class AdminInvoiceController extends Controller
             });
         }
 
-        $invoices = $q->orderByDesc('issueDate')
+         $invoices = $q->orderByDesc('issueDate')
             ->orderByDesc('id')
-            ->paginate(25);
+            ->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -182,7 +183,6 @@ class AdminInvoiceController extends Controller
         try {
             $invoice = Invoice::findOrFail($invoice);
             
-            // Ellenőrizzük, hogy nem már fizetett-e
             if ($invoice->invoiceStatus === 'Fizetve') {
                 return response()->json([
                     'success' => false,
@@ -190,7 +190,6 @@ class AdminInvoiceController extends Controller
                 ], 400);
             }
             
-            // Státusz frissítése - használd a helyes mezőneveket
             $invoice->invoiceStatus = 'Fizetve';
             $invoice->paidAt = now();  // paidAt, nem paid_at
             $invoice->save();
@@ -227,7 +226,7 @@ class AdminInvoiceController extends Controller
     public function markAsUnpaid($invoice)
     {
          try {
-            // Távolítsd el az output buffert és a BOM-ot
+            // output buffert és a BOM eltávolítása
             if (ob_get_length()) ob_clean();
             
             $invoice = Invoice::findOrFail($invoice);
@@ -272,7 +271,6 @@ class AdminInvoiceController extends Controller
 
     private function generateInvoiceNumber(Carbon $monthStart): string
     {
-        // Példa: INV-202602-000123
         $prefix = 'INV-' . $monthStart->format('Ym') . '-';
         $last = Invoice::where('invoiceNumber', 'like', $prefix.'%')
             ->orderBy('invoiceNumber', 'desc')

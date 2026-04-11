@@ -31,13 +31,13 @@ const routes = [
         path: '/login',
         name: 'login',
         component: Login,
-        meta: { requiresAuth: false }
+        meta: { requiresAuth: false, showNavigation: false }
     },
     {
         path: '/register',
         name: 'register',
         component: Register,
-        meta: { requiresAuth: false }
+        meta: { requiresAuth: false, showNavigation: false }
     },
     {
         path: '/resetpassword',

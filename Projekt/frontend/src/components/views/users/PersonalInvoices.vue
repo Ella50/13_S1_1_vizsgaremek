@@ -60,7 +60,6 @@
       <!-- Empty state -->
       <div v-else-if="invoices.length === 0" class="empty-state">
         <h3>Nincs számla</h3>
-        <p>Még nem érkezett számla a rendszerbe.</p>
       </div>
       
       <!-- Invoices table -->
@@ -70,7 +69,7 @@
             <thead>
               <tr>
                 <th>Számlaszám</th>
-                <th>Kelte</th>
+                <th>Keltezés</th>
                 <th>Esedékesség</th>
                 <th>Összeg</th>
                 <th>Státusz</th>
@@ -228,7 +227,7 @@
         
         <div class="modal-footer">
           <button class="btn-pdf" @click="downloadPdf(selectedInvoice)" :disabled="downloading === selectedInvoice.id">
-            {{ downloading === selectedInvoice.id ? 'Generálás...' : 'PDF letöltése' }}
+            {{ downloading === selectedInvoice.id ? '...' : 'PDF letöltése' }}
           </button>
           <button class="btn-cancel" @click="closeModal">Bezárás</button>
         </div>

@@ -55,7 +55,6 @@
       </div>
 
       <div v-else class="empty-state">
-        <div class="empty-icon">📋</div>
         <p>Nincs menü a mai napra</p>
         <p class="empty-hint">Kérjük, nézz vissza később</p>
       </div>
@@ -162,7 +161,7 @@ export default {
   border: 1px solid #f0a24a;
 }
 
-/* Menu sections - egymás alatt */
+
 .menu-sections {
   display: flex;
   flex-direction: column;
@@ -204,7 +203,7 @@ export default {
   border-color: #f0a24a;
 }
 
-/* Loading state */
+
 .loading-state {
   text-align: center;
   padding: 3rem;
@@ -230,7 +229,7 @@ export default {
   font-size: 0.85rem;
 }
 
-/* Error state */
+
 .error-message {
   background: #ffebee;
   color: #c62828;
@@ -259,19 +258,13 @@ export default {
   background: #dee2e6;
 }
 
-/* Empty state */
+
 .empty-state {
   text-align: center;
   padding: 3rem;
   color: #666;
   background: #f9f9f9;
   border-radius: 12px;
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.6;
 }
 
 .empty-state p {
@@ -284,7 +277,7 @@ export default {
   margin-top: 0.5rem !important;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .today-menu {
     padding: 1rem;
