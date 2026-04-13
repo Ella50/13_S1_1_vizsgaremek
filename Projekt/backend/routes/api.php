@@ -193,6 +193,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/allergens', [KitchenController::class, 'getAllAllergens']);
         Route::get('/ingredients/{id}/allergens', [KitchenController::class, 'getIngredientAllergens']);
         Route::put('/ingredients/{id}/allergens', [KitchenController::class, 'updateIngredientAllergens']);
+        Route::post('/ingredients', [KitchenController::class, 'createIngredient']);
+
 
         Route::get('/categories', [KitchenController::class, 'getCategories']);
 

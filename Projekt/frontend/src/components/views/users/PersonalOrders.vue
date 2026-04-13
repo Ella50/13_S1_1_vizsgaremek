@@ -1095,10 +1095,10 @@ export default {
   background: #fef9ef;
 }
 
-/* Sor állapotok */
+/* nincs változás kinézetben mert újra megrendelhető
 .data-table tr.cancelled-order {
-  opacity: 0.7;
-}
+  
+}*/
 
 .data-table tr.active-order {
   background: #e8f5e9;

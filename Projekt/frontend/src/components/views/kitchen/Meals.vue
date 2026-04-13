@@ -10,6 +10,7 @@
               v-model="search" 
               @input="onSearchInput"
               placeholder="Keresés név alapján..."
+              max="50"
               class="search-input"
             >
             <span class="search-icon">🔍</span>
@@ -328,7 +329,7 @@
     <div v-if="showAddModal && editingMeal" class="modal-overlay" @click.self="closeModal">
       <div class="modal edit-meal-modal">
         <div class="modal-header">
-          <h2>{{ editingMeal?.mealName || 'Étel' }} szerkesztése</h2>
+          <h2>{{ editingMeal?.mealName || 'Étel' }} - Szerkesztése</h2>
           <button @click="closeModal" class="modal-close">×</button>
         </div>
         
@@ -572,7 +573,7 @@
             </div>
             
             <div v-if="!selectedMeal?.ingredients || selectedMeal.ingredients.length === 0" class="no-ingredients">
-              <p>Ehhez az ételhez még nincsenek hozzávalók hozzáadva.</p>
+              <p class="text-center">Ehhez az ételhez még nincsenek hozzávalók hozzáadva.</p>
             </div>
             
             <div v-else>
@@ -1029,6 +1030,109 @@ export default {
         await this.saveMealWithIngredients();
       }
     },
+
+    async saveMealWithIngredients() {
+      if (!this.editingMeal || !this.editingMeal.id) {
+        console.error('No editing meal or missing ID')
+        return
+      }
+      
+      try {
+        this.savingMeal = true
+        
+        console.log('=== START saveMealWithIngredients ===')
+        console.log('Meal ID:', this.editingMeal.id)
+        console.log('Meal form:', this.mealForm)
+        console.log('Ingredients to save:', this.editIngredientsList)
+        
+        // 1. Alapadatok mentése
+        console.log('1. Saving meal basic data...')
+        const mealResponse = await AuthService.api.put(
+          `/kitchen/meals/${this.editingMeal.id}`, 
+          this.mealForm
+        )
+        
+        if (!mealResponse.data.success) {
+          console.error('Meal save failed:', mealResponse.data)
+          alert(mealResponse.data.message || 'Hiba történt az étel mentése során')
+          return
+        }
+        
+        console.log('Meal saved successfully')
+        
+        // 2. Összetevők mentése
+        console.log('2. Preparing ingredients data...')
+        const ingredientsData = this.editIngredientsList.map(ingredient => {
+          const amount = parseFloat(ingredient.pivot?.amount) || 0
+          const unit = ingredient.pivot?.unit || 'g'
+          const ingredientId = ingredient.id
+          
+          console.log(`Ingredient: id=${ingredientId}, amount=${amount}, unit=${unit}`)
+          
+          // **FONTOS**: ellenőrizd, hogy a kulcsok helyesek-e
+          return {
+            ingredient_id: ingredientId,  
+            amount: amount,
+            unit: unit
+          }
+        })
+        
+        console.log('Ingredients data to send:', {
+          ingredients: ingredientsData,  // <-- a tömbnek ez a formája
+          count: ingredientsData.length
+        })
+        
+        // Küldés előtti ellenőrzés
+        if (ingredientsData.length === 0) {
+          console.log('No ingredients to save, skipping...')
+          this.$toast?.success('Étel sikeresen mentve (nincsenek összetevők)')
+          this.closeModal()
+          await this.fetchMeals()
+          return
+        }
+        
+        console.log('3. Sending ingredients to API...')
+        const ingredientsResponse = await AuthService.api.put(
+          `/kitchen/meals/${this.editingMeal.id}/ingredients`,
+          { ingredients: ingredientsData }
+        )
+        
+        console.log('Ingredients API response:', ingredientsResponse.data)
+        
+        if (ingredientsResponse.data.success) {
+          console.log('Ingredients saved successfully')
+          this.$toast?.success('Étel és összetevők sikeresen mentve')
+          this.closeModal()
+          await this.fetchMeals()
+        } else {
+          console.error('Ingredients save failed:', ingredientsResponse.data)
+          alert('Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message)
+        }
+        
+      } catch (error) {
+        console.error('=== ERROR in saveMealWithIngredients ===')
+        console.error('Error:', error)
+        
+        // Hibakezelés
+        if (error.response) {
+          if (error.response.data?.errors) {
+            const validationErrors = Object.values(error.response.data.errors).flat().join('\n')
+            alert(`Validációs hibák:\n${validationErrors}`)
+          } else if (error.response.data?.message) {
+            alert(`Szerver hiba: ${error.response.data.message}`)
+          }
+        } else if (error.request) {
+          alert('Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!')
+        } else {
+          alert(error.message || 'Ismeretlen hiba történt a mentés során')
+        }
+        
+      } finally {
+        console.log('=== END saveMealWithIngredients ===')
+        this.savingMeal = false
+      }
+    },
+    
 
     async deleteMeal(mealId) {
       if (!mealId) return
@@ -1826,6 +1930,8 @@ export default {
   object-fit: contain;
 }
 
+
+
 .no-allergens {
   color: #6c757d;
   font-style: italic;
@@ -1916,20 +2022,42 @@ export default {
   color: #333;
 }
 
-.allergen-tag[title*="Glutén"] { border-color: #6a8b0e50; background: #e7e3a4; }
-.allergen-tag[title*="Tej"] { border-color: #3d5e6359; background: #60747775; }
-.allergen-tag[title*="Tojás"] { border-color: #6e42c160; background: #3a0e4e4f; }
-.allergen-tag[title*="Hal"] { border-color: #dfc01350; background: #ffdb79c5; }
-.allergen-tag[title*="Dió"] { border-color: #f87f1c6c; background: #ca8d5c7e; }
-.allergen-tag[title*="Földimogyoró"] { border-color: #df77227e; background: #f7c584b9; }
-.allergen-tag[title*="Zeller"] { border-color: #7849b644; background: #967ebec4; }
-.allergen-tag[title*="Rákfélék"] { border-color: #2dc5be44; background: #6bafbbc2; }
-.allergen-tag[title*="Mustár"] { border-color: #17157262; background: #84889eb9; }
-.allergen-tag[title*="Kukorica"] { border-color: #5a244262; background: #df6fa3b9; }
-.allergen-tag[title*="Szójabab"] { border-color: #5a244262; background: #ca5b8fb9; }
+[class*="allergen-tag"][title*="Glutén"],
+[class*="allergen-chip"][title*="Glutén"] {border-color: #6a8b0e50;background: #e7e3a4;}
+
+[class*="allergen-tag"][title*="Tej"],
+[class*="allergen-chip"][title*="Tej"]  { border-color: #3d5e6359; background: #60747775; }
 
 
-/* Ingredients section styles */
+[class*="allergen-tag"][title*="Tojás"],
+[class*="allergen-chip"][title*="Tojás"]  { border-color: #6e42c160; background: #3a0e4e4f; }
+
+[class*="allergen-tag"][title*="Hal"],
+[class*="allergen-chip"][title*="Hal"]  { border-color: #dfc01350; background: #ffdb79c5; }
+
+
+[class*="allergen-tag"][title*="Dió"],
+[class*="allergen-chip"][title*="Dió"]  { border-color: #f87f1c6c; background: #ca8d5c7e; }
+
+[class*="allergen-tag"][title*="Földimogyoró"],
+[class*="allergen-chip"][title*="Földimogyoró"] { border-color: #df77227e; background: #f7c584b9; }
+
+[class*="allergen-tag"][title*="Zeller"],
+[class*="allergen-chip"][title*="Zeller"]  { border-color: #7849b644; background: #967ebec4; }
+
+[class*="allergen-tag"][title*="Rákfélék"],
+[class*="allergen-chip"][title*="Rákfélék"] { border-color: #2dc5be44; background: #6bafbbc2; }
+
+[class*="allergen-tag"][title*="Mustár"],
+[class*="allergen-chip"][title*="Mustár"]  { border-color: #17157262; background: #84889eb9; }
+
+[class*="allergen-tag"][title*="Kukorica"],
+[class*="allergen-chip"][title*="Kukorica"]  { border-color: #5a244262; background: #df6fa3b9; }
+
+[class*="allergen-tag"][title*="Szójabab"],
+[class*="allergen-chip"][title*="Szójabab"] { border-color: #5a244262; background: #ca5b8fb9; }
+
+
 .ingredients-section {
   margin-bottom: 2rem;
 }

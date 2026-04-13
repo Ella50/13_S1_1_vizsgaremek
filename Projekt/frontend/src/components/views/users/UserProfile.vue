@@ -79,7 +79,7 @@
 
                   <div class="form-group">
                     <label>Cím</label>
-                    <input type="text" v-model="profileForm.address" class="form-control">
+                    <input type="text" v-model="profileForm.address" class="form-control" maxlength="255" >
                   </div>
 
                   <button type="submit" class="btn-primary" :disabled="isUpdating">
@@ -98,17 +98,17 @@
                 <form @submit.prevent="changePassword">
                   <div class="form-group">
                     <label>Jelenlegi jelszó *</label>
-                    <input type="password" v-model="passwordForm.current_password" class="form-control" required>
+                    <input type="password" v-model="passwordForm.current_password" class="form-control" maxlength="255" required>
                   </div>
 
                   <div class="form-group">
                     <label>Új jelszó *</label>
-                    <input type="password" v-model="passwordForm.new_password" class="form-control" required>
+                    <input type="password" v-model="passwordForm.new_password" class="form-control" maxlength="255" required>
                   </div>
 
                   <div class="form-group">
                     <label>Új jelszó megerősítése *</label>
-                    <input type="password" v-model="passwordForm.new_password_confirmation" class="form-control" required>
+                    <input type="password" v-model="passwordForm.new_password_confirmation" maxlength="255" class="form-control" required>
                   </div>
 
                   <button type="submit" class="btn-primary" :disabled="isChangingPassword">

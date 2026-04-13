@@ -105,12 +105,30 @@ export default {
 }
 
 .allergen-icon {
-  width: 24px;
-  height: 24px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   transition: transform 0.2s;
   cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.2rem;
 }
+
+[class*="allergen-icon"][title*="Glutén"] {border-color: #6a8b0e50;background: #e7e3a4;}
+[class*="allergen-icon"][title*="Tej"]  { border-color: #3d5e6359; background: #60747775; }
+[class*="allergen-icon"][title*="Tojás"]  { border-color: #6e42c160; background: #3a0e4e4f; }
+[class*="allergen-icon"][title*="Hal"]  { border-color: #dfc01350; background: #ffdb79c5; }
+[class*="allergen-icon"][title*="Dió"]  { border-color: #f87f1c6c; background: #ca8d5c7e; }
+[class*="allergen-icon"][title*="Földimogyoró"] { border-color: #df77227e; background: #f7c584b9; }
+[class*="allergen-icon"][title*="Zeller"]  { border-color: #7849b644; background: #967ebec4; }
+[class*="allergen-icon"][title*="Rákfélék"] { border-color: #2dc5be44; background: #6bafbbc2; }
+[class*="allergen-icon"][title*="Mustár"]  { border-color: #17157262; background: #84889eb9; }
+[class*="allergen-icon"][title*="Kukorica"]  { border-color: #5a244262; background: #df6fa3b9; }
+[class*="allergen-chip"][title*="Szójabab"] { border-color: #5a244262; background: #ca5b8fb9; }
 
 .allergen-icon:hover {
   transform: scale(1.1);

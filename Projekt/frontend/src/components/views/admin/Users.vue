@@ -11,6 +11,7 @@
               type="text" 
               placeholder="Keresés név vagy email alapján..."
               class="search-input"
+              maxlength="255" 
               @input="onSearchInput"
             >
             <span class="search-icon">🔍</span>
@@ -169,21 +170,21 @@
               
               <div class="form-group">
                 <label>Vezetéknév *</label>
-                <input v-model="editUser.lastName" type="text" required>
+                <input v-model="editUser.lastName" type="text" required max="50">
               </div>
               <div class="form-group">
                 <label>Keresztnév *</label>
-                <input v-model="editUser.firstName" type="text" required>
+                <input v-model="editUser.firstName" type="text" required max="50">
               </div>
               
               <div class="form-group">
                 <label>Középső név</label>
-                <input v-model="editUser.thirdName" type="text">
+                <input v-model="editUser.thirdName" type="text" max="50">
               </div>
               
               <div class="form-group">
                 <label>Email *</label>
-                <input v-model="editUser.email" type="email" required>
+                <input v-model="editUser.email" type="email" required  maxlength="255" >
               </div>
               
               <div class="form-group">
@@ -229,20 +230,21 @@
               
               <div class="form-group">
                 <label>Lakcím *</label>
-                <input v-model="editUser.address" type="text">
+                <input v-model="editUser.address" type="text" maxlength="255" >
               </div>
               
               <div class="form-group checkbox-group">
                 <label class="checkbox-label">
                   <input v-model="editUser.hasDiscount" type="checkbox">
                   <span>Kedvezményes</span>
-                </label>
-              </div>
-              <div class="form-group checkbox-group">
+                </label><br>
                 <label class="checkbox-label">
                   <input v-model="editUser.hasDiabetes" type="checkbox">
                   <span>Cukorbeteg</span>
                 </label>
+              </div>
+              <div class="form-group checkbox-group">
+
               </div>
             </div>
 

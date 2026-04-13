@@ -840,14 +840,12 @@ private function getAllergenIconUrl($iconPath)
 
   
 
-    /**
-     * Hozzávalók listájának lekérése paginációval
-     */
+
     public function getIngredientsList(Request $request)
     {
-        // Csak konyha és admin jogosultság
+
         $user = Auth::user();
-        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+        if (!in_array($user->userType, ['Konyha'])) {
             return response()->json([
                 'message' => 'Unauthorized'
             ], Response::HTTP_FORBIDDEN);
@@ -856,23 +854,22 @@ private function getAllergenIconUrl($iconPath)
         $perPage = $request->get('per_page', 25);
         $query = Ingredient::with('allergens');
 
-        // Szűrés típus szerint
+   
         if ($request->has('type') && $request->type !== 'all') {
             $query->where('ingredientType', $request->type);
         }
 
-        // Szűrés elérhetőség szerint
+
         if ($request->has('availability') && $request->availability !== 'all') {
             $query->where('isAvailable', $request->availability === 'available');
         }
 
-        // Keresés név szerint
+
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where('ingredientName', 'LIKE', "%{$search}%");
         }
 
-        // Rendezés
         $sortBy = $request->get('sort_by', 'ingredientName');
         $sortOrder = $request->get('sort_order', 'asc');
         $query->orderBy($sortBy, $sortOrder);
@@ -891,14 +888,12 @@ private function getAllergenIconUrl($iconPath)
             'to' => $ingredients->lastItem()
         ]);
     }
-    /**
-     * Új hozzávaló létrehozása
-     */
+
+
     public function createIngredient(Request $request)
     {
-        // Csak konyha és admin jogosultság
         $user = Auth::user();
-        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+        if (!in_array($user->userType, ['Konyha'])) {
             return response()->json([
                 'message' => 'Unauthorized'
             ], Response::HTTP_FORBIDDEN);
@@ -914,15 +909,25 @@ private function getAllergenIconUrl($iconPath)
             'sodium' => 'nullable|integer|min:0',
             'sugar' => 'nullable|integer|min:0',
             'fiber' => 'nullable|integer|min:0',
-            'isAvailable' => 'boolean'
+            'isAvailable' => 'boolean',
+            'allergen_ids' => 'nullable|array', // Új mező
+            'allergen_ids.*' => 'exists:allergens,id'
         ]);
 
         try {
+            $allergenIds = $validated['allergen_ids'] ?? [];
+            unset($validated['allergen_ids']);
+            
             $ingredient = Ingredient::create($validated);
+            
+            // Allergének hozzáadása
+            if (!empty($allergenIds)) {
+                $ingredient->allergens()->sync($allergenIds);
+            }
 
             return response()->json([
                 'message' => 'Hozzávaló sikeresen létrehozva',
-                'data' => $ingredient
+                'data' => $ingredient->load('allergens')
             ], Response::HTTP_CREATED);
 
         } catch (\Exception $e) {
@@ -997,44 +1002,53 @@ private function getAllergenIconUrl($iconPath)
         }
     }
 
-    /**
-     * Hozzávaló törlése (új név)
-     */
     public function deleteIngredientItem($id)
-    {
-        // Csak konyha és admin jogosultság
-        $user = Auth::user();
-        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        $ingredient = Ingredient::findOrFail($id);
-
-        // Ellenőrizzük, hogy használatban van-e
-        if ($ingredient->meals()->count() > 0) {
-            return response()->json([
-                'message' => 'Nem törölhető, mert használatban van étel(ek)ben',
-                'count' => $ingredient->meals()->count()
-            ], Response::HTTP_CONFLICT);
-        }
-
-        try {
-            $ingredient->delete();
-
-            return response()->json([
-                'message' => 'Hozzávaló sikeresen törölve'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Hiba történt a hozzávaló törlése során',
-                'error' => $e->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+{
+    $user = Auth::user();
+    if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], Response::HTTP_FORBIDDEN);
     }
 
+    $ingredient = Ingredient::findOrFail($id);
+    
+    // Debug: nézzük meg van-e kapcsolat
+    $mealsCount = $ingredient->meals()->count();
+    \Log::info('Delete ingredient check', [
+        'ingredient_id' => $id,
+        'ingredient_name' => $ingredient->ingredientName,
+        'meals_count' => $mealsCount,
+        'allergens_count' => $ingredient->allergens()->count()
+    ]);
+
+    if ($mealsCount > 0) {
+        return response()->json([
+            'message' => 'Nem törölhető, mert használatban van étel(ek)ben',
+            'count' => $mealsCount
+        ], Response::HTTP_CONFLICT);
+    }
+
+    try {
+        // Először töröljük a kapcsolódó rekordokat
+        $ingredient->allergens()->detach(); // Allergén kapcsolatok törlése
+        $ingredient->meals()->detach();     // Étél kapcsolatok törlése (ha vannak)
+        
+        $ingredient->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Hozzávaló sikeresen törölve'
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Delete ingredient error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt a hozzávaló törlése során: ' . $e->getMessage()
+        ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+}
     /**
      * Tömeges elérhetőség frissítés
      */

@@ -12,6 +12,7 @@
                 v-model="filters.search" 
                 placeholder="Keresés számlaszám alapján..."
                 @keyup.enter="loadInvoices"
+                maxlength="255" 
                 class="search-input"
               >
               <span class="search-icon">🔍</span>
