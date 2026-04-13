@@ -8,8 +8,11 @@
       :placeholder="placeholder"
       :required="required"
       :minlength="minlength"
+      :min-width="min-width"
+      :maxlength= 50
       :disabled="disabled"
       class="password-input"
+
     >
     <button 
       type="button" 

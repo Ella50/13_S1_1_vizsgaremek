@@ -319,8 +319,8 @@ input[type="password"]::-ms-reveal {
 
   .left-side {
     width: 100%;
-    height: 30vh; 
-    min-height: 200px; 
+    min-height: 35vh; /* minimum magasság növelve */
+    height: auto; /* automatikus magasság */
     overflow: hidden;
   }
 
@@ -345,10 +345,11 @@ input[type="password"]::-ms-reveal {
 
   .right-side {
     width: 100%;
-    height: 70vh;
+    flex: 1; 
     overflow-y: auto;
     overflow-x: hidden;
     padding: 1.5rem 1rem;
+    min-height: 0;
   }
 
   .right-side-content {

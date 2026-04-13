@@ -171,7 +171,6 @@
                 </option>
               </select>
               
-              <!-- Szerkesztés módban: csak szövegmező (readonly) -->
               <input 
                 v-else
                 :value="formatDate(formData.day)" 
@@ -202,6 +201,7 @@
                   class="search-input"
                   placeholder="Keresés étel név szerint..."
                   type="text"
+                  maxlength="255" 
                 >
                 <span class="search-icon">🔍</span>
               </div>

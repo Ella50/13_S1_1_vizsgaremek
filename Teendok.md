@@ -3,8 +3,6 @@
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 - custom alert
 - regisztráció sikeres üzenet (custom alert legyen)
-- navbar a newpassword.vueján
-- navbar dinamika jobb
 - rfid design egységesyítés
 - rfid hangjelzés leolvasáskor?
 
@@ -19,6 +17,7 @@
 
 ## AdminInvoice.vue
 -  pagináció van, nem jó (többadat?)
+- függőben lévők és fizetettek külön mint a dokumentumoknál
 
 ## Users.vue
 - kártya törlés gomb
@@ -27,13 +26,10 @@
 ## Meals.vue
 - pontosabb tápérték számítás??
 - ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
-- nem működik a törlés NEM IGAZ -> nem törli mert van hozzá rendelés kapcsolva (ilyne hibaüzenet kell)
+- nem törli mert van hozzá menuItem kapcsolva (ilyne hibaüzenet kell)
 
 
 ## Ingredients.vue
-- nem menti az allergént ha új hozzávalót töltök fel
-- nem lehet törölni ingredientet (újat)
-- nem lehet változtatni az elérhetőségét
 
 ## Orders.vue
 

@@ -11,6 +11,7 @@
               type="text" 
               v-model="searchQuery" 
               placeholder="Keresés név vagy email alapján..."
+              maxlength="255" 
               class="search-input"
             >
             <span class="search-icon">🔍</span>

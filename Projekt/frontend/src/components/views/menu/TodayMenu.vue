@@ -56,7 +56,6 @@
 
       <div v-else class="empty-state">
         <p>Nincs menü a mai napra</p>
-        <p class="empty-hint">Kérjük, nézz vissza később</p>
       </div>
     </div>
   </div>
@@ -271,11 +270,6 @@ export default {
   margin: 0;
 }
 
-.empty-hint {
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 0.5rem !important;
-}
 
 
 @media (max-width: 768px) {

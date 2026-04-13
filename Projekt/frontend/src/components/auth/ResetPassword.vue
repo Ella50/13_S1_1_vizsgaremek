@@ -18,6 +18,7 @@
           v-model="form.email"
           placeholder="Email cím *"
           required
+          maxlength="255" 
           :disabled="loading"
         />
 

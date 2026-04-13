@@ -11,6 +11,7 @@
               v-model="searchQuery" 
               placeholder="Keresés név vagy email alapján..."
               class="search-input"
+              maxlength="255" 
               @input="onSearchInput"
             >
             <span class="search-icon">🔍</span>
@@ -44,7 +45,7 @@
       <div v-else>
 
 
-        <div v-if="rows.length === 0" class="empty-state">
+        <div v-if="paginatedRows.length === 0" class="empty-state">
           Nincs találat erre a hónapra.
         </div>
 
@@ -62,7 +63,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="inv in rows" :key="inv.id">
+              <tr v-for="inv in paginatedRows" :key="inv.id">
                 <td>
                   <div class="user-info">
                     <div class="user-name">
@@ -112,8 +113,9 @@
             </tbody>
           </table>
         </div>
-          <!-- Pagináció -->
-          div v-if="pagination.last_page > 1" class="pagination">
+                </div>
+        <!-- Pagináció -->
+        <div v-if="pagination.last_page > 1" class="pagination">
           <button 
             @click="changePage(pagination.current_page - 1)" 
             :disabled="pagination.current_page === 1"
@@ -135,6 +137,9 @@
             Következő
           </button>
         </div>
+
+
+
 
         <!-- Sorok száma választó -->
         <div v-if="rows.length" class="per-page-selector">
@@ -385,33 +390,37 @@ function confirmCancel() {
   }
 }
 
-// Pagináció kezelés
 function changePage(page) {
   if (page < 1 || page > pagination.value.last_page) return;
   currentPage.value = page;
-  load();
+  pagination.value.current_page = page;
   window.scrollTo(0, 0);
 }
 
 function changePerPage() {
   currentPage.value = 1;
-  load();
+  const totalItems = rows.value.length;
+  pagination.value = {
+    current_page: 1,
+    last_page: Math.ceil(totalItems / perPage.value) || 1,
+    per_page: perPage.value,
+    total: totalItems,
+    from: 1,
+    to: Math.min(perPage.value, totalItems)
+  };
 }
 
-// Fő adatbetöltés paginációval
+
 async function load() {
   loading.value = true;
   error.value = "";
   try {
     const response = await adminFetchInvoices({
       month: billingMonth.value,
-      search: searchQuery.value,
-      page: currentPage.value,
-      per_page: perPage.value
+      search: searchQuery.value
     });
 
     let invoiceData = [];
-    let paginationData = null;
 
     if (typeof response === 'string') {
       try {
@@ -419,14 +428,12 @@ async function load() {
         const parsed = JSON.parse(cleanJson);
         if (parsed?.invoices?.data) {
           invoiceData = parsed.invoices.data;
-          paginationData = {
-            current_page: parsed.invoices.current_page,
-            last_page: parsed.invoices.last_page,
-            per_page: parsed.invoices.per_page,
-            total: parsed.invoices.total,
-            from: parsed.invoices.from,
-            to: parsed.invoices.to
-          };
+        } else if (Array.isArray(parsed?.invoices)) {
+          invoiceData = parsed.invoices;
+        } else if (Array.isArray(parsed?.data)) {
+          invoiceData = parsed.data;
+        } else if (Array.isArray(parsed)) {
+          invoiceData = parsed;
         }
       } catch (e) {
         console.error("JSON parse error:", e);
@@ -434,21 +441,30 @@ async function load() {
     } else if (response && typeof response === 'object') {
       if (response.invoices?.data) {
         invoiceData = response.invoices.data;
-        paginationData = {
-          current_page: response.invoices.current_page,
-          last_page: response.invoices.last_page,
-          per_page: response.invoices.per_page,
-          total: response.invoices.total,
-          from: response.invoices.from,
-          to: response.invoices.to
-        };
+      } else if (Array.isArray(response.invoices)) {
+        invoiceData = response.invoices;
+      } else if (Array.isArray(response.data)) {
+        invoiceData = response.data;
+      } else if (Array.isArray(response)) {
+        invoiceData = response;
       }
     }
 
     rows.value = invoiceData;
-    if (paginationData) {
-      pagination.value = paginationData;
-    }
+    
+    // Frontend pagináció beállítása
+    const totalItems = rows.value.length;
+    pagination.value = {
+      current_page: currentPage.value,
+      last_page: Math.ceil(totalItems / perPage.value) || 1,
+      per_page: perPage.value,
+      total: totalItems,
+      from: ((currentPage.value - 1) * perPage.value) + 1,
+      to: Math.min(currentPage.value * perPage.value, totalItems)
+    };
+    
+    console.log('Pagination:', pagination.value);
+    
   } catch (e) {
     error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
     showAlert({
@@ -460,6 +476,13 @@ async function load() {
     loading.value = false;
   }
 }
+
+// Frontend oldali lapozáshoz a megjelenítendő adatok
+const paginatedRows = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value;
+  const end = start + perPage.value;
+  return rows.value.slice(start, end);
+});
 
 // Keresés debounce
 function onSearchInput() {

@@ -80,11 +80,8 @@ main.with-nav {
   --border:  #d07a7a;
   --shadow: rgba(255, 170, 0, 0.25); /*#FFAA00*/
 
-
-
-
-
-
 } 
+
+
 
 </style>

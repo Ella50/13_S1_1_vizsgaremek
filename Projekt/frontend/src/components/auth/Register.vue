@@ -5,11 +5,11 @@
     <form @submit.prevent="handleRegister" class="register-form">
       <!-- Név mezők -->
       <div class="form-row">
-        <input type="text" v-model="form.lastName" placeholder="Vezetéknév *" required>
-        <input type="text" v-model="form.firstName" placeholder="Keresztnév *" required>
+        <input type="text" v-model="form.lastName" placeholder="Vezetéknév *" required maxlength="50" >
+        <input type="text" v-model="form.firstName" placeholder="Keresztnév *" required maxlength="50" >
       </div>
       
-      <input type="text" v-model="form.thirdName" placeholder="Harmadik név">
+      <input type="text" v-model="form.thirdName" placeholder="Harmadik név" maxlength="50" >
 
       <!-- Cím adatok -->
       <div class="form-row">
@@ -35,14 +35,14 @@
       </div>
 
       <div class="form-group">
-        <label>Lakcím (utca, házszám) *</label>
-        <input type="text" v-model="form.address" placeholder="pl. Kossuth utca 10." required>
+        <label class="text-nowrap">Lakcím (utca, házszám) *</label>
+        <input type="text" v-model="form.address" placeholder="pl. Kossuth utca 10." required maxlength="255" >
       </div>
 
-      <!-- Email és jelszó -->
+      <!-- Email és jelszó --> 
       <div class="form-group">
         <label>Email cím (iskolai) *</label>
-        <input type="email" v-model="form.email" placeholder="pelda@iskola.hu" required>
+        <input type="email" v-model="form.email" placeholder="pelda@iskola.hu" required maxlength="255" >
       </div>
       
       <div class="form-row">
@@ -53,14 +53,18 @@
             placeholder="Minimum 8 karakter"
             :required="true"
             :minlength="8"
+            :min-width="500"
+
           />
         </div>
         <div class="form-group">
-          <label>Jelszó megerősítése *</label>
+          <label class="text-nowrap">Jelszó megerősítése *</label>
           <PasswordInput 
             v-model="form.password_confirmation"
             placeholder="Jelszó újra"
             :required="true"
+
+
           />
         </div>
       </div>

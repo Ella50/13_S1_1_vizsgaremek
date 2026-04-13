@@ -3,7 +3,7 @@
     <h2 class="title">Bejelentkezés</h2>
 
     <form @submit.prevent="handleLogin" class="login-form">
-      <input type="email" v-model="form.email" placeholder="Email" required>
+      <input type="email" v-model="form.email" placeholder="Email" required maxlength="255" >
       
       <PasswordInput 
         v-model="form.password"
