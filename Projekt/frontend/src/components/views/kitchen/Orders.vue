@@ -673,6 +673,7 @@ export default {
   margin: 0 auto;
   padding: 20px;
   min-height: 100vh;
+  background: var(--content-card);
 }
 
 .header-section {

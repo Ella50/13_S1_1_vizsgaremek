@@ -183,10 +183,12 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   min-height: calc(100vh - 200px);
+  background: #fff7e6;
+
 }
 
 .content-card {
-  background: white;
+  background: #fffcf7;
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
@@ -245,7 +247,7 @@ export default {
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: #f8f9fa;
+  background: white;
   border: 1px solid #eee;
   border-radius: 12px;
   text-decoration: none;

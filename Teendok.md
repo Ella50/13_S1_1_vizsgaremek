@@ -10,7 +10,6 @@
 ## PersonalOrders.vue
 
 ## PersonalInvoices.vue
-- pdf formázás eltérő az adminostól 
 - pagináció?
 
 ## AdminInvoice.vue

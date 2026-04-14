@@ -234,6 +234,7 @@ export default {
           console.error('Response data:', error.response.data)
         }
       }
+    },
     // Alert metódus
     showAlert({ message, type = 'success', title = '' }) {
       if (this.alertTimeout) {
@@ -503,6 +504,7 @@ export default {
         this.loading = false
       }
     }
+  }
   }
 }
 </script>

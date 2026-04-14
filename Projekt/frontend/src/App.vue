@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Navigation v-if="showNavigation" />
-    <main :class="{ 'with-nav': showNavigation }">
+    <main :class=" { 'with-nav': showNavigation }">
       <router-view />
       <AppAlert />
       <AppConfirm />
@@ -58,8 +58,11 @@ body {
   background: hsl(0, 0%, 96%);
 }
 
+
 main {
   min-height: calc(100vh - 64px);
+   background: #fff7e6;
+   background-image: url();
 }
 
 main.with-nav {
@@ -67,8 +70,8 @@ main.with-nav {
 }
 
 :root {
-  --zold:#1fa317; /*hozzáadás, frissítés, bejelentkezés, submit gombok (még nem mindenhol)*/
-  --piros: #e74c3c; /*kijelentkezés, törlés*/
+  --zold:#1fa317; 
+  --piros: #e74c3c;
 
   --emenza-piros: #FF3131;
   --emenza-zold: #7ED957;
@@ -79,6 +82,8 @@ main.with-nav {
   --sarga: #f7c77a;
   --border:  #d07a7a;
   --shadow: rgba(255, 170, 0, 0.25); /*#FFAA00*/
+
+  --content-card: #fffcf7;
 
 } 
 
