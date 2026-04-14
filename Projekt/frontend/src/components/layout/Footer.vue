@@ -9,7 +9,7 @@
             <li><router-link to="/menu/today" class="footer-link">Mai menü</router-link></li>
             <li><router-link to="/menu/week" class="footer-link">Heti menü</router-link></li>
             <li><router-link to="/kitchen/meals" class="footer-link">Ételek</router-link></li>
-            <li><router-link to="/profile" class="footer-link">Profil</router-link></li>
+            <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" to="/profile" class="footer-link">Profil</router-link></li>
             <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" to="/personal-orders" class="footer-link">Rendeléseim</router-link></li>
             <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()"  to="/personal-invoices" class="footer-link">Számláim</router-link></li>
             

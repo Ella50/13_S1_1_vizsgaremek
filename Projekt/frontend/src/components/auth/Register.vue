@@ -5,13 +5,41 @@
     <form @submit.prevent="handleRegister" class="register-form">
       <!-- Név mezők -->
       <div class="form-row">
-        <input type="text" v-model="form.lastName" placeholder="Vezetéknév *" required maxlength="50">
+
+        <input 
+          type="text" 
+          v-model="form.lastName" 
+          placeholder="Vezetéknév *" 
+          required 
+          maxlength="50" 
+          @input="validateNameField($event, 'lastName')"
+          @blur="validateNameField($event, 'lastName')">
+        <input 
+          type="text" 
+          v-model="form.firstName" 
+          placeholder="Keresztnév *" 
+          required 
+          maxlength="50" 
+          @input="validateNameField($event, 'firstName')"
+          @blur="validateNameField($event, 'firstName')">
+      </div>
+      
+      <input 
+        type="text" 
+        v-model="form.thirdName" 
+        placeholder="Harmadik név" 
+        maxlength="50" 
+        @input="validateNameField($event, 'thirdName')"
+        @blur="validateNameField($event, 'thirdName')">
+
+       <!-- <input type="text" v-model="form.lastName" placeholder="Vezetéknév *" required maxlength="50">
         <input type="text" v-model="form.firstName" placeholder="Keresztnév *" required maxlength="50">
       </div>
       
-      <input type="text" v-model="form.thirdName" placeholder="Harmadik név" maxlength="50">
+      <input type="text" v-model="form.thirdName" placeholder="Harmadik név" maxlength="50"> -->
 
-      <!-- Cím adatok -->
+
+  
       <div class="form-row">
         <div class="form-group">
           <label>Vármegye *</label>
@@ -143,6 +171,69 @@ export default {
     }
   },
   methods: {
+    // Név mező validáció: csak betűk (magyar ékezetesek is) és kötőjel
+    validateNameField(event, fieldName) {
+      let value = event.target.value
+      // Csak betűk (angol, magyar ékezetes) és kötőjel maradhat
+      const regex = /[^A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű\-]/g
+      const filtered = value.replace(regex, '')
+      
+      if (value !== filtered) {
+        this.form[fieldName] = filtered
+        this.error = `A ${this.getFieldLabel(fieldName)} mezőben csak betűk és kötőjel használható!`
+        setTimeout(() => {
+          if (this.error === `A ${this.getFieldLabel(fieldName)} mezőben csak betűk és kötőjel használható!`) {
+            this.error = ''
+          }
+        }, 3000)
+      }
+    },
+
+    getFieldLabel(fieldName) {
+      const labels = {
+        lastName: 'vezetéknév',
+        firstName: 'keresztnév',
+        thirdName: 'harmadik név'
+      }
+      return labels[fieldName] || fieldName
+    },
+
+    async loadCounties() {
+      try {
+        console.log('Loading counties...')
+        const response = await axios.get('/countiesReg')
+        console.log('Raw counties response:', response.data)
+        
+        let responseData = response.data
+        
+        if (typeof responseData === 'string') {
+          console.log('Response is string, cleaning BOM...')
+          responseData = responseData.replace(/^\uFEFF/, '')
+          responseData = JSON.parse(responseData)
+        } else if (typeof responseData === 'object') {
+          const jsonString = JSON.stringify(responseData)
+          if (jsonString.charCodeAt(0) === 0xFEFF) {
+            console.log('BOM found in object, cleaning...')
+            const cleanString = jsonString.replace(/^\uFEFF/, '')
+            responseData = JSON.parse(cleanString)
+          }
+        }
+        
+        console.log('Cleaned response data:', responseData)
+        
+        if (responseData.success) {
+          this.counties = responseData.data
+          console.log('Counties loaded successfully:', this.counties.length)
+        } else {
+          console.error('Counties API returned success=false:', responseData.message)
+        }
+      } catch (error) {
+        console.error('Megye betöltési hiba:', error)
+        if (error.response) {
+          console.error('Response status:', error.response.status)
+          console.error('Response data:', error.response.data)
+        }
+      }
     // Alert metódus
     showAlert({ message, type = 'success', title = '' }) {
       if (this.alertTimeout) {
@@ -251,14 +342,79 @@ export default {
           console.error('Response data:', error.response.data)
         }
         this.cities = []
+      }
+    },
+
+    async handleRegister() {
+      // Név mezők validációja a beküldés előtt
+      const nameFields = [
+        { value: this.form.lastName, name: 'Vezetéknév' },
+        { value: this.form.firstName, name: 'Keresztnév' }
+      ]
+      
+      const nameRegex = /^[A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű\-]+$/
+      
+      for (const field of nameFields) {
+        if (!field.value || !nameRegex.test(field.value)) {
+          this.error = `${field.name} mezőben csak betűk és kötőjel használható!`
+          return
+      }
+
+      try {
+        console.log('Loading cities for county ID:', this.form.county_id)
+        const response = await axios.get(`/cities/by-countyReg/${this.form.county_id}`)
+        console.log('Raw cities response:', response.data)
+        
+        let responseData = response.data
+        
+        if (typeof responseData === 'string') {
+          console.log('Response is string, cleaning BOM...')
+          responseData = responseData.replace(/^\uFEFF/, '')
+          responseData = JSON.parse(responseData)
+        } else if (typeof responseData === 'object') {
+          const jsonString = JSON.stringify(responseData)
+          if (jsonString.charCodeAt(0) === 0xFEFF) {
+            console.log('BOM found in object, cleaning...')
+            const cleanString = jsonString.replace(/^\uFEFF/, '')
+            responseData = JSON.parse(cleanString)
+          }
+        }
+        
+        console.log('Cleaned response data:', responseData)
+        
+        if (responseData.success) {
+          this.cities = responseData.data
+          console.log('Cities loaded successfully:', this.cities.length)
+          
+          if (this.form.city_id) {
+            const cityExists = this.cities.some(city => city.id == this.form.city_id)
+            if (!cityExists) {
+              this.form.city_id = null
+            }
+          }
+        } else {
+          console.error('Cities API returned success=false:', responseData.message)
+          this.cities = []
+        }
+      } catch (error) {
+        console.error('Város betöltési hiba:', error)
+        if (error.response) {
+          console.error('Response status:', error.response.status)
+          console.error('Response data:', error.response.data)
+        }
+        this.cities = []
         this.showAlert({
           message: 'Hiba történt a városok betöltésekor',
           type: 'error'
         })
       }
-    },
+      
+      // Harmadik név ellenőrzése (ha van kitöltve)
+      if (this.form.thirdName && !nameRegex.test(this.form.thirdName)) {
+        this.error = 'Harmadik név mezőben csak betűk és kötőjel használható!'
+        return
+      }
 
-    async handleRegister() {
       // Email végződés ellenőrzés
       const emailRegex = /@iskola\.hu$/
       if (!emailRegex.test(this.form.email)) {

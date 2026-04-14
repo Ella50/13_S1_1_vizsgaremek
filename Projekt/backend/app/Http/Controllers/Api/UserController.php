@@ -125,7 +125,7 @@ class UserController extends Controller
 
             $user = User::create($userData);
 
-            // Újra betöltjük a kapcsolatokkal
+      
             $user->load(['city', 'rfidCard']);
 
             return response()->json([
@@ -208,14 +208,12 @@ class UserController extends Controller
         try {
             $userData = $request->all();
 
-            // Jelszó titkosítása, ha megváltozott
             if ($request->has('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
 
             $user->update($userData);
 
-            // Újra betöltjük a kapcsolatokkal
             $user->load(['city', 'rfidCard']);
 
             return response()->json([
@@ -324,9 +322,9 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Osztályonkénti felhasználók
-     */
+    /*
+      Osztályonkénti felhasználók
+  
     public function getByClass($classId)
     {
         try {
@@ -346,7 +344,7 @@ class UserController extends Controller
             ], 500);
         }
     }
-
+   **/
 
     /**
      * Megyék lekérése (bejelentkezett felhasználóknak)
@@ -384,7 +382,7 @@ class UserController extends Controller
             
             $cities = City::where('county_id', $county_id)
                 ->orderBy('cityName')
-                ->get(['id', 'cityName', 'zipCode', 'county_id']); // county_id hozzáadva
+                ->get(['id', 'cityName', 'zipCode', 'county_id']); 
             
             return response()->json([
                 'success' => true,
@@ -457,7 +455,6 @@ class UserController extends Controller
             
             $user = $request->user();
             
-            // Ellenőrizzük, hogy a megadott jelenlegi jelszó helyes-e
             if (!Hash::check($request->current_password, $user->password)) {
                 return response()->json([
                     'success' => false,
@@ -468,13 +465,11 @@ class UserController extends Controller
                 ], 422);
             }
             
-            // Új jelszó beállítása
+
             $user->password = Hash::make($request->new_password);
             $user->save();
             
-            // Opcionális: kijelentkeztetés minden más eszközről (kivéve a jelenlegit)
-            // Auth::logoutOtherDevices($request->new_password);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Jelszó sikeresen megváltoztatva'

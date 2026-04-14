@@ -102,21 +102,21 @@
                 <p>Összes étel megtekintése, tápérték információk</p>
               </div>
             </router-link>
-            <router-link to="/personal-orders" class="link-card">
+            <router-link to="/personal-orders" class="link-card"  v-if="!isKitchen && !isAdmin">
 
               <div class="link-content">
                 <h3>Rendeléseim</h3>
                 <p>Saját rendelések kezelése, módosítás, lemondás</p>
               </div>
             </router-link>
-            <router-link to="/personal-invoices" class="link-card">
+            <router-link to="/personal-invoices" class="link-card" v-if="!isKitchen && !isAdmin">
    
               <div class="link-content">
                 <h3>Számláim</h3>
                 <p>Saját számlák megtekintése, PDF letöltés</p>
               </div>
             </router-link>
-            <router-link to="/profile" class="link-card">
+            <router-link to="/profile" class="link-card" v-if="!isKitchen && !isAdmin">
    
               <div class="link-content">
                 <h3>Profilom</h3>
