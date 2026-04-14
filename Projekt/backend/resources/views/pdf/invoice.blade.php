@@ -123,7 +123,7 @@ Adószám: 12345678-1-23
 <tr>
 <td width="50%">
 <strong>VEVŐ</strong><br>
-{{ $invoice->user->firstName ?? '' }} {{ $invoice->user->lastName ?? '' }}<br>
+{{ $invoice->user->lastName ?? '' }} {{ $invoice->user->firstName ?? '' }}<br>
 {{ $invoice->user->address ?? '' }}
 </td>
 <td width="50%" class="right">

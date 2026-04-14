@@ -1,10 +1,6 @@
 ## Egyéb:
 - optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
-- custom alert
-- regisztráció sikeres üzenet (custom alert legyen)
-- rfid design egységesyítés
-- rfid hangjelzés leolvasáskor?
 
 ## Doucments
 - 

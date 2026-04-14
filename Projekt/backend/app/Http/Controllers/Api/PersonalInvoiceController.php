@@ -113,68 +113,50 @@ class PersonalInvoiceController extends Controller
     /**
      * Számla letöltése PDF-ként
      */
-    public function downloadInvoice(Request $request, Invoice $invoice)
-    {
-        try {
-            $user = Auth::user();
-            
-            // Ellenőrizzük, hogy a számla a felhasználóhoz tartozik-e
-            if ($invoice->user_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hozzáférés megtagadva.'
-                ], 403);
-            }
-            
-            // Csak generált vagy fizetett számla tölthető le
-            if ($invoice->invoiceStatus === 'Függőben lévő') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Csak generált számla tölthető le.'
-                ], 400);
-            }
-            
-            // Betöltjük a kapcsolódó adatokat
-            $invoice->load(['user', 'orders.price']);
-            
-            // Bruttó összeg számítása (27% ÁFA)
-            $grossAmount = $invoice->totalAmount * 1.27;
-            
-            $data = [
-                'invoice' => $invoice,
-                'user' => $invoice->user,
-                'grossAmount' => $grossAmount,
-                'company' => [
-                    'name' => 'Étkeztető Rendszer',
-                    'address' => '1234 Budapest, Példa utca 1.',
-                    'tax_number' => '12345678-1-23',
-                    'bank_account' => '12345678-12345678-12345678',
-                    'phone' => '+36 1 234 5678',
-                    'email' => 'info@etkezteto.hu'
-                ]
-            ];
-            
-            // PDF generálása - először ellenőrizzük, hogy létezik-e a view
-            if (!view()->exists('invoices.pdf')) {
-                // Ha nincs meg a view, készítsünk egy egyszerűbb verziót
-                $html = $this->generateSimplePdfHtml($data);
-                $pdf = Pdf::loadHTML($html);
-            } else {
-                $pdf = Pdf::loadView('invoices.pdf', $data);
-            }
-            
-            // PDF letöltése
-            return $pdf->download('szamla_' . $invoice->invoiceNumber . '.pdf');
-            
-        } catch (\Exception $e) {
-            \Log::error('PDF letöltési hiba: ' . $e->getMessage());
+    /**
+ * Számla letöltése PDF-ként
+ */
+public function downloadInvoice(Request $request, Invoice $invoice)
+{
+    try {
+        $user = Auth::user();
+        
+        // Ellenőrizzük, hogy a számla a felhasználóhoz tartozik-e
+        if ($invoice->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hiba történt a számla letöltése során.',
-                'error' => env('APP_DEBUG') ? $e->getMessage() : null
-            ], 500);
+                'message' => 'Hozzáférés megtagadva.'
+            ], 403);
         }
+        
+        // Csak generált vagy fizetett számla tölthető le
+        if ($invoice->invoiceStatus === 'Függőben lévő') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Csak generált számla tölthető le.'
+            ], 400);
+        }
+        
+        // Betöltjük a kapcsolódó adatokat (ugyanúgy, mint a másik controllerben)
+        $invoice->load(['user', 'orders.price']);
+        
+        // PDF generálása - ugyanúgy, mint a működő példában
+        $pdf = Pdf::loadView('pdf.invoice', [
+            'invoice' => $invoice
+        ]);
+        
+        // PDF letöltése
+        return $pdf->download('szamla_' . $invoice->invoiceNumber . '.pdf');
+        
+    } catch (\Exception $e) {
+        \Log::error('PDF letöltési hiba: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt a számla letöltése során.',
+            'error' => env('APP_DEBUG') ? $e->getMessage() : null
+        ], 500);
     }
+}
     
     /**
      * Egyszerű PDF HTML generálása, ha nincs meg a view
