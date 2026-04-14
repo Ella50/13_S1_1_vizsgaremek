@@ -2,6 +2,8 @@
 - optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
 
+- 
+
 ## Doucments
 - 
 
@@ -14,6 +16,7 @@
 ## AdminInvoice.vue
 -  pagináció van, nem jó (többadat?)
 - függőben lévők és fizetettek külön mint a dokumentumoknál
+- banki utalás vagy késpénz
 
 ## Users.vue
 - kártya törlés gomb

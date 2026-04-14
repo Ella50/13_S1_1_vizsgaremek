@@ -24,14 +24,12 @@ class ResetPasswordController extends Controller
     public function sendResetLink(Request $request)
     {
         try {
-            // Validáció
             $request->validate([
                 'email' => 'required|email|exists:users,email'
             ]);
             
             Log::info('Send reset link for: ' . $request->email);
             
-            // LINK KÜLDÉS - ez fog emailt küldeni
             $status = Password::sendResetLink(
                 $request->only('email')
             );
