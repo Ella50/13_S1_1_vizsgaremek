@@ -1,6 +1,5 @@
-<!-- components/auth/PasswordInput.vue -->
 <template>
-  <div class="password-wrapper">
+  <div class="password-wrapper" :class="customClass">
     <input 
       :type="showPassword ? 'text' : 'password'" 
       :value="modelValue"
@@ -8,11 +7,9 @@
       :placeholder="placeholder"
       :required="required"
       :minlength="minlength"
-      :min-width="min-width"
-      :maxlength= 50
+      :maxlength="maxlength"
       :disabled="disabled"
       class="password-input"
-
     >
     <button 
       type="button" 
@@ -72,9 +69,17 @@ export default {
       type: Number,
       default: null
     },
+    maxlength: {
+      type: Number,
+      default: null
+    },
     disabled: {
       type: Boolean,
       default: false
+    },
+    customClass: {
+      type: String,
+      default: ''
     },
     error: {
       type: Boolean,
@@ -95,12 +100,13 @@ export default {
 </script>
 
 <style scoped>
+/* Alap stílus (auth oldalak) */
 .password-wrapper {
   position: relative;
   width: 100%;
 }
 
-.password-input {
+.password-wrapper .password-input {
   width: 100%;
   padding: 0.8rem;
   padding-right: 45px;
@@ -111,6 +117,40 @@ export default {
   transition: all 0.2s;
 }
 
+.password-wrapper.profile-style .password-input:focus {
+  outline: none;
+  border-color: #f0a24a;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
+}
+
+/* UserProfile stílus - amikor a customClass = 'profile-style' */
+.password-wrapper.profile-style .password-input {
+  padding: 0.6rem 0.75rem !important;
+  padding-right: 40px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  background: white !important;
+}
+
+.password-wrapper.profile-style .password-input:focus {
+  border-color: #f0a24a !important;
+  box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2) !important;
+}
+
+.password-wrapper.profile-style .password-input:disabled {
+  background: #f8f9fa !important;
+  color: #666 !important;
+}
+
+.password-wrapper.profile-style .password-toggle {
+  right: 8px;
+}
+
+.password-wrapper.profile-style .toggle-icon {
+  width: 18px;
+  height: 18px;
+}
 
 .password-input:disabled {
   background: #f8f9fa;

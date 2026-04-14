@@ -91,31 +91,52 @@
 
             <!-- Jelszó megváltoztatása -->
             <div class="info-card">
-              <div class="info-card-header">
-                <h3>Jelszó megváltoztatása</h3>
-              </div>
-              <div class="info-card-body">
-                <form @submit.prevent="changePassword">
-                  <div class="form-group">
-                    <label>Jelenlegi jelszó *</label>
-                    <input type="password" v-model="passwordForm.current_password" class="form-control" maxlength="255" required>
-                  </div>
+              <div class="info-card">
+                <div class="info-card-header">
+                  <h3>Jelszó megváltoztatása</h3>
+                </div>
+                  <div class="info-card-body">
+                    <form @submit.prevent="changePassword">
+                      <div class="form-group">
+                        <label>Jelenlegi jelszó *</label>
+                        <PasswordInput 
+                          v-model="passwordForm.current_password"
+                          placeholder="Jelenlegi jelszó"
+                          :required="true"
+                          :maxlength="255"
+                          custom-class="profile-style"
+                        />
+                      </div>
 
-                  <div class="form-group">
-                    <label>Új jelszó *</label>
-                    <input type="password" v-model="passwordForm.new_password" class="form-control" maxlength="255" required>
-                  </div>
+                      <div class="form-group">
+                        <label>Új jelszó *</label>
+                        <PasswordInput 
+                          v-model="passwordForm.new_password"
+                          placeholder="Új jelszó (minimum 8 karakter)"
+                          :required="true"
+                          :minlength="8"
+                          :maxlength="255"
+                          custom-class="profile-style"
+                        />
+                      </div>
 
-                  <div class="form-group">
-                    <label>Új jelszó megerősítése *</label>
-                    <input type="password" v-model="passwordForm.new_password_confirmation" maxlength="255" class="form-control" required>
+                      <div class="form-group">
+                        <label>Új jelszó megerősítése *</label>
+                        <PasswordInput 
+                          v-model="passwordForm.new_password_confirmation"
+                          placeholder="Jelszó megerősítése"
+                          :required="true"
+                          :minlength="8"
+                          :maxlength="255"
+                          custom-class="profile-style"
+                        />
+                      </div>
+                      <button type="submit" class="btn-primary" :disabled="isChangingPassword">
+                        {{ isChangingPassword ? 'Mentés...' : 'Jelszó megváltoztatása' }}
+                      </button>
+                    </form>
                   </div>
-
-                  <button type="submit" class="btn-primary" :disabled="isChangingPassword">
-                    {{ isChangingPassword ? 'Mentés...' : 'Jelszó megváltoztatása' }}
-                  </button>
-                </form>
-              </div>
+                </div>
             </div>
           </div>
 
@@ -279,9 +300,13 @@
 
 <script>
 import axios from 'axios';
+import PasswordInput from '../../auth/PasswordInput.vue';
 
 export default {
   name: 'UserProfile',
+  components: {
+    PasswordInput 
+  },
   data() {
     return {
       user: null,
@@ -895,6 +920,8 @@ export default {
   font-weight: 600;
 }
 
+
+
 /* Profile grid */
 .profile-grid {
   display: grid;
@@ -1318,6 +1345,10 @@ export default {
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
 }
+
+
+
+
 
 @keyframes spin {
   0% { transform: rotate(0deg); }

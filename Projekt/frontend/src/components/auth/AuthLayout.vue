@@ -181,7 +181,7 @@ input[type="password"]::-ms-reveal {
 .bottom-left img {
     max-width: 40%;
     position: absolute;
-    bottom: -2%;
+    bottom: -1%;
     left: -14%;
 }
 
@@ -190,7 +190,6 @@ input[type="password"]::-ms-reveal {
     width: 100%;
     background-repeat: no-repeat;
     background-position: top left;
-
 
 }
 
@@ -209,26 +208,25 @@ input[type="password"]::-ms-reveal {
   width: 50%;
   height: 100vh;
   background: #ffd294;
-  overflow-y: auto; /* Függőleges görgetés engedélyezve */
-  overflow-x: hidden; /* Vízszintes görgetés tiltva */
+  overflow-y: auto; 
+  overflow-x: hidden; 
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 2rem 1rem;
-  flex-shrink: 0; /* Ne zsugorodjon */
+  flex-shrink: 0; 
 }
 
 .right-side-content {
   width: 100%;
   max-width: 800px;
-  margin: auto; /* Ez fogja középre igazítani vertikálisan is */
+  margin: auto; 
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
 }
 
-/* Reszponzív beállítások */
 @media (max-width: 768px) {
   .right-side {
     padding: 1rem 0.5rem;
@@ -319,8 +317,8 @@ input[type="password"]::-ms-reveal {
 
   .left-side {
     width: 100%;
-    min-height: 35vh; /* minimum magasság növelve */
-    height: auto; /* automatikus magasság */
+    min-height: 35vh;
+    height: auto;
     overflow: hidden;
   }
 
@@ -329,13 +327,12 @@ input[type="password"]::-ms-reveal {
   }
 
   .upper img {
-    max-width: 30%;
+    max-width: 25%;
     left: -5%;
   }
 
   .bottom-left img {
     max-width: 25%;
-    bottom: -10%;
     left: -7%;
   }
 
@@ -373,8 +370,7 @@ input[type="password"]::-ms-reveal {
   }
 
   .bottom-left img {
-    max-width: 20%;
-    bottom: -15%;
+    max-width: 25%;
   }
 
   .middle img {
@@ -393,7 +389,7 @@ input[type="password"]::-ms-reveal {
   }
 }
 
-/* Magasabb képernyők ??*/
+
 @media (min-height: 800px) and (max-width: 768px) {
   .left-side {
     height: 25vh;
@@ -404,7 +400,7 @@ input[type="password"]::-ms-reveal {
   }
 }
 
-/* Táblagép landscape */
+
 @media (orientation: landscape) and (max-width: 1024px) {
   .left-side {
     height: 100vh;

@@ -5,6 +5,7 @@
 - regisztráció sikeres üzenet (custom alert legyen)
 - rfid design egységesyítés
 - rfid hangjelzés leolvasáskor?
+- 
 
 ## Doucments
 - 
@@ -18,6 +19,7 @@
 ## AdminInvoice.vue
 -  pagináció van, nem jó (többadat?)
 - függőben lévők és fizetettek külön mint a dokumentumoknál
+- banki utalás vagy késpénz
 
 ## Users.vue
 - kártya törlés gomb

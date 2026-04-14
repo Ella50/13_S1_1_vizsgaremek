@@ -5,17 +5,37 @@
     <form @submit.prevent="handleRegister" class="register-form">
       <!-- Név mezők -->
       <div class="form-row">
-        <input type="text" v-model="form.lastName" placeholder="Vezetéknév *" required maxlength="50" >
-        <input type="text" v-model="form.firstName" placeholder="Keresztnév *" required maxlength="50" >
+        <input 
+          type="text" 
+          v-model="form.lastName" 
+          placeholder="Vezetéknév *" 
+          required 
+          maxlength="50" 
+          @input="validateNameField($event, 'lastName')"
+          @blur="validateNameField($event, 'lastName')">
+        <input 
+          type="text" 
+          v-model="form.firstName" 
+          placeholder="Keresztnév *" 
+          required 
+          maxlength="50" 
+          @input="validateNameField($event, 'firstName')"
+          @blur="validateNameField($event, 'firstName')">
       </div>
       
-      <input type="text" v-model="form.thirdName" placeholder="Harmadik név" maxlength="50" >
+      <input 
+        type="text" 
+        v-model="form.thirdName" 
+        placeholder="Harmadik név" 
+        maxlength="50" 
+        @input="validateNameField($event, 'thirdName')"
+        @blur="validateNameField($event, 'thirdName')">
 
       <!-- Cím adatok -->
       <div class="form-row">
         <div class="form-group">
           <label>Vármegye *</label>
-          <select  style="line-height: 100px;" v-model="form.county_id" @change="loadCities" required>
+          <select style="line-height: 100px;" v-model="form.county_id" @change="loadCities" required>
             <option value="">Válassz vármegyét</option>
             <option v-for="county in counties" :key="county.id" :value="county.id">
               {{ county.countyName }}
@@ -36,13 +56,13 @@
 
       <div class="form-group">
         <label class="text-nowrap">Lakcím (utca, házszám) *</label>
-        <input type="text" v-model="form.address" placeholder="pl. Kossuth utca 10." required maxlength="255" >
+        <input type="text" v-model="form.address" placeholder="pl. Kossuth utca 10." required maxlength="255">
       </div>
 
       <!-- Email és jelszó --> 
       <div class="form-group">
         <label>Email cím (iskolai) *</label>
-        <input type="email" v-model="form.email" placeholder="pelda@iskola.hu" required maxlength="255" >
+        <input type="email" v-model="form.email" placeholder="pelda@iskola.hu" required maxlength="255">
       </div>
       
       <div class="form-row">
@@ -54,7 +74,6 @@
             :required="true"
             :minlength="8"
             :min-width="500"
-
           />
         </div>
         <div class="form-group">
@@ -63,8 +82,6 @@
             v-model="form.password_confirmation"
             placeholder="Jelszó újra"
             :required="true"
-
-
           />
         </div>
       </div>
@@ -125,102 +142,146 @@ export default {
     this.loadCounties()
   },
   methods: {
-    async loadCounties() {
-  try {
-    console.log('Loading counties...')
-    const response = await axios.get('/countiesReg')
-    console.log('Raw counties response:', response.data)
-    
-    // BOM eltávolítása ha stringként jön
-    let responseData = response.data
-    
-    if (typeof responseData === 'string') {
-      console.log('Response is string, cleaning BOM...')
-      responseData = responseData.replace(/^\uFEFF/, '')
-      responseData = JSON.parse(responseData)
-    } else if (typeof responseData === 'object') {
-      // Ha object, akkor is lehet BOM a stringesített verzióban
-      console.log('Response is object, checking for BOM in stringified version...')
-      const jsonString = JSON.stringify(responseData)
-      if (jsonString.charCodeAt(0) === 0xFEFF) {
-        console.log('BOM found in object, cleaning...')
-        const cleanString = jsonString.replace(/^\uFEFF/, '')
-        responseData = JSON.parse(cleanString)
-      }
-    }
-    
-    console.log('Cleaned response data:', responseData)
-    
-    if (responseData.success) {
-      this.counties = responseData.data
-      console.log('Counties loaded successfully:', this.counties.length)
-    } else {
-      console.error('Counties API returned success=false:', responseData.message)
-    }
-  } catch (error) {
-    console.error('Megye betöltési hiba:', error)
-    if (error.response) {
-      console.error('Response status:', error.response.status)
-      console.error('Response data:', error.response.data)
-    }
-  }
-},
-
-    async loadCities() {
-  if (!this.form.county_id) {
-    this.cities = []
-    this.form.city_id = null
-    return
-  }
-
-  try {
-    console.log('Loading cities for county ID:', this.form.county_id)
-    const response = await axios.get(`/cities/by-countyReg/${this.form.county_id}`)
-    console.log('Raw cities response:', response.data)
-    
-    // BOM eltávolítása
-    let responseData = response.data
-    
-    if (typeof responseData === 'string') {
-      console.log('Response is string, cleaning BOM...')
-      responseData = responseData.replace(/^\uFEFF/, '')
-      responseData = JSON.parse(responseData)
-    } else if (typeof responseData === 'object') {
-      const jsonString = JSON.stringify(responseData)
-      if (jsonString.charCodeAt(0) === 0xFEFF) {
-        console.log('BOM found in object, cleaning...')
-        const cleanString = jsonString.replace(/^\uFEFF/, '')
-        responseData = JSON.parse(cleanString)
-      }
-    }
-    
-    console.log('Cleaned response data:', responseData)
-    
-    if (responseData.success) {
-      this.cities = responseData.data
-      console.log('Cities loaded successfully:', this.cities.length)
+    // Név mező validáció: csak betűk (magyar ékezetesek is) és kötőjel
+    validateNameField(event, fieldName) {
+      let value = event.target.value
+      // Csak betűk (angol, magyar ékezetes) és kötőjel maradhat
+      const regex = /[^A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű\-]/g
+      const filtered = value.replace(regex, '')
       
-      if (this.form.city_id) {
-        const cityExists = this.cities.some(city => city.id == this.form.city_id)
-        if (!cityExists) {
-          this.form.city_id = null
+      if (value !== filtered) {
+        this.form[fieldName] = filtered
+        this.error = `A ${this.getFieldLabel(fieldName)} mezőben csak betűk és kötőjel használható!`
+        setTimeout(() => {
+          if (this.error === `A ${this.getFieldLabel(fieldName)} mezőben csak betűk és kötőjel használható!`) {
+            this.error = ''
+          }
+        }, 3000)
+      }
+    },
+
+    getFieldLabel(fieldName) {
+      const labels = {
+        lastName: 'vezetéknév',
+        firstName: 'keresztnév',
+        thirdName: 'harmadik név'
+      }
+      return labels[fieldName] || fieldName
+    },
+
+    async loadCounties() {
+      try {
+        console.log('Loading counties...')
+        const response = await axios.get('/countiesReg')
+        console.log('Raw counties response:', response.data)
+        
+        let responseData = response.data
+        
+        if (typeof responseData === 'string') {
+          console.log('Response is string, cleaning BOM...')
+          responseData = responseData.replace(/^\uFEFF/, '')
+          responseData = JSON.parse(responseData)
+        } else if (typeof responseData === 'object') {
+          const jsonString = JSON.stringify(responseData)
+          if (jsonString.charCodeAt(0) === 0xFEFF) {
+            console.log('BOM found in object, cleaning...')
+            const cleanString = jsonString.replace(/^\uFEFF/, '')
+            responseData = JSON.parse(cleanString)
+          }
+        }
+        
+        console.log('Cleaned response data:', responseData)
+        
+        if (responseData.success) {
+          this.counties = responseData.data
+          console.log('Counties loaded successfully:', this.counties.length)
+        } else {
+          console.error('Counties API returned success=false:', responseData.message)
+        }
+      } catch (error) {
+        console.error('Megye betöltési hiba:', error)
+        if (error.response) {
+          console.error('Response status:', error.response.status)
+          console.error('Response data:', error.response.data)
         }
       }
-    } else {
-      console.error('Cities API returned success=false:', responseData.message)
-      this.cities = []
-    }
-  } catch (error) {
-    console.error('Város betöltési hiba:', error)
-    if (error.response) {
-      console.error('Response status:', error.response.status)
-      console.error('Response data:', error.response.data)
-    }
-    this.cities = []
-  }
-},
+    },
+
+    async loadCities() {
+      if (!this.form.county_id) {
+        this.cities = []
+        this.form.city_id = null
+        return
+      }
+
+      try {
+        console.log('Loading cities for county ID:', this.form.county_id)
+        const response = await axios.get(`/cities/by-countyReg/${this.form.county_id}`)
+        console.log('Raw cities response:', response.data)
+        
+        let responseData = response.data
+        
+        if (typeof responseData === 'string') {
+          console.log('Response is string, cleaning BOM...')
+          responseData = responseData.replace(/^\uFEFF/, '')
+          responseData = JSON.parse(responseData)
+        } else if (typeof responseData === 'object') {
+          const jsonString = JSON.stringify(responseData)
+          if (jsonString.charCodeAt(0) === 0xFEFF) {
+            console.log('BOM found in object, cleaning...')
+            const cleanString = jsonString.replace(/^\uFEFF/, '')
+            responseData = JSON.parse(cleanString)
+          }
+        }
+        
+        console.log('Cleaned response data:', responseData)
+        
+        if (responseData.success) {
+          this.cities = responseData.data
+          console.log('Cities loaded successfully:', this.cities.length)
+          
+          if (this.form.city_id) {
+            const cityExists = this.cities.some(city => city.id == this.form.city_id)
+            if (!cityExists) {
+              this.form.city_id = null
+            }
+          }
+        } else {
+          console.error('Cities API returned success=false:', responseData.message)
+          this.cities = []
+        }
+      } catch (error) {
+        console.error('Város betöltési hiba:', error)
+        if (error.response) {
+          console.error('Response status:', error.response.status)
+          console.error('Response data:', error.response.data)
+        }
+        this.cities = []
+      }
+    },
 
     async handleRegister() {
+      // Név mezők validációja a beküldés előtt
+      const nameFields = [
+        { value: this.form.lastName, name: 'Vezetéknév' },
+        { value: this.form.firstName, name: 'Keresztnév' }
+      ]
+      
+      const nameRegex = /^[A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű\-]+$/
+      
+      for (const field of nameFields) {
+        if (!field.value || !nameRegex.test(field.value)) {
+          this.error = `${field.name} mezőben csak betűk és kötőjel használható!`
+          return
+        }
+      }
+      
+      // Harmadik név ellenőrzése (ha van kitöltve)
+      if (this.form.thirdName && !nameRegex.test(this.form.thirdName)) {
+        this.error = 'Harmadik név mezőben csak betűk és kötőjel használható!'
+        return
+      }
+
       // Email végződés ellenőrzés
       const emailRegex = /@iskola\.hu$/
       if (!emailRegex.test(this.form.email)) {
@@ -287,21 +348,11 @@ export default {
 </script>
 
 <style scoped>
-
-
 .register-form {
   width: 70%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  /*
-    display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  */
 }
 
 .register-form input, .register-form select {
@@ -310,16 +361,7 @@ export default {
   border: 2px solid #555;
   border-radius: 25px;
   font-size: 1rem;
-  /*
-    padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 100%;
-  box-sizing: border-box;
-  */
 }
-
 
 .form-row {
   display: grid;
@@ -338,7 +380,7 @@ export default {
     grid-template-columns: 1fr;
   }
 }
-/* Reszponzív töréspontok */
+
 @media screen and (max-width: 768px) {
   .register-form {
     max-width: 100%;
@@ -400,11 +442,9 @@ export default {
   }
 }
 
-/* Táblagép nézet (landscape) */
 @media screen and (min-width: 769px) and (max-width: 1024px) {
   .register-form {
     max-width: 550px;
   }
 }
-
 </style>
