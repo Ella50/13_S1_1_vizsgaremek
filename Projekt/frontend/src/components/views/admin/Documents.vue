@@ -329,7 +329,7 @@ export default {
 }
 
 .content-card {
-  background: white;
+  background: var(--content-card);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
