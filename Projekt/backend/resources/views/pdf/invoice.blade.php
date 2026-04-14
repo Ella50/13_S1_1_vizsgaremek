@@ -110,9 +110,11 @@ Telefon: +36 30 123 4567<br>
 Adószám: 12345678-1-23
 </td>
 <td style="text-align:right;">
+<!--
 <div>
     <img src="{{ $imagePath }}" /> 
 </div>
+-->
 </td>
 </tr>
 </table>

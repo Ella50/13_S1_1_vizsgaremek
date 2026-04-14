@@ -79,7 +79,7 @@
 
                   <div class="form-group">
                     <label>Cím</label>
-                    <input type="text" v-model="profileForm.address" class="form-control" maxlength="255" >
+                    <input type="text" v-model="profileForm.address" class="form-control" maxlength="255">
                   </div>
 
                   <button type="submit" class="btn-primary" :disabled="isUpdating">
@@ -150,8 +150,7 @@
               <div class="info-card-body">
                 <div class="checkbox-group">
                   <label class="checkbox-label">
-                    <!-- <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" :disabled="isUpdatingDiabetes">-->
-                    <input type="checkbox" v-model="hasDiabetes" @change="updateDiabetes" disabled>
+                    <input type="checkbox" v-model="hasDiabetes" disabled>
                     <span>Cukorbeteg vagyok</span>
                   </label>
                 </div>
@@ -295,6 +294,26 @@
         </div>
       </div>
     </div>
+
+    <!-- Alert értesítés -->
+    <div class="alert-container" v-if="alertVisible">
+      <div :class="['alert', alertType]">
+        <strong v-if="alertTitle">{{ alertTitle }}</strong>
+        <div>{{ alertMessage }}</div>
+      </div>
+    </div>
+
+    <!-- Confirm modal -->
+    <div v-if="confirmVisible" class="confirm-overlay">
+      <div class="confirm-box">
+        <h3 v-if="confirmTitle" class="confirm-title">{{ confirmTitle }}</h3>
+        <p class="confirm-message">{{ confirmMessage }}</p>
+        <div class="confirm-actions">
+          <button class="btn-cancel" @click="confirmCancel">Mégse</button>
+          <button class="btn-ok" @click="confirmOk">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -341,7 +360,6 @@ export default {
       isUpdating: false,
       isChangingPassword: false,
       isAddingAllergen: false,
-      //isUpdatingDiabetes: false,
 
       message: '',
       messageType: '',
@@ -358,7 +376,20 @@ export default {
       uploadSuccess: '',
       uploadError: '',
       allowedFileTypes: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
-      documents: []
+      documents: [],
+      
+      // Alert állapotok
+      alertVisible: false,
+      alertMessage: '',
+      alertTitle: '',
+      alertType: 'success',
+      alertTimeout: null,
+      
+      // Confirm állapotok
+      confirmVisible: false,
+      confirmMessage: '',
+      confirmTitle: '',
+      confirmResolver: null
     };
   },
 
@@ -372,7 +403,7 @@ export default {
     userType() {
       return this.user?.userType || 'Ismeretlen';
     },
-    hasDiscount() {
+    hasDiscountValue() {
       return this.user?.hasDiscount !== undefined ? (this.user.hasDiscount ? 'Igen' : 'Nem') : '-';
     },
     className() {
@@ -388,8 +419,58 @@ export default {
     await this.loadUserData();
     await this.loadDocuments();
   },
+  
+  beforeUnmount() {
+    if (this.alertTimeout) {
+      clearTimeout(this.alertTimeout);
+    }
+    document.body.style.overflow = '';
+  },
 
   methods: {
+    // Alert metódusok
+    showAlert({ message, type = 'success', title = '' }) {
+      if (this.alertTimeout) {
+        clearTimeout(this.alertTimeout);
+      }
+      
+      this.alertMessage = message;
+      this.alertType = type;
+      this.alertTitle = title;
+      this.alertVisible = true;
+      
+      this.alertTimeout = setTimeout(() => {
+        this.alertVisible = false;
+      }, 3000);
+    },
+    
+    // Confirm metódusok
+    showConfirm({ message, title = '' }) {
+      this.confirmMessage = message;
+      this.confirmTitle = title;
+      this.confirmVisible = true;
+      
+      return new Promise((resolve) => {
+        this.confirmResolver = resolve;
+      });
+    },
+    
+    confirmOk() {
+      this.confirmVisible = false;
+      if (this.confirmResolver) {
+        this.confirmResolver(true);
+        this.confirmResolver = null;
+      }
+    },
+    
+    confirmCancel() {
+      this.confirmVisible = false;
+      if (this.confirmResolver) {
+        this.confirmResolver(false);
+        this.confirmResolver = null;
+      }
+    },
+
     formatDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -517,13 +598,22 @@ export default {
       }
     },
 
-    confirmDelete(doc) {
+    async confirmDelete(doc) {
       if (doc.isAccepted) {
-        this.showUploadError('Elfogadott dokumentumot nem törölhetsz!');
+        this.showAlert({
+          message: 'Elfogadott dokumentumot nem törölhetsz!',
+          type: 'error'
+        });
         return;
       }
+      
       const typeText = doc.type === 'discount' ? 'kedvezmény' : 'cukorbetegség';
-      if (confirm(`Biztosan törölni szeretnéd ezt a ${typeText} dokumentumot?`)) {
+      const confirmed = await this.showConfirm({
+        title: 'Dokumentum törlése',
+        message: `Biztosan törölni szeretnéd ezt a ${typeText} dokumentumot?`
+      });
+      
+      if (confirmed) {
         this.deleteDocument(doc);
       }
     },
@@ -611,6 +701,10 @@ export default {
       } catch (error) {
         console.error('Error loading user data:', error);
         this.error = 'Hiba történt az adatok betöltése során: ' + error.message;
+        this.showAlert({
+          message: this.error,
+          type: 'error'
+        });
       } finally {
         this.isLoading = false;
       }
@@ -637,6 +731,10 @@ export default {
         }
       } catch (error) {
         console.error('Error loading counties:', error);
+        this.showAlert({
+          message: 'Hiba történt a megyék betöltésekor',
+          type: 'error'
+        });
       }
     },
 
@@ -667,6 +765,10 @@ export default {
       } catch (error) {
         console.error('Error loading cities:', error);
         this.cities = [];
+        this.showAlert({
+          message: 'Hiba történt a városok betöltésekor',
+          type: 'error'
+        });
       } finally {
         this.isLoadingCities = false;
       }
@@ -703,15 +805,26 @@ export default {
             this.selectedCountyId = this.user.city.county_id;
           }
         }
-        this.showMessage('Profiladatok sikeresen frissítve!', 'success');
-        window.location.reload();
+        this.showAlert({
+          message: 'Profiladatok sikeresen frissítve!',
+          type: 'success'
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } catch (error) {
         console.error('Error updating profile:', error);
         if (error.response?.data?.errors) {
           const errors = Object.values(error.response.data.errors).flat();
-          this.showMessage(errors.join(', '), 'error');
+          this.showAlert({
+            message: errors.join(', '),
+            type: 'error'
+          });
         } else {
-          this.showMessage(error.response?.data?.message || 'Hiba történt a profil frissítése során.', 'error');
+          this.showAlert({
+            message: error.response?.data?.message || 'Hiba történt a profil frissítése során.',
+            type: 'error'
+          });
         }
       } finally {
         this.isUpdating = false;
@@ -720,11 +833,17 @@ export default {
 
     async changePassword() {
       if (this.passwordForm.new_password !== this.passwordForm.new_password_confirmation) {
-        this.showMessage('Az új jelszavak nem egyeznek!', 'error');
+        this.showAlert({
+          message: 'Az új jelszavak nem egyeznek!',
+          type: 'error'
+        });
         return;
       }
       if (this.passwordForm.new_password.length < 8) {
-        this.showMessage('Az új jelszónak legalább 8 karakter hosszúnak kell lennie!', 'error');
+        this.showAlert({
+          message: 'Az új jelszónak legalább 8 karakter hosszúnak kell lennie!',
+          type: 'error'
+        });
         return;
       }
 
@@ -733,7 +852,10 @@ export default {
 
       try {
         await axios.post('/user/auth/change-password', this.passwordForm);
-        this.showMessage('Jelszó sikeresen megváltoztatva!', 'success');
+        this.showAlert({
+          message: 'Jelszó sikeresen megváltoztatva!',
+          type: 'success'
+        });
         this.passwordForm = {
           current_password: '',
           new_password: '',
@@ -743,9 +865,15 @@ export default {
         console.error('Error changing password:', error);
         if (error.response?.data?.errors) {
           const errors = Object.values(error.response.data.errors).flat();
-          this.showMessage(errors.join(', '), 'error');
+          this.showAlert({
+            message: errors.join(', '),
+            type: 'error'
+          });
         } else {
-          this.showMessage(error.response?.data?.message || 'Hiba történt a jelszó módosítása során.', 'error');
+          this.showAlert({
+            message: error.response?.data?.message || 'Hiba történt a jelszó módosítása során.',
+            type: 'error'
+          });
         }
       } finally {
         this.isChangingPassword = false;
@@ -780,7 +908,10 @@ export default {
         this.hasDiabetes = responseData.has_diabetes || false;
       } catch (error) {
         console.error('Error loading health data:', error);
-        this.showMessage('Hiba történt az egészségügyi adatok betöltése során.', 'error');
+        this.showAlert({
+          message: 'Hiba történt az egészségügyi adatok betöltése során.',
+          type: 'error'
+        });
       }
     },
 
@@ -827,61 +958,60 @@ export default {
         await this.loadHealthData();
         await this.loadAvailableAllergens();
         this.newAllergenId = '';
-        this.showMessage('Allergén sikeresen hozzáadva!', 'success');
+        this.showAlert({
+          message: 'Allergén sikeresen hozzáadva!',
+          type: 'success'
+        });
       } catch (error) {
         let errorMessage = 'Hiba történt az allergén hozzáadása során.';
         if (error.response?.data?.message) errorMessage = error.response.data.message;
         else if (error.response?.data?.errors) errorMessage = Object.values(error.response.data.errors).flat().join(', ');
-        this.showMessage(errorMessage, 'error');
+        this.showAlert({
+          message: errorMessage,
+          type: 'error'
+        });
       } finally {
         this.isAddingAllergen = false;
       }
     },
 
     async removeAllergen(allergenId) {
-      if (!confirm('Biztosan eltávolítod ezt az allergént?')) return;
+      const confirmed = await this.showConfirm({
+        title: 'Allergén eltávolítása',
+        message: 'Biztosan eltávolítod ezt az allergént?'
+      });
+      
+      if (!confirmed) return;
+      
       this.clearMessage();
 
       try {
         await axios.delete(`/user/allergens/${allergenId}`);
         await this.loadHealthData();
         await this.loadAvailableAllergens();
-        this.showMessage('Allergén sikeresen eltávolítva!', 'success');
+        this.showAlert({
+          message: 'Allergén sikeresen eltávolítva!',
+          type: 'success'
+        });
       } catch (error) {
         console.error('Error removing allergen:', error);
-        this.showMessage(error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.', 'error');
+        this.showAlert({
+          message: error.response?.data?.message || 'Hiba történt az allergén eltávolítása során.',
+          type: 'error'
+        });
       }
     },
-/*
-    async updateDiabetes() {
-      this.isUpdatingDiabetes = true;
-      this.clearMessage();
 
-      try {
-        await axios.put('/user/diabetes', { has_diabetes: this.hasDiabetes });
-        this.showMessage('Cukorbetegség állapota frissítve!', 'success');
-      } catch (error) {
-        console.error('Error updating diabetes:', error);
-        this.showMessage('Hiba történt a cukorbetegség állapotának frissítése során.', 'error');
-        this.hasDiabetes = !this.hasDiabetes;
-      } finally {
-        this.isUpdatingDiabetes = false;
-      }
-    },
-*/
     retryLoading() {
       this.loadUserData();
     },
 
     showMessage(text, type = 'success') {
-      this.message = text;
-      this.messageType = type;
-      setTimeout(() => { this.clearMessage(); }, 5000);
+      this.showAlert({ message: text, type: type });
     },
 
     clearMessage() {
-      this.message = '';
-      this.messageType = '';
+      // Üres, mert a showAlert kezeli
     }
   }
 };
@@ -1361,6 +1491,126 @@ export default {
   padding: 1rem;
   border-radius: 12px;
   text-align: center;
+}
+
+/* Alert stílusok */
+.alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+}
+
+.alert {
+  margin-bottom: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  color: white;
+  min-width: 250px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease;
+}
+
+.alert.success {
+  background: #4CAF50;
+}
+
+.alert.error {
+  background: #ff4d4f;
+}
+
+.alert.warning {
+  background: #ff9800;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Confirm stílusok */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+}
+
+.confirm-box {
+  background: white;
+  padding: 24px;
+  border-radius: 14px;
+  min-width: 320px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  animation: scaleIn 0.25s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.confirm-title {
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0 20px 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirm-actions .btn-cancel {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-cancel:hover {
+  background: #c0392b;
+}
+
+.confirm-actions .btn-ok {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-ok:hover {
+  background: #27ae60;
 }
 
 /* Animations */
