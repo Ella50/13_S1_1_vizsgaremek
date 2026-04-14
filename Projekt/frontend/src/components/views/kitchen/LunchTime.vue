@@ -19,10 +19,11 @@
         </div>
         <div class="hint">{{ error ? 'Hiba történt' : 'Érintsd a kártyát az olvasóhoz…' }}</div>
         
-        <div v-if="error" class="error-message">
+        <!--<div v-if="error" class="error-message">
           <span class="error-icon">⚠️</span>
           {{ error }}
         </div>
+        -->
       </div>
 
       <div class="history-section">
@@ -32,7 +33,6 @@
         </div>
         
         <div v-if="history.length === 0" class="empty-state">
-          <div class="empty-icon">🔄</div>
           <p>Még nem volt leolvasás</p>
           <p class="empty-hint">Érintsd a kártyát a kezdéshez</p>
         </div>
@@ -49,7 +49,7 @@
                 <div class="user-name">{{ item.fullName || 'Ismeretlen felhasználó' }}</div>
                 <div class="user-badge">
                   <span class="badge-role">{{ getUserRoleDisplay(item.userType) }}</span>
-                  <span v-if="item.hasDiabetes" class="badge-diabetic">🩺 Cukorbeteg</span>
+                  <span v-if="item.hasDiabetes" class="badge-diabetic"> Cukorbeteg</span>
                 </div>
               </div>
               <div class="entry-time">{{ formatTime(item._scannedAt) }}</div>
@@ -68,22 +68,6 @@
                   {{ item.message || (item.canEat ? '✅ Ebéd kiadható' : '❌ Nem kiadható') }}
                 </span>
               </div>
-            </div>
-            
-            <div v-if="item.canEat" class="meal-info">
-              <div class="meal-row">
-                <span class="meal-label">🍲 Leves:</span>
-                <span class="meal-value">{{ item.soupName || '—' }}</span>
-              </div>
-              <div class="meal-row">
-                <span class="meal-label">🍽️ Főétel:</span>
-                <span class="meal-value">{{ item.mainMealName || '—' }}</span>
-              </div>
-            </div>
-            
-            <div v-else class="error-reason">
-              <span class="error-icon-small">⚠️</span>
-              {{ getErrorMessage(item) }}
             </div>
           </div>
         </div>
