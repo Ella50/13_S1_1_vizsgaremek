@@ -679,13 +679,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Alert értesítés -->
+    <div class="alert-container" v-if="alertVisible">
+      <div :class="['alert', alertType]">
+        <strong v-if="alertTitle">{{ alertTitle }}</strong>
+        <div>{{ alertMessage }}</div>
+      </div>
+    </div>
+
+    <!-- Confirm modal -->
+    <div v-if="confirmVisible" class="confirm-overlay">
+      <div class="confirm-box">
+        <h3 v-if="confirmTitle" class="confirm-title">{{ confirmTitle }}</h3>
+        <p class="confirm-message">{{ confirmMessage }}</p>
+        <div class="confirm-actions">
+          <button class="btn-cancel" @click="confirmCancel">Mégse</button>
+          <button class="btn-ok" @click="confirmOk">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import AuthService from '../../../services/authService'
-import { addAlert } from '../../auth/AppAlert.vue'
-import { showConfirm } from '../../auth/AppConfirm.vue'
 
 export default {
   data() {
@@ -722,7 +740,20 @@ export default {
         mealName: '',
         category: '',
         description: ''
-      }
+      },
+      
+      // Alert állapotok
+      alertVisible: false,
+      alertMessage: '',
+      alertTitle: '',
+      alertType: 'success',
+      alertTimeout: null,
+      
+      // Confirm állapotok
+      confirmVisible: false,
+      confirmMessage: '',
+      confirmTitle: '',
+      confirmResolver: null
     }
   },
   
@@ -747,10 +778,54 @@ export default {
   
   beforeDestroy() {
     if (this.searchTimeout) clearTimeout(this.searchTimeout)
+    if (this.alertTimeout) clearTimeout(this.alertTimeout)
     document.body.style.overflow = ''
   },
   
   methods: {
+    // Alert metódusok
+    showAlert({ message, type = 'success', title = '' }) {
+      if (this.alertTimeout) {
+        clearTimeout(this.alertTimeout)
+      }
+      
+      this.alertMessage = message
+      this.alertType = type
+      this.alertTitle = title
+      this.alertVisible = true
+      
+      this.alertTimeout = setTimeout(() => {
+        this.alertVisible = false
+      }, 3000)
+    },
+    
+    // Confirm metódusok
+    showConfirm({ message, title = '' }) {
+      this.confirmMessage = message
+      this.confirmTitle = title
+      this.confirmVisible = true
+      
+      return new Promise((resolve) => {
+        this.confirmResolver = resolve
+      })
+    },
+    
+    confirmOk() {
+      this.confirmVisible = false
+      if (this.confirmResolver) {
+        this.confirmResolver(true)
+        this.confirmResolver = null
+      }
+    },
+    
+    confirmCancel() {
+      this.confirmVisible = false
+      if (this.confirmResolver) {
+        this.confirmResolver(false)
+        this.confirmResolver = null
+      }
+    },
+
     onSearchInput() {
       if (this.searchTimeout) clearTimeout(this.searchTimeout)
       this.searchTimeout = setTimeout(() => {
@@ -816,7 +891,7 @@ export default {
       } catch (error) {
         console.error('Ételek betöltése sikertelen:', error)
         this.error = error.response?.data?.message || 'Hiba történt az ételek betöltésekor'
-        addAlert({ message: this.error, type: 'error' })
+        this.showAlert({ message: this.error, type: 'error' })
         
         if (error.response?.status === 401) {
           AuthService.clearAuth()
@@ -956,10 +1031,6 @@ export default {
         try {
           this.savingMeal = true;
           
-          console.log('=== START saving new meal ===');
-          console.log('Meal form:', this.mealForm);
-          console.log('Ingredients to save:', this.editIngredientsList);
-          
           const mealResponse = await AuthService.api.post('/kitchen/meals', {
             mealName: this.mealForm.mealName,
             category: this.mealForm.category,
@@ -967,7 +1038,7 @@ export default {
           });
           
           if (!mealResponse.data.success) {
-            addAlert({
+            this.showAlert({
               message: mealResponse.data.message || 'Hiba történt',
               type: 'error'
             });
@@ -976,7 +1047,6 @@ export default {
           }
           
           const newMealId = mealResponse.data.meal.id;
-          console.log('New meal created with ID:', newMealId);
           
           if (this.editIngredientsList.length > 0) {
             const ingredientsData = this.editIngredientsList.map(ingredient => {
@@ -987,30 +1057,14 @@ export default {
               };
             });
             
-            console.log('Sending ingredients data:', ingredientsData);
-            
             await AuthService.api.put(`/kitchen/meals/${newMealId}/ingredients`, {
               ingredients: ingredientsData
             });
-            
-            console.log('Ingredients saved successfully');
           }
           
-          console.log('Refreshing meals list with allergens...');
           await this.fetchMeals();
           
-          setTimeout(() => {
-            const newMeal = this.meals.find(m => m.id === newMealId);
-            if (newMeal) {
-              console.log('Found new meal in updated list:', newMeal);
-              
-              if (!newMeal.allergens || newMeal.allergens.length === 0) {
-                this.loadAllergensForNewMeal(newMealId);
-              }
-            }
-          }, 500);
-          
-          addAlert({
+          this.showAlert({
             message: 'Étel sikeresen hozzáadva' + (this.editIngredientsList.length > 0 ? ` (${this.editIngredientsList.length} összetevővel)` : ''),
             type: 'success'
           });
@@ -1019,7 +1073,7 @@ export default {
           
         } catch (error) {
           console.error('Étel mentése sikertelen:', error);
-          addAlert({
+          this.showAlert({
             message: error.response?.data?.message || 'Hiba történt a mentés során',
             type: 'error'
           });
@@ -1040,116 +1094,110 @@ export default {
       try {
         this.savingMeal = true
         
-        console.log('=== START saveMealWithIngredients ===')
-        console.log('Meal ID:', this.editingMeal.id)
-        console.log('Meal form:', this.mealForm)
-        console.log('Ingredients to save:', this.editIngredientsList)
-        
-        // 1. Alapadatok mentése
-        console.log('1. Saving meal basic data...')
         const mealResponse = await AuthService.api.put(
           `/kitchen/meals/${this.editingMeal.id}`, 
           this.mealForm
         )
         
         if (!mealResponse.data.success) {
-          console.error('Meal save failed:', mealResponse.data)
-          alert(mealResponse.data.message || 'Hiba történt az étel mentése során')
+          this.showAlert({
+            message: mealResponse.data.message || 'Hiba történt az étel mentése során',
+            type: 'error'
+          })
           return
         }
         
-        console.log('Meal saved successfully')
-        
-        // 2. Összetevők mentése
-        console.log('2. Preparing ingredients data...')
         const ingredientsData = this.editIngredientsList.map(ingredient => {
-          const amount = parseFloat(ingredient.pivot?.amount) || 0
-          const unit = ingredient.pivot?.unit || 'g'
-          const ingredientId = ingredient.id
-          
-          console.log(`Ingredient: id=${ingredientId}, amount=${amount}, unit=${unit}`)
-          
-          // **FONTOS**: ellenőrizd, hogy a kulcsok helyesek-e
           return {
-            ingredient_id: ingredientId,  
-            amount: amount,
-            unit: unit
+            ingredient_id: ingredient.id,
+            amount: parseFloat(ingredient.pivot?.amount) || 0,
+            unit: ingredient.pivot?.unit || 'g'
           }
         })
         
-        console.log('Ingredients data to send:', {
-          ingredients: ingredientsData,  // <-- a tömbnek ez a formája
-          count: ingredientsData.length
-        })
-        
-        // Küldés előtti ellenőrzés
         if (ingredientsData.length === 0) {
-          console.log('No ingredients to save, skipping...')
-          this.$toast?.success('Étel sikeresen mentve (nincsenek összetevők)')
+          this.showAlert({
+            message: 'Étel sikeresen mentve (nincsenek összetevők)',
+            type: 'success'
+          })
           this.closeModal()
           await this.fetchMeals()
           return
         }
         
-        console.log('3. Sending ingredients to API...')
         const ingredientsResponse = await AuthService.api.put(
           `/kitchen/meals/${this.editingMeal.id}/ingredients`,
           { ingredients: ingredientsData }
         )
         
-        console.log('Ingredients API response:', ingredientsResponse.data)
-        
         if (ingredientsResponse.data.success) {
-          console.log('Ingredients saved successfully')
-          this.$toast?.success('Étel és összetevők sikeresen mentve')
+          this.showAlert({
+            message: 'Étel és összetevők sikeresen mentve',
+            type: 'success'
+          })
           this.closeModal()
           await this.fetchMeals()
         } else {
-          console.error('Ingredients save failed:', ingredientsResponse.data)
-          alert('Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message)
+          this.showAlert({
+            message: 'Étel mentve, de az összetevők mentése sikertelen: ' + ingredientsResponse.data.message,
+            type: 'warning'
+          })
         }
         
       } catch (error) {
-        console.error('=== ERROR in saveMealWithIngredients ===')
-        console.error('Error:', error)
+        console.error('Error in saveMealWithIngredients:', error)
         
-        // Hibakezelés
         if (error.response) {
           if (error.response.data?.errors) {
             const validationErrors = Object.values(error.response.data.errors).flat().join('\n')
-            alert(`Validációs hibák:\n${validationErrors}`)
+            this.showAlert({
+              message: `Validációs hibák: ${validationErrors}`,
+              type: 'error'
+            })
           } else if (error.response.data?.message) {
-            alert(`Szerver hiba: ${error.response.data.message}`)
+            this.showAlert({
+              message: `Szerver hiba: ${error.response.data.message}`,
+              type: 'error'
+            })
           }
         } else if (error.request) {
-          alert('Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!')
+          this.showAlert({
+            message: 'Nem érkezett válasz a szervertől. Ellenőrizd a hálózati kapcsolatot!',
+            type: 'error'
+          })
         } else {
-          alert(error.message || 'Ismeretlen hiba történt a mentés során')
+          this.showAlert({
+            message: error.message || 'Ismeretlen hiba történt a mentés során',
+            type: 'error'
+          })
         }
         
       } finally {
-        console.log('=== END saveMealWithIngredients ===')
         this.savingMeal = false
       }
     },
     
-
     async deleteMeal(mealId) {
       if (!mealId) return
-      const confirmed = await showConfirm({ message: 'Biztosan törölni szeretnéd ezt az ételt?' })
+      
+      const confirmed = await this.showConfirm({ 
+        title: 'Étel törlése',
+        message: 'Biztosan törölni szeretnéd ezt az ételt?' 
+      })
+      
       if (!confirmed) return
       
       try {
         const response = await AuthService.api.delete(`/kitchen/meals/${mealId}`)
         if (response.data.success) {
           this.meals = this.meals.filter(meal => meal.id !== mealId)
-          addAlert({ message: 'Étel sikeresen törölve', type: 'success' })
+          this.showAlert({ message: 'Étel sikeresen törölve', type: 'success' })
         } else {
-          addAlert({ message: response.data.message || 'Hiba történt', type: 'error' })
+          this.showAlert({ message: response.data.message || 'Hiba történt', type: 'error' })
         }
       } catch (error) {
         console.error('Étel törlése sikertelen:', error)
-        addAlert({ message: error.response?.data?.message || 'Az étel a menün szerepel, nem törölhető', type: 'error' })
+        this.showAlert({ message: error.response?.data?.message || 'Az étel a menün szerepel, nem törölhető', type: 'error' })
       }
     },
 
@@ -1189,7 +1237,7 @@ export default {
       )
       
       if (alreadyExists) {
-        addAlert({ message: 'Ez a hozzávaló már hozzá van adva', type: 'warning' })
+        this.showAlert({ message: 'Ez a hozzávaló már hozzá van adva', type: 'warning' })
         return
       }
       
@@ -1821,6 +1869,126 @@ export default {
   cursor: not-allowed;
 }
 
+/* Alert stílusok */
+.alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10001;
+}
+
+.alert {
+  margin-bottom: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  color: white;
+  min-width: 250px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease;
+}
+
+.alert.success {
+  background: #4CAF50;
+}
+
+.alert.error {
+  background: #ff4d4f;
+}
+
+.alert.warning {
+  background: #ff9800;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Confirm stílusok */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+}
+
+.confirm-box {
+  background: white;
+  padding: 24px;
+  border-radius: 14px;
+  min-width: 320px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  animation: scaleIn 0.25s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.confirm-title {
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0 20px 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirm-actions .btn-cancel {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-cancel:hover {
+  background: #c0392b;
+}
+
+.confirm-actions .btn-ok {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.confirm-actions .btn-ok:hover {
+  background: #27ae60;
+}
+
 /* Form elements */
 .form-group {
   margin-bottom: 1rem;
@@ -1929,8 +2097,6 @@ export default {
   height: 20px;
   object-fit: contain;
 }
-
-
 
 .no-allergens {
   color: #6c757d;
