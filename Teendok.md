@@ -1,6 +1,6 @@
 ## Egyéb:
 - optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
-
+- TESZTELÉS ÚJRACSINÁLÁSA
 - 
 
 ## Doucments
@@ -14,7 +14,6 @@
 ## AdminInvoice.vue
 -  pagináció van, nem jó (többadat?)
 - függőben lévők és fizetettek külön mint a dokumentumoknál
-- banki utalás vagy készpénz
 
 ## Users.vue
 
@@ -49,5 +48,5 @@
 
 (
     pip install robotframework-seleniumlibrary
-    Robotframework használat: python -m robot --outputdir results tests\bejelentkezes.robot
+    Robotframework használat: python -m robot --outputdir results Tesztelés\robot_tests\tests\bejelentkezes.robot
 )
