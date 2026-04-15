@@ -1,8 +1,8 @@
 ## Egyéb:
 - optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
 - ha user felfüggesztve, akkor a kártya törlésre kerüljön
-
-- 
+- kód (async axios nem jó együtt) + tiszta kód
+- ÚJ tesztelések
 
 ## Doucments
 - 
