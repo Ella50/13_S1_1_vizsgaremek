@@ -1,6 +1,5 @@
 ## Egyéb:
 - optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
-- ha user felfüggesztve, akkor a kártya törlésre kerüljön
 
 - 
 
@@ -15,16 +14,13 @@
 ## AdminInvoice.vue
 -  pagináció van, nem jó (többadat?)
 - függőben lévők és fizetettek külön mint a dokumentumoknál
-- banki utalás vagy késpénz
+- banki utalás vagy készpénz
 
 ## Users.vue
-- kártya törlés gomb
-- kicsit elcsúszva a modal
+
 
 ## Meals.vue
-- pontosabb tápérték számítás??
-- ha cukorbeteg akkor az adatok nem pontosak figyelmeztetés
-- nem törli mert van hozzá menuItem kapcsolva (ilyne hibaüzenet kell)
+
 
 
 ## Ingredients.vue
@@ -44,9 +40,7 @@
 
 
 ## PersonalOrders.vue
-- frontend
-- reszponzív legyen
-- külön telefonos reszponzivitás??
+
 
 
 

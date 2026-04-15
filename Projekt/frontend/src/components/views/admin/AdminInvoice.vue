@@ -257,6 +257,70 @@
         </div>
       </div>
     </div>
+    <div v-if="showPaymentMethodModal" class="modal-overlay" @click.self="showPaymentMethodModal = false">
+      <div class="modal payment-modal">
+        <div class="modal-header">
+          <h2>Fizetési mód kiválasztása</h2>
+          <button @click="showPaymentMethodModal = false" class="modal-close">×</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="invoice-summary">
+            <div class="summary-item">
+              <span class="summary-label">Számlaszám:</span>
+              <span class="summary-value">{{ selectedInvoiceForPayment?.invoiceNumber }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Összeg:</span>
+              <span class="summary-value amount-highlight">{{ formatFt(Math.round(selectedInvoiceForPayment?.totalAmount * 1.27)) }}</span>
+            </div>
+          </div>
+          
+          <div class="payment-options">
+            <h3 class="options-title">Válassz fizetési módot</h3>
+            
+            <div class="option-group">
+              <label 
+                v-for="method in paymentMethods" 
+                :key="method.value"
+                :class="['payment-option', { selected: selectedPaymentMethod === method.value }]"
+              >
+                <input 
+                  type="radio" 
+                  :value="method.value" 
+                  v-model="selectedPaymentMethod" 
+                  class="payment-radio"
+                >
+                <div class="payment-card">
+                  <div class="payment-icon">{{ method.icon }}</div>
+                  <div class="payment-details">
+                    <div class="payment-name">{{ method.label }}</div>
+                    <div class="payment-desc">{{ method.description }}</div>
+                  </div>
+                  <div class="payment-check" v-if="selectedPaymentMethod === method.value">
+                    ✓
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" @click="showPaymentMethodModal = false">
+            Mégse
+          </button>
+          <button 
+            type="button" 
+            class="btn-confirm" 
+            @click="confirmPayment"
+            :disabled="!selectedPaymentMethod"
+          >
+            <span>Fizetettre állítás</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -316,6 +380,16 @@ const totalSum = computed(() => {
     return sum + gross;
   }, 0);
 });
+
+const showPaymentMethodModal = ref(false);
+const selectedInvoiceForPayment = ref(null);
+const selectedPaymentMethod = ref('');
+
+const paymentMethods = [
+  { value: 'készpénz', label: 'Készpénz'},
+  { value: 'bankkártya', label: 'Bankkártya'},
+  { value: 'banki utalás', label: 'Banki utalás'}
+];
 
 // Látható oldalszámok
 const visiblePages = computed(() => {
@@ -554,34 +628,54 @@ async function generate() {
     generating.value = false;
   }
 }
-
+function markPaid(inv) {
+  console.log('markPaid called', inv); // Debug
+  selectedInvoiceForPayment.value = inv;
+  selectedPaymentMethod.value = '';
+  showPaymentMethodModal.value = true;
+}
 // Fizetettre állítás
-async function markPaid(inv) {
+async function confirmPayment() {
+  if (!selectedPaymentMethod.value) {
+    showAlert({
+      message: 'Kérlek válassz fizetési módot!',
+      type: 'warning'
+    });
+    return;
+  }
+  
+  const inv = selectedInvoiceForPayment.value;
   const confirmed = await showConfirm({
     title: 'Fizetettre állítás',
-    message: `Biztosan fizetettre állítod a(z) ${inv.invoiceNumber} számú számlát?`
+    message: `Biztosan fizetettre állítod a(z) ${inv.invoiceNumber} számú számlát?\nFizetési mód: ${selectedPaymentMethod.value}`
   });
   
-  if (!confirmed) return;
+  if (!confirmed) {
+    showPaymentMethodModal.value = false;
+    return;
+  }
   
   payingId.value = inv.id;
   error.value = "";
   
   try {
-    await adminMarkInvoicePaid(inv.id);
+    await adminMarkInvoicePaid(inv.id, selectedPaymentMethod.value);
     await load();
     
     if (selected.value?.id === inv.id) {
       selected.value = {
         ...selected.value,
-        invoiceStatus: 'Fizetve'
+        invoiceStatus: 'Fizetve',
+        paymentMethod: selectedPaymentMethod.value
       };
     }
     
     showAlert({
-      message: 'Számla sikeresen fizetettre állítva',
+      message: `Számla sikeresen fizetettre állítva (${selectedPaymentMethod.value})`,
       type: 'success'
     });
+    
+    showPaymentMethodModal.value = false;
     
   } catch (e) {
     console.error('Mark as paid error:', e);
@@ -591,6 +685,7 @@ async function markPaid(inv) {
     });
   } finally {
     payingId.value = null;
+    selectedInvoiceForPayment.value = null;
   }
 }
 
@@ -1582,6 +1677,232 @@ load();
   .search-icon {
     left: 0.5rem;
     font-size: 0.75rem;
+  }
+}
+
+.payment-modal {
+  max-width: 480px;
+}
+
+.invoice-summary {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.summary-item:first-child {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.amount-highlight {
+  color: #1fa317;
+  font-size: 1.25rem;
+}
+
+.options-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0a24a;
+  display: inline-block;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.payment-option {
+  cursor: pointer;
+  display: block;
+}
+
+.payment-radio {
+  display: none;
+}
+
+.payment-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.payment-option:hover .payment-card {
+  border-color: #f0a24a;
+  transform: translateX(4px);
+}
+
+.payment-option.selected .payment-card {
+  border-color: #1fa317;
+  background: linear-gradient(135deg, #f0fff4 0%, #e8f5e9 100%);
+  box-shadow: 0 4px 12px rgba(31, 163, 23, 0.15);
+}
+
+.payment-icon {
+  font-size: 2rem;
+  margin-right: 1rem;
+  min-width: 48px;
+  text-align: center;
+}
+
+.payment-details {
+  flex: 1;
+}
+
+.payment-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+
+.payment-desc {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.payment-check {
+  width: 28px;
+  height: 28px;
+  background: #1fa317;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #1fa317 0%, #158a0f 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-confirm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(31, 163, 23, 0.3);
+}
+
+.btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Zöld fizetve gomb a táblázatban */
+.btn-paid {
+  background: linear-gradient(135deg, #1fa317 0%, #158a0f 100%);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-paid:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(31, 163, 23, 0.3);
+  background: linear-gradient(135deg, #158a0f 0%, #0f6b0a 100%);
+}
+
+.btn-paid:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Visszavonás gomb */
+.btn-unpaid {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-unpaid:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+  background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+}
+
+.payment-modal {
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-option {
+  animation: fadeIn 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.payment-option:nth-child(1) { animation-delay: 0.05s; }
+.payment-option:nth-child(2) { animation-delay: 0.1s; }
+.payment-option:nth-child(3) { animation-delay: 0.15s; }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
