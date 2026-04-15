@@ -357,70 +357,29 @@ export default {
       
       for (const field of nameFields) {
         if (!field.value || !nameRegex.test(field.value)) {
-          this.error = `${field.name} mezőben csak betűk és kötőjel használható!`
+          this.showAlert({
+            message: `${field.name} mezőben csak betűk és kötőjel használható!`,
+            type: 'error'
+          })
           return
-      }
-
-      try {
-        console.log('Loading cities for county ID:', this.form.county_id)
-        const response = await axios.get(`/cities/by-countyReg/${this.form.county_id}`)
-        console.log('Raw cities response:', response.data)
-        
-        let responseData = response.data
-        
-        if (typeof responseData === 'string') {
-          console.log('Response is string, cleaning BOM...')
-          responseData = responseData.replace(/^\uFEFF/, '')
-          responseData = JSON.parse(responseData)
-        } else if (typeof responseData === 'object') {
-          const jsonString = JSON.stringify(responseData)
-          if (jsonString.charCodeAt(0) === 0xFEFF) {
-            console.log('BOM found in object, cleaning...')
-            const cleanString = jsonString.replace(/^\uFEFF/, '')
-            responseData = JSON.parse(cleanString)
-          }
         }
-        
-        console.log('Cleaned response data:', responseData)
-        
-        if (responseData.success) {
-          this.cities = responseData.data
-          console.log('Cities loaded successfully:', this.cities.length)
-          
-          if (this.form.city_id) {
-            const cityExists = this.cities.some(city => city.id == this.form.city_id)
-            if (!cityExists) {
-              this.form.city_id = null
-            }
-          }
-        } else {
-          console.error('Cities API returned success=false:', responseData.message)
-          this.cities = []
-        }
-      } catch (error) {
-        console.error('Város betöltési hiba:', error)
-        if (error.response) {
-          console.error('Response status:', error.response.status)
-          console.error('Response data:', error.response.data)
-        }
-        this.cities = []
-        this.showAlert({
-          message: 'Hiba történt a városok betöltésekor',
-          type: 'error'
-        })
       }
       
       // Harmadik név ellenőrzése (ha van kitöltve)
       if (this.form.thirdName && !nameRegex.test(this.form.thirdName)) {
-        this.error = 'Harmadik név mezőben csak betűk és kötőjel használható!'
+        this.showAlert({
+          message: 'Harmadik név mezőben csak betűk és kötőjel használható!',
+          type: 'error'
+        })
         return
       }
 
-      // Email végződés ellenőrzés
+      // Email végződés ellenőrzés - JAVÍTVA
+      // Ez az ellenőrzés biztosítja, hogy az email @iskola.hu-ra végződjön
       const emailRegex = /@iskola\.hu$/
       if (!emailRegex.test(this.form.email)) {
         this.showAlert({
-          message: 'Csak iskolai email cím fogadható el!',
+          message: 'Csak iskolai email cím fogadható el! (@iskola.hu végződéssel)',
           type: 'error'
         })
         return
@@ -467,7 +426,7 @@ export default {
         const response = await axios.post('/register', this.form)
         console.log('Registration response:', response.data)
         
-        this.success = response.data.message || 'Sikeres regisztráció!'
+
         
         // Űrlap alaphelyzetbe állítása
         this.form = {
@@ -504,7 +463,6 @@ export default {
         this.loading = false
       }
     }
-  }
   }
 }
 </script>
