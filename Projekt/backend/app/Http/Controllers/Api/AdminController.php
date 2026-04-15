@@ -49,8 +49,13 @@ class AdminController extends Controller
             // Rendezés
             $sortBy = $request->get('sort_by', 'id');
             $sortOrder = $request->get('sort_order', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            //$query->orderBy($sortBy, $sortOrder);
             
+            $query->orderBy('lastName', 'asc')
+              ->orderBy('firstName', 'asc');
+        
+            $users = $query->paginate(20);
+
             $users = $query->paginate($perPage);
             
             return response()->json([
@@ -377,6 +382,30 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Hiba történt a felhasználó törlése során'
+            ], 500);
+        }
+    }
+
+    public function removeRfidCard($userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            
+            // A helyes mezőnév: rfidCard_id (camelCase)
+            $user->rfidCard_id = null;
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'RFID kártya sikeresen eltávolítva'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('RFID kártya eltávolítási hiba: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba a kártya eltávolítása során: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -151,6 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [AdminController::class, 'getUsers']);
         Route::post('/users/bulk-status', [AdminController::class, 'bulkUpdateUserStatus']);
         Route::put('/users/{user}/status', [AdminController::class, 'updateUserStatus']);
+        Route::delete('/users/{user}/rfid/remove', [AdminController::class, 'removeRfidCard']);
 
         Route::get('/users/{user}', [AdminController::class, 'getUserDetails']);
         Route::put('/users/{user}', [AdminController::class, 'updateUser']);

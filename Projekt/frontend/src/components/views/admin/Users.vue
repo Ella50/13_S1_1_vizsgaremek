@@ -251,17 +251,25 @@
             <div class="rfid-section">
               <div class="rfid-row">
                 <div>
-                    <div>
-                      <strong>RFID kártya: </strong>
-                      <span v-if="editUser.rfid_card?.cardNumber">
-                        {{ editUser.rfid_card.cardNumber }}
-                      </span>
-                      <span v-else class="text-muted">Nincs hozzárendelve</span>
-                    </div>
-                  </div>
+                  <strong>RFID kártya: </strong>
+                  <span v-if="editUser.rfid_card?.cardNumber">
+                    {{ editUser.rfid_card.cardNumber }}
+                  </span>
+                  <span v-else class="text-muted">Nincs hozzárendelve</span>
+                </div>
+                <div class="rfid-buttons">
                   <button type="button" class="btn-rfid" @click="openCardAssignModal">
                     Kártya hozzáadása
-                </button>
+                  </button>
+                  <button 
+                    v-if="editUser.rfid_card?.cardNumber" 
+                    type="button" 
+                    class="btn-rfid-remove" 
+                    @click="removeRfidCard"
+                  >
+                    Kártya törlése
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -603,12 +611,63 @@ export default {
       if (!confirmed) return
       
       try {
+        // Ha felfüggesztés, először töröljük a kártyát
+        if (newUserStatus === 'Felfüggesztett') {
+          try {
+            // Kérjük le a felhasználó adatait
+            const userResponse = await AuthService.api.get(`/admin/users/${userId}`)
+            if (userResponse.data.success && userResponse.data.data.rfid_card) {
+              // Töröljük a kártyát
+              await AuthService.api.delete(`/admin/users/${userId}/rfid/remove`)
+              addAlert({ message: 'RFID kártya eltávolítva', type: 'info' })
+            }
+          } catch (rfidError) {
+            console.error('RFID törlési hiba:', rfidError)
+            // Nem állítjuk meg a státusz frissítést, ha a kártya törlése nem sikerül
+          }
+        }
+        
+        // Státusz frissítése
         await AuthService.api.put(`/admin/users/${userId}/status`, { userStatus: newUserStatus })
         const userIndex = this.users.data.findIndex(u => u.id === userId)
-        if (userIndex !== -1) this.users.data[userIndex].userStatus = newUserStatus
+        if (userIndex !== -1) {
+          this.users.data[userIndex].userStatus = newUserStatus
+          // Ha felfüggesztett, töröljük a kártya adatokat a lokális listából is
+          if (newUserStatus === 'Felfüggesztett') {
+            this.users.data[userIndex].rfid_card = null
+          }
+        }
         addAlert({ message: `Felhasználó státusza frissítve: ${newUserStatus}`, type: 'success' })
       } catch (error) {
         addAlert({ message: error.response?.data?.message || 'Hiba történt a státusz frissítése során', type: 'error' })
+      }
+    },
+
+    async removeRfidCard() {
+      const confirmed = await showConfirm({ 
+        message: 'Biztosan eltávolítja az RFID kártyát a felhasználótól?' 
+      })
+      if (!confirmed) return
+      
+      try {
+        const response = await AuthService.api.delete(`/admin/users/${this.editUser.id}/rfid/remove`)
+        if (response.data.success) {
+          this.editUser.rfid_card = null
+          addAlert({ message: 'RFID kártya sikeresen eltávolítva', type: 'success' })
+          
+          // Frissítsük a listában is
+          const userIndex = this.users.data.findIndex(u => u.id === this.editUser.id)
+          if (userIndex !== -1) {
+            this.users.data[userIndex].rfid_card = null
+          }
+        } else {
+          addAlert({ message: response.data.message || 'Hiba történt a kártya eltávolítása során', type: 'error' })
+        }
+      } catch (error) {
+        addAlert({ 
+          message: error.response?.data?.message || 'Hiba történt a kártya eltávolítása során', 
+          type: 'error' 
+        })
       }
     },
 
@@ -630,15 +689,60 @@ export default {
       const confirmed = await showConfirm({ message: 'Biztos?' })
       if (!confirmed) return
       
+      const newStatus = isAvailable ? 'Aktív' : 'Inaktív'
+      
       try {
+        // Ha inaktiválás (ami itt Inaktív státusz), de ha Felfüggesztett kell, akkor módosítsd
+        // Jelenleg ez csak Aktív/Inaktív között vált
+        
         await AuthService.api.post('/admin/users/bulk-status', {
           user_ids: this.selectedUsers,
-          userStatus: isAvailable ? 'Aktív' : 'Inaktív'
+          userStatus: newStatus
         })
         await this.fetchUsers()
         this.clearSelection()
+        addAlert({ message: `${this.selectedUsers.length} felhasználó státusza frissítve`, type: 'success' })
       } catch (error) {
         addAlert({ message: 'Hiba történt a tömeges frissítés során', type: 'error' })
+      }
+    },
+
+    // Új metódus tömeges felfüggesztéshez (opcionális)
+    async bulkSuspendUsers() {
+      if (this.selectedUsers.length === 0) return
+      const confirmed = await showConfirm({ 
+        message: `Biztosan felfüggeszti ${this.selectedUsers.length} felhasználót?\n\nA felfüggesztéskor a hozzájuk tartozó RFID kártyák is törlődnek!` 
+      })
+      if (!confirmed) return
+      
+      this.loading = true
+      
+      try {
+        // Először töröljük a kártyákat
+        for (const userId of this.selectedUsers) {
+          try {
+            const userResponse = await AuthService.api.get(`/admin/users/${userId}`)
+            if (userResponse.data.success && userResponse.data.data.rfid_card) {
+              await AuthService.api.delete(`/admin/users/${userId}/rfid/remove`)
+            }
+          } catch (rfidError) {
+            console.error(`RFID törlési hiba a ${userId} felhasználónál:`, rfidError)
+          }
+        }
+        
+        // Majd frissítjük a státuszokat
+        await AuthService.api.post('/admin/users/bulk-status', {
+          user_ids: this.selectedUsers,
+          userStatus: 'Felfüggesztett'
+        })
+        
+        await this.fetchUsers()
+        this.clearSelection()
+        addAlert({ message: `${this.selectedUsers.length} felhasználó felfüggesztve`, type: 'success' })
+      } catch (error) {
+        addAlert({ message: 'Hiba történt a tömeges felfüggesztés során', type: 'error' })
+      } finally {
+        this.loading = false
       }
     },
 
@@ -1376,5 +1480,41 @@ export default {
     padding: 0.25rem 0.5rem;
     font-size: 0.7rem;
   }
+}
+
+.rfid-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-rfid {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #f0a24a;
+  color: #7b2c2c;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-rfid:hover {
+  background: #e5942c;
+}
+
+.btn-rfid-remove {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #dc3545;
+  color: white;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-rfid-remove:hover {
+  background: #c82333;
 }
 </style>
