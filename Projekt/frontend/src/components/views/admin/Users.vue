@@ -332,7 +332,10 @@ export default {
       },
       loading: false,
       error: '',
+
       currentPage: 1,
+      
+
       counties: [],
       citiesForCounty: [],
       showEditModal: false,
