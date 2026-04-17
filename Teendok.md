@@ -4,7 +4,15 @@
 - kód (async axios nem jó együtt) + tiszta kód
 - ÚJ tesztelések
 - TESZTELÉS ÚJRACSINÁLÁSA
-- 
+- transaction_id??
+
+## Dokumentációban:
++ Adatbázis: képek kicserélése
++ Algoritmusok: képek csere
++ a különböző felületeknél képek (navbar)
++
++
+
 
 ## Doucments
 - 
