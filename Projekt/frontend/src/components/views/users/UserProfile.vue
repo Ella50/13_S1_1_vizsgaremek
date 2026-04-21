@@ -246,7 +246,7 @@
                       </button>
                     </div>
                   </form>
-                  <div v-else-if="discountDocument?.isAccepted" class="doc-alert success">✅ Dokumentum elfogadva! A kedvezményed érvényes.</div>
+                  <div v-else-if="discountDocument?.isAccepted" class="doc-alert success">Dokumentum elfogadva! A kedvezményed érvényes.</div>
                 </div>
 
                 <!-- Cukorbetegség dokumentum -->

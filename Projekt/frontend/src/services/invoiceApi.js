@@ -40,12 +40,13 @@ export async function fetchInvoices() {
 
 export async function adminFetchInvoices(params) {
   try {
-    const { month, search, page, per_page } = params;
+    const { month, search, page, per_page, status } = params;
     const queryParams = new URLSearchParams();
     if (month) queryParams.append('month', month);
     if (search) queryParams.append('search', search);
     if (page) queryParams.append('page', page);
     if (per_page) queryParams.append('per_page', per_page);
+    if (status) queryParams.append('status', status);
     
     const response = await api.get(`/admin/invoices?${queryParams.toString()}`);
     return response.data;

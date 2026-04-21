@@ -58,11 +58,11 @@ class AdminInvoiceController extends Controller
                 $invoice = Invoice::create([
                     'user_id'        => $userId,
                     'invoiceNumber'  => $this->generateInvoiceNumber($monthStart),
-                    'billingMonth'   => $monthStart->toDateString(),  //első nap dátuma
+                    'billingMonth'   => $monthStart->toDateString(), 
                     'issueDate'      => now()->toDateString(),
                     'dueDate'        => now()->addDays(8)->toDateString(),
                     'totalAmount'    => $total,
-                    'paymentMethod'  => 'Bankkártya',                 //default
+                    'paymentMethod'  => 'Bankkártya',                
                     'invoiceStatus'  => 'Generálva',
                 ]);
 
@@ -93,26 +93,25 @@ class AdminInvoiceController extends Controller
 
     public function index(Request $request)
     {
+Log::info('AdminInvoiceController index called', $request->all());
         $request->validate([
             'month' => ['nullable', 'date_format:Y-m'],
             'search' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'string', 'in:all,paid,unpaid'], 
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
         $perPage = $request->input('per_page', 25);
-
-
-
         $q = Invoice::query()->with('user');
 
-        // Hónap szűrés
+ 
         if ($request->filled('month')) {
-            $monthStart = Carbon::createFromFormat('Y-m', $request->month)->startOfMonth()->toDateString();
-            $q->whereDate('billingMonth', $monthStart);
+            $monthStart = Carbon::createFromFormat('Y-m', $request->month)->startOfMonth();
+            $q->whereYear('billingMonth', $monthStart->year)
+            ->whereMonth('billingMonth', $monthStart->month);
         }
 
-        // Keresés név vagy email alapján
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $q->whereHas('user', function($query) use ($searchTerm) {
@@ -122,7 +121,16 @@ class AdminInvoiceController extends Controller
             });
         }
 
-         $invoices = $q->orderByDesc('issueDate')
+
+        $status = $request->input('status', 'all');
+        if ($status === 'paid') {
+            $q->where('invoiceStatus', 'Fizetve');
+        } elseif ($status === 'unpaid') {
+            $q->whereIn('invoiceStatus', ['Generálva', 'Függőben lévő', 'Lejárt']);
+        }
+
+
+        $invoices = $q->orderByDesc('issueDate')
             ->orderByDesc('id')
             ->paginate($perPage);
 
@@ -191,17 +199,17 @@ class AdminInvoiceController extends Controller
             }
             
             $invoice->invoiceStatus = 'Fizetve';
-            $invoice->paidAt = now();  // paidAt, nem paid_at
+            $invoice->paidAt = now();  
             $invoice->save();
             
-            // Naplózás
+            /* 
             Log::info('Számla fizetettre állítva', [
                 'invoice_id' => $invoice->id,
                 'invoice_number' => $invoice->invoiceNumber,
                 'admin_id' => auth()->id()
-            ]);
+            ]);*/
             
-            // Frissített számla visszaadása a kapcsolatokkal
+   
             $invoice->load(['user', 'orders']);
             
             return response()->json([
@@ -242,11 +250,11 @@ class AdminInvoiceController extends Controller
             $invoice->paidAt = null;
             $invoice->save();
             
-            Log::info('Számla visszaállítva Generálva státuszra', [
+            /*Log::info('Számla visszaállítva Generálva státuszra', [
                 'invoice_id' => $invoice->id,
                 'invoice_number' => $invoice->invoiceNumber,
                 'admin_id' => auth()->id()
-            ]);
+            ]);*/
             
             $invoice->load(['user', 'orders']);
             

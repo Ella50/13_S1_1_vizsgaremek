@@ -23,57 +23,55 @@ class KitchenController extends Controller
     public function getMeals(Request $request)
     {
         try {
-            $query = Meal::query();
-            
-            // Keresés
-            if ($request->has('search') && !empty($request->search)) {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('mealName', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
-                });
+        $perPage = $request->get('per_page', 12);
+        $query = Meal::query();
+        
+        // Keresés
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('mealName', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        
+        // Kategória szűrés
+        if ($request->has('category') && !empty($request->category)) {
+            $query->where('mealType', $request->category);
+        }
+        
+        // Allergének betöltése, ha kérték
+        $withAllergens = $request->has('withAllergens') && $request->withAllergens === 'true';
+        
+        $query->with(['ingredients' => function($q) use ($withAllergens) {
+            $q->select([
+                'ingredients.id',
+                'ingredients.ingredientName',
+                'ingredients.ingredientType',
+                'ingredients.energy',
+                'ingredients.protein',
+                'ingredients.carbohydrate',
+                'ingredients.fat',
+                'ingredients.sodium',
+                'ingredients.sugar',
+                'ingredients.fiber',
+                'ingredients.isAvailable'
+            ]);
+            $q->withPivot('amount', 'unit');
+            if ($withAllergens) {
+                $q->with(['allergens' => function($allergenQuery) {
+                    $allergenQuery->select('id', 'allergenName', 'icon');
+                }]);
             }
-            
-            // Kategória szűrés
-            if ($request->has('category') && !empty($request->category)) {
-                $query->where('mealType', $request->category);
-            }
-            
-            // Allergének betöltése, ha kérték
-            $withAllergens = $request->has('withAllergens') && $request->withAllergens === 'true';
-            
-            // Összetevők betöltése ALLERGÉNEKKEL
-            $query->with(['ingredients' => function($q) use ($withAllergens) {
-                $q->select([
-                    'ingredients.id',
-                    'ingredients.ingredientName',
-                    'ingredients.ingredientType',
-                    'ingredients.energy',
-                    'ingredients.protein',
-                    'ingredients.carbohydrate',
-                    'ingredients.fat',
-                    'ingredients.sodium',
-                    'ingredients.sugar',
-                    'ingredients.fiber',
-                    'ingredients.isAvailable'
-                ]);
-                $q->withPivot('amount', 'unit');
-                
-                // Ha allergéneket is kérünk, betöltjük őket
-                if ($withAllergens) {
-                    $q->with(['allergens' => function($allergenQuery) {
-                        $allergenQuery->select('id', 'allergenName', 'icon');
-                    }]);
-                }
-            }]);
-            
-            // Rendezés
-            $query->orderBy('mealName');
-            
-            $meals = $query->get();
-            
-            // Átalakítás a Vue komponens elvárásainak megfelelően
-            $formattedMeals = $meals->map(function ($meal) {
+        }]);
+        
+        $query->orderBy('mealName');
+        
+        // Pagináció
+        $meals = $query->paginate($perPage);
+        
+        // Átalakítás a Vue komponens elvárásainak megfelelően (ugyanaz marad)
+        $formattedMeals = $meals->getCollection()->map(function ($meal) use ($withAllergens) {
                 // Alap adatok
                 $formattedMeal = [
                     'id' => $meal->id,
@@ -145,8 +143,13 @@ class KitchenController extends Controller
             
             return response()->json([
                 'success' => true,
-                'meals' => $formattedMeals,
-                'count' => $formattedMeals->count(),
+                'data' => $formattedMeals,         
+                'current_page' => $meals->currentPage(),
+                'last_page' => $meals->lastPage(),
+                'per_page' => $meals->perPage(),
+                'total' => $meals->total(),
+                'from' => $meals->firstItem(),
+                'to' => $meals->lastItem(),
                 'message' => 'Ételek sikeresen betöltve.'
             ]);
             
@@ -1015,7 +1018,7 @@ private function getAllergenIconUrl($iconPath)
     
     // Debug: nézzük meg van-e kapcsolat
     $mealsCount = $ingredient->meals()->count();
-    \Log::info('Delete ingredient check', [
+    Log::info('Delete ingredient check', [
         'ingredient_id' => $id,
         'ingredient_name' => $ingredient->ingredientName,
         'meals_count' => $mealsCount,
@@ -1042,7 +1045,7 @@ private function getAllergenIconUrl($iconPath)
         ]);
 
     } catch (\Exception $e) {
-        \Log::error('Delete ingredient error: ' . $e->getMessage());
+        Log::error('Delete ingredient error: ' . $e->getMessage());
         return response()->json([
             'success' => false,
             'message' => 'Hiba történt a hozzávaló törlése során: ' . $e->getMessage()
