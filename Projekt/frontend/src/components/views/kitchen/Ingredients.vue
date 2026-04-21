@@ -121,23 +121,15 @@
           </table>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="ingredients.length > 0" class="pagination">
-          <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="btn-pagination">Előző</button>
-          <span class="pagination-info">{{ currentPage }} / {{ lastPage }} oldal (Összesen: {{ totalItems }} hozzávaló)</span>
-          <button @click="changePage(currentPage + 1)" :disabled="currentPage === lastPage" class="btn-pagination">Következő</button>
-        </div>
-
-        <div v-if="ingredients.length > 0" class="per-page-selector">
-          <label>Találatok oldalanként:
-            <select v-model="perPage" @change="changePerPage">
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </label>
-        </div>
+        <!-- Pagination komponens -->
+        <Pagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :total="total"
+          :per-page="perPage"
+          @update:page="changePage"
+          @update:perPage="changePerPage"
+        />
       </div>
     </div>
 
@@ -341,7 +333,6 @@
             <div class="error-content">
               <p class="error-title">Nem törölhető!</p>
               <p class="error-message">{{ deleteError }}</p>
-
             </div>
           </div>
 
@@ -364,6 +355,13 @@ import axios from 'axios'
 import AuthService from '../../../services/AuthService'
 import { addAlert } from '../../auth/AppAlert.vue'
 import { showConfirm } from '../../auth/AppConfirm.vue'
+import Pagination from '../../layout/Pagination.vue'
+
+// Pagination állapotok
+const currentPage = ref(1)
+const lastPage = ref(1)
+const total = ref(0)
+const perPage = ref(25)
 
 // Reaktív állapotok
 const ingredients = ref([])
@@ -377,14 +375,7 @@ const selectedIngredients = ref([])
 const ingredientToDelete = ref(null)
 const ingredientToEdit = ref(null)
 const deleteError = ref('')
-
 const allergens = ref([])
-
-const currentPage = ref(1)
-const lastPage = ref(1)
-const totalItems = ref(0)
-const perPage = ref(25)
-
 const searchTimeout = ref(null)
 
 // Szűrők
@@ -507,7 +498,7 @@ async function loadIngredients() {
       ingredients.value = data.data || []
       currentPage.value = data.current_page || 1
       lastPage.value = data.last_page || 1
-      totalItems.value = data.total || 0
+      total.value = data.total || 0
     } else if (Array.isArray(data)) {
       ingredients.value = data
     } else {
@@ -529,8 +520,9 @@ function changePage(page) {
   window.scrollTo(0, 0)
 }
 
-function changePerPage() {
-  currentPage.value = 1
+function changePerPage(newPerPage) {
+  perPage.value = newPerPage
+  currentPage.value = 1  // első oldalra ugrás
   loadIngredients()
 }
 
@@ -669,7 +661,7 @@ async function saveNewIngredient() {
   try {
     const data = { ...newForm.value }
     
-    const response = await axios.post('/kitchen/ingredients', data)
+    await axios.post('/kitchen/ingredients', data)
     
     await loadIngredients()
     closeCreateModal()
@@ -696,9 +688,8 @@ async function deleteIngredient() {
   deleteError.value = ''
   
   try {
-    const response = await axios.delete(`/kitchen/ingredients/${ingredientToDelete.value.id}`)
+    await axios.delete(`/kitchen/ingredients/${ingredientToDelete.value.id}`)
     
-    // Ha eljutottunk ide, a kérés sikeres volt (2xx státuszkód)
     await loadIngredients()
     closeDeleteModal()
     addAlert({ message: 'Hozzávaló sikeresen törölve!', type: 'success' })
@@ -707,7 +698,6 @@ async function deleteIngredient() {
     console.error('Hiba a törlés során:', error)
     
     if (error.response?.status === 404) {
-      // Már nem létezik, frissítjük a listát
       await loadIngredients()
       closeDeleteModal()
       addAlert({ message: 'Hozzávaló már nem létezik.', type: 'info' })
@@ -771,6 +761,7 @@ function clearSelection() {
   selectedIngredients.value = []
 }
 </script>
+
 
 <style scoped>
 /* Fő konténer */
@@ -1076,63 +1067,6 @@ function clearSelection() {
   background: #ffcdd2;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
-  margin-top: 2rem;
-  padding: 1rem;
-}
-
-.btn-pagination {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;
-}
-
-.btn-pagination:hover:not(:disabled) {
-  background: #f0a24a;
-  color: white;
-  border-color: #f0a24a;
-}
-
-.btn-pagination:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  color: #666;
-  font-size: 0.85rem;
-}
-
-.per-page-selector {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-}
-
-.per-page-selector label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #666;
-  font-size: 0.8rem;
-}
-
-.per-page-selector select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-}
 
 /* Modal stílusok */
 .modal-overlay {

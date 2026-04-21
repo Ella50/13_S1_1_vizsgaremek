@@ -136,18 +136,15 @@
           </table>
         </div>
 
-        <div v-if="users.data && users.data.length > 0" class="pagination">
-          <button @click="changePage(users.current_page - 1)" :disabled="users.current_page === 1" class="btn-pagination">
-            Előző
-          </button>
-          <span class="pagination-info">
-            {{ users.current_page }} / {{ users.last_page }} oldal
-            ({{ users.total }} felhasználó)
-          </span>
-          <button @click="changePage(users.current_page + 1)" :disabled="users.current_page === users.last_page" class="btn-pagination">
-            Következő
-          </button>
-        </div>
+        <Pagination
+  :current-page="currentPage"
+  :last-page="lastPage"
+  :total="total"
+  :per-page="perPage"
+  :per-page-options="[10, 25, 50, 100]"
+  @update:page="changePage"
+  @update:perPage="changePerPage"
+/>
       </div>
     </div>
 
@@ -318,8 +315,10 @@
 import AuthService from '../../../services/authService'
 import { addAlert } from '../../auth/AppAlert.vue'
 import { showConfirm } from '../../auth/AppConfirm.vue' 
+import Pagination from '../../layout/Pagination.vue';
 
 export default {
+  components: { Pagination },
   data() {
     return {
       users: { data: [] },
@@ -334,6 +333,9 @@ export default {
       error: '',
 
       currentPage: 1,
+      lastPage: 1,
+      total: 0,
+      perPage: 25,
       
 
       counties: [],
@@ -418,8 +420,10 @@ export default {
       try {
         const params = {
           page: this.currentPage,
+          per_page: this.perPage,
           search: this.search,
-          ...this.filters
+          userType: this.filters.userType,
+          userStatus: this.filters.userStatus,
         }
         Object.keys(params).forEach(key => {
           if (params[key] === '' || params[key] === null) delete params[key]
@@ -435,6 +439,9 @@ export default {
         
         if (responseData.success && responseData.data) {
           this.users = responseData
+          this.currentPage = response.data.current_page;
+          this.lastPage = response.data.last_page;
+          this.total = response.data.total;
         } else {
           this.error = 'Érvénytelen válasz formátum'
         }
@@ -675,10 +682,15 @@ export default {
     },
 
     changePage(page) {
-      if (page < 1 || page > this.users.last_page) return
-      this.currentPage = page
-      this.fetchUsers()
-      window.scrollTo(0, 0)
+      this.currentPage = page;
+      this.fetchUsers();
+      window.scrollTo(0, 0);
+    },
+
+    changePerPage(newPerPage) {
+      this.perPage = newPerPage;
+      this.currentPage = 1; 
+      this.fetchUsers();
     },
 
     formatDate(dateString) {
@@ -1070,39 +1082,6 @@ export default {
   color: #522a2e;
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
-  margin-top: 2rem;
-  padding: 1rem;
-}
-
-.btn-pagination {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-pagination:hover:not(:disabled) {
-  background: #f0a24a;
-  color: white;
-  border-color: #f0a24a;
-}
-
-.btn-pagination:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  color: #666;
-  font-size: 0.85rem;
-}
 
 /* Bulk actions */
 .bulk-actions {

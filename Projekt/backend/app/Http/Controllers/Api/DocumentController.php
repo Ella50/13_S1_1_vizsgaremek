@@ -30,10 +30,18 @@ class DocumentController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'string', 'in:pending,accepted,all'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $perPage = $request->input('per_page', 25);
         $query = Document::with('user:id,firstName,lastName,email');
-        
+
         // Keresés név vagy email alapján
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->whereHas('user', function($q) use ($searchTerm) {
                 $q->where('firstName', 'like', "%{$searchTerm}%")
@@ -41,17 +49,38 @@ class DocumentController extends Controller
                 ->orWhere('email', 'like', "%{$searchTerm}%");
             });
         }
-        
-        $documents = $query->latest()->get();
-        
-        foreach ($documents as $document) {
+
+        // Státusz szűrés (frontend: 'pending' = függőben, 'accepted' = elfogadott)
+        $status = $request->input('status', 'all');
+        if ($status === 'pending') {
+            $query->where('isAccepted', false);
+        } elseif ($status === 'accepted') {
+            $query->where('isAccepted', true);
+        }
+        // 'all' esetén nincs szűrés
+
+        // Csak aktív dokumentumok
+        $query->where('isActive', true);
+
+        $documents = $query->latest()->paginate($perPage);
+
+        // Formázás (type, formatted_size)
+        $documents->getCollection()->transform(function ($document) {
             $document->type = self::TYPE_MAPPING_REVERSE[$document->documentType] ?? $document->documentType;
             $document->formatted_size = $document->formattedSize;
             $document->original_name = $document->originalName;
-        }
-        
+            return $document;
+        });
+
         return response()->json([
-            'documents' => $documents
+            'success' => true,
+            'data' => $documents->items(),
+            'current_page' => $documents->currentPage(),
+            'last_page' => $documents->lastPage(),
+            'per_page' => $documents->perPage(),
+            'total' => $documents->total(),
+            'from' => $documents->firstItem(),
+            'to' => $documents->lastItem(),
         ]);
     }
     /**

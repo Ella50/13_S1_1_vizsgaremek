@@ -1,7 +1,6 @@
 ## Egyéb:
 - optimalizálás: app.vue-ba table, keresés, modal, allergenBadges, pagináció, datePicker stílusok +  varcolor
-- ha user felfüggesztve, akkor a kártya törlésre kerüljön
-- kód (async axios nem jó együtt) + tiszta kód
+- kód (async axios) + tiszta kód
 - ÚJ tesztelések
 - TESZTELÉS ÚJRACSINÁLÁSA
 - transaction_id??
@@ -15,12 +14,14 @@
 
 
 ## Doucments
-- 
+- dokumentum elfogadása alert
+- alert ha elutasítva, törölve
+- alapból a függőben léőv legyen beállítva
 
 ## PersonalOrders.vue
 
 ## PersonalInvoices.vue
-- pagináció?
+
 
 ## AdminInvoice.vue
 -  pagináció van, nem jó (többadat?)

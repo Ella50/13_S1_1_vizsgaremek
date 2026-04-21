@@ -21,17 +21,21 @@
           <div class="filter-tabs">
             <button 
               :class="['filter-tab', { active: activeFilter === 'pending' }]"
-              @click="activeFilter = 'pending'"
+              @click="setFilter('pending')"
             >
-              Függőben lévők
-  
+              Függőben lévő
             </button>
             <button 
               :class="['filter-tab', { active: activeFilter === 'accepted' }]"
-              @click="activeFilter = 'accepted'"
+              @click="setFilter('accepted')"
             >
-              Elfogadottak
-
+              Elfogadva
+            </button>
+            <button 
+              :class="['filter-tab', { active: activeFilter === 'all' }]"
+              @click="setFilter('all')"
+            >
+              Összes
             </button>
           </div>
         </div>
@@ -72,12 +76,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="filteredDocuments.length === 0">
+              <tr v-if="documents.length === 0">
                 <td colspan="6" class="empty-row">
                   Nincsenek megjeleníthető dokumentumok
                 </td>
               </tr>
-              <tr v-for="doc in filteredDocuments" :key="doc.id">
+              <tr v-for="doc in documents" :key="doc.id">
                 <td>
                   <div class="user-info">
                     <strong>{{ doc.user?.firstName }} {{ doc.user?.lastName }}</strong>
@@ -128,6 +132,16 @@
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :total="total"
+          :per-page="perPage"
+          :per-page-options="[10, 25, 50, 100]"
+          @update:page="changePage"
+          @update:perPage="changePerPage"
+        />
       </div>
     </div>
   </div>
@@ -135,17 +149,28 @@
 
 <script>
 import axios from 'axios';
+import Pagination from '../../layout/Pagination.vue';
 
 export default {
   name: 'Documents',
+
+  components: {
+    Pagination
+  },
   data() {
     return {
       documents: [],
       isLoading: true,
       error: '',
       successMessage: '',
-      activeFilter: 'pending', // pending vagy accepted
-      searchQuery: '' 
+      activeFilter: 'pending', // pending, accepted, all
+      searchQuery: '' ,
+      searchTimeout: null,
+
+      currentPage: 1,
+      lastPage: 1,
+      total: 0,
+      perPage: 25,
     };
   },
 
@@ -155,81 +180,50 @@ export default {
 
   computed: {
     
-    filteredDocuments() {
-      let filtered = this.documents.filter(doc => doc.isActive);
-      
-      if (this.activeFilter === 'pending') {
-        filtered = filtered.filter(doc => !doc.isAccepted);
-      } else if (this.activeFilter === 'accepted') {
-        filtered = filtered.filter(doc => doc.isAccepted);
-      }
-      
-      return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
+  
   },
 
-  watch: {
-    searchQuery: {
-      handler() {
-        this.loadDocuments();
-      },
-    } 
-  },
+
 
   methods: {
     async loadDocuments() {
-      this.isLoading = true;
-      this.error = '';
+  this.isLoading = true;
+  this.error = '';
 
-      try {
-        const response = await axios.get('/admin/documents',{
-          params: {
-          search: this.searchQuery 
-          }
-        });
-        let data = response.data;
-
-        if (typeof data === 'string') {
-          if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
-            data = data.slice(1);
-          }
-          try {
-            data = JSON.parse(data);
-          } catch (parseError) {
-            console.error('JSON parse error:', parseError);
-            this.error = 'Hiba történt az adatok feldolgozása során.';
-            return;
-          }
-        }
-
-        let loadedDocs = [];
-        if (data && typeof data === 'object') {
-          if (data.documents && Array.isArray(data.documents)) {
-            loadedDocs = data.documents;
-          } else if (Array.isArray(data)) {
-            loadedDocs = data;
-          }
-        }
-
-        this.documents = loadedDocs.map(doc => ({
-          id: doc.id,
-          type: doc.type,
-          fileName: doc.fileName || doc.fileName,
-          created_at: doc.created_at,
-          formatted_size: doc.formatted_size || doc.formattedSize,
-          filePath: doc.filePath,
-          mimeType: doc.mimeType,
-          isActive: doc.isActive,
-          isAccepted: doc.isAccepted || false,
-          user: doc.user
-        }));
-      } catch (error) {
-        console.error('Error loading documents:', error);
-        this.error = 'Hiba történt a dokumentumok betöltése során.';
-      } finally {
-        this.isLoading = false;
+  try {
+    const params = {
+      page: this.currentPage,
+      per_page: this.perPage,
+      search: this.searchQuery,
+      status: this.activeFilter,  // 'pending', 'accepted', 'all'
+    };
+    const response = await axios.get('/admin/documents', { params });
+    
+    let data = response.data;
+    // BOM kezelés (ha szükséges)
+    if (typeof data === 'string') {
+      if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 65279) {
+        data = data.slice(1);
       }
-    },
+      data = JSON.parse(data);
+    }
+
+    if (data.success) {
+      this.documents = data.data || [];
+      this.currentPage = data.current_page || 1;
+      this.lastPage = data.last_page || 1;
+      this.total = data.total || 0;
+      this.perPage = data.per_page || 25;
+    } else {
+      this.error = 'Hiba történt a dokumentumok betöltése során.';
+    }
+  } catch (error) {
+    console.error('Error loading documents:', error);
+    this.error = 'Hiba történt a dokumentumok betöltése során.';
+  } finally {
+    this.isLoading = false;
+  }
+},
 
     async downloadDocument(doc) {
       try {
@@ -315,7 +309,34 @@ export default {
     showError(message) {
       this.error = message;
       setTimeout(() => { this.error = ''; }, 5000);
-    }
+    },
+     changePage(page) {
+    if (page < 1 || page > this.lastPage) return;
+    this.currentPage = page;
+    this.loadDocuments();
+    window.scrollTo(0, 0);
+  },
+
+  changePerPage(newPerPage) {
+    this.perPage = newPerPage;
+    this.currentPage = 1;
+    this.loadDocuments();
+  },
+
+  onSearchInput() {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage = 1;
+      this.loadDocuments();
+    }, 300);
+  },
+
+  // Szűrő váltás
+  setFilter(filter) {
+    this.activeFilter = filter;
+    this.currentPage = 1;
+    this.loadDocuments();
+  },
   }
 };
 </script>
@@ -496,13 +517,13 @@ export default {
 }
 
 .type-discount {
-  background: #d4edda;
-  color: #155724;
+  background: #d2ecd0;
+  color: #324436;
 }
 
 .type-diabetes {
-  background: #fff3cd;
-  color: #856404;
+  background: #beedf3;
+  color: #0e3149;
 }
 
 .file-info {

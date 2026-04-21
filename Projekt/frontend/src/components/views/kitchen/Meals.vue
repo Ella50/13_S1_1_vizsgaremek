@@ -109,6 +109,15 @@
             </div>
           </div>
         </div>
+          <Pagination
+            :current-page="currentPage"
+            :last-page="lastPage"
+            :total="total"
+            :per-page="perPage"
+            :per-page-options="[6, 12, 24, 48]"
+            @update:page="changePage"
+            @update:perPage="changePerPage"
+          />
       </div>
     </div>
 
@@ -705,7 +714,11 @@
 <script>
 import AuthService from '../../../services/authService'
 
+import Pagination from '../../layout/Pagination.vue'
+
 export default {
+
+  components: { Pagination },
   data() {
     return {
       meals: [],
@@ -753,7 +766,12 @@ export default {
       confirmVisible: false,
       confirmMessage: '',
       confirmTitle: '',
-      confirmResolver: null
+      confirmResolver: null,
+
+      currentPage: 1,
+      lastPage: 1,
+      total: 0,
+      perPage: 12,
     }
   },
   
@@ -875,16 +893,22 @@ export default {
       this.error = ''
       
       try {
-        const params = {}
+        const params = {
+          page: this.currentPage,
+          per_page: this.perPage,
+          withAllergens: true,
+          _t: Date.now()
+        }
         if (this.search) params.search = this.search
         if (this.selectedCategory) params.category = this.selectedCategory
-        params.withAllergens = true
-        params._t = Date.now()
         
         const response = await AuthService.api.get('/kitchen/meals', { params })
         
         if (response.data.success) {
-          this.meals = response.data.meals || []
+          this.meals = response.data.data || []
+          this.currentPage = response.data.current_page || 1
+          this.lastPage = response.data.last_page || 1
+          this.total = response.data.total || 0
         } else {
           this.error = response.data.message || 'Hiba történt'
         }
@@ -900,6 +924,19 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    changePage(page) {
+      if (page < 1 || page > this.lastPage) return
+      this.currentPage = page
+      this.fetchMeals()
+      window.scrollTo(0, 0)
+    },
+    
+    changePerPage(newPerPage) {
+      this.perPage = newPerPage
+      this.currentPage = 1
+      this.fetchMeals()
     },
 
     async viewIngredients(meal) {

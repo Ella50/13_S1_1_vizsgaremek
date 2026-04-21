@@ -5,19 +5,43 @@
         <h1 class="title">Számlák kezelése</h1>
 
         <div class="header-controls">
-          <div class="search-box">
-            <input 
-              type="text" 
-              v-model="searchQuery" 
-              placeholder="Keresés név vagy email alapján..."
-              class="search-input"
-              maxlength="255" 
-              @input="onSearchInput"
+         
+            <div class="search-box">
+              <input 
+                type="text" 
+                v-model="searchQuery" 
+                placeholder="Keresés név vagy email alapján..."
+                class="search-input"
+                maxlength="255" 
+                @input="onSearchInput"
+              >
+              <span class="search-icon">🔍</span>
+            </div>
+
+   
+          <div class="filter-tabs">
+              <button 
+              :class="['filter-tab', { active: activeStatusFilter === 'unpaid' }]"
+              @click="setStatusFilter('unpaid')"
             >
-            <span class="search-icon">🔍</span>
+              Függőben lévő
+            </button>
+           <button 
+              :class="['filter-tab', { active: activeStatusFilter === 'all' }]"
+              @click="setStatusFilter('all')"
+            >
+              Összes
+            </button>
+            <button 
+              :class="['filter-tab', { active: activeStatusFilter === 'paid' }]"
+              @click="setStatusFilter('paid')"
+            >
+              Fizetve
+            </button>
+
           </div>
 
-          <div class="toolbar">
+           <div class="toolbar">
             <div class="form-group">
               <input type="month" v-model="billingMonth" class="form-control" />
             </div>
@@ -30,6 +54,7 @@
               {{ generating ? "Generálás..." : "Számlák generálása" }}
             </button>
           </div>
+        
         </div>
       </div>
 
@@ -45,7 +70,7 @@
       <div v-else>
 
 
-        <div v-if="paginatedRows.length === 0" class="empty-state">
+        <div v-if="rows.length === 0" class="empty-state">
           Nincs találat erre a hónapra.
         </div>
 
@@ -63,7 +88,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="inv in paginatedRows" :key="inv.id">
+              <tr v-for="inv in rows" :key="inv.id">
                 <td>
                   <div class="user-info">
                     <div class="user-name">
@@ -113,46 +138,22 @@
             </tbody>
           </table>
         </div>
-                </div>
-        <!-- Pagináció -->
-        <div v-if="pagination.last_page > 1" class="pagination">
-          <button 
-            @click="changePage(pagination.current_page - 1)" 
-            :disabled="pagination.current_page === 1"
-            class="btn-pagination"
-          >
-            Előző
-          </button>
-          
-          <span class="pagination-info">
-            {{ pagination.current_page }} / {{ pagination.last_page }} oldal
-            ({{ pagination.total }} számla)
-          </span>
-          
-          <button 
-            @click="changePage(pagination.current_page + 1)" 
-            :disabled="pagination.current_page === pagination.last_page"
-            class="btn-pagination"
-          >
-            Következő
-          </button>
-        </div>
+
+        <Pagination
+          :current-page="currentPage"
+          :last-page="lastPage"
+          :total="total"
+          :per-page="perPage"
+          :per-page-options="[10, 25, 50, 100]"
+          @update:page="changePage"
+          @update:perPage="changePerPage"
+        />
+
+      </div>
 
 
 
 
-        <!-- Sorok száma választó -->
-        <div v-if="rows.length" class="per-page-selector">
-          <label>
-            Sorok száma oldalanként:
-            <select v-model="perPage" @change="changePerPage">
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </label>
-        </div>
 
       <!-- MODAL -->
       <div v-if="selected" class="modal-overlay" @click.self="close">
@@ -334,6 +335,8 @@ import {
   adminMarkInvoiceUnpaid
 } from "@/services/invoiceApi";
 
+import Pagination from '../../layout/Pagination.vue';
+
 const loading = ref(false);
 const generating = ref(false);
 const error = ref("");
@@ -347,16 +350,10 @@ const searchQuery = ref("");
 const searchTimeout = ref(null);
 
 // Pagináció állapotok
-const currentPage = ref(1);
-const perPage = ref(25);
-const pagination = ref({
-  current_page: 1,
-  last_page: 1,
-  per_page: 25,
-  total: 0,
-  from: 0,
-  to: 0
-});
+const currentPage = ref(1)
+const lastPage = ref(1)
+const total = ref(0)
+const perPage = ref(25)
 
 // Alert állapotok
 const alertVisible = ref(false);
@@ -391,35 +388,13 @@ const paymentMethods = [
   { value: 'banki utalás', label: 'Banki utalás'}
 ];
 
-// Látható oldalszámok
-const visiblePages = computed(() => {
-  const current = pagination.value.current_page;
-  const last = pagination.value.last_page;
-  const delta = 2;
-  const range = [];
-  const rangeWithDots = [];
-  let l;
+const activeStatusFilter = ref('all')
 
-  for (let i = 1; i <= last; i++) {
-    if (i === 1 || i === last || (i >= current - delta && i <= current + delta)) {
-      range.push(i);
-    }
-  }
-
-  range.forEach((i) => {
-    if (l) {
-      if (i - l === 2) {
-        rangeWithDots.push(l + 1);
-      } else if (i - l !== 1) {
-        rangeWithDots.push('...');
-      }
-    }
-    rangeWithDots.push(i);
-    l = i;
-  });
-
-  return rangeWithDots;
-});
+function setStatusFilter(status) {
+  activeStatusFilter.value = status
+  currentPage.value = 1  
+  load()
+}
 
 // Alert metódusok
 function showAlert({ message, type = 'success', title = '' }) {
@@ -465,106 +440,123 @@ function confirmCancel() {
 }
 
 function changePage(page) {
-  if (page < 1 || page > pagination.value.last_page) return;
-  currentPage.value = page;
-  pagination.value.current_page = page;
-  window.scrollTo(0, 0);
+  if (page < 1 || page > lastPage.value) return
+  currentPage.value = page
+  load()
+  window.scrollTo(0, 0)
 }
 
-function changePerPage() {
-  currentPage.value = 1;
-  const totalItems = rows.value.length;
-  pagination.value = {
-    current_page: 1,
-    last_page: Math.ceil(totalItems / perPage.value) || 1,
-    per_page: perPage.value,
-    total: totalItems,
-    from: 1,
-    to: Math.min(perPage.value, totalItems)
-  };
+function changePerPage(newPerPage) {
+  perPage.value = newPerPage
+  currentPage.value = 1
+  load()
 }
 
 
-async function load() {
-  loading.value = true;
-  error.value = "";
-  try {
-    const response = await adminFetchInvoices({
-      month: billingMonth.value,
-      search: searchQuery.value
-    });
 
-    let invoiceData = [];
+  async function load() {
+      console.log('activeStatusFilter.value:', activeStatusFilter.value);
+    loading.value = true
+    error.value = ""
+    try {
+      const params = {
+        month: billingMonth.value,
+        search: searchQuery.value,
+        page: currentPage.value,
+        per_page: perPage.value,
+        status: activeStatusFilter.value 
+      }
+       console.log('Sending params:', params);
+      const response = await adminFetchInvoices(params)
 
-    if (typeof response === 'string') {
-      try {
-        const cleanJson = response.replace(/^\uFEFF/, '');
-        const parsed = JSON.parse(cleanJson);
-        if (parsed?.invoices?.data) {
-          invoiceData = parsed.invoices.data;
-        } else if (Array.isArray(parsed?.invoices)) {
-          invoiceData = parsed.invoices;
-        } else if (Array.isArray(parsed?.data)) {
-          invoiceData = parsed.data;
-        } else if (Array.isArray(parsed)) {
-          invoiceData = parsed;
+
+      let invoiceData = []
+      let paginationData = {}
+
+      if (typeof response === 'string') {
+        try {
+          const cleanJson = response.replace(/^\uFEFF/, '')
+          const parsed = JSON.parse(cleanJson)
+          if (parsed?.invoices?.data) {
+            invoiceData = parsed.invoices.data
+            paginationData = {
+              current_page: parsed.invoices.current_page,
+              last_page: parsed.invoices.last_page,
+              per_page: parsed.invoices.per_page,
+              total: parsed.invoices.total
+            }
+          } else if (Array.isArray(parsed?.invoices)) {
+            invoiceData = parsed.invoices
+          } else if (Array.isArray(parsed?.data)) {
+            invoiceData = parsed.data
+            paginationData = {
+              current_page: parsed.current_page,
+              last_page: parsed.last_page,
+              per_page: parsed.per_page,
+              total: parsed.total
+            }
+          } else if (Array.isArray(parsed)) {
+            invoiceData = parsed
+          }
+        } catch (e) {
+          console.error("JSON parse error:", e)
         }
-      } catch (e) {
-        console.error("JSON parse error:", e);
+      } else if (response && typeof response === 'object') {
+        if (response.invoices?.data) {
+          invoiceData = response.invoices.data
+          paginationData = {
+            current_page: response.invoices.current_page,
+            last_page: response.invoices.last_page,
+            per_page: response.invoices.per_page,
+            total: response.invoices.total
+          }
+        } else if (Array.isArray(response.invoices)) {
+          invoiceData = response.invoices
+        } else if (Array.isArray(response.data)) {
+          invoiceData = response.data
+          paginationData = {
+            current_page: response.current_page,
+            last_page: response.last_page,
+            per_page: response.per_page,
+            total: response.total
+          }
+        } else if (Array.isArray(response)) {
+          invoiceData = response
+        }
       }
-    } else if (response && typeof response === 'object') {
-      if (response.invoices?.data) {
-        invoiceData = response.invoices.data;
-      } else if (Array.isArray(response.invoices)) {
-        invoiceData = response.invoices;
-      } else if (Array.isArray(response.data)) {
-        invoiceData = response.data;
-      } else if (Array.isArray(response)) {
-        invoiceData = response;
-      }
-    }
 
-    rows.value = invoiceData;
-    
-    // Frontend pagináció beállítása
-    const totalItems = rows.value.length;
-    pagination.value = {
-      current_page: currentPage.value,
-      last_page: Math.ceil(totalItems / perPage.value) || 1,
-      per_page: perPage.value,
-      total: totalItems,
-      from: ((currentPage.value - 1) * perPage.value) + 1,
-      to: Math.min(currentPage.value * perPage.value, totalItems)
-    };
-    
-    console.log('Pagination:', pagination.value);
-    
-  } catch (e) {
-    error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor";
-    showAlert({
-      message: error.value,
-      type: 'error'
-    });
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
+      rows.value = invoiceData
+
+      // Ha van paginációs adat, használjuk, különben számoljuk (kompatibilitás miatt)
+      if (paginationData.last_page) {
+        currentPage.value = paginationData.current_page || 1
+        lastPage.value = paginationData.last_page || 1
+        total.value = paginationData.total || 0
+        perPage.value = paginationData.per_page || 25
+      } else {
+        // Frontend pagináció (ha a backend nem adja vissza) – de ezt nem javasolt
+        total.value = rows.value.length
+        lastPage.value = Math.ceil(total.value / perPage.value) || 1
+        currentPage.value = Math.min(currentPage.value, lastPage.value)
+      }
+
+    } catch (e) {
+      error.value = e?.response?.data?.message || "Hiba a számlák betöltésekor"
+      showAlert({ message: error.value, type: 'error' })
+      console.error(e)
+    } finally {
+      loading.value = false
+    }
 }
 
-// Frontend oldali lapozáshoz a megjelenítendő adatok
-const paginatedRows = computed(() => {
-  const start = (currentPage.value - 1) * perPage.value;
-  const end = start + perPage.value;
-  return rows.value.slice(start, end);
-});
 
 // Keresés debounce
 function onSearchInput() {
-  if (searchTimeout.value) clearTimeout(searchTimeout.value);
+  if (searchTimeout.value) clearTimeout(searchTimeout.value)
   searchTimeout.value = setTimeout(() => {
-    currentPage.value = 1;
-    load();
-  }, 300);
+    currentPage.value = 1
+    load()
+  }, 300)
 }
 
 // Segédfüggvények
@@ -862,11 +854,11 @@ onBeforeUnmount(() => {
   document.body.style.overflow = '';
 });
 
-// Hónap változás figyelés
 watch(billingMonth, () => {
-  currentPage.value = 1;
-  load();
-});
+  currentPage.value = 1
+  load()
+})
+
 
 // Alapértelmezett hónap beállítása
 function setDefaultMonth() {
@@ -1478,101 +1470,7 @@ load();
 }
 
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
-  margin-top: 2rem;
-  padding: 1rem;
-}
 
-.btn-pagination {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;
-}
-
-.btn-pagination:hover:not(:disabled) {
-  background: #f0a24a;
-  color: #7b2c2c;
-  border-color: #f0a24a;
-}
-
-.btn-pagination:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  color: #666;
-  font-size: 0.85rem;
-}
-
-/* Sorok száma választó */
-.per-page-selector {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-  padding: 0 0.5rem;
-}
-
-.per-page-selector label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #666;
-  font-size: 0.8rem;
-}
-
-.per-page-selector select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-}
-
-
-@media (max-width: 768px) {
-  .pagination {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .page-numbers {
-    order: 1;
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .btn-pagination {
-    order: 0;
-  }
-  
-  .per-page-selector {
-    justify-content: center;
-  }
-  
-
-}
-
-@media (max-width: 480px) {
-  .page-number {
-    min-width: 30px;
-    height: 30px;
-    font-size: 0.75rem;
-  }
-  
-  .btn-pagination {
-    padding: 0.3rem 0.8rem;
-    font-size: 0.75rem;
-  }
-}
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -1875,6 +1773,37 @@ load();
   animation: modalSlideUp 0.3s ease-out;
 }
 
+/* Filter tabs */
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: #f5f5f5;
+  padding: 0.25rem;
+  border-radius: 12px;
+}
+
+.filter-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.filter-tab:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.filter-tab.active {
+  background: #f0a24a;
+  color: #7b2c2c;
+}
+
 @keyframes modalSlideUp {
   from {
     opacity: 0;
@@ -1906,5 +1835,14 @@ load();
   }
 }
 
-
+@media (max-width: 768px) {
+  .filter-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .filter-tab {
+    flex: 1;
+    text-align: center;
+  }
+}
 </style>

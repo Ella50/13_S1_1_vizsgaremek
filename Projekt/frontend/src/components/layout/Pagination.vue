@@ -1,5 +1,7 @@
 <template>
   <div class="pagination-container">
+    <div></div>
+
     <div class="pagination-controls">
       <button
         @click="emitPage(currentPage - 1)"
@@ -53,6 +55,7 @@ const props = defineProps({
   perPage: {
     type: Number,
     default: 25,
+    
   },
   perPageOptions: {
     type: Array,
@@ -79,19 +82,20 @@ function emitPerPage(event) {
 
 <style scoped>
 .pagination-container {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  flex-wrap: wrap;
   gap: 1rem;
   margin-top: 2rem;
   padding: 1rem;
 }
 
 .pagination-controls {
+  grid-column: 2;
   display: flex;
   align-items: center;
   gap: 2rem;
+  justify-content: center;
 }
 
 .btn-pagination {
@@ -121,8 +125,8 @@ function emitPerPage(event) {
 }
 
 .per-page-selector {
-  display: flex;
-  align-items: center;
+  grid-column: 3;
+  justify-self: end;
 }
 
 .per-page-selector label {
@@ -141,19 +145,22 @@ function emitPerPage(event) {
   cursor: pointer;
 }
 
-/* Reszponzív */
+
 @media (max-width: 768px) {
   .pagination-container {
+    display: flex;
     flex-direction: column;
     align-items: center;
-  }
-
-  .pagination-controls {
     gap: 1rem;
   }
 
+  .pagination-controls {
+    order: 1;
+  }
+
   .per-page-selector {
-    margin-top: 0.5rem;
+    order: 2;
+    justify-self: auto;
   }
 }
 </style>
