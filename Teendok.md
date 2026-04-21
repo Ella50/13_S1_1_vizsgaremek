@@ -3,13 +3,13 @@
 - kód (async axios) + tiszta kód
 - ÚJ tesztelések
 - TESZTELÉS ÚJRACSINÁLÁSA
-- transaction_id??
+- seederek: rendelés, számlák
 
 ## Dokumentációban:
 + Adatbázis: képek kicserélése
 + Algoritmusok: képek csere
 + a különböző felületeknél képek (navbar)
-+
++ felhaszn. rész: KÉPEK
 +
 
 
@@ -24,8 +24,7 @@
 
 
 ## AdminInvoice.vue
--  pagináció van, nem jó (többadat?)
-- függőben lévők és fizetettek külön mint a dokumentumoknál
+
 
 ## Users.vue
 
