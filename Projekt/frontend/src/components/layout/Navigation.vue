@@ -1,6 +1,6 @@
 <template>
   <nav>
-    <!-- Desktop Navigation -->
+    <!-- Számítógépes nézet -->
     <div class="desktop-nav">
       <template v-if="AuthService.isAuthenticated()">
         <router-link to="/dashboard" class="logo">
@@ -37,7 +37,7 @@
           <router-link v-if="AuthService.canViewMenu()" to="/menu/today">Mai menü</router-link>
           <router-link to="/menu/week">Heti menü</router-link>
           <router-link to="/kitchen/meals">Ételek</router-link>
-          <router-link to="/profile">Profil</router-link>
+          <router-link v-if="!AuthService.isKitchen() && !AuthService.isAdmin()" to="/profile">Profil</router-link>
           <router-link v-if="!AuthService.isKitchen() && !AuthService.isAdmin()" to="/personal-orders">Rendelések</router-link>
           <router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" to="/personal-invoices">Számlák</router-link>
         </div>
@@ -60,7 +60,7 @@
       </template>
     </div>
 
-    <!-- Telefonos navigáció (változatlan) -->
+    <!-- Telefonos navigáció -->
     <div class="mobile-bottom-nav" v-if="AuthService.isAuthenticated()">
       <router-link to="/menu/today" class="mobile-nav-item" :class="{ active: $route.path.includes('/menu') }">
         <span class="icon">𓌉◯𓇋</span>
@@ -92,7 +92,7 @@
       </router-link>
     </div>
 
-    <!-- Action Sheet (változatlan) -->
+
     <transition name="slide-up">
       <div v-if="showActionSheet" class="action-sheet-overlay" @click="closeActionSheet">
         <div class="action-sheet" @click.stop>
@@ -211,7 +211,6 @@ nav {
 
 }
 
-/* Desktop Navigation */
 .desktop-nav {
   display: flex;
   justify-content: space-between;
@@ -269,7 +268,7 @@ nav {
 .nav-links a::after, .dropdown-btn::after {
   content: '';
   position: absolute;
-  bottom: -2px;  /* kicsit lejjebb, hogy ne fedje át a szöveget */
+  bottom: -2px;
   left: 0;
   right: 0;
   width: auto;
@@ -310,7 +309,6 @@ nav {
 
 }
 
-/* Dropdown */
 .dropdown {
   position: relative;
   display: inline-block;

@@ -30,7 +30,7 @@
       </form>
     </div>
 
-    <!-- Ha már elküldtük -->
+  
     <div v-else class="success-container">
       <div class="success-icon">✓</div>
       <h3 class="success-title">Email elküldve!</h3>
@@ -192,7 +192,6 @@ export default {
   border: 1px solid #c8e6c9;
 }
 
-/* Sikeres állapot stílusok */
 .success-container {
   text-align: center;
   padding: 1rem 0;

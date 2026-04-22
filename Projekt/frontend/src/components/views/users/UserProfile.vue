@@ -5,22 +5,18 @@
         <h1 class="title">Profilom</h1>
       </div>
 
-      <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">
         <div class="spinner"></div>
         <p>Adatok betöltése...</p>
       </div>
 
-      <!-- Error State -->
       <div v-else-if="error" class="error-message">
         <p>{{ error }}</p>
         <button @click="retryLoading" class="btn-secondary">Újrapróbálkozás</button>
       </div>
 
-      <!-- Content -->
       <div v-else class="profile-content">
         <div class="profile-grid">
-          <!-- Bal oldal -->
           <div class="profile-left">
             <!-- Személyes adatok -->
             <div class="info-card">
@@ -140,7 +136,7 @@
             </div>
           </div>
 
-          <!-- Jobb oldal -->
+
           <div class="profile-right">
             <!-- Egészségügyi információk -->
             <div class="info-card">
@@ -1051,8 +1047,6 @@ export default {
 }
 
 
-
-/* Profile grid */
 .profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1066,7 +1060,6 @@ export default {
   gap: 1.5rem;
 }
 
-/* Info cards */
 .info-card {
   background: white;
   border: 1px solid #eee;
@@ -1094,7 +1087,6 @@ export default {
   padding: 1.25rem;
 }
 
-/* Form elements */
 .form-group {
   margin-bottom: 1rem;
 }
@@ -1128,7 +1120,6 @@ export default {
   color: #666;
 }
 
-/* Buttons */
 .btn-primary {
   padding: 0.5rem 1rem;
   background: #1fa317;
@@ -1197,7 +1188,6 @@ export default {
   background: #ffcdd2;
 }
 
-/* Checkbox */
 .checkbox-group {
   margin-bottom: 1.25rem;
 }
@@ -1216,7 +1206,6 @@ export default {
   cursor: not-allowed;
 }
 
-/* Allergens */
 .allergens-section {
   margin-top: 1rem;
 }
@@ -1306,7 +1295,6 @@ export default {
   margin-top: 0.25rem;
 }
 
-/* Info rows */
 .info-row {
   display: flex;
   justify-content: space-between;
@@ -1329,7 +1317,7 @@ export default {
   font-size: 0.8rem;
 }
 
-/* Documents */
+
 .doc-hint {
   font-size: 0.7rem;
   color: #888;
@@ -1460,7 +1448,7 @@ export default {
   font-weight: 500;
 }
 
-/* Loading state */
+
 .loading-state {
   text-align: center;
   padding: 3rem;
@@ -1613,7 +1601,7 @@ export default {
   background: #27ae60;
 }
 
-/* Animations */
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -1623,7 +1611,7 @@ export default {
   opacity: 0;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .user-profile {
     padding: 1rem;

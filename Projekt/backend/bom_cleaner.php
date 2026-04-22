@@ -1,4 +1,4 @@
-// bom_cleaner.php - tedd a Laravel gyökérkönyvtárba
+
 <?php
 
 $files = [

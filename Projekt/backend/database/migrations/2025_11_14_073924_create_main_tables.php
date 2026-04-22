@@ -67,16 +67,7 @@ return new class extends Migration
         $table->timestamps();
 
     });
-/*
-    Schema::create('schedules', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('class_id')->constrained('classes');
-        $table->foreignId('group_id')->nullable()->constrained('groups');
-        $table->date('from');
-        $table->date('to');
-        $table->timestamps();
-    });
-*/
+
     }
 
 

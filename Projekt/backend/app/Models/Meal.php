@@ -24,36 +24,32 @@ class Meal extends Model
         return $this->hasMany(MenuItem::class, 'soup');
     }
 
-    /**
-     * Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel A opcióként)
-     */
+    //Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel A opcióként)
+     
     public function optionAMenuItems()
     {
         return $this->hasMany(MenuItem::class, 'optionA');
     }
 
-    /**
-     * Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel B opcióként)
-     */
+    // Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel B opcióként)
+     
     public function optionBMenuItems()
     {
         return $this->hasMany(MenuItem::class, 'optionB');
     }
 
-    /**
-     * Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel "egyéb"-ként)
-     */
+    // Kapcsolat a MenuItem modellhez (ahol ez az étel szerepel "egyéb"-ként)
+     
     public function otherMenuItems()
     {
         return $this->hasMany(MenuItem::class, 'other');
     }
 
-    /**
-     * Összes MenuItem, ahol ez az étel szerepel (bármely pozícióban)
-     */
+    //Összes MenuItem, ahol ez az étel szerepel (bármely pozícióban)
+     
     public function menuItems()
     {
-        // Összegyűjti az összes menüt, ahol az étel szerepel
+
         $soupItems = $this->soupMenuItems;
         $optionAItems = $this->optionAMenuItems;
         $optionBItems = $this->optionBMenuItems;
@@ -62,9 +58,8 @@ class Meal extends Model
         return $soupItems->merge($optionAItems)->merge($optionBItems)->merge($otherItems)->unique('id');
     }
 
-    /**
-     * Ellenőrzi, hogy az étel szerepel-e bármelyik menüben
-     */
+    // Étel szerepel-e bármelyik menüben
+     
     public function hasMenuItems()
     {
         return MenuItem::where('soup', $this->id)
@@ -91,16 +86,15 @@ class Meal extends Model
         return $this->hasManyThrough(
             Allergen::class,
             Ingredient::class,
-            'id', // Foreign key on ingredients table
-            'id', // Foreign key on allergens table
-            'id', // Local key on meals table
-            'id'  // Local key on ingredients table
+            'id', // ingredients
+            'id', // allergens
+            'id', // meals
+            'id'  // ingredients
         )->distinct();
     }
 
-    /**
-     * Alternatív megoldás: allergének összetevőkön keresztül
-     */
+    // Alternatív megoldás: allergének összetevőkön keresztül
+     
     public function getAllAllergensAttribute()
     {
         return $this->ingredients->flatMap(function ($ingredient) {
@@ -108,9 +102,6 @@ class Meal extends Model
         })->unique('id');
     }
 
-    /**
-     * Ellenőrzés, hogy tartalmaz-e bizonyos allergént
-     */
     public function containsAllergen($allergenId)
     {
         return $this->ingredients()
@@ -120,25 +111,18 @@ class Meal extends Model
             ->exists();
     }
 
-    /**
-     * Összes allergén ID lekérdezése
-     */
     public function getAllergenIdsAttribute()
     {
         return $this->allAllergens->pluck('id')->toArray();
     }
 
-    /**
-     * Összetevők allergének nélkül
-     */
+
     public function ingredientsWithoutAllergens()
     {
         return $this->ingredients()->whereDoesntHave('allergens');
     }
 
-    /**
-     * Összetevők bizonyos allergénnel
-     */
+
     public function ingredientsWithAllergen($allergenId)
     {
         return $this->ingredients()->whereHas('allergens', function($query) use ($allergenId) {

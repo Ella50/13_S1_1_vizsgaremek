@@ -13,19 +13,18 @@ use Illuminate\Support\Facades\Log;
 
 class UserHealthController extends Controller
 {
-    // Összes allergén lekérése (mindenkinek elérhető)
     public function getAllergens()
     {
         $allergens = Allergen::orderBy('allergenName')->get();
         return response()->json($allergens);
     }
 
-    // Felhasználó egészségügyi adatainak lekérése
+  //Allergének, cukorbeteg-e
     public function getUserHealthData()
     {
         $user = Auth::user();
         
-        // Allergének lekérése
+     
         $userAllergens = UserHealthRestriction::where('user_id', $user->id)
             ->whereNotNull('allergen_id')
             ->with('allergen')
@@ -34,9 +33,9 @@ class UserHealthController extends Controller
                 return $restriction->allergen;
             })
             ->filter()
-            ->values(); // values() hozzáadva a tömb indexeléséhez
+            ->values(); 
         
-        // Mivel nincs hasDiabetes mező, a users táblából olvassuk ki
+ 
         $hasDiabetes = $user->hasDiabetes ?? false;
 
         return response()->json([
@@ -45,7 +44,7 @@ class UserHealthController extends Controller
         ]);
     }
 
-    // Felhasználó allergénjeinek lekérése (külön endpoint)
+    // Felhasználó allergénjeinek lekérése
     public function getUserAllergens()
     {
         $user = Auth::user();
@@ -64,7 +63,6 @@ class UserHealthController extends Controller
     }
 
 
-    // Allergén hozzáadása
     public function addAllergen(Request $request)
     {
         $request->validate([
@@ -73,7 +71,6 @@ class UserHealthController extends Controller
 
         $user = Auth::user();
 
-        // Ellenőrizzük, hogy már nem létezik-e
         $exists = UserHealthRestriction::where('user_id', $user->id)
             ->where('allergen_id', $request->allergen_id)
             ->exists();
@@ -85,13 +82,11 @@ class UserHealthController extends Controller
         UserHealthRestriction::create([
             'user_id' => $user->id,
             'allergen_id' => $request->allergen_id
-            // 'hasDiabetes' mezőt nem adjuk meg, mert nem létezik
         ]);
 
         return response()->json(['message' => 'Allergén hozzáadva']);
     }
 
-    // Allergén eltávolítása
     public function removeAllergen($id)
     {
         $user = Auth::user();
@@ -107,7 +102,6 @@ class UserHealthController extends Controller
         return response()->json(['message' => 'Allergén nem található'], 404);
     }
 
-    // Cukorbetegség frissítése
     public function updateDiabetes(Request $request)
     {
         $request->validate([
@@ -116,12 +110,10 @@ class UserHealthController extends Controller
 
         $user = Auth::user();
         
-        // Statikus update a User modellen
         User::where('id', $user->id)->update([
             'hasDiabetes' => $request->has_diabetes
         ]);
         
-        // Frissítjük a user objektumot is
         $user->hasDiabetes = $request->has_diabetes;
 
         return response()->json([

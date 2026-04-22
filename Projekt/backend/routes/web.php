@@ -14,7 +14,7 @@ Route::get('/reset-password/{token}/{email}', function ($token, $email) {
     ]);
 })->name('password.reset');
 
-// Jelszó visszaállítás feldolgozása
+
 Route::post('/reset-password', function (Request $request) {
     $request->validate([
         'token' => 'required',

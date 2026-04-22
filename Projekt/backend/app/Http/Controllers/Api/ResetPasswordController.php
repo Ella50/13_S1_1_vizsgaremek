@@ -18,9 +18,6 @@ use Illuminate\Support\Facades\DB;
 
 class ResetPasswordController extends Controller
 {
-    /**
-     * Jelszó visszaállító link küldése
-     */
     public function sendResetLink(Request $request)
     {
         try {
@@ -64,9 +61,8 @@ class ResetPasswordController extends Controller
         }
     }
     
-    /**
-     * Jelszó visszaállítás a token alapján
-     */
+    //Jelszó visszaállítás a token alapján
+     
     public function resetPassword(Request $request)
     {
         try {

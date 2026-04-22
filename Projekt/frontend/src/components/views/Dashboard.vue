@@ -77,7 +77,7 @@
           </div>
         </div>
         
-        <!-- Általános linkek (minden felhasználónak) -->
+        <!-- Általános linkek -->
         <div class="links-section">
           <h2 class="section-title">Menü és rendelések</h2>
           <div class="links-grid">
@@ -165,7 +165,7 @@ export default {
     },
     userName() {
       const user = this.user
-      return user ? `${user.lastName} ${user.firstName}` : 'Vendég' //nincs vendég
+      return user ? `${user.lastName} ${user.firstName}` : ' '
     }
   },
   
@@ -217,7 +217,6 @@ export default {
   font-weight: 500;
 }
 
-/* Links sections */
 .links-section {
   margin-bottom: 2rem;
 }
@@ -279,7 +278,7 @@ export default {
   line-height: 1.4;
 }
 
-/* Empty state */
+
 .no-links {
   text-align: center;
   padding: 3rem;
@@ -288,7 +287,7 @@ export default {
   border-radius: 12px;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .dashboard {
     padding: 1rem;

@@ -9,7 +9,7 @@ use App\Models\RfidCard;
 
 class AdminRfidController extends Controller
 {
-    // 1) Python gateway proxy
+
     public function latestScan(Request $request)
     {
         $since = $request->query('since');
@@ -28,7 +28,6 @@ class AdminRfidController extends Controller
         return response()->json($resp->json());
     }
 
-    // 2) Hozzárendelés userhez (rfidCards + users.rfidCard_id)
     public function assign(Request $request, $id)
     {
         $request->validate([
@@ -37,12 +36,11 @@ class AdminRfidController extends Controller
 
         $uid = trim($request->input('uid'));
 
-        // 1) rfidCards.cardNumber (NÁLAD EZ A HELYES OSZLOP)
         $card = RfidCard::firstOrCreate([
             'cardNumber' => $uid
         ]);
 
-        // 2) foglalt-e?
+
         $busy = \App\Models\User::where('rfidCard_id', $card->id)
             ->where('id', '!=', $id)
             ->exists();
@@ -55,7 +53,7 @@ class AdminRfidController extends Controller
             ], 409);
         }
 
-        // 3) hozzárendelés
+
         $user = \App\Models\User::findOrFail($id);
         $user->rfidCard_id = $card->id;
         $user->save();

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Auth;
 class AdminController extends Controller
 {
 
-    // Összes felhasználó lekérdezése
+
     public function getUsers(Request $request)
     {
         try {
@@ -27,7 +27,6 @@ class AdminController extends Controller
             
             $query = User::query();
             
-            // Keresés
             if ($search) {
                 $query->where(function($q) use ($search) {
                     $q->where('firstName', 'LIKE', "%{$search}%")
@@ -35,18 +34,15 @@ class AdminController extends Controller
                       ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             }
-            
-            // Szűrés userType alapján
+
             if ($request->has('userType') && $request->userType !== '') {
                 $query->where('userType', $request->userType);
             }
-            
-            // Szűrés userStatus alapján
+
             if ($request->has('userStatus') && $request->userStatus !== '') {
                 $query->where('userStatus', $request->userStatus);
             }
-            
-            // Rendezés
+   
             $sortBy = $request->get('sort_by', 'id');
             $sortOrder = $request->get('sort_order', 'desc');
             //$query->orderBy($sortBy, $sortOrder);
@@ -77,10 +73,9 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+   
     
-    /**
-     * Megyék lekérdezése
-     */
     public function getCounties()
     {
         try {
@@ -100,9 +95,8 @@ class AdminController extends Controller
         }
     }
     
-    /**
-     * Városok lekérdezése megye alapján
-     */
+   
+  
     public function getCitiesByCounty($county_id)
     {
         try {
@@ -131,9 +125,7 @@ class AdminController extends Controller
         }
     }
     
-    /**
-     * Városok keresése
-     */
+    
     public function searchCities(Request $request)
     {
         try {
@@ -166,7 +158,6 @@ class AdminController extends Controller
         }
     }
     
-    // Felhasználó státusz frissítése
     public function updateUserStatus(Request $request, $id)
     {
         try {
@@ -176,7 +167,6 @@ class AdminController extends Controller
             
             $user = User::findOrFail($id);
             
-            // Admin nem módosíthatja saját státuszát
             if ($user->id === $request->user()->id) {
                 return response()->json([
                     'success' => false,
@@ -242,50 +232,48 @@ class AdminController extends Controller
         }
     }
     
-    // Felhasználó részletes adatainak lekérése
     public function getUserDetails($id)
-{
-    try {
-        Log::info('getUserDetails called', ['id' => $id]);
-        
-        if (!is_numeric($id)) {
+    {
+        try {
+            Log::info('getUserDetails called', ['id' => $id]);
+            
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Érvénytelen felhasználó azonosító'
+                ], 400);
+            }
+            
+            $user = User::with([
+                'city', 
+                'city.county',
+                'rfidCard'
+            ])->find($id);
+            
+            if (!$user) {
+                Log::warning('User not found', ['id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Felhasználó nem található'
+                ], 404);
+            }
+            
+            Log::info('User found', ['id' => $user->id, 'name' => $user->firstName]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('getUserDetails error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Érvénytelen felhasználó azonosító'
-            ], 400);
+                'message' => 'Hiba történt a felhasználó betöltése során'
+            ], 500);
         }
-        
-        $user = User::with([
-            'city', 
-            'city.county',
-            'rfidCard'
-        ])->find($id);
-        
-        if (!$user) {
-            Log::warning('User not found', ['id' => $id]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Felhasználó nem található'
-            ], 404);
-        }
-        
-        Log::info('User found', ['id' => $user->id, 'name' => $user->firstName]);
-        
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
-        
-    } catch (\Exception $e) {
-        Log::error('getUserDetails error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Hiba történt a felhasználó betöltése során'
-        ], 500);
     }
-}
     
-    // Felhasználó frissítése
     public function updateUser(Request $request, $id)
     {
         try {
@@ -293,7 +281,7 @@ class AdminController extends Controller
             
             $user = User::findOrFail($id);
             
-            // Validáció - BŐVÍTVE county_id és city_id mezőkkel
+
             $validator = Validator::make($request->all(), [
                 'firstName' => 'required|string|max:255',
                 'lastName' => 'required|string|max:255',
@@ -319,14 +307,14 @@ class AdminController extends Controller
             
             $data = $request->all();
             
-            // Jelszó titkosítása, ha meg van adva
+
             if ($request->has('password') && $request->password) {
                 $data['password'] = Hash::make($request->password);
             } else {
                 unset($data['password']);
             }
             
-            // Jelszó megerősítés mező eltávolítása
+       
             unset($data['password_confirmation']);
             
             $user->update($data);
@@ -351,13 +339,13 @@ class AdminController extends Controller
         }
     }
     
-    // Felhasználó törlése
+
     public function deleteUser(Request $request, $id)
     {
         try {
             $user = User::findOrFail($id);
             
-            // Admin nem törölheti magát
+  
             if ($user->id === $request->user()->id) {
                 return response()->json([
                     'success' => false,
@@ -391,7 +379,6 @@ class AdminController extends Controller
         try {
             $user = User::findOrFail($userId);
             
-            // A helyes mezőnév: rfidCard_id (camelCase)
             $user->rfidCard_id = null;
             $user->save();
             
@@ -401,7 +388,6 @@ class AdminController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('RFID kártya eltávolítási hiba: ' . $e->getMessage());
             
             return response()->json([
                 'success' => false,

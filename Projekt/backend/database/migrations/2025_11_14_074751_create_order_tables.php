@@ -37,9 +37,7 @@ return new class extends Migration
         $table->date('issueDate');
         $table->date('dueDate');
         $table->decimal('totalAmount', 10, 2);
-        //$table->enum('paymentMethod', array_column(PaymentMethod::cases(), 'value'))->default('Banki utalás');;
         $table->enum('paymentMethod', ['Banki utalás', 'Bankkártya', 'Készpénz'])->default('Bankkártya');
-        //$table->enum('status', array_column(InvoiceStatus::cases(), 'value'))->default('Generálva');
         $table->enum('invoiceStatus', ['Függőben lévő', 'Generálva', 'Fizetve', 'Lejárt'])->default('Generálva');
 
         $table->string('transactionId')->nullable();
@@ -54,7 +52,6 @@ return new class extends Migration
         $table->foreignId('menuItems_id')->constrained('menuItems');
         $table->date('orderDate');
         $table->enum('selectedOption', ['A', 'B']);
-        //$table->enum('status', array_column(OrderStatus::cases(), 'value'))->default('Rendelve');
         $table->enum('orderStatus', ['Rendelve', 'Lemondva', 'Fizetve'])->default('Rendelve');
         $table->foreignId('invoice_id')->nullable()->constrained('invoices');
         $table->foreignId('price_id')->constrained('prices');
@@ -62,24 +59,11 @@ return new class extends Migration
         $table->timestamps();
     });
 
-/*
-    Schema::create('ratings', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('user_id')->constrained('users');
-        $table->foreignId('order_id')->constrained('orders');
-        $table->smallInteger('rating');
-        $table->text('comment')->nullable();
-        $table->unique(['user_id', 'order_id']);
-        $table->timestamps();
-    });
-*/
-
 
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('ratings');
         Schema::dropIfExists('orders');
         Schema::dropIfExists('invoices');
         Schema::dropIfExists('prices');

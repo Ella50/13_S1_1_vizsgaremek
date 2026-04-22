@@ -8,7 +8,6 @@ use Carbon\Carbon;
 
 class MenuController extends Controller
 {
-    // Már létező menüs napok
     public function existingDates()
     {
         $dates = MenuItem::query()
@@ -20,7 +19,6 @@ class MenuController extends Controller
         return response()->json($dates);
     }
 
-    // Még szabad napok
     public function availableDates(Request $request)
     {
         $month = $request->query('month');
@@ -48,7 +46,6 @@ class MenuController extends Controller
         return response()->json($available);
     }
 
-    // Menü lekérése adott napra
     public function getMenuByDate($date)
     {
         $menu = MenuItem::where('day', $date)
@@ -80,7 +77,6 @@ class MenuController extends Controller
             'other' => 'nullable|exists:meals,id'
         ]);
 
-        // Ha van ID, akkor frissítünk
         if ($id) {
             $menu = MenuItem::find($id);
             
@@ -100,7 +96,6 @@ class MenuController extends Controller
             
             $message = 'Menü sikeresen frissítve.';
         } else {
-            // Nincs ID, új menü létrehozása
             $menu = MenuItem::updateOrCreate(
                 ['day' => $request->day],
                 [
@@ -119,7 +114,7 @@ class MenuController extends Controller
             'data' => $menu->getMenuWithMeals()
         ]);
     }
-    // Mai menü lekérése
+
     public function getTodayMenu()
     {
         $today = Carbon::today()->toDateString();
@@ -141,7 +136,7 @@ class MenuController extends Controller
             ], 200);
         }
 
-        // Formázd az adatokat, hogy tartalmazzák az allergéneket
+        
         $formattedMenu = [
             'id' => $menu->id,
             'day' => $menu->day,
@@ -162,7 +157,6 @@ class MenuController extends Controller
     {
         if (!$meal) return null;
         
-        // Összegyűjtjük az összes allergént az összetevőkből
         $allAllergens = collect();
         foreach ($meal->ingredients as $ingredient) {
             if ($ingredient->allergens && $ingredient->allergens->isNotEmpty()) {
@@ -200,7 +194,7 @@ class MenuController extends Controller
         return asset('storage/' . ltrim($iconPath, '/'));
     }
 
-    // Heti menü lekérése
+
     public function getWeeklyMenu(Request $request)
     {
         $from = $request->query('from');
@@ -249,7 +243,6 @@ class MenuController extends Controller
             ->with(['soupMeal', 'optionAMeal', 'optionBMeal', 'otherMeal'])
             ->orderBy('day', 'desc');
         
-        // Szűrés év és hónap alapján
         if ($year && $month) {
             $query->whereYear('day', $year)
                 ->whereMonth('day', $month);

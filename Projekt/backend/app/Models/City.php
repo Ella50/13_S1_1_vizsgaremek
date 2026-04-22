@@ -16,13 +16,11 @@ class City extends Model
         'county_id'
     ];
 
-    // Kapcsolat County modellel
     public function county()
     {
         return $this->belongsTo(County::class, 'county_id');
     }
 
-    // Kapcsolat User modellel
     public function user()
     {
         return $this->hasMany(User::class, 'city_id');

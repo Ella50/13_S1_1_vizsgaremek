@@ -64,7 +64,7 @@ export default {
   z-index: 9999;
 }
 
-/* 🔥 ANIMÁCIÓ */
+
 .confirm-box {
   background: white;
   padding: 24px;
@@ -87,7 +87,7 @@ export default {
   }
 }
 
-/* ✨ SZÖVEG */
+
 .confirm-title {
   margin-bottom: 10px;
 }
@@ -98,14 +98,14 @@ export default {
   margin: 10px 0 20px 0;
 }
 
-/* 🎯 GOMBOK KÖZÉPRE */
+
 .confirm-actions {
   display: flex;
   justify-content: center;
   gap: 15px;
 }
 
-/* 🟥 MÉGSE */
+
 .btn-cancel {
   background: #e74c3c;
   color: white;
@@ -120,7 +120,7 @@ export default {
   background: #c0392b;
 }
 
-/* 🟩 OK */
+
 .btn-ok {
   background: #2ecc71;
   color: white;

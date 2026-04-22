@@ -18,7 +18,7 @@ class OrderSeeder extends Seeder
 
         $now = Carbon::now();
         
-        // Különböző dátumok a rendelésekhez
+
         $dates = [
             $now->copy()->subDays(1)->format('Y-m-d'), // tegnap
             $now->copy()->format('Y-m-d'),            // ma

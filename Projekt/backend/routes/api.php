@@ -36,7 +36,7 @@ Route::post('/forgot-password', [App\Http\Controllers\Api\ResetPasswordControlle
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 
 
-//Menü utvonalak (nem a sanctumba van ezért publikusak??)
+//Menü utvonalak
 
 Route::prefix('menu')->group(function () {
     Route::get('/available-dates', [MenuController::class, 'availableDates']);
@@ -44,8 +44,7 @@ Route::prefix('menu')->group(function () {
     Route::get('/{date}', [MenuController::class, 'getMenuByDate']) ->where('date', '^\d{4}-\d{2}-\d{2}$');
     Route::post('/', [MenuController::class, 'saveMenu']);
     Route::put('/{id}', [MenuController::class, 'saveMenu']); 
-    //Route::put('/{id}', [MenuController::class, 'store']);
-    //Route::put('/{menu}', [MenuController::class, 'update']);
+
     Route::get('/today', [MenuController::class, 'getTodayMenu']);
     Route::get('/week', [MenuController::class, 'getWeeklyMenu']);
 
@@ -72,19 +71,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/kitchen/lunchtime/verify', [LunchTimeController::class, 'verify']);
     Route::post('/kitchen/lunchtime/consume', [LunchTimeController::class, 'consume']);
   
-    //Számla
+    //Számla-admin?
     Route::get('/invoices', [InvoiceController::class, 'index']);
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
     Route::get('/invoices/{id}/pdf', [InvoiceController::class, 'pdf']);
-    //Számla-Admin
-    
 
 
 
   
     // User profil
     Route::prefix('user')->group(function () {
-        Route::get('/me', [UserController::class, 'me']); //alapból AuthCotroller volt 
+        Route::get('/me', [UserController::class, 'me']); 
         Route::get('/profile', [UserController::class, 'profile']);
         Route::post('/auth/change-password', [UserController::class, 'changePassword']);
 
@@ -100,18 +97,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);     //csak látszólagos törlés
 
 
-
-
         Route::get('/health', [UserHealthController::class, 'getUserHealthData']);
         Route::get('/allergens', [UserHealthController::class, 'getUserAllergens']);
         Route::post('/allergens', [UserHealthController::class, 'addAllergen']); 
         Route::delete('/allergens/{id}', [UserHealthController::class, 'removeAllergen']); 
         Route::put('/diabetes', [UserHealthController::class, 'updateDiabetes']); 
     
-    
-    
 
-        
+    
         // Személyes rendelések
         Route::prefix('personal-orders')->group(function () {
             Route::get('/', [PersonalOrderController::class, 'index']);
@@ -130,6 +123,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         });
 
+        //Személyes számlák
         Route::prefix('personal-invoices')->group(function () {
             Route::get('/', [PersonalInvoiceController::class, 'userInvoices']);
             Route::get('/{invoice}/orders', [PersonalInvoiceController::class, 'invoiceOrders']);
@@ -138,12 +132,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
 
-            
-    
-    
     });
-    
-
     
     
     // Admin
@@ -169,7 +158,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/invoices/{invoice}/unpaid', [AdminInvoiceController::class, 'markAsUnpaid']);
 
 
-        //Dokuments
+        //Dokumentumok
         Route::get('/documents', [DocumentController::class, 'index']);
         Route::get('/documents/{document}/download', [DocumentController::class, 'adminDownload']);
         Route::delete('/documents/{document}/force', [DocumentController::class, 'adminDestroy']); // Végleges törlés
@@ -179,7 +168,6 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Konyha
     Route::prefix('kitchen')->group(function () {
-        // Meals.vue
         Route::get('/meals', [KitchenController::class, 'getMeals']);
         Route::get('/meals/with-allergens', [KitchenController::class, 'mealsWithAllergens']);
         Route::post('/meals', [KitchenController::class, 'storeMeal']);
@@ -213,7 +201,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
    
 
-        //Hozzávalók kezelése (Ingredients.vue)
+        //Hozzávalók kezelése
         Route::prefix('ingredients')->group(function () {
             Route::get('/', [KitchenController::class, 'getIngredientsList']);
             Route::post('/', [KitchenController::class, 'createIngredient']); 

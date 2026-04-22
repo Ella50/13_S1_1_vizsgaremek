@@ -9,7 +9,7 @@ class CheckAdmin
 {
     public function handle(Request $request, Closure $next)
     {
-        // Ellenőrizzük, hogy be van-e jelentkezve
+        // Be van-e jelentkezve
         if (!$request->user()) {
             return response()->json([
                 'success' => false,
@@ -17,7 +17,7 @@ class CheckAdmin
             ], 401);
         }
         
-        // Ellenőrizzük, hogy admin-e
+        // Admin-e
         if ($request->user()->userType !== 'Admin') {
             return response()->json([
                 'success' => false,

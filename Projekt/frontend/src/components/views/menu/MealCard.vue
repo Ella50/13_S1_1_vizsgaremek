@@ -153,7 +153,7 @@ export default {
   gap: 0.25rem;
 }
 
-/* Responsive */
+
 @media (max-width: 480px) {
   .meal-card {
     padding: 1rem;

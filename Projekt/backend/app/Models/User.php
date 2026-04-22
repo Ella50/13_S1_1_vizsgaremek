@@ -39,7 +39,7 @@ class User extends Authenticatable
     protected $appends = [
         'rfid_uid',
     ];
-    // Jelszó mező átnevezése
+
     public function getAuthPassword()
     {
         return $this->password;
@@ -51,7 +51,7 @@ class User extends Authenticatable
     $this->notify(new \App\Notifications\ResetPasswordNotification($token, $this->email));
 }
 
-    // Kapcsolatok
+
     public function city()
     {
         return $this->belongsTo(City::class);
@@ -75,10 +75,6 @@ class User extends Authenticatable
         return $this->belongsTo(\App\Models\RfidCard::class, 'rfidCard_id');
     }
 
-    /*public function user() HA NEM MŰKÖDNE AZ RFID OLVASÓ, AKKOR EZT VISSZAÁLLÍTANI
-    {
-        return $this->hasOne(\App\Models\User::class, 'rfidCard_id');
-    }*/
 
 
     public function userHealthRestrictions()
