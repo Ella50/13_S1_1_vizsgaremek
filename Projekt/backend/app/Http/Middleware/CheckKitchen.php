@@ -9,7 +9,6 @@ class CheckKitchen
 {
     public function handle(Request $request, Closure $next)
     {
-        // Ellenőrizzük, hogy be van-e jelentkezve
         if (!$request->user()) {
             return response()->json([
                 'success' => false,
@@ -17,7 +16,7 @@ class CheckKitchen
             ], 401);
         }
         
-        // Ellenőrizzük, hogy konyha-e
+        // Konyha-e
         if ($request->user()->userType !== 'Konyha') {
             return response()->json([
                 'success' => false,

@@ -41,49 +41,37 @@ class Order extends Model
         return $this->belongsTo(MenuItem::class, 'menuItems_id');
     }
 
-    /**
-     * Kapcsolat az árazással
-     */
+
     public function price(): BelongsTo
     {
         return $this->belongsTo(Price::class, 'price_id');
     }
 
-    /**
-     * Kapcsolat a számlával
-     */
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
     }
 
-    /**
-     * Scope aktív rendelésekhez
-     */
+
     public function scopeActive($query)
     {
         return $query->where('orderStatus', 'Rendelve');
     }
 
-    /**
-     * Scope lemondott rendelésekhez
-     */
+
     public function scopeCancelled($query)
     {
         return $query->where('orderStatus', 'Lemondva');
     }
 
-    /**
-     * Scope kifizetett rendelésekhez
-     */
+
     public function scopePaid($query)
     {
         return $query->where('orderStatus', 'Fizetve');
     }
 
-    /**
-     * Opció megjelenítési neve
-     */
+
     public function getOptionDisplayAttribute(): string
     {
         return match($this->selected_option) {
@@ -96,17 +84,11 @@ class Order extends Model
     }
     
 
-    /**
-     * Aktív-e a rendelés
-     */
     public function isActive(): bool
     {
         return $this->orderStatus === 'Rendelve';
     }
 
-    /**
-     * Lemondható-e még a rendelés
-     */
     public function canBeCancelled(): bool
     {
         return $this->isActive() && 

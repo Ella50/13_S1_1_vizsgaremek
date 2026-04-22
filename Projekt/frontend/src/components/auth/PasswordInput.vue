@@ -123,7 +123,6 @@ export default {
   box-shadow: 0 0 0 2px rgba(240, 162, 74, 0.2);
 }
 
-/* UserProfile stílus - amikor a customClass = 'profile-style' */
 .password-wrapper.profile-style .password-input {
   padding: 0.6rem 0.75rem !important;
   padding-right: 40px !important;

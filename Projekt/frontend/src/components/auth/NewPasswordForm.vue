@@ -69,7 +69,6 @@ export default {
   },
   methods: {
     async handleResetPassword() {
-      // Validáció
       if (!this.form.password || !this.form.password_confirmation) {
         this.error = "Minden mező kitöltése kötelező!";
         return;
@@ -212,7 +211,7 @@ export default {
   border: 1px solid #c8e6c9;
 }
 
-/* Reszponzív beállítások - megegyezik a Register/Login komponensekkel */
+
 @media (max-width: 768px) {
   .auth-form {
     width: 100%;

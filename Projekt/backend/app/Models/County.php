@@ -15,7 +15,6 @@ class County extends Model
         'countyName'
     ];
 
-    // Kapcsolat City modellel
     public function cities()
     {
         return $this->hasMany(City::class, 'county_id');

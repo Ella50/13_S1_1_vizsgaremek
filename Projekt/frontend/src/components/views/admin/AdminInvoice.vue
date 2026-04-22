@@ -26,17 +26,18 @@
             >
               Függőben lévő
             </button>
-           <button 
-              :class="['filter-tab', { active: activeStatusFilter === 'all' }]"
-              @click="setStatusFilter('all')"
-            >
-              Összes
-            </button>
+
             <button 
               :class="['filter-tab', { active: activeStatusFilter === 'paid' }]"
               @click="setStatusFilter('paid')"
             >
               Fizetve
+            </button>
+            <button 
+              :class="['filter-tab', { active: activeStatusFilter === 'all' }]"
+              @click="setStatusFilter('all')"
+            >
+              Összes
             </button>
 
           </div>
@@ -151,10 +152,6 @@
 
       </div>
 
-
-
-
-
       <!-- MODAL -->
       <div v-if="selected" class="modal-overlay" @click.self="close">
         <div class="modal">
@@ -239,7 +236,7 @@
       </div>
     </div>
 
-    <!-- Alert értesítés -->
+
     <div class="alert-container" v-if="alertVisible">
       <div :class="['alert', alertType]">
         <strong v-if="alertTitle">{{ alertTitle }}</strong>
@@ -247,7 +244,7 @@
       </div>
     </div>
 
-    <!-- Confirm modal -->
+
     <div v-if="confirmVisible" class="confirm-overlay">
       <div class="confirm-box">
         <h3 v-if="confirmTitle" class="confirm-title">{{ confirmTitle }}</h3>
@@ -349,7 +346,7 @@ const billingMonth = ref("");
 const searchQuery = ref("");
 const searchTimeout = ref(null);
 
-// Pagináció állapotok
+
 const currentPage = ref(1)
 const lastPage = ref(1)
 const total = ref(0)
@@ -368,7 +365,7 @@ const confirmMessage = ref('');
 const confirmTitle = ref('');
 let confirmResolver = null;
 
-// Computed properties
+
 const totalSum = computed(() => {
   const arr = Array.isArray(rows.value) ? rows.value : [];
   return arr.reduce((sum, i) => {
@@ -388,7 +385,7 @@ const paymentMethods = [
   { value: 'banki utalás', label: 'Banki utalás'}
 ];
 
-const activeStatusFilter = ref('all')
+const activeStatusFilter = ref('unpaid')
 
 function setStatusFilter(status) {
   activeStatusFilter.value = status
@@ -527,14 +524,12 @@ function changePerPage(newPerPage) {
 
       rows.value = invoiceData
 
-      // Ha van paginációs adat, használjuk, különben számoljuk (kompatibilitás miatt)
       if (paginationData.last_page) {
         currentPage.value = paginationData.current_page || 1
         lastPage.value = paginationData.last_page || 1
         total.value = paginationData.total || 0
         perPage.value = paginationData.per_page || 25
       } else {
-        // Frontend pagináció (ha a backend nem adja vissza) – de ezt nem javasolt
         total.value = rows.value.length
         lastPage.value = Math.ceil(total.value / perPage.value) || 1
         currentPage.value = Math.min(currentPage.value, lastPage.value)
@@ -549,8 +544,6 @@ function changePerPage(newPerPage) {
     }
 }
 
-
-// Keresés debounce
 function onSearchInput() {
   if (searchTimeout.value) clearTimeout(searchTimeout.value)
   searchTimeout.value = setTimeout(() => {
@@ -559,7 +552,7 @@ function onSearchInput() {
   }, 300)
 }
 
-// Segédfüggvények
+
 function formatFt(n) {
   const x = Number(n || 0);
   return x.toLocaleString("hu-HU") + " Ft";
@@ -590,7 +583,6 @@ function getStatusClass(status) {
   return classes[status] || 'status-default';
 }
 
-// Generálás
 async function generate() {
   if (!billingMonth.value) return;
   
@@ -621,12 +613,12 @@ async function generate() {
   }
 }
 function markPaid(inv) {
-  console.log('markPaid called', inv); // Debug
+  console.log('markPaid called', inv); 
   selectedInvoiceForPayment.value = inv;
   selectedPaymentMethod.value = '';
   showPaymentMethodModal.value = true;
 }
-// Fizetettre állítás
+
 async function confirmPayment() {
   if (!selectedPaymentMethod.value) {
     showAlert({
@@ -681,7 +673,7 @@ async function confirmPayment() {
   }
 }
 
-// Visszavonás (Fizetve -> Generálva)
+
 async function markUnpaid(inv) {
   const confirmed = await showConfirm({
     title: 'Státusz visszaállítása',
@@ -772,7 +764,7 @@ function close() {
   selected.value = null;
 }
 
-// PDF letöltés
+
 async function pdf(inv) {
   try {
     const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
@@ -860,7 +852,6 @@ watch(billingMonth, () => {
 })
 
 
-// Alapértelmezett hónap beállítása
 function setDefaultMonth() {
   const now = new Date();
   const y = now.getFullYear();
@@ -1141,7 +1132,6 @@ load();
   background: #ffeaa7;
 }
 
-/* Alert stílusok */
 .alert-container {
   position: fixed;
   top: 20px;
@@ -1182,7 +1172,6 @@ load();
   }
 }
 
-/* Confirm stílusok */
 .confirm-overlay {
   position: fixed;
   top: 0;
@@ -1261,7 +1250,7 @@ load();
   background: #27ae60;
 }
 
-/* Modal styles */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1439,7 +1428,7 @@ load();
   padding: 2rem !important;
 }
 
-/* Search box styles */
+
 .search-box {
   position: relative;
   display: inline-flex;
@@ -1470,9 +1459,6 @@ load();
 }
 
 
-
-
-/* Responsive */
 @media (max-width: 768px) {
   .admin-invoices {
     padding: 1rem;
@@ -1701,7 +1687,7 @@ load();
 }
 
 .btn-confirm {
-  background: linear-gradient(135deg, #1fa317 0%, #158a0f 100%);
+  background:  #158a0f ;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -1715,7 +1701,6 @@ load();
 }
 
 .btn-confirm:hover:not(:disabled) {
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(31, 163, 23, 0.3);
 }
 
@@ -1725,9 +1710,8 @@ load();
   transform: none;
 }
 
-/* Zöld fizetve gomb a táblázatban */
 .btn-paid {
-  background: linear-gradient(135deg, #1fa317 0%, #158a0f 100%);
+  background:  #1fa317 ;
   color: white;
   border: none;
   padding: 0.4rem 0.75rem;
@@ -1739,9 +1723,7 @@ load();
 }
 
 .btn-paid:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(31, 163, 23, 0.3);
-  background: linear-gradient(135deg, #158a0f 0%, #0f6b0a 100%);
+  background:  #0f6b0a ;
 }
 
 .btn-paid:disabled {
@@ -1750,9 +1732,8 @@ load();
   transform: none;
 }
 
-/* Visszavonás gomb */
 .btn-unpaid {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  background:#f57c00;
   color: white;
   border: none;
   padding: 0.4rem 0.75rem;
@@ -1764,16 +1745,14 @@ load();
 }
 
 .btn-unpaid:hover:not(:disabled) {
-  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
-  background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+  background: #e65100 ;
 }
 
 .payment-modal {
   animation: modalSlideUp 0.3s ease-out;
 }
 
-/* Filter tabs */
 .filter-tabs {
   display: flex;
   gap: 0.5rem;

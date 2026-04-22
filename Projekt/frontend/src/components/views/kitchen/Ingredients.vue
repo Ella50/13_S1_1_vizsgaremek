@@ -40,7 +40,6 @@
         </div>
       </div>
 
-      <!-- Tömeges műveletek -->
       <div v-if="selectedIngredients.length > 0" class="bulk-actions">
         <div class="bulk-header">
           <span class="selected-count">{{ selectedIngredients.length }} hozzávaló kiválasztva</span>
@@ -58,13 +57,13 @@
         </div>
       </div>
 
-      <!-- Betöltés állapota -->
+  
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Hozzávalók betöltése...</p>
       </div>
 
-      <!-- Üres állapot -->
+
       <div v-else-if="!loading && ingredients.length === 0" class="empty-state">
         <p>Nincsenek hozzávalók</p>
         <button @click="openCreateModal" class="btn-primary">
@@ -72,7 +71,6 @@
         </button>
       </div>
 
-      <!-- Hozzávalók táblázata -->
       <div v-else>
         <div class="table-wrapper">
           <table class="data-table">
@@ -121,7 +119,7 @@
           </table>
         </div>
 
-        <!-- Pagination komponens -->
+
         <Pagination
           :current-page="currentPage"
           :last-page="lastPage"
@@ -133,7 +131,6 @@
       </div>
     </div>
 
-    <!-- Szerkesztés modal -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
       <div class="modal">
         <div class="modal-header">
@@ -144,7 +141,7 @@
         <div class="modal-body">
           <form @submit.prevent="saveIngredient">
             <div class="form-grid">
-              <!-- Alap információk -->
+      
               <div class="form-section">
                 <h4>Alap információk</h4>
                 <div class="form-row">
@@ -167,7 +164,7 @@
                 </div>
               </div>
 
-              <!-- Tápértékek -->
+            
               <div class="form-section">
                 <h4>Tápértékek (100g-ra)</h4>
                 <div class="form-row nutrition-grid">
@@ -202,7 +199,7 @@
                 </div>
               </div>
 
-              <!-- Allergének -->
+    
               <div class="form-section">
                 <h4>Allergének</h4>
                 <p class="section-description">Válaszd ki az összetevőhöz tartozó allergéneket</p>
@@ -218,7 +215,7 @@
                 </div>
               </div>
 
-              <!-- Elérhetőség -->
+    
               <div class="form-section">
                 <label class="checkbox-label">
                   <input type="checkbox" v-model="editForm.isAvailable">
@@ -357,7 +354,7 @@ import { addAlert } from '../../auth/AppAlert.vue'
 import { showConfirm } from '../../auth/AppConfirm.vue'
 import Pagination from '../../layout/Pagination.vue'
 
-// Pagination állapotok
+
 const currentPage = ref(1)
 const lastPage = ref(1)
 const total = ref(0)
@@ -378,14 +375,14 @@ const deleteError = ref('')
 const allergens = ref([])
 const searchTimeout = ref(null)
 
-// Szűrők
+
 const filters = ref({
   search: '',
   type: 'all',
   availability: 'all',
 })
 
-// Szerkesztés form
+
 const editForm = ref({
   id: null,
   ingredientName: '',
@@ -401,7 +398,7 @@ const editForm = ref({
   allergen_ids: []
 })
 
-// Új hozzávaló form
+
 const newForm = ref({
   ingredientName: '',
   ingredientType: 'Egyéb',
@@ -416,13 +413,13 @@ const newForm = ref({
   allergen_ids: []
 })
 
-// Computed properties
+
 const allSelected = computed(() => {
   return ingredients.value.length > 0 && 
          ingredients.value.every(ingredient => selectedIngredients.value.includes(ingredient.id))
 })
 
-// Görgetés tiltás kezelése modalokhoz
+
 watch(showCreateModal, (newVal) => {
   if (newVal) document.body.style.overflow = 'hidden'
   else if (!showEditModal.value && !showDeleteModal.value) document.body.style.overflow = ''
@@ -443,7 +440,7 @@ onBeforeUnmount(() => {
   if (searchTimeout.value) clearTimeout(searchTimeout.value)
 })
 
-// Keresés debounce
+
 function onSearchInput() {
   if (searchTimeout.value) clearTimeout(searchTimeout.value)
   searchTimeout.value = setTimeout(() => {
@@ -451,7 +448,7 @@ function onSearchInput() {
   }, 300)
 }
 
-// Életciklus
+
 onMounted(() => {
   loadIngredients()
   loadAllergens()
@@ -522,7 +519,7 @@ function changePage(page) {
 
 function changePerPage(newPerPage) {
   perPage.value = newPerPage
-  currentPage.value = 1  // első oldalra ugrás
+  currentPage.value = 1  
   loadIngredients()
 }
 
@@ -764,7 +761,7 @@ function clearSelection() {
 
 
 <style scoped>
-/* Fő konténer */
+
 .ingredients {
   padding: 2rem;
   max-width: 1400px;
@@ -863,7 +860,6 @@ function clearSelection() {
   background: #158a0f;
 }
 
-/* Tömeges műveletek */
 .bulk-actions {
   background: #f8f9fa;
   border-radius: 12px;
@@ -907,7 +903,7 @@ function clearSelection() {
 .btn-bulk-clear { background: #e9ecef; color: #6c757d; }
 .btn-bulk-clear:hover { background: #dee2e6; }
 
-/* Betöltés állapota */
+
 .loading-state {
   text-align: center;
   padding: 3rem;
@@ -940,7 +936,7 @@ function clearSelection() {
   margin-bottom: 1rem;
 }
 
-/* Táblázat */
+
 .table-wrapper {
   overflow-x: auto;
   border-radius: 12px;
@@ -1067,8 +1063,6 @@ function clearSelection() {
   background: #ffcdd2;
 }
 
-
-/* Modal stílusok */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1219,7 +1213,7 @@ function clearSelection() {
   cursor: pointer;
 }
 
-/* Allergének */
+
 .allergens-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -1422,7 +1416,7 @@ function clearSelection() {
   text-align: center;
 }
 
-/* Reszponzív */
+
 @media (max-width: 768px) {
   .ingredients {
     padding: 1rem;

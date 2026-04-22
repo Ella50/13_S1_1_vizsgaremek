@@ -5,7 +5,6 @@
         <h1 class="title">Dokumentumok kezelése</h1>
         
         <div class="header-actions">
-          <!-- Keresőmező -->
           <div class="search-box">
             <input 
               type="text" 
@@ -17,7 +16,6 @@
             <span class="search-icon">🔍</span>
           </div>
           
-          <!-- Filter tabs marad -->
           <div class="filter-tabs">
             <button 
               :class="['filter-tab', { active: activeFilter === 'pending' }]"
@@ -381,7 +379,6 @@ export default {
   flex-wrap: wrap;
 }
 
-/* Filter tabs - új stílusok */
 .filter-tabs {
   display: flex;
   gap: 0.5rem;
@@ -561,7 +558,6 @@ export default {
   flex-wrap: wrap;
 }
 
-/* Egységes gombstílusok */
 .btn-action {
   padding: 0.4rem 0.75rem;
   border: none;
@@ -624,7 +620,6 @@ export default {
 }
 
 
-/* Keresőmező stílusok */
 .search-box {
   position: relative;
   display: inline-flex;
@@ -665,7 +660,6 @@ export default {
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .admin-documents {
     padding: 1rem;

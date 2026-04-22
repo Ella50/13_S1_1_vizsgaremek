@@ -142,7 +142,6 @@
         </div>
       </div>
 
-      <!-- Betöltés / hiba / üres állapot -->
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Rendelések betöltése...</p>
@@ -758,7 +757,7 @@ export default {
 }
 .btn-cancel:hover { background: #dee2e6; }
 
-/* ========== NAPI ÖSSZESÍTŐ ========== */
+
 .daily-summary-section {
   margin-top: 1rem;
 }
@@ -831,7 +830,7 @@ export default {
   color: #888;
 }
 
-/* Részletes táblázat */
+
 .summary-table-wrapper {
   background: #f8f9fa;
   border-radius: 12px;
@@ -1031,7 +1030,7 @@ export default {
   to { opacity: 1; transform: translateX(0); }
 }
 
-/* Loading, error, empty */
+
 .loading-state {
   text-align: center;
   padding: 3rem;
@@ -1064,7 +1063,7 @@ export default {
   border-radius: 12px;
 }
 
-/* Reszponzív */
+
 @media (max-width: 768px) {
   .orders-container { padding: 1rem; }
   .content-card { padding: 1rem; }

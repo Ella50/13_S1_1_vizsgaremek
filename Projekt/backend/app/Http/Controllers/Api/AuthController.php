@@ -56,7 +56,6 @@ class AuthController extends Controller
 
             Log::info('Felhasználó létrehozva', ['user_id' => $user->id]);
 
-            // Sanctum token létrehozása
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -109,9 +108,7 @@ class AuthController extends Controller
         }
     }
     
-    /**
-     * Városok lekérdezése megye alapján
-     */
+
     public function getCitiesByCountyReg($county_id)
     {
         try {
@@ -139,9 +136,7 @@ class AuthController extends Controller
         }
     }
         
-    /**
-     * Városok keresése
-     */
+
     public function searchCitiesReg(Request $request)
     {
         try {

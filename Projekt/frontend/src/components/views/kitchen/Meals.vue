@@ -1781,7 +1781,6 @@ export default {
 }
 
 
-/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1906,7 +1905,7 @@ export default {
   cursor: not-allowed;
 }
 
-/* Alert stílusok */
+
 .alert-container {
   position: fixed;
   top: 20px;
@@ -1947,7 +1946,6 @@ export default {
   }
 }
 
-/* Confirm stílusok */
 .confirm-overlay {
   position: fixed;
   top: 0;
@@ -2026,7 +2024,6 @@ export default {
   background: #27ae60;
 }
 
-/* Form elements */
 .form-group {
   margin-bottom: 1rem;
 }
@@ -2070,7 +2067,7 @@ export default {
   min-width: 150px;
 }
 
-/* Allergén részletek */
+
 .allergen-warning {
   margin-bottom: 1.5rem;
   padding: 1rem;
@@ -2285,7 +2282,6 @@ export default {
   font-size: 0.9rem;
 }
 
-/* Add ingredient section */
 .add-ingredient-section {
   margin-bottom: 2rem;
   padding: 1.5rem;
@@ -2424,7 +2420,6 @@ export default {
   cursor: not-allowed;
 }
 
-/* Current ingredients section */
 .current-ingredients-section {
   padding: 1.5rem;
   background: #f8f9fa;
@@ -2548,7 +2543,7 @@ export default {
   font-size: 1.1rem;
 }
 
-/* Edit meal modal */
+
 .edit-meal-modal {
   max-width: 1000px;
   max-height: 85vh;
@@ -2575,7 +2570,7 @@ export default {
   font-size: 1.2rem;
 }
 
-/* Ingredient type badges */
+
 .ingredient-type {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
@@ -2605,7 +2600,7 @@ export default {
   color: #616161;
 }
 
-/* Animations */
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -2617,7 +2612,7 @@ export default {
   }
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .meals-management {
     padding: 1rem;

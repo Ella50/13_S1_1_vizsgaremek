@@ -71,9 +71,8 @@ class UserController extends Controller
     }
 
         
-    /**
-     * Összes felhasználó lekérése
-     */
+    // Összes felhasználó lekérése
+     
     public function index()
     {
         try {
@@ -92,9 +91,8 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Új felhasználó létrehozása
-     */
+    // Új felhasználó létrehozása
+     
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -141,9 +139,8 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Egy felhasználó lekérése
-     */
+    // Egy felhasználó lekérése
+     
     public function show($id)
     {
         try {
@@ -169,9 +166,8 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Felhasználó frissítése
-     */
+    //Felhasználó frissítése
+     
     public function update(Request $request, $id)
     {
         $user = User::find($id);
@@ -229,9 +225,8 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Felhasználó törlése
-     */
+    //Felhasználó törlése
+    
     public function destroy($id)
     {
         try {
@@ -258,9 +253,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Felhasználók keresése típus szerint
-     */
     public function getByType($type)
     {
         try {
@@ -290,9 +282,7 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Felhasználók keresése státusz szerint
-     */
+
     public function getByStatus($status)
     {
         try {
@@ -322,33 +312,7 @@ class UserController extends Controller
         }
     }
 
-    /*
-      Osztályonkénti felhasználók
   
-    public function getByClass($classId)
-    {
-        try {
-            $users = User::with(['city', 'rfidCard'])
-                        ->where('class_id', $classId)
-                        ->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => $users,
-                'message' => 'Osztályhoz tartozó felhasználók betöltve'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hiba történt a felhasználók betöltése során: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-   **/
-
-    /**
-     * Megyék lekérése (bejelentkezett felhasználóknak)
-     */
     public function getCounties()
     {
         try {
@@ -367,9 +331,7 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Városok lekérése megye alapján (bejelentkezett felhasználóknak)
-     */
+
     public function getCitiesByCounty($county_id)
     {
         try {
@@ -396,9 +358,7 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Városok keresése (bejelentkezett felhasználóknak)
-     */
+
     public function searchCities(Request $request)
     {
         try {
@@ -432,7 +392,7 @@ class UserController extends Controller
     }
 
 
- public function changePassword(Request $request)
+    public function changePassword(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [

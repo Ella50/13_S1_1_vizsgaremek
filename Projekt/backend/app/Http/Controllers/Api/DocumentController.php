@@ -40,7 +40,7 @@ class DocumentController extends Controller
         $perPage = $request->input('per_page', 25);
         $query = Document::with('user:id,firstName,lastName,email');
 
-        // Keresés név vagy email alapján
+
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->whereHas('user', function($q) use ($searchTerm) {
@@ -50,21 +50,17 @@ class DocumentController extends Controller
             });
         }
 
-        // Státusz szűrés (frontend: 'pending' = függőben, 'accepted' = elfogadott)
         $status = $request->input('status', 'all');
         if ($status === 'pending') {
             $query->where('isAccepted', false);
         } elseif ($status === 'accepted') {
             $query->where('isAccepted', true);
         }
-        // 'all' esetén nincs szűrés
 
-        // Csak aktív dokumentumok
         $query->where('isActive', true);
 
         $documents = $query->latest()->paginate($perPage);
 
-        // Formázás (type, formatted_size)
         $documents->getCollection()->transform(function ($document) {
             $document->type = self::TYPE_MAPPING_REVERSE[$document->documentType] ?? $document->documentType;
             $document->formatted_size = $document->formattedSize;
@@ -83,9 +79,7 @@ class DocumentController extends Controller
             'to' => $documents->lastItem(),
         ]);
     }
-    /**
-     * Felhasználó saját dokumentumainak listázása (CSAK AKTÍV)
-     */
+
     public function myDocuments()
     {
         $documents = Document::where('user_id', Auth::id())
@@ -117,7 +111,6 @@ class DocumentController extends Controller
 
             $dbType = self::TYPE_MAPPING[$request->documentType];
 
-            // Ellenőrizzük, hogy van-e már elfogadott dokumentum ilyen típusból
             $acceptedDocument = Document::where('user_id', Auth::id())
                 ->where('documentType', $dbType)
                 ->where('isAccepted', true)
@@ -137,28 +130,25 @@ class DocumentController extends Controller
 
             $file = $request->file('document');
             
-            // Meglévő AKTÍV dokumentum inaktívvá tétele
+
             Document::where('user_id', Auth::id())
                 ->where('documentType', $dbType)
                 ->where('isActive', true)
                 ->update(['isActive' => false]);
             
-            // Eredeti fájlnév tisztítása
+
             $originalName = $file->getClientOriginalName();
             $cleanOriginalName = $this->sanitizeFilename($originalName);
-            
-            // Biztonságos fájlnév generálása
+
             $extension = $file->getClientOriginalExtension();
             $fileName = time() . '_' . uniqid() . '.' . $extension;
-            
-            // Fájl mentése
+
             $path = $file->storeAs('documents', $fileName, 'public');
             
             if (!$path) {
                 throw new \Exception('Nem sikerült a fájl mentése');
             }
 
-            // Új dokumentum létrehozása (isActive = true, isAccepted = false)
             $document = Document::create([
                 'user_id' => Auth::id(),
                 'originalName' => $cleanOriginalName,
@@ -194,19 +184,14 @@ class DocumentController extends Controller
         }
     }
 
-     /**
-     * Admin: Dokumentum elfogadása
-     */
     public function accept(Document $document)
     {
         try {
-            // Az összes többi dokumentumot inaktívvá tesszük ugyanannál a típusnál
             Document::where('user_id', $document->user_id)
                 ->where('documentType', $document->documentType)
                 ->where('id', '!=', $document->id)
                 ->update(['isActive' => false]);
 
-            // Az elfogadott dokumentumot aktívvá és elfogadottá tesszük
             $document->update([
                 'isActive' => true,
                 'isAccepted' => true
@@ -223,9 +208,6 @@ class DocumentController extends Controller
         }
     }
 
-    /**
-     * Admin: Dokumentum elutasítása
-     */
     public function reject(Document $document)
     {
         try {
@@ -245,9 +227,8 @@ class DocumentController extends Controller
         }
     }
 
-    /**
-     * Fájlnév tisztítása
-     */
+     //Fájlnév tisztítása
+     
     private function sanitizeFilename($filename)
     {
         $unwanted = [
@@ -264,9 +245,6 @@ class DocumentController extends Controller
         return $clean;
     }
 
-    /**
-     * Felhasználó saját dokumentumának letöltése
-     */
     public function download(Document $document)
     {
         if (Auth::id() !== $document->user_id) {
@@ -280,9 +258,7 @@ class DocumentController extends Controller
         return Storage::disk('public')->download($document->filePath, $document->originalName);
     }
 
-    /**
-     * Admin: Bármilyen dokumentum letöltése
-     */
+
     public function adminDownload(Document $document)
     {
         if (!Storage::disk('public')->exists($document->filePath)) {
@@ -292,9 +268,9 @@ class DocumentController extends Controller
         return Storage::disk('public')->download($document->filePath, $document->originalName);
     }
 
-    /**
-     * Felhasználó saját dokumentumának TÖRLÉSE (valójában inaktívvá tétel)
-     */
+  
+     // Felhasználó saját dokumentumának TÖRLÉSE (valójában inaktívvá tétel)
+     
     public function destroy(Document $document)
     {
         try {
@@ -302,7 +278,7 @@ class DocumentController extends Controller
                 return response()->json(['error' => 'Nincs jogosultságod ehhez a dokumentumhoz'], 403);
             }
 
-            // NEM TÖRÖLJÜK, csak inaktívvá tesszük
+          
             $document->update(['isActive' => false]);
 
             return response()->json(['message' => 'Dokumentum eltávolítva a megjelenítésből']);
@@ -313,9 +289,8 @@ class DocumentController extends Controller
         }
     }
 
-    /**
-     * Admin: TELJES TÖRLÉS (fizikailag is)
-     */
+    //Admin: VÉGLEGES TÖRLÉS 
+     
     public function adminDestroy(Document $document)
     {
         try {
@@ -323,7 +298,7 @@ class DocumentController extends Controller
                 Storage::disk('public')->delete($document->filePath);
             }
 
-            $document->delete(); // Végleges törlés
+            $document->delete();
 
             return response()->json(['message' => 'Dokumentum véglegesen törölve']);
             
@@ -333,16 +308,14 @@ class DocumentController extends Controller
         }
     }
 
-    /**
-     * Felhasználó dokumentumainak lekérése típus szerint (CSAK AKTÍV)
-     */
+
     public function getByType($type)
     {
         $dbType = self::TYPE_MAPPING[$type] ?? $type;
         
         $documents = Document::where('user_id', Auth::id())
             ->where('documentType', $dbType)
-            ->where('isActive', true)  // CSAK az aktívakat
+            ->where('isActive', true) 
             ->latest()
             ->get();
 

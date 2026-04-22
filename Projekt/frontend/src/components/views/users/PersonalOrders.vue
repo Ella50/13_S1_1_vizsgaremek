@@ -56,7 +56,6 @@
         </div>
       </div>
 
-      <!-- Töltés/hiba állapot -->
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Rendelések betöltése...</p>
@@ -922,7 +921,7 @@ export default {
   background: #dee2e6;
 }
 
-/* Modal */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1026,7 +1025,7 @@ export default {
   color: #7b2c2c;
 }
 
-/* Loading state */
+
 .loading-state {
   text-align: center;
   padding: 3rem;
@@ -1063,7 +1062,7 @@ export default {
   border-radius: 12px;
 }
 
-/* Table */
+
 .table-wrapper {
   overflow-x: auto;
   border-radius: 12px;
@@ -1095,10 +1094,6 @@ export default {
   background: #fef9ef;
 }
 
-/* nincs változás kinézetben mert újra megrendelhető
-.data-table tr.cancelled-order {
-  
-}*/
 
 .data-table tr.active-order {
   background: #e8f5e9;
@@ -1108,7 +1103,7 @@ export default {
   background: #fff7e6;
 }
 
-/* Dátum cella */
+
 .date-cell {
   width: 100px;
 }
@@ -1132,7 +1127,7 @@ export default {
   text-transform: uppercase;
 }
 
-/* Étel cella */
+
 .meal-cell {
   min-width: 180px;
 }
@@ -1169,9 +1164,10 @@ export default {
   color: #856404;
   font-size: 0.7rem;
   cursor: help;
+  padding-bottom: 2px;
 }
 
-/* Választás cella */
+
 .choice-cell {
   width: 120px;
   text-align: center;
@@ -1246,7 +1242,7 @@ export default {
   font-size: 0.8rem;
 }
 
-/* Státusz badge */
+
 .status-cell {
   width: 100px;
 }
@@ -1281,7 +1277,7 @@ export default {
   color: #0c5460;
 }
 
-/* Művelet cella */
+
 .action-cell {
   width: 140px;
   text-align: center;

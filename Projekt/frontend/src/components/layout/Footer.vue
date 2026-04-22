@@ -12,25 +12,7 @@
             <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" to="/profile" class="footer-link">Profil</router-link></li>
             <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()" to="/personal-orders" class="footer-link">Rendeléseim</router-link></li>
             <li><router-link v-if="!AuthService.isAdmin() && !AuthService.isKitchen()"  to="/personal-invoices" class="footer-link">Számláim</router-link></li>
-            
-
-            <!--
-            <template v-if="AuthService && AuthService.isAdmin()">
-              <li class="footer-section-divider"><span>Admin</span></li>
-              <li><router-link to="/admin/users" class="footer-link">Felhasználók kezelése</router-link></li>
-              <li><router-link to="/admin/invoices" class="footer-link">Számlák kezelése</router-link></li>
-              <li><router-link to="/admin/documents" class="footer-link">Dokumentumok</router-link></li>
-            </template>
-            
-   
-            <template v-if="AuthService && AuthService.isKitchen()">
-              <li class="footer-section-divider"><span>Konyha</span></li>
-              <li><router-link to="/kitchen/ingredients" class="footer-link">Hozzávalók</router-link></li>
-              <li><router-link to="/kitchen/menu-maker" class="footer-link">Menük készítése</router-link></li>
-              <li><router-link to="/kitchen/orders" class="footer-link">Rendelések kezelése</router-link></li>
-              <li><router-link to="/kitchen/lunchtime" class="footer-link">Ebédeltetés</router-link></li>
-            </template>-->
-
+          
             
             <!-- Nem authentikált felhasználóknak -->
             <template v-if="!AuthService || !AuthService.isAuthenticated()">
@@ -70,13 +52,13 @@ export default {
 </script>
 
 <style scoped>
-/* Fontos: a footer mindig az oldal alján maradjon */
+
 .footer {
   background-color: #ffd18f;
   color: #8f2527;
-  margin-top: auto; /* Ez tolja le a footert az oldal aljára */
+  margin-top: auto; 
   width: 100%;
-  flex-shrink: 0; /* Megakadályozza, hogy a footer összenyomódjon */
+  flex-shrink: 0; 
 }
 
 .footer-container {
@@ -150,7 +132,7 @@ export default {
   font-size: 0.9rem;
 }
 
-/* Reszponzív design */
+
 @media (max-width: 768px) {
   .footer-content {
     grid-template-columns: 1fr;
@@ -158,7 +140,7 @@ export default {
   }
   
   .footer {
-    margin-bottom: 0; /* Mobilon ne legyen extra margin */
+    margin-bottom: 0; 
   }
   
   .footer-link:hover {
@@ -170,7 +152,7 @@ export default {
   }
 }
 
-/* Kis mobilos nézet */
+
 @media (max-width: 480px) {
   .footer-container {
     padding: 0 1rem;

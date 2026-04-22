@@ -140,7 +140,7 @@
       </div>
     </div>
 
-    <!-- Create/Edit Modal (ugyanaz marad) -->
+    <!-- Modal -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <div class="modal-header">
@@ -158,7 +158,6 @@
             <div class="form-group">
               <label>Dátum *</label>
               
-              <!-- Új menü létrehozásakor: legördülő lista -->
               <select 
                 v-if="!isEditMode"
                 v-model="formData.day" 
@@ -271,7 +270,7 @@ import { showConfirm } from '../../auth/AppConfirm.vue'
 export default {
   data() {
     return {
-      // Táblázatos nézet adatai
+     
       menus: { data: [] },
       loading: false,
       error: '',
@@ -281,17 +280,17 @@ export default {
       selectedMonth: null,
       showMonthPicker: false,
       
-      // Modal állapotok
+    
       showModal: false,
       isEditMode: false,
       modalLoading: false,
       saving: false,
       editingMenuId: null,
       
-      // Dátum választás
+    
       availableDates: [],
       
-      // Ételek listája
+ 
       meals: [],
       mealSearch: '',
       mealTypes: [
@@ -303,7 +302,7 @@ export default {
       activeSlot: 'soup',
       activeCategory: 'Leves',
       
-      // Form adatok
+    
       formData: {
         day: '',
         soup: null,
@@ -472,7 +471,7 @@ export default {
           data = JSON.parse(data)
         }
         
-        // Csak a mai és jövőbeli dátumokat mutassuk
+
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         
@@ -546,7 +545,6 @@ export default {
       
       await this.fetchMeals()
       
-      // A dátumot egyszerűen átvesszük, nem kell formázni
       this.formData = {
         day: menu.day,
         soup: menu.soup || null,
@@ -620,7 +618,6 @@ export default {
     },
 
     async deleteMenu(menuId) {
-      // Először keresd meg a menüt az adatok között
       const menu = this.menus.data.find(m => m.id === menuId)
       
       if (!menu) {
@@ -628,7 +625,7 @@ export default {
         return
       }
       
-      // Ellenőrizzük, hogy nem múltbeli-e
+      // múltbeli-e
       if (this.isPastDate(menu.day)) {
         addAlert({ 
           message: 'Múltbeli menü nem törölhető!', 
@@ -761,7 +758,7 @@ export default {
   flex-wrap: wrap;
 }
 
-/* Month selector stílusok */
+
 .month-selector {
   display: flex;
   align-items: center;
@@ -813,7 +810,7 @@ export default {
   color: #f0a24a;
 }
 
-/* Months grid a modalban */
+
 .months-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1100,7 +1097,7 @@ export default {
   padding: 3rem !important;
 }
 
-/* Modal styles */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1413,7 +1410,7 @@ export default {
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
 }
-/* Múltbeli menük stílusa */
+
 .data-table tr.past-menu {
   opacity: 0.7;
   background-color: #f5f5f5;

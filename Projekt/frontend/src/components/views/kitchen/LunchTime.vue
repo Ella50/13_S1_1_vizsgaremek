@@ -19,11 +19,6 @@
         </div>
         <div class="hint">{{ error ? 'Hiba történt' : 'Érintsd a kártyát az olvasóhoz…' }}</div>
         
-        <!--<div v-if="error" class="error-message">
-          <span class="error-icon">⚠️</span>
-          {{ error }}
-        </div>
-        -->
       </div>
 
       <div class="history-section">
@@ -261,7 +256,7 @@ export default {
   100% { opacity: 0.5; transform: scale(0.8); }
 }
 
-/* Reader panel */
+
 .reader-panel {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 20px;
@@ -299,7 +294,7 @@ export default {
   font-size: 1.2rem;
 }
 
-/* History section */
+
 .history-section {
   margin-top: 1rem;
 }
@@ -521,7 +516,7 @@ export default {
   color: #c62828;
 }
 
-/* Meal info */
+
 .meal-info {
   background: #f8f9fa;
   border-radius: 12px;
@@ -568,7 +563,6 @@ export default {
   font-size: 1rem;
 }
 
-/* Scrollbar */
 .history-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -587,7 +581,7 @@ export default {
   background: #e5942c;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .lunchtime {
     padding: 1rem;

@@ -49,8 +49,6 @@ class MenuItemSeeder extends Seeder
 
     public function run(): void
     {
-
-        // Ellenőrizzük, hogy vannak-e ételek
         $mealsCount = Meal::count();
 
         
@@ -59,7 +57,6 @@ class MenuItemSeeder extends Seeder
             return;
         }
 
-        // Ellenőrizzük az ételeket
 
         $requiredMeals = ['Gombaleves', 'Marhapörkölt', 'Sajtos tészta', 'Húsleves', 'Rántott csirke', 
                          'Grillcsirke', 'Paradicsomleves', 'Lasagne', 'Gyümölcssaláta'];
@@ -71,15 +68,12 @@ class MenuItemSeeder extends Seeder
             }
         }
 
-        // Táblázat ürítése vagy ellenőrzése
         $existingMenuItems = MenuItem::count();
         if ($existingMenuItems > 0) {
-            
             MenuItem::truncate();
 
         }
 
-        // Menü elemek generálása
 
         $menuItems = $this->generateNextMonthMenuItems();
         
@@ -92,7 +86,6 @@ class MenuItemSeeder extends Seeder
 
         foreach ($menuItems as $menuItem) {
             try {
-                // Ellenőrizzük az ID-kat
                 $soupId = $this->findMealIdByName($menuItem['soup_name']);
                 $optionAId = $this->findMealIdByName($menuItem['optionA_name']);
                 $optionBId = $this->findMealIdByName($menuItem['optionB_name']);
@@ -141,14 +134,14 @@ class MenuItemSeeder extends Seeder
         // Kezdődátum: ma
         $startDate = Carbon::today();
 
-        // Havi menü generálás
+  
         $daysGenerated = 0;
         $maxDays = 31;
         
         for ($dayOffset = 0; $dayOffset < $maxDays && $daysGenerated < 22; $dayOffset++) {
             $currentDate = $startDate->copy()->addDays($dayOffset);
             
-            // Ellenőrizzük, hogy még a következő hónapban van-e
+
             $nextMonth = $startDate->copy()->addMonth()->month;
             if ($currentDate->month > $nextMonth) {
                 break;
@@ -187,7 +180,7 @@ class MenuItemSeeder extends Seeder
         // Ünnepnap
         $monthDay = $date->format('m-d');
         if (in_array($monthDay, $this->holidays)) {
-            // Ellenőrizzük, hogy az aktuális évben van-e
+  
             $currentYear = Carbon::now()->year;
             $holidayDate = Carbon::createFromFormat('Y-m-d', "{$currentYear}-{$monthDay}");
             

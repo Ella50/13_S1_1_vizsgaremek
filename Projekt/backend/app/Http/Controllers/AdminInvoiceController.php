@@ -183,9 +183,8 @@ Log::info('AdminInvoiceController index called', $request->all());
         ]);
     }
 
-    /**
-     * Számla fizetettre állítása
-     */
+    // Számla fizetettre állítása
+    
     public function markAsPaid($invoice)
     {
         try {
@@ -202,13 +201,7 @@ Log::info('AdminInvoiceController index called', $request->all());
             $invoice->paidAt = now();  
             $invoice->save();
             
-            /* 
-            Log::info('Számla fizetettre állítva', [
-                'invoice_id' => $invoice->id,
-                'invoice_number' => $invoice->invoiceNumber,
-                'admin_id' => auth()->id()
-            ]);*/
-            
+
    
             $invoice->load(['user', 'orders']);
             
@@ -234,7 +227,6 @@ Log::info('AdminInvoiceController index called', $request->all());
     public function markAsUnpaid($invoice)
     {
          try {
-            // output buffert és a BOM eltávolítása
             if (ob_get_length()) ob_clean();
             
             $invoice = Invoice::findOrFail($invoice);
@@ -250,11 +242,6 @@ Log::info('AdminInvoiceController index called', $request->all());
             $invoice->paidAt = null;
             $invoice->save();
             
-            /*Log::info('Számla visszaállítva Generálva státuszra', [
-                'invoice_id' => $invoice->id,
-                'invoice_number' => $invoice->invoiceNumber,
-                'admin_id' => auth()->id()
-            ]);*/
             
             $invoice->load(['user', 'orders']);
             

@@ -1,5 +1,4 @@
 <?php
-//Kitchen: ételek kezelése (hozzáadás, allergének, összetevők szerkesztése)
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Facades\Log;
@@ -19,14 +18,14 @@ use App\Models\MenuItem;
 
 class KitchenController extends Controller
 {
-    // Összes étel lekérdezése ALLERGÉNEKKEL
+    // Ételek lekérdezése ALLERGÉNEKKEL
     public function getMeals(Request $request)
     {
         try {
         $perPage = $request->get('per_page', 12);
         $query = Meal::query();
         
-        // Keresés
+
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -35,12 +34,10 @@ class KitchenController extends Controller
             });
         }
         
-        // Kategória szűrés
         if ($request->has('category') && !empty($request->category)) {
             $query->where('mealType', $request->category);
         }
         
-        // Allergének betöltése, ha kérték
         $withAllergens = $request->has('withAllergens') && $request->withAllergens === 'true';
         
         $query->with(['ingredients' => function($q) use ($withAllergens) {
@@ -70,9 +67,7 @@ class KitchenController extends Controller
         // Pagináció
         $meals = $query->paginate($perPage);
         
-        // Átalakítás a Vue komponens elvárásainak megfelelően (ugyanaz marad)
         $formattedMeals = $meals->getCollection()->map(function ($meal) use ($withAllergens) {
-                // Alap adatok
                 $formattedMeal = [
                     'id' => $meal->id,
                     'mealName' => $meal->mealName,
@@ -104,7 +99,6 @@ class KitchenController extends Controller
                             ]
                         ];
                         
-                        // Ha van allergén, hozzáadjuk
                         if ($ingredient->relationLoaded('allergens')) {
                             $formattedIngredient['allergens'] = $ingredient->allergens->map(function ($allergen) {
                                 return [
@@ -119,7 +113,7 @@ class KitchenController extends Controller
                         return $formattedIngredient;
                     });
                     
-                    // Az étel összes allergénjének összegyűjtése
+                    // Étel összes allergénjének összegyűjtése
                     $allAllergens = collect();
                     foreach ($meal->ingredients as $ingredient) {
                         if ($ingredient->allergens && $ingredient->allergens->isNotEmpty()) {
@@ -127,7 +121,6 @@ class KitchenController extends Controller
                         }
                     }
                     
-                    // Egyedi allergének
                     $formattedMeal['allergens'] = $allAllergens->unique('id')->map(function ($allergen) {
                         return [
                             'id' => $allergen->id,
@@ -163,32 +156,26 @@ class KitchenController extends Controller
         }
     }
     
-    // Allergén ikon URL generálása
-private function getAllergenIconUrl($iconPath)
-{
-    if (!$iconPath) {
-        return null;
-    }
-    
-    if (filter_var($iconPath, FILTER_VALIDATE_URL)) {
-        return $iconPath;
-    }
+    // Allergén ikon
+    private function getAllergenIconUrl($iconPath)
+    {
+        if (!$iconPath) {
+            return null;
+        }
+        
+        if (filter_var($iconPath, FILTER_VALIDATE_URL)) {
+            return $iconPath;
+        }
 
-    return asset('storage/' . ltrim($iconPath, '/'));
-}
+        return asset('storage/' . ltrim($iconPath, '/'));
+    }
     
-    /**
-     * Egy étel összetevőinek lekérdezése ALLERGÉNEKKEL
-     */
+    // Egy étel összetevőinek lekérdezése ALLERGÉNEKKEL
     public function getMealIngredients($id, Request $request = null)
     {
         try {
-
+            $withAllergens = true; 
             
-            // Paraméterek kezelése
-            $withAllergens = true; // Mindig betöltjük az allergéneket
-            
-            // 1. Ellenőrizzük az ételt
             $meal = Meal::find($id);
             
             if (!$meal) {
@@ -201,7 +188,6 @@ private function getAllergenIconUrl($iconPath)
             
             Log::info('Meal found: ' . $meal->id . ' - ' . $meal->mealName);
             
-            // 2. Betöltjük az összetevőket allergénekkel
             $ingredients = $meal->ingredients()->with([
                 'allergens' => function($query) {
                     $query->select('id', 'allergenName', 'icon');
@@ -210,7 +196,6 @@ private function getAllergenIconUrl($iconPath)
             
             Log::info('Ingredients loaded with allergens: ' . $ingredients->count());
             
-            // 3. Formázott válasz
             $formattedIngredients = $ingredients->map(function($ingredient) {
                 Log::info('Processing ingredient: ' . $ingredient->id . ' - ' . $ingredient->ingredientName);
                 
@@ -228,7 +213,6 @@ private function getAllergenIconUrl($iconPath)
                     ]
                 ];
                 
-                // Allergének hozzáadása
                 if ($ingredient->relationLoaded('allergens') && $ingredient->allergens->isNotEmpty()) {
                     $formattedIngredient['allergens'] = $ingredient->allergens->map(function($allergen) {
                         return [
@@ -245,7 +229,6 @@ private function getAllergenIconUrl($iconPath)
                 return $formattedIngredient;
             });
             
-            // 4. Az étel összes allergénjének összegyűjtése
             $allAllergens = collect();
             foreach ($ingredients as $ingredient) {
                 if ($ingredient->allergens && $ingredient->allergens->isNotEmpty()) {
@@ -284,11 +267,7 @@ private function getAllergenIconUrl($iconPath)
             ]);
             
         } catch (\Exception $e) {
-            Log::error('CRITICAL ERROR in getMealIngredients: ' . $e->getMessage());
-            Log::error('File: ' . $e->getFile());
-            Log::error('Line: ' . $e->getLine());
-            Log::error('Trace: ' . $e->getTraceAsString());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Szerverhiba történt.',
@@ -302,15 +281,13 @@ private function getAllergenIconUrl($iconPath)
         }
     }
     
-    /**
-     * Összes hozzávaló lekérdezése
-     */
+
     public function getAllIngredients(Request $request = null)
     {
         try {
             $query = Ingredient::query();
             
-            // Opcionális: betölthetjük az allergéneket is
+            
             if ($request && $request->has('withAllergens') && $request->withAllergens === 'true') {
                 $query->with(['allergens' => function($q) {
                     $q->select('id', 'allergenName', 'icon');
@@ -319,7 +296,6 @@ private function getAllergenIconUrl($iconPath)
             
             $ingredients = $query->orderBy('ingredientName')->get();
             
-            // Átalakítás, ha allergéneket is kértünk
             $formattedIngredients = $ingredients->map(function($ingredient) use ($request) {
                 $formatted = [
                     'id' => $ingredient->id,
@@ -369,22 +345,15 @@ private function getAllergenIconUrl($iconPath)
     }
     
 
-    
-    /**
-     * Új étel létrehozása
-     */
     public function storeMeal(Request $request)
     {
         try {
-            Log::info('=== START storeMeal ===');
-            Log::info('Request data:', $request->all());
             
-            // Validáció alapadatokhoz
             $validator = Validator::make($request->all(), [
                 'mealName' => 'required|string|max:255',
                 'category' => 'required|string|in:Leves,Főétel,Egyéb',
                 'description' => 'nullable|string',
-                // Összetevők validálása, ha küldik
+
                 'ingredients' => 'nullable|array',
                 'ingredients.*.ingredient_id' => 'exists:ingredients,id',
                 'ingredients.*.amount' => 'numeric|min:0.1',
@@ -397,7 +366,7 @@ private function getAllergenIconUrl($iconPath)
             ]);
             
             if ($validator->fails()) {
-                Log::warning('Validation failed:', $validator->errors()->toArray());
+                
                 return response()->json([
                     'success' => false,
                     'message' => 'Validációs hibák',
@@ -405,7 +374,7 @@ private function getAllergenIconUrl($iconPath)
                 ], 422);
             }
             
-            // Étel létrehozása
+
             $meal = Meal::create([
                 'mealName' => $request->mealName,
                 'mealType' => $request->category,
@@ -416,7 +385,7 @@ private function getAllergenIconUrl($iconPath)
             
             Log::info('Meal created successfully:', ['id' => $meal->id, 'name' => $meal->mealName]);
             
-            // Ha vannak összetevők, hozzáadjuk őket
+    
             $ingredientsCount = 0;
             if ($request->has('ingredients') && is_array($request->ingredients) && count($request->ingredients) > 0) {
                 $ingredientsData = [];
@@ -454,10 +423,6 @@ private function getAllergenIconUrl($iconPath)
             ], 201);
             
         } catch (\Exception $e) {
-            Log::error('CRITICAL ERROR in storeMeal: ' . $e->getMessage());
-            Log::error('File: ' . $e->getFile());
-            Log::error('Line: ' . $e->getLine());
-            Log::error('Trace: ' . $e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
@@ -468,13 +433,9 @@ private function getAllergenIconUrl($iconPath)
     }
 
 
-    /**
-     * Ételfrissítés
-     */
     public function updateMeal(Request $request, $id)
     {
         try {
-            // Étel megkeresése
             $meal = Meal::find($id);
             
             if (!$meal) {
@@ -484,10 +445,10 @@ private function getAllergenIconUrl($iconPath)
                 ], 404);
             }
             
-            // Validáció
+
             $validator = Validator::make($request->all(), [
                 'mealName' => 'required|string|max:255',
-                'category' => 'required|string|in:Leves,Főétel,Egyéb' ,//. implode(',', MealType::values()),
+                'category' => 'required|string|in:Leves,Főétel,Egyéb' ,
                 'description' => 'nullable|string',
                 'calories' => 'nullable|integer|min:0',
                 'allergens' => 'nullable|array',
@@ -508,15 +469,13 @@ private function getAllergenIconUrl($iconPath)
                 ], 422);
             }
             
-            // Frissítés
+    
             $meal->update([
                 'mealName' => $request->mealName,
                 'mealType' => $request->category,
                 'description' => $request->description,
                 'picture' => $request->picture ?? $meal->picture,
-                // Ha van extra meződ, itt add hozzá
-                // 'calories' => $request->calories ?? $meal->calories,
-                // 'allergens' => $request->has('allergens') ? json_encode($request->allergens) : $meal->allergens
+
             ]);
             
             return response()->json([
@@ -541,16 +500,11 @@ private function getAllergenIconUrl($iconPath)
         }
     }
 
-    /**
-     * Ételtörlés
-     */
     public function deleteMeal($id)
     {
         try {
-            Log::info('=== START deleteMeal ===');
-            Log::info('Attempting to delete meal with ID: ' . $id);
-            
-            // Étel megkeresése
+
+
             $meal = Meal::find($id);
             
             if (!$meal) {
@@ -561,8 +515,7 @@ private function getAllergenIconUrl($iconPath)
                 ], 404);
             }
             
-            // Ellenőrizzük, hogy szerepel-e menükben
-            // Itt használjuk a Meal modell új metódusát vagy direkt query-t
+
             $menuItemCount = MenuItem::where('soup', $id)
                 ->orWhere('optionA', $id)
                 ->orWhere('optionB', $id)
@@ -570,7 +523,6 @@ private function getAllergenIconUrl($iconPath)
                 ->count();
             
             if ($menuItemCount > 0) {
-                // Megkeressük a konkrét dátumokat
                 $menuItems = MenuItem::where('soup', $id)
                     ->orWhere('optionA', $id)
                     ->orWhere('optionB', $id)
@@ -581,18 +533,12 @@ private function getAllergenIconUrl($iconPath)
                     return \Carbon\Carbon::parse($date)->format('Y-m-d');
                 })->toArray();
                 
-                $datesStr = implode(', ', array_slice($dates, 0, 5)); // Max 5 dátumot mutatunk
+                $datesStr = implode(', ', array_slice($dates, 0, 5)); // Max 5 dátumot
                 
                 if (count($dates) > 5) {
                     $datesStr .= '... (+' . (count($dates) - 5) . ' további)';
                 }
                 
-                Log::warning('Cannot delete meal: it is used in menu items', [
-                    'meal_id' => $meal->id,
-                    'meal_name' => $meal->mealName,
-                    'menu_items_count' => $menuItemCount,
-                    'menu_dates' => $dates
-                ]);
                 
                 return response()->json([
                     'success' => false,
@@ -601,7 +547,7 @@ private function getAllergenIconUrl($iconPath)
                 ], 400);
             }
             
-            // Először töröljük az összetevőket
+
             if ($meal->ingredients()->count() > 0) {
                 $ingredientsCount = $meal->ingredients()->count();
                 $meal->ingredients()->detach();
@@ -620,11 +566,9 @@ private function getAllergenIconUrl($iconPath)
                 'ingredients_count' => $ingredientsCount ?? 0
             ];
             
-            // Törlés
+
             $meal->delete();
             
-            Log::info('Meal deleted successfully', $mealData);
-            Log::info('=== END deleteMeal ===');
             
             return response()->json([
                 'success' => true,
@@ -633,10 +577,6 @@ private function getAllergenIconUrl($iconPath)
             ]);
             
         } catch (\Exception $e) {
-            Log::error('CRITICAL ERROR in deleteMeal: ' . $e->getMessage());
-            Log::error('File: ' . $e->getFile());
-            Log::error('Line: ' . $e->getLine());
-            Log::error('Trace: ' . $e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
@@ -646,9 +586,6 @@ private function getAllergenIconUrl($iconPath)
         }
     }
 
-    /**
-     * Egy étel lekérdezése
-     */
     public function showMeal($id)
     {
         try {
@@ -684,98 +621,92 @@ private function getAllergenIconUrl($iconPath)
     }
 
     public function updateMealIngredients($id, Request $request)
-{
-    try {
-        Log::info('=== START updateMealIngredients ===');
-        Log::info('Meal ID: ' . $id);
-        Log::info('Request data:', $request->all());
-        
-        // Étellellenőrzés
-        $meal = Meal::find($id);
-        
-        if (!$meal) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Az étel nem található.'
-            ], 404);
-        }
-        
-        // Validáció
-        $validator = Validator::make($request->all(), [
-            'ingredients' => 'required|array',
-            'ingredients.*.ingredient_id' => 'required|exists:ingredients,id',
-            'ingredients.*.amount' => 'required|numeric|min:0.1',
-            'ingredients.*.unit' => 'required|string|max:10'
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validációs hibák',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        // Meglévő összetevők törlése
-        $meal->ingredients()->detach();
-        
-        // Új összetevők hozzáadása
-        $ingredientsData = [];
-        foreach ($request->ingredients as $ingredient) {
-            $ingredientsData[$ingredient['ingredient_id']] = [
-                'amount' => $ingredient['amount'],
-                'unit' => $ingredient['unit']
-            ];
-        }
-        
-        $meal->ingredients()->attach($ingredientsData);
-        
-        Log::info('Meal ingredients updated successfully:', [
-            'meal_id' => $meal->id,
-            'ingredients_count' => count($ingredientsData)
-        ]);
-        
-        // Betöltjük a frissített adatokat allergénekkel
-        $updatedMeal = Meal::with(['ingredients.allergens' => function($query) {
-            $query->select('id', 'allergenName', 'icon');
-        }])->find($id);
-        
-        // Összegyűjtjük az allergéneket
-        $allAllergens = collect();
-        foreach ($updatedMeal->ingredients as $ingredient) {
-            if ($ingredient->allergens && $ingredient->allergens->isNotEmpty()) {
-                $allAllergens = $allAllergens->merge($ingredient->allergens);
+    {
+        try {
+    
+            $meal = Meal::find($id);
+            
+            if (!$meal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az étel nem található.'
+                ], 404);
             }
+            
+            $validator = Validator::make($request->all(), [
+                'ingredients' => 'required|array',
+                'ingredients.*.ingredient_id' => 'required|exists:ingredients,id',
+                'ingredients.*.amount' => 'required|numeric|min:0.1',
+                'ingredients.*.unit' => 'required|string|max:10'
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validációs hibák',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+          
+            $meal->ingredients()->detach();
+            
+          
+            $ingredientsData = [];
+            foreach ($request->ingredients as $ingredient) {
+                $ingredientsData[$ingredient['ingredient_id']] = [
+                    'amount' => $ingredient['amount'],
+                    'unit' => $ingredient['unit']
+                ];
+            }
+            
+            $meal->ingredients()->attach($ingredientsData);
+            
+            Log::info('Meal ingredients updated successfully:', [
+                'meal_id' => $meal->id,
+                'ingredients_count' => count($ingredientsData)
+            ]);
+            
+            
+            $updatedMeal = Meal::with(['ingredients.allergens' => function($query) {
+                $query->select('id', 'allergenName', 'icon');
+            }])->find($id);
+            
+         
+            $allAllergens = collect();
+            foreach ($updatedMeal->ingredients as $ingredient) {
+                if ($ingredient->allergens && $ingredient->allergens->isNotEmpty()) {
+                    $allAllergens = $allAllergens->merge($ingredient->allergens);
+                }
+            }
+            
+            $uniqueAllergens = $allAllergens->unique('id')->map(function($allergen) {
+                return [
+                    'id' => $allergen->id,
+                    'allergenName' => $allergen->allergenName,
+                    'icon' => $allergen->icon,
+                    'icon_url' => $this->getAllergenIconUrl($allergen->icon)
+                ];
+            })->values()->toArray();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Összetevők sikeresen frissítve.',
+                'ingredients_count' => count($ingredientsData),
+                'allergens' => $uniqueAllergens  
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('CRITICAL ERROR in updateMealIngredients: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az összetevők frissítése során.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
-        
-        $uniqueAllergens = $allAllergens->unique('id')->map(function($allergen) {
-            return [
-                'id' => $allergen->id,
-                'allergenName' => $allergen->allergenName,
-                'icon' => $allergen->icon,
-                'icon_url' => $this->getAllergenIconUrl($allergen->icon)
-            ];
-        })->values()->toArray();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Összetevők sikeresen frissítve.',
-            'ingredients_count' => count($ingredientsData),
-            'allergens' => $uniqueAllergens  // Visszaadjuk az allergéneket is
-        ]);
-        
-    } catch (\Exception $e) {
-        Log::error('CRITICAL ERROR in updateMealIngredients: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Hiba történt az összetevők frissítése során.',
-            'error' => config('app.debug') ? $e->getMessage() : null
-        ], 500);
     }
-}
-    /**
-     * Kategóriák listája
-     */
+
+
     public function getCategories()
     {
         try {
@@ -795,7 +726,7 @@ private function getAllergenIconUrl($iconPath)
     }
     
     /**
-     * Ételek listázása allergénekkel (speciális végpont)
+     * Ételek listázása allergénekkel
      */
     public function mealsWithAllergens()
     {
@@ -805,7 +736,6 @@ private function getAllergenIconUrl($iconPath)
             }])
             ->get()
             ->map(function($meal) {
-                // Összegyűjtjük az összes allergént
                 $allAllergens = collect();
                 foreach ($meal->ingredients as $ingredient) {
                     if ($ingredient->allergens && $ingredient->allergens->isNotEmpty()) {
@@ -841,9 +771,6 @@ private function getAllergenIconUrl($iconPath)
     }
     
 
-  
-
-
     public function getIngredientsList(Request $request)
     {
 
@@ -877,7 +804,6 @@ private function getAllergenIconUrl($iconPath)
         $sortOrder = $request->get('sort_order', 'asc');
         $query->orderBy($sortBy, $sortOrder);
 
-        // Pagináció
         $ingredients = $query->paginate($perPage);
 
         return response()->json([
@@ -913,7 +839,7 @@ private function getAllergenIconUrl($iconPath)
             'sugar' => 'nullable|integer|min:0',
             'fiber' => 'nullable|integer|min:0',
             'isAvailable' => 'boolean',
-            'allergen_ids' => 'nullable|array', // Új mező
+            'allergen_ids' => 'nullable|array', 
             'allergen_ids.*' => 'exists:allergens,id'
         ]);
 
@@ -923,7 +849,7 @@ private function getAllergenIconUrl($iconPath)
             
             $ingredient = Ingredient::create($validated);
             
-            // Allergének hozzáadása
+         
             if (!empty($allergenIds)) {
                 $ingredient->allergens()->sync($allergenIds);
             }
@@ -941,14 +867,12 @@ private function getAllergenIconUrl($iconPath)
         }
     }
 
-    /**
-     * Egy hozzávaló megjelenítése (új név)
-     */
+
     public function showIngredientDetail($id)
     {
-        // Csak konyha és admin jogosultság
+        // Csak konyha jogosultság
         $user = Auth::user();
-        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+        if (!in_array($user->userType, ['Konyha'])) {
             return response()->json([
                 'message' => 'Unauthorized'
             ], Response::HTTP_FORBIDDEN);
@@ -961,14 +885,11 @@ private function getAllergenIconUrl($iconPath)
         ]);
     }
 
-    /**
-     * Hozzávaló frissítése
-     */
+
     public function updateIngredientItem(Request $request, $id)
     {
-        // Csak konyha és admin jogosultság
         $user = Auth::user();
-        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+        if (!in_array($user->userType, ['Konyha'])) {
             return response()->json([
                 'message' => 'Unauthorized'
             ], Response::HTTP_FORBIDDEN);
@@ -1016,7 +937,7 @@ private function getAllergenIconUrl($iconPath)
 
     $ingredient = Ingredient::findOrFail($id);
     
-    // Debug: nézzük meg van-e kapcsolat
+    // Debug
     $mealsCount = $ingredient->meals()->count();
     Log::info('Delete ingredient check', [
         'ingredient_id' => $id,
@@ -1033,7 +954,6 @@ private function getAllergenIconUrl($iconPath)
     }
 
     try {
-        // Először töröljük a kapcsolódó rekordokat
         $ingredient->allergens()->detach(); // Allergén kapcsolatok törlése
         $ingredient->meals()->detach();     // Étél kapcsolatok törlése (ha vannak)
         
@@ -1052,14 +972,12 @@ private function getAllergenIconUrl($iconPath)
         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }
-    /**
-     * Tömeges elérhetőség frissítés
-     */
+
     public function bulkUpdateIngredientAvailability(Request $request)
     {
-        // Csak konyha és admin jogosultság
+ 
         $user = Auth::user();
-        if (!in_array($user->userType, ['Konyha', 'Admin'])) {
+        if (!in_array($user->userType, ['Konyha'])) {
             return response()->json([
                 'message' => 'Unauthorized'
             ], Response::HTTP_FORBIDDEN);
@@ -1087,9 +1005,7 @@ private function getAllergenIconUrl($iconPath)
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-    /**
-     * Összes allergén lekérdezése
-     */
+
     public function getAllAllergens()
     {
         try {
@@ -1108,9 +1024,7 @@ private function getAllergenIconUrl($iconPath)
         }
     }
 
-    /**
-     * Összetevő allergénjeinek lekérdezése
-     */
+
     public function getIngredientAllergens($id)
     {
         try {
@@ -1135,9 +1049,7 @@ private function getAllergenIconUrl($iconPath)
         }
     }
 
-    /**
-     * Összetevő allergénjeinek frissítése
-     */
+
     public function updateIngredientAllergens(Request $request, $id)
     {
         try {
@@ -1147,8 +1059,7 @@ private function getAllergenIconUrl($iconPath)
                 'allergen_ids' => 'array',
                 'allergen_ids.*' => 'exists:allergens,id'
             ]);
-            
-            // Allergének szinkronizálása
+        
             $ingredient->allergens()->sync($request->allergen_ids ?? []);
             
             return response()->json([

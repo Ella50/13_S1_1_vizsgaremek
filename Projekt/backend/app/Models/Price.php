@@ -10,9 +10,8 @@ class Price extends Model
 {
     use HasFactory;
 
-    /**
-     * A tömeges hozzárendeléshez engedélyezett mezők
-     */
+    // A tömeges hozzárendeléshez engedélyezett mezők
+     
     protected $fillable = [
         'userType',
         'priceCategory',
@@ -21,9 +20,7 @@ class Price extends Model
         'validTo'
     ];
 
-    /**
-     * Típuskonverziók
-     */
+
     protected $casts = [
         'validFrom' => 'date',
         'validTo' => 'date',
@@ -32,17 +29,13 @@ class Price extends Model
     
     public $timestamps = false;
 
-    /**
-     * Kapcsolat a rendelésekkel
-     */
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
 
-    /**
-     * Scope aktuális árakhoz
-     */
+
     public function scopeActive($query)
     {
         $now = now()->format('Y-m-d');
@@ -65,9 +58,7 @@ class Price extends Model
         return $query->where('priceCategory', $category);
     }
 
-    /**
-     * Aktív-e az ár
-     */
+
     public function isActive(): bool
     {
         $now = now()->format('Y-m-d');
@@ -75,17 +66,13 @@ class Price extends Model
                ($this->validTo === null || $this->validTo >= $now);
     }
 
-    /**
-     * Formázott ár
-     */
+
     public function getFormattedAmountAttribute(): string
     {
         return number_format($this->amount, 0, ',', ' ') . ' Ft';
     }
 
-    /**
-     * Felhasználó típus megjelenítési neve
-     */
+
     public function getUserTypeDisplayAttribute(): string
     {
         return match($this->userType) {
@@ -97,9 +84,7 @@ class Price extends Model
         };
     }
 
-    /**
-     * Kategória megjelenítési neve
-     */
+
     public function getCategoryDisplayAttribute(): string
     {
         return match($this->priceCategory) {

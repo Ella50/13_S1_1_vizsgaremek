@@ -11,11 +11,11 @@ class MealIngredientSeeder extends Seeder
     {
         DB::table('meal_ingredients')->truncate();
         
-        // Betöltjük az ételeket és összetevőket
+
         $meals = DB::table('meals')->get()->keyBy('mealName');
         $allIngredients = DB::table('ingredients')->get();
         
-        // Készítünk egy helper tömböt a nevek alapján
+      
         $ingredients = [];
         foreach ($allIngredients as $ingredient) {
             $ingredients[$ingredient->ingredientName] = $ingredient;
@@ -33,7 +33,7 @@ class MealIngredientSeeder extends Seeder
             return $ingredients[$name];
         };
         
-        // ============ GOMBALEVES ============
+    
         if (isset($meals['Gombaleves'])) {
             $gombalevesIngredients = [
                 'Friss gomba' => ['amount' => 300.00, 'unit' => 'g'],
@@ -57,7 +57,7 @@ class MealIngredientSeeder extends Seeder
             }
         }
         
-        // ============ MARHAPÖRKÖLT ============
+
         if (isset($meals['Marhapörkölt'])) {
             $marhaporkoltIngredients = [
                 'Marhahús (comb)' => ['amount' => 500.00, 'unit' => 'g'],
@@ -82,7 +82,7 @@ class MealIngredientSeeder extends Seeder
             }
         }
         
-        // ============ SAJTOS TÉSZT ============
+   
         if (isset($meals['Sajtos tészta'])) {
             $sajtosTesztaIngredients = [
                 'Tészta (spaghetti)' => ['amount' => 400.00, 'unit' => 'g'],
@@ -106,7 +106,7 @@ class MealIngredientSeeder extends Seeder
             }
         }
         
-        // ============ LASAGNE ============
+ 
         if (isset($meals['Lasagne'])) {
             $lasagneIngredients = [
                 'Lasagne lap' => ['amount' => 250.00, 'unit' => 'g'],
@@ -130,7 +130,7 @@ class MealIngredientSeeder extends Seeder
             }
         }
         
-        // ============ HÚSLEVES ============
+     
         if (isset($meals['Húsleves'])) {
             $huslevesIngredients = [
                 'Csirkemell' => ['amount' => 600.00, 'unit' => 'g'],
@@ -154,7 +154,7 @@ class MealIngredientSeeder extends Seeder
             }
         }
         
-        // ============ GRILLCSIRKE ============
+
         if (isset($meals['Grillcsirke'])) {
             $grillcsirkeIngredients = [
                 'Csirkecomb' => ['amount' => 800.00, 'unit' => 'g'],
@@ -178,7 +178,7 @@ class MealIngredientSeeder extends Seeder
             }
         }
         
-        // ============ GYÜMÖLCSALÁTA ============
+
         if (isset($meals['Gyümölcssaláta'])) {
             $gyumolcssalataIngredients = [
                 'Alma' => ['amount' => 200.00, 'unit' => 'g'],

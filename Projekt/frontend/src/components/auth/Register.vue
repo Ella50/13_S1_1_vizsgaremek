@@ -3,7 +3,7 @@
     <h2 class="title">Regisztráció</h2>
 
     <form @submit.prevent="handleRegister" class="register-form">
-      <!-- Név mezők -->
+
       <div class="form-row">
 
         <input 
@@ -31,13 +31,6 @@
         maxlength="50" 
         @input="validateNameField($event, 'thirdName')"
         @blur="validateNameField($event, 'thirdName')">
-
-       <!-- <input type="text" v-model="form.lastName" placeholder="Vezetéknév *" required maxlength="50">
-        <input type="text" v-model="form.firstName" placeholder="Keresztnév *" required maxlength="50">
-      </div>
-      
-      <input type="text" v-model="form.thirdName" placeholder="Harmadik név" maxlength="50"> -->
-
 
   
       <div class="form-row">
@@ -67,7 +60,6 @@
         <input type="text" v-model="form.address" placeholder="pl. Kossuth utca 10." required maxlength="255">
       </div>
 
-      <!-- Email és jelszó --> 
       <div class="form-group">
         <label>Email cím (iskolai) *</label>
         <input type="email" v-model="form.email" placeholder="pelda@iskola.hu" required maxlength="255">
@@ -94,7 +86,7 @@
         </div>
       </div>
 
-      <!-- Felhasználó típus -->
+
       <div class="form-group">
         <label>Felhasználó típus *</label>
         <select v-model="form.userType" required>
@@ -116,7 +108,7 @@
       Van már fiókja? <router-link to="/login">Jelentkezzen be</router-link>
     </p>
 
-    <!-- Alert értesítés -->
+
     <div class="alert-container" v-if="alertVisible">
       <div :class="['alert', alertType]">
         <strong v-if="alertTitle">{{ alertTitle }}</strong>
@@ -154,7 +146,6 @@ export default {
       error: '',
       success: '',
       
-      // Alert állapotok
       alertVisible: false,
       alertMessage: '',
       alertTitle: '',
@@ -171,10 +162,9 @@ export default {
     }
   },
   methods: {
-    // Név mező validáció: csak betűk (magyar ékezetesek is) és kötőjel
     validateNameField(event, fieldName) {
       let value = event.target.value
-      // Csak betűk (angol, magyar ékezetes) és kötőjel maradhat
+      // Csak betűk (+ magyar ékezetes) és kötőjel
       const regex = /[^A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű\-]/g
       const filtered = value.replace(regex, '')
       
@@ -235,7 +225,6 @@ export default {
         }
       }
     },
-    // Alert metódus
     showAlert({ message, type = 'success', title = '' }) {
       if (this.alertTimeout) {
         clearTimeout(this.alertTimeout)
@@ -347,7 +336,7 @@ export default {
     },
 
     async handleRegister() {
-      // Név mezők validációja a beküldés előtt
+
       const nameFields = [
         { value: this.form.lastName, name: 'Vezetéknév' },
         { value: this.form.firstName, name: 'Keresztnév' }
@@ -365,7 +354,7 @@ export default {
         }
       }
       
-      // Harmadik név ellenőrzése (ha van kitöltve)
+
       if (this.form.thirdName && !nameRegex.test(this.form.thirdName)) {
         this.showAlert({
           message: 'Harmadik név mezőben csak betűk és kötőjel használható!',
@@ -374,8 +363,7 @@ export default {
         return
       }
 
-      // Email végződés ellenőrzés - JAVÍTVA
-      // Ez az ellenőrzés biztosítja, hogy az email @iskola.hu-ra végződjön
+      // @iskola.hu végződés
       const emailRegex = /@iskola\.hu$/
       if (!emailRegex.test(this.form.email)) {
         this.showAlert({
@@ -427,8 +415,6 @@ export default {
         console.log('Registration response:', response.data)
         
 
-        
-        // Űrlap alaphelyzetbe állítása
         this.form = {
           firstName: '', lastName: '', thirdName: '', email: '',
           password: '', password_confirmation: '', userType: 'Tanuló',
@@ -495,7 +481,7 @@ export default {
   gap: 0.5rem;
 }
 
-/* Alert stílusok */
+
 .alert-container {
   position: fixed;
   top: 20px;

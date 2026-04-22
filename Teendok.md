@@ -6,11 +6,10 @@
 - seederek: rendelés, számlák
 
 ## Dokumentációban:
-+ Adatbázis: képek kicserélése
-+ Algoritmusok: képek csere
-+ a különböző felületeknél képek (navbar)
++ a különböző felületeknél képek (navbarról is)
 + felhaszn. rész: KÉPEK
 +
+
 
 
 ## Doucments
@@ -21,7 +20,7 @@
 ## PersonalOrders.vue
 
 ## PersonalInvoices.vue
-
+- pagináció component
 
 ## AdminInvoice.vue
 

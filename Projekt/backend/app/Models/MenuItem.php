@@ -67,9 +67,8 @@ class MenuItem extends Model
 
  
 
-/**
- * Menü adatainak lekérése (visszafelé kompatibilis)
- */
+    // Menü adatainak lekérése (visszafelé kompatibilis)
+ 
     public function getMenuData()
     {
         $data = [
@@ -91,7 +90,7 @@ class MenuItem extends Model
                 'isAvailable' => $this->soupMeal->isAvailable ?? true
             ];
         } else if ($this->soup) {
-            // Ha nincs betöltve, csak az ID-t adjuk vissza
+   
             $data['soup'] = ['id' => $this->soup];
         }
         

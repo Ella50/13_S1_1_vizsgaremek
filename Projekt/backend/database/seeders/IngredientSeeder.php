@@ -10,7 +10,7 @@ class IngredientSeeder extends Seeder
     public function run()
     {
         DB::table('ingredients')->insert([
-            // ============ GOMBALEVES ============
+       
             [
                 'ingredientName' => 'Friss gomba',
                 'ingredientType' => 'Zöldség',
@@ -48,7 +48,6 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             
-            // ============ MARHAPÖRKÖLT ============
             [
                 'ingredientName' => 'Marhahús (comb)',
                 'ingredientType' => 'Hús',
@@ -86,7 +85,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             
-            // ============ SAJTOS TÉSZT ============
+     
             [
                 'ingredientName' => 'Tészta (spaghetti)',
                 'ingredientType' => 'Egyéb',
@@ -136,7 +135,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             
-            // ============ LASAGNE ============
+        
             [
                 'ingredientName' => 'Lasagne lap',
                 'ingredientType' => 'Egyéb',
@@ -186,7 +185,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             
-            // ============ HÚSLEVES ============
+            
             [
                 'ingredientName' => 'Csirkemell',
                 'ingredientType' => 'Hús',
@@ -236,7 +235,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             
-            // ============ GRILLCSIRKE ============
+           
             [
                 'ingredientName' => 'Csirkecomb',
                 'ingredientType' => 'Hús',
@@ -286,7 +285,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             
-            // ============ GYÜMÖLCSALÁTA ============
+
             [
                 'ingredientName' => 'Alma',
                 'ingredientType' => 'Gyümölcs',
@@ -336,7 +335,7 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             
-            // ============ ÁLTALÁNOS ALAPANYAGOK ============
+         
             [
                 'ingredientName' => 'Só',
                 'ingredientType' => 'Fűszer',

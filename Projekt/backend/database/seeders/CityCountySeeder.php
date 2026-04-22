@@ -61,7 +61,7 @@ class CityCountySeeder extends Seeder
                 'county_id' => $counties[$countyName],
             ];
             
-            // Batch insert (minden 500)
+    
             if (count($cities) >= 500) {
                 try {
                     DB::table('cities')->insert($cities);

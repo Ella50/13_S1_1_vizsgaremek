@@ -342,7 +342,7 @@ button {
   }
 }
 
-/* felül a "nap" */
+
 .day-pill {
   background: #f7c77a;
   color: #7b2c2c;
@@ -370,7 +370,7 @@ button {
   opacity: 0.9;
 }
 
-/* belső "füzet" card */
+
 .card {
   background: #fff;
   border-radius: 16px;
@@ -509,7 +509,6 @@ button {
   transform: translateY(0);
 }
 
-/* mobilon is scroll marad, csak kisebb kártyák */
 @media (max-width: 768px) {
   .content-card {
     padding: 1rem;

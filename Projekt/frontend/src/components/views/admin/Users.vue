@@ -1082,8 +1082,6 @@ export default {
   color: #522a2e;
 }
 
-
-/* Bulk actions */
 .bulk-actions {
   background: #f8f9fa;
   border-radius: 12px;
@@ -1139,7 +1137,6 @@ export default {
   font-size: 0.85rem;
 }
 
-/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1384,7 +1381,6 @@ export default {
   color: #888;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .admin-users {
     padding: 1rem;

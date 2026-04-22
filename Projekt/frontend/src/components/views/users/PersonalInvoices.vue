@@ -38,32 +38,27 @@
             </select>
           </div>
           
-
-          
-        <!-- <button class="btn-primary" @click="loadInvoices">
-            Szűrés
-          </button>--> 
         </div>
       </div>
       
-      <!-- Loading state -->
+
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Betöltés...</p>
       </div>
       
-      <!-- Error state -->
+ 
       <div v-else-if="error" class="error-message">
         <p>{{ error }}</p>
         <button @click="loadInvoices" class="btn-secondary">Újrapróbálkozás</button>
       </div>
       
-      <!-- Empty state -->
+
       <div v-else-if="invoices.length === 0" class="empty-state">
         <h3>Nincs számla</h3>
       </div>
       
-      <!-- Invoices table -->
+      <!-- Számlák-->
       <div v-else>
         <div class="table-wrapper">
           <table class="data-table">
@@ -117,7 +112,7 @@
           </table>
         </div>
         
-        <!-- Pagination -->
+        <!-- Paginacio-->
         <div class="pagination" v-if="pagination.last_page > 1">
           <button 
             @click="goToPage(pagination.current_page - 1)" 
@@ -152,7 +147,7 @@
       </div>
     </div>
     
-    <!-- Invoice Detail Modal -->
+    <!-- Számla részletek Modal -->
     <div v-if="selectedInvoice" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <div class="modal-header">
@@ -653,7 +648,7 @@ export default {
   background: #dee2e6;
 }
 
-/* Loading state */
+
 .loading-state {
   text-align: center;
   padding: 3rem;
@@ -674,7 +669,7 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-/* Error state */
+
 .error-message {
   background: #ffebee;
   color: #c62828;
@@ -683,7 +678,7 @@ export default {
   text-align: center;
 }
 
-/* Empty state */
+
 .empty-state {
   text-align: center;
   padding: 3rem;
@@ -709,7 +704,7 @@ export default {
   font-size: 0.85rem;
 }
 
-/* Table styles */
+
 .table-wrapper {
   overflow-x: auto;
   border-radius: 12px;
@@ -760,7 +755,7 @@ export default {
   font-weight: 500;
 }
 
-/* Status badges */
+
 .status-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -789,7 +784,7 @@ export default {
   color: #495057;
 }
 
-/* Action buttons */
+
 .actions-cell {
   white-space: nowrap;
 }
@@ -838,74 +833,6 @@ export default {
   cursor: not-allowed;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding: 1rem;
-}
-
-.btn-pagination {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;
-}
-
-.btn-pagination:hover:not(:disabled) {
-  background: #f0a24a;
-  color: white;
-  border-color: #f0a24a;
-}
-
-.btn-pagination:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-numbers {
-  display: flex;
-  gap: 0.25rem;
-  align-items: center;
-}
-
-.page-number {
-  min-width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-
-.page-number:hover {
-  background: #f0a24a;
-  color: #7b2c2c;
-}
-
-.page-number.active {
-  background: #f0a24a;
-  color: #7b2c2c;
-  font-weight: 600;
-}
-
-.page-dots {
-  padding: 0 0.25rem;
-  color: #aaa;
-}
-
-/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1000,7 +927,7 @@ export default {
   background: #dee2e6;
 }
 
-/* Detail grid */
+
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1040,7 +967,7 @@ export default {
   color: #1fa317;
 }
 
-/* Orders table */
+
 .orders-section h3 {
   margin: 0 0 1rem 0;
   font-size: 0.9rem;
@@ -1109,7 +1036,7 @@ export default {
   border-radius: 12px;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .personal-invoices {
     padding: 1rem;

@@ -11,7 +11,6 @@ use App\Models\RfidCard;
 
 class LunchTimeController extends Controller
 {
-    // proxy a python gateway felé
     public function latestScan(Request $request)
     {
         $since = $request->query('since');
@@ -30,7 +29,7 @@ class LunchTimeController extends Controller
         return response()->json($resp->json());
     }
 
-    // ellenőrzés: van-e user, van-e rendelés ma, evett-e ma
+    //van-e user, van-e rendelés ma, evett-e ma
    public function verify(Request $request)
     {
         $request->validate([
@@ -40,7 +39,6 @@ class LunchTimeController extends Controller
         $uid = trim($request->input('uid'));
         $today = Carbon::today();
 
-        // 1) kártya
         $card = RfidCard::where('cardNumber', $uid)->first();
         if (!$card) {
             return response()->json([
@@ -52,7 +50,6 @@ class LunchTimeController extends Controller
             ]);
         }
 
-        // 2) user a kártyához
         $user = User::where('rfidCard_id', $card->id)->first();
         if (!$user) {
             return response()->json([
@@ -66,12 +63,10 @@ class LunchTimeController extends Controller
 
         $fullName = trim($user->lastName . ' ' . $user->firstName . ' ' . ($user->thirdName ?? ''));
 
-        // 3) Mai rendelés (mit eszik) + van-e rendelése
         $order = Order::where('user_id', $user->id)
             ->whereDate('orderDate', $today)
             ->first();
 
-        // nincs rendelés
         if (!$order) {
             return response()->json([
                 'success' => true,
@@ -88,7 +83,6 @@ class LunchTimeController extends Controller
             ]);
         }
 
-        // lemondva
         if (($order->orderStatus ?? '') === 'Lemondva' || !empty($order->cancelledAt)) {
             return response()->json([
                 'success' => true,
@@ -105,7 +99,7 @@ class LunchTimeController extends Controller
             ]);
         }
 
-        // 4) Már evett ma? -> rfidCards.lastUsedAt alapján
+
         if (!empty($card->lastUsedAt) && Carbon::parse($card->lastUsedAt)->isSameDay($today)) {
             return response()->json([
                 'success' => true,
@@ -116,13 +110,12 @@ class LunchTimeController extends Controller
                     'selectedOption' => $order->selectedOption,
                     'hasDiabetes' => (bool)($user->hasDiabetes ?? false),
                     'canEat' => false,
-                    'message' => 'Már evett.',
+                    'message' => 'Már evett',
                     'lastUsedAt' => $card->lastUsedAt,
                 ]
             ]);
         }
 
-        // 5) Ehet -> AZONNAL rögzítjük a lastUsedAt-ot
         $card->lastUsedAt = now();
         $card->save();
 
@@ -135,14 +128,13 @@ class LunchTimeController extends Controller
                 'selectedOption' => $order->selectedOption,
                 'hasDiabetes' => (bool)($user->hasDiabetes ?? false),
                 'canEat' => true,
-                'message' => 'Ehet.',
+                'message' => 'Ehet',
                 'lastUsedAt' => $card->lastUsedAt,
             ]
         ]);
     }
 
 
-    // fogyasztás rögzítése (hogy ne ehessen még egyszer)
     public function consume(Request $request)
     {
         $request->validate([

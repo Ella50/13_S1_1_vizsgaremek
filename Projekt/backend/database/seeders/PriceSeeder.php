@@ -14,7 +14,7 @@ class PriceSeeder extends Seeder
         $nextYear = $now->copy()->addYear();
         
         $prices = [
-            // ========== TANULÓK ==========
+       
             [
                 'userType' => 'Tanuló',
                 'priceCategory' => 'Normál',
@@ -32,7 +32,7 @@ class PriceSeeder extends Seeder
 
             ],
             
-            // ========== TANÁROK ==========
+          
             [
                 'userType' => 'Tanár',
                 'priceCategory' => 'Normál',
@@ -50,7 +50,7 @@ class PriceSeeder extends Seeder
 
             ],
             
-            // ========== DOLGOZÓK ==========
+        
             [
                 'userType' => 'Dolgozó',
                 'priceCategory' => 'Normál',
@@ -60,7 +60,7 @@ class PriceSeeder extends Seeder
 
             ],
             
-            // ========== KÜLSŐSÖK ==========
+           
             [
                 'userType' => 'Külsős',
                 'priceCategory' => 'Normál',
