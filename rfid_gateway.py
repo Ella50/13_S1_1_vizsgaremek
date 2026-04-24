@@ -16,7 +16,6 @@ def now_iso():
 
 def find_port():
     ports = list(serial.tools.list_ports.comports())
-    # DEBUG: írd ki mit lát
     # print("DEBUG: ports:", [p.device + " " + (p.description or "") for p in ports])
 
     for p in ports:
