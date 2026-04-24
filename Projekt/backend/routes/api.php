@@ -72,9 +72,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/kitchen/lunchtime/consume', [LunchTimeController::class, 'consume']);
   
     //Számla-admin?
-    Route::get('/invoices', [InvoiceController::class, 'index']);
-    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
-    Route::get('/invoices/{id}/pdf', [InvoiceController::class, 'pdf']);
+    Route::get('/invoices', [AdminInvoiceController::class, 'index']);
+    Route::get('/invoices/{invoice}', [AdminInvoiceController::class, 'show']);
+    Route::get('/invoices/{id}/pdf', [AdminInvoiceController::class, 'pdf']);
 
 
 
