@@ -49,7 +49,7 @@
             <router-link to="/kitchen/ingredients" class="link-card">
            
               <div class="link-content">
-                <h3>Összetevők kezelése</h3>
+                <h3>Hozzávalók kezelése</h3>
                 <p>Hozzávalók listázása, tápértékek módosítása</p>
               </div>
             </router-link>
@@ -71,7 +71,7 @@
      
               <div class="link-content">
                 <h3>Ebédeltetés</h3>
-                <p>Ebédelési státusz rögzítése</p>
+                <p>Kártya leolvasás</p>
               </div>
             </router-link>
           </div>

@@ -79,7 +79,6 @@ class Price extends Model
             'Tanuló' => 'Tanuló',
             'Tanár' => 'Tanár',
             'Dolgozó' => 'Dolgozó',
-            'Külsős' => 'Külsős',
             default => $this->userType
         };
     }

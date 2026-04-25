@@ -16,6 +16,8 @@
                 <router-link to="/admin/users">Felhasználók</router-link>
                 <router-link to="/admin/invoices">Számlák</router-link>
                 <router-link to="/admin/documents">Dokumentumok</router-link>
+                <router-link to="/admin/prices">Árak</router-link>
+
               </div>
             </div>
           </template>
@@ -108,6 +110,8 @@
                 <button @click="navigateTo('/admin/users')">Felhasználók</button>
                 <button @click="navigateTo('/admin/invoices')">Számlák</button>
                 <button @click="navigateTo('/admin/documents')">Dokumentumok</button>
+                <button @click="navigateTo('/admin/prices')">Árak</button>
+
               </div>
             </template>
 
