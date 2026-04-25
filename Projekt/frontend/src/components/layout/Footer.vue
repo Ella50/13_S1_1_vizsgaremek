@@ -27,8 +27,15 @@
           <h4>Kapcsolat</h4>
           <p>info@emenza.hu</p>
           <p>+36 1 234 5678</p>
-          <p>1088 Budapest, Rákóczi út 1-3.</p>
+          <p>1088 Budapest, Rákóczi út 1.</p>
         </div>
+
+        <div class="footer-section">
+          <h4>Tájékoztatók</h4>
+          <a href="../../../public/adatvedelem.pdf" download class="footer-link document-link">Adatvédelmi tájékoztató</a>
+          <a href="../../../public/adatkezeles.pdf" download class="footer-link document-link">Adatkezelési tájékoztató</a>
+        </div>
+
       </div>
       
       <div class="footer-bottom">
@@ -111,6 +118,16 @@ export default {
   transform: translateX(5px);
 }
 
+.document-link {
+  display: block;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.document-link:hover {
+  transform: translateX(5px);
+}
+
 .footer-section-divider {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
@@ -149,6 +166,10 @@ export default {
   
   .footer-section-divider {
     text-align: center;
+  }
+  
+  .document-link:hover {
+    transform: translateY(-2px);
   }
 }
 

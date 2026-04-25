@@ -17,6 +17,8 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Api\UserHealthController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\AdminInvoiceController;
+use App\Http\Controllers\PriceController;
+
 
 use Illuminate\Support\Facades\Mail;
 
@@ -164,6 +166,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/documents/{document}/force', [DocumentController::class, 'adminDestroy']); // Végleges törlés
         Route::post('/documents/{document}/accept', [DocumentController::class, 'accept']);
         Route::post('/documents/{document}/reject', [DocumentController::class, 'reject']);
+
+
+        Route::prefix('prices')->group(function () {
+            Route::get('/', [PriceController::class, 'index']);
+            Route::get('/active', [PriceController::class, 'getActivePrices']);
+            Route::post('/', [PriceController::class, 'store']);
+            Route::get('/{id}', [PriceController::class, 'show']);
+            Route::put('/{id}', [PriceController::class, 'update']);
+            Route::delete('/{id}', [PriceController::class, 'destroy']);
+        });
     });
     
     // Konyha
