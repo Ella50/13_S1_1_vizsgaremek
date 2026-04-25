@@ -631,7 +631,7 @@ export default {
       
       const confirmed = await this.showConfirm({
         title: 'Rendelés leadása',
-        message: `Biztosan rendelni szeretnéd a ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`
+        message: `Biztosan rendelni szeretnéd a(z) ${selectedOption} opciót ${this.formatDate(date.date)}-ra?`
       })
       
       if (!confirmed) return
@@ -686,7 +686,7 @@ export default {
       
       const confirmed = await this.showConfirm({
         title: 'Opció módosítása',
-        message: `Biztosan módosítani szeretnéd a ${newOption} opcióra?`
+        message: `Biztosan módosítani szeretnéd a(z) ${newOption} opcióra?`
       })
       
       if (!confirmed) return

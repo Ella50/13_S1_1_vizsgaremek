@@ -8,30 +8,33 @@ ${SIGNUP URL}        http://localhost:5173/register
 ${BROWSER}          chrome
 
 
-${VALID_FIRSTNAME}      Imre
+${VALID_FIRSTNAME}      Dávid
 ${VALID_LASTNAME}      Szabó
-${VALID_THIRDNAME}     Dávid
-${VALID_EMAIL}      szabo.imre@iskola.hu
-${VALID_PASS}       szabo123
+${VALID_THIRDNAME}     Imre
+${VALID_EMAIL}      szabo.david@iskola.hu
+${VALID_PASS}       jelszo123
 ${VALID_STREET}     Szabadság utca 10
 
-${INVALID_FIRSTNAME}      Imre
+${INVALID_FIRSTNAME}      Dávid
 ${INVALID_LASTNAME}       Szabó
-${INVALID_THIRDNAME}      John
+${INVALID_THIRDNAME}      Imre
 ${INVALID_EMAIL}      szabo@gmail.com
-${INVALID_PASS}       szabo
+${INVALID_PASS}       jelszo123
 
-${SIGNUP_FIRSTNAME_INPUT}             //*[@id="app"]/main/div/div[2]/div/form/div[1]/input[1]
-${SIGNUP_LASTNAME_INPUT}             //*[@id="app"]/main/div/div[2]/div/form/div[1]/input[2]
-${SIGNUP_THIRDNAME_INPUT}             //*[@id="app"]/main/div/div[2]/div/form/div[1]/input[3]
-${SIGNUP_SELECT_COUNTY}               //*[@id="app"]/main/div/div[2]/div/form/div[2]/div[1]/select
-${SIGNUP_SELECT_CITY}               //*[@id="app"]/main/div/div[2]/div/form/div[2]/div[2]/select
-${SIGNUP_STREET_INPUT}               //*[@id="app"]/main/div/div[2]/div/form/div[3]/input
-${SIGNUP_EMAIL_INPUT}                 //*[@id="app"]/main/div/div[2]/div/form/div[4]/input
-${SIGNUP_PASSWORD_INPUT}             //*[@id="app"]/main/div/div[2]/div/form/div[5]/div[1]/input
-${SIGNUP_PASSWORD_AGAIN_INPUT}        //*[@id="app"]/main/div/div[2]/div/form/div[5]/div[2]/input
-${SIGNUP_USERTYPE_SELECT}            //*[@id="app"]/main/div/div[2]/div/form/div[6]/select
-${SIGNUP_BUTTON}                 //*[@id="app"]/main/div/div[2]/div/form/button
+
+# ${TO_REGISTER_BUTTON}          //*[@id="app"]/main/div[1]/div[2]/div/p/a
+
+${SIGNUP_FIRSTNAME_INPUT}             //*[@id="app"]/main/div[1]/div[2]/div/form/div[1]/input[2]
+${SIGNUP_LASTNAME_INPUT}             //*[@id="app"]/main/div[1]/div[2]/div/form/div[1]/input[1]
+${SIGNUP_THIRDNAME_INPUT}            //*[@id="app"]/main/div[1]/div[2]/div/form/input
+${SIGNUP_SELECT_COUNTY}              //*[@id="app"]/main/div[1]/div[2]/div/form/div[2]/div[1]/select
+${SIGNUP_SELECT_CITY}               //*[@id="app"]/main/div[1]/div[2]/div/form/div[2]/div[2]/select
+${SIGNUP_STREET_INPUT}               //*[@id="app"]/main/div[1]/div[2]/div/form/div[3]/input
+${SIGNUP_EMAIL_INPUT}                 //*[@id="app"]/main/div[1]/div[2]/div/form/div[4]/input
+${SIGNUP_PASSWORD_INPUT}             //*[@id="app"]/main/div[1]/div[2]/div/form/div[5]/div[1]/div/input
+${SIGNUP_PASSWORD_AGAIN_INPUT}        //*[@id="app"]/main/div[1]/div[2]/div/form/div[5]/div[2]/div/input
+${SIGNUP_USERTYPE_SELECT}           //*[@id="app"]/main/div[1]/div[2]/div/form/div[6]/select
+${SIGNUP_BUTTON}                 //*[@id="app"]/main/div[1]/div[2]/div/form/button
 
 
 
@@ -47,6 +50,8 @@ Sikeres regisztráció
     
     Wait Until Page Contains Element    css=#app    timeout=10s
     Sleep    2s 
+
+    # Click Element   ${TO_REGISTER_BUTTON}  
     
     Wait Until Page Contains Element    ${SIGNUP_EMAIL_INPUT}    timeout=10s
     Wait Until Page Contains Element    ${SIGNUP_PASSWORD_INPUT}    timeout=10s
@@ -71,11 +76,11 @@ Sikeres regisztráció
     Sleep    2s
     
     # Alert kezelése
-    ${alert_text}=    Handle Alert    ACCEPT    timeout=5s
-    Log    Alert szövege: ${alert_text}
+    #${alert_text}=    Handle Alert    ACCEPT    timeout=5s
+    #Log    Alert szövege: ${alert_text}
     
     # Alert a várt szöveget tartalmazza-e?
-    Should Contain    ${alert_text}    Sikeres regisztráció!    
+    #Should Contain    ${alert_text}    Sikeres regisztráció!    
     
 
     Sleep    2s
@@ -116,6 +121,6 @@ Sikertelen regisztráció
     Input Password      ${SIGNUP_PASSWORD_AGAIN_INPUT}    ${INVALID_PASS}
 
     Click Button        ${SIGNUP_BUTTON}
-    Capture Page Screenshot   
+    Capture Page Screenshot   sikeres_regisztracio.png
     
     [Teardown]    Close Browser

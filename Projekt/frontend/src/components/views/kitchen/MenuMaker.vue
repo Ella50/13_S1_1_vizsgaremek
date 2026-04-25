@@ -497,7 +497,12 @@ export default {
           data = data.replace(/^\uFEFF/, '')
           data = JSON.parse(data)
         }
-        this.meals = Array.isArray(data) ? data : data.meals || []
+        
+        if (data.success && data.data) {
+          this.meals = Array.isArray(data.data) ? data.data : []
+        } else {
+          this.meals = []
+        }
       } catch (e) {
         console.error('Ételek betöltése sikertelen', e)
         addAlert({ message: 'Hiba az ételek betöltésekor', type: 'error' })
