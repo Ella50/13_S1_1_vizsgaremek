@@ -112,38 +112,15 @@
           </table>
         </div>
         
-        <!-- Paginacio-->
-        <div class="pagination" v-if="pagination.last_page > 1">
-          <button 
-            @click="goToPage(pagination.current_page - 1)" 
-            :disabled="pagination.current_page === 1"
-            class="btn-pagination"
-          >
-            ← Előző
-          </button>
-          
-          <div class="page-numbers">
-            <template v-for="page in visiblePages" :key="page">
-              <button 
-                v-if="page !== '...'"
-                @click="goToPage(page)"
-                :class="{ active: page === pagination.current_page }"
-                class="page-number"
-              >
-                {{ page }}
-              </button>
-              <span v-else class="page-dots">...</span>
-            </template>
-          </div>
-          
-          <button 
-            @click="goToPage(pagination.current_page + 1)" 
-            :disabled="pagination.current_page === pagination.last_page"
-            class="btn-pagination"
-          >
-            Következő →
-          </button>
-        </div>
+          <Pagination
+            :current-page="pagination.current_page"
+            :last-page="pagination.last_page"
+            :total="pagination.total"
+            :per-page="pagination.per_page"
+            :per-page-options="[10, 25, 50, 100]"
+            @update:page="goToPage"
+            @update:perPage="changePerPage"
+          />
       </div>
     </div>
     
@@ -234,9 +211,14 @@
 
 <script>
 import AuthService from '@/services/authService'
+import Pagination from '../../layout/Pagination.vue'
+
+
+
 
 export default {
   name: 'PersonalInvoices',
+  components: { Pagination },
   
   data() {
     return {
@@ -282,34 +264,6 @@ export default {
       return this.filters.year || this.filters.status || this.filters.search
     },
     
-    visiblePages() {
-      const current = this.pagination.current_page
-      const last = this.pagination.last_page
-      const delta = 2
-      const range = []
-      const rangeWithDots = []
-      let l
-
-      for (let i = 1; i <= last; i++) {
-        if (i === 1 || i === last || (i >= current - delta && i <= current + delta)) {
-          range.push(i)
-        }
-      }
-
-      range.forEach((i) => {
-        if (l) {
-          if (i - l === 2) {
-            rangeWithDots.push(l + 1)
-          } else if (i - l !== 1) {
-            rangeWithDots.push('...')
-          }
-        }
-        rangeWithDots.push(i)
-        l = i
-      })
-
-      return rangeWithDots
-    }
   },
   
   mounted() {
@@ -503,6 +457,11 @@ export default {
     
     closeModal() {
       this.selectedInvoice = null
+    },
+    changePerPage(newPerPage) {
+      this.pagination.per_page = newPerPage
+      this.pagination.current_page = 1
+      this.loadInvoices()
     }
   },
   
@@ -1087,9 +1046,6 @@ export default {
     flex-direction: column;
   }
 
-  .pagination {
-    flex-wrap: wrap;
-  }
 
   .detail-grid {
     grid-template-columns: 1fr;
@@ -1101,14 +1057,4 @@ export default {
   }
 }
 
-@media (max-width: 480px) {
-  .page-numbers {
-    display: none;
-  }
-
-  .btn-pagination {
-    flex: 1;
-    text-align: center;
-  }
-}
 </style>

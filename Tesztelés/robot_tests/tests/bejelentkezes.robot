@@ -6,15 +6,15 @@ Resource            ../resources/locators.resource
 *** Variables ***
 ${LOGIN URL}        http://localhost:5173/login
 ${BROWSER}          chrome
-${VALID_EMAIL}      admin@iskola.hu
-${VALID_PASS}       admin123
+${VALID_EMAIL}      kovacs.janos@iskola.hu
+${VALID_PASS}       tanar123
 ${INVALID_EMAIL}      szabo.david@iskola.hu
-${INVALID_PASS}       tegla
+${INVALID_PASS}       jelszo
 
-${LOGIN_EMAIL_INPUT}             //*[@id="app"]/main/div/div[2]/div/form/input[1]
-${LOGIN_PASSWORD_INPUT}          //*[@id="app"]/main/div/div[2]/div/form/input[2]
-${LOGIN_BUTTON}                 //*[@id="app"]/main/div/div[2]/div/form/button
-${LOGOUT_BUTTON}                //*[@id="logout"]
+${LOGIN_EMAIL_INPUT}             //*[@id="app"]/main/div[1]/div[2]/div/form/input
+${LOGIN_PASSWORD_INPUT}          //*[@id="app"]/main/div[1]/div[2]/div/form/div/input
+${LOGIN_BUTTON}                 //*[@id="app"]/main/div[1]/div[2]/div/form/button
+${LOGOUT_BUTTON}                //*[@id="app"]/nav/div[1]/button
 
 
 
@@ -69,5 +69,5 @@ Sikertelen bejelentkezés
 
     Sleep    2s    
     
-    Capture Page Screenshot
+    Capture Page Screenshot  sikeres_bejelentkezes.png
     [Teardown]    Close Browser

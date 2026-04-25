@@ -128,7 +128,6 @@
 
           <div v-if="dailyMealSummary.diabetic && dailyMealSummary.diabetic.count > 0" class="diabetic-summary">
             <div class="diabetic-info">
-              <span class="diabetic-icon-small">🍎</span>
               <div>
                 <h6>Cukorbeteg rendelések összesítése</h6>
                 <p class="diabetic-text">

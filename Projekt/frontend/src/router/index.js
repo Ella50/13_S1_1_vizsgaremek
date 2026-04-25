@@ -13,12 +13,13 @@ import Orders from '../components/views/kitchen/Orders.vue'
 import UserProfile from '../components/views/users/UserProfile.vue'
 import PersonalOrders from '../components/views/users/PersonalOrders.vue'
 import PersonalInvoices from '../components/views/users/PersonalInvoices.vue'
-
+import Prices from '../components/views/admin/Prices.vue'
 import AdminInvoice from '../components/views/admin/AdminInvoice.vue'
 import Documents from '../components/views/admin/Documents.vue'
 
 import ResetPassword from '../components/auth/ResetPassword.vue'
 import NewPasswordForm from '../components/auth/NewPasswordForm.vue'
+
 
 
 
@@ -135,6 +136,12 @@ const routes = [
         path: '/admin/documents',
         name: 'Documents',
         component: Documents,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/admin/prices',
+        name: 'Prices',
+        component: Prices,
         meta: { requiresAuth: true }
     },
     {

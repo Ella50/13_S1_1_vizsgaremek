@@ -65,10 +65,7 @@
 
 
       <div v-else-if="!loading && ingredients.length === 0" class="empty-state">
-        <p>Nincsenek hozzávalók</p>
-        <button @click="openCreateModal" class="btn-primary">
-          + Új hozzávaló létrehozása
-        </button>
+        <p>Nincs ilyen hozzávaló</p>
       </div>
 
       <div v-else>
