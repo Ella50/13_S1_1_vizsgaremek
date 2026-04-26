@@ -10,7 +10,6 @@
               <option value="">Összes felhasználó típus</option>
               <option value="Tanuló">Tanuló</option>
               <option value="Tanár">Tanár</option>
-              <option value="Dolgozó">Dolgozó</option>
             </select>
             
             <select v-model="filters.priceCategory" @change="fetchPrices" class="filter-select">

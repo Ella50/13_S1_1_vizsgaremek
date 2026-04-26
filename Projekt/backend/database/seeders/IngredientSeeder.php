@@ -24,6 +24,18 @@ class IngredientSeeder extends Seeder
                 'isAvailable' => true
             ],
             [
+                'ingredientName' => 'Törölnivaló',
+                'ingredientType' => 'Fűszer',
+                'energy' => 2,
+                'protein' => 3,
+                'carbohydrate' => 3,
+                'fat' => 0,
+                'sodium' => 5,
+                'sugar' => 2,
+                'fiber' => 1,
+                'isAvailable' => true
+            ],
+            [
                 'ingredientName' => 'Hagyma',
                 'ingredientType' => 'Zöldség',
                 'energy' => 40,

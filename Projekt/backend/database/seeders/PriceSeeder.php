@@ -51,24 +51,7 @@ class PriceSeeder extends Seeder
             ],
             
         
-            [
-                'userType' => 'Dolgozó',
-                'priceCategory' => 'Normál',
-                'amount' => 600.00,
-                'validFrom' => '2024-09-01',
-                'validTo' => null,
-
-            ],
             
-           
-            [
-                'userType' => 'Külsős',
-                'priceCategory' => 'Normál',
-                'amount' => 750.00,
-                'validFrom' => '2024-09-01',
-                'validTo' => null,
-
-            ],
             
 
         ];
