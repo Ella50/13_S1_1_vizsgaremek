@@ -82,7 +82,7 @@
               <tr v-for="doc in documents" :key="doc.id">
                 <td>
                   <div class="user-info">
-                    <strong>{{ doc.user?.firstName }} {{ doc.user?.lastName }}</strong>
+                    <strong> {{ doc.user?.lastName }} {{ doc.user?.firstName }}</strong>
                     <small class="user-email">{{ doc.user?.email }}</small>
                   </div>
                 </td>
